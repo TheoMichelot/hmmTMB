@@ -42,8 +42,37 @@
 HmmData <- R6Class("HmmData",
 
   public = list(
-    initialize = function(data) {
-      private$data_ <- data
+    initialize = function(data, interval = NA) {
+      
+      # If time column and interval provided, insert NAs to obtain regular time grid
+      if(!is.na(interval) & !is.null(data$time)) {
+        # Initialise regularised data set
+        data_reg <- NULL
+        
+        # Loop over IDs
+        for(id in unique(data$ID)) {
+          sub_data <- subset(data, ID == id)
+          sub_n <- nrow(sub_data)
+          
+          # Regular time grid
+          reg_times <- data.frame(time = seq(from = sub_data$time[1], 
+                                             to = sub_data$time[sub_n], 
+                                             by = interval))
+          
+          # Insert NAs
+          sub_data_reg <- merge(sub_data, reg_times, by = "time", all = TRUE)
+          
+          # Remove NAs in ID column
+          sub_data_reg$ID <- id
+          
+          # Append to regularised data set
+          data_reg <- rbind(data_reg, sub_data_reg)
+        }
+        
+        private$data_ <- data_reg        
+      } else {
+        private$data_ <- data
+      }
     },
 
     data = function() {return(private$data_)}
@@ -53,8 +82,3 @@ HmmData <- R6Class("HmmData",
     data_ = NULL
   )
 )
-
-
-
-
-
