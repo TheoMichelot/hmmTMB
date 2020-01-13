@@ -38,3 +38,5 @@ rsconnect/
 # C++ compilation files
 src/*.so
 src/*.o
+
+.Rbuildignore
