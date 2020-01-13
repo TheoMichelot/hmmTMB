@@ -26,7 +26,7 @@
 
 #' Hidden Markov observation class
 #'
-#' @description Encapsulates the observations from a hidden Markov model.
+#' @description Encapsulates the observation model from a hidden Markov model.
 #' Object can be created using $new with arguments:
 #' \itemize{
 #'   \item data: a HmmData object
@@ -40,7 +40,7 @@
 #' }
 #'
 
-Observations <- R6Class("Observations",
+Observation <- R6Class("Observation",
 
   public = list(
     initialize = function(data, obsnames, dists, par) {
@@ -69,8 +69,3 @@ Observations <- R6Class("Observations",
 
   )
 )
-
-
-
-
-
