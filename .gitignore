@@ -40,3 +40,4 @@ src/*.so
 src/*.o
 
 .Rbuildignore
+*.Rproj
