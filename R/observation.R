@@ -38,7 +38,7 @@
 #' \itemize{
 #'  \item plot_dist Plot histogram of observations, overlaid with the pdf
 #'  of the specified distribution for that data stream. Helpful to select
-#'  initial parameter values for the model fitting.
+#'  initial parameter values for model fitting.
 #' }
 #'
 
@@ -49,7 +49,9 @@ Observation <- R6Class("Observation",
        private$data_ <- data
        private$dists_ <- dists
        private$par_ <- par
-       # private$tpar_ <- log(par)
+       private$tpar_ <- lapply(1:length(dists), 
+                               function(i) dists[[i]]$n2w(par[[i]]))
+       names(private$tpar_) <- names(par)
     },
 
     # Accessors
@@ -75,7 +77,7 @@ Observation <- R6Class("Observation",
           args[[i+1]] <- par[i]        
       } else {
         for(i in 1:length(private$par_))
-          args[[i+1]] <- private$par_[[i]]
+          args[[i+1]] <- private$par_[[name]][[i]]
       }
       
       # Add pdf to histogram plot
@@ -85,11 +87,8 @@ Observation <- R6Class("Observation",
 
   private = list(
     data_ = NULL,
-    obsnames_ = NULL,
     dists_ = NULL,
     par_ = NULL,
     tpar_ = NULL
-
   )
 )
-
