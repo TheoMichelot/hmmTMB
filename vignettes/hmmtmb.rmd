@@ -1,0 +1,69 @@
+---
+title: "HmmTmb vignette"
+author: "Richard Glennie, Théo Michelot"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_document
+# bibliography: 
+vignette: >
+  %\VignetteIndexEntry{HmmTmb vignette}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = F, error = F, warning = F,
+  comment = NA
+)
+```
+
+```{r load-package, echo = FALSE}
+library(HmmTmb)
+```
+
+# Observation distributions
+
+Distributions for the observation process are created using the Dist class. To define a new distribution, we provide its name (as a string), its probability density/mass function (as a function), and the link functions for its parameters (as named lists of functions). For example, for the normal distribution, we have
+```{r dist-def}
+dist_norm <- Dist$new(name = "normal", pdf = dnorm,
+                      link = list(mean = identity, sd = log),
+                      invlink = list(mean = identity, sd = exp))
+```
+
+The functions n2w and w2n transform parameters of the observation distributions from the natural to the working scale and vice-versa. We can verify that applying the two functions successively returns the original parameter values:
+```{r norm-test}
+# List of parameters (on the natural scale)
+par1 <- list(mean = c(0, 5), sd = c(1, 10))
+
+# Transform to working scale
+wpar <- dist_norm$n2w(par1)
+wpar
+
+# Transform back to natural scale
+par2 <- dist_norm$w2n(wpar)
+par2
+```
+
+# HMM data
+
+Data objects are defined with the HmmData class. An object can be created from a data frame which includes one column for each observed variable and for each covariate. There are special column names: "ID" is used to identify the time series if several are provided, and "time" gives the times of observation. If the times of observations are provided, gaps are automatically filled with NAs to create a obtain a regular time grid.
+
+```{r create-data}
+# Create a dummy data set, with two time series
+times1 <- seq(as.POSIXct("2020/01/01 00:00:00"), by = "hour", length = 10)
+times2 <- seq(as.POSIXct("2020/02/01 00:00:00"), by = "hour", length = 10)
+data <- data.frame(ID = rep(c(1, 2), each = 10),
+                   x = rnorm(20), 
+                   time = c(times1, times2))
+
+# Remove a few rows to create gaps in the data
+data <- data[-c(2:3, 7, 15:18),]
+
+# Define HmmData object
+data_prep <- HmmData$new(data = data, interval = "hour")
+
+# The gaps have been filled
+data_prep$data()
+```
