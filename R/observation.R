@@ -30,8 +30,7 @@
 #' Object can be created using $new with arguments:
 #' \itemize{
 #'   \item data: a HmmData object
-#'   \item obsnames: columns names of data streams that are observations
-#'   \item dists: distributions for each data stream
+#'   \item dists: named list of distributions for each data stream
 #' }
 #'
 #' Methods include:
@@ -43,21 +42,42 @@
 Observation <- R6Class("Observation",
 
   public = list(
-    initialize = function(data, obsnames, dists, par) {
+    initialize = function(data, dists, par) {
        private$data_ <- data
-       private$obsnames_ <- obsnames
        private$dists_ <- dists
        private$par_ <- par
-       private$tpar_ <- log(par)
+       # private$tpar_ <- log(par)
     },
 
     # Accessors
     data = function() {return(private$data_)},
-    obsnames = function() {return(private$obsnames_)},
     dists = function() {return(private$dists_)},
     par = function() {return(private$par_)},
-    tpar = function() {return(private$tpar_)}
+    tpar = function() {return(private$tpar_)},
 
+    # Histogram of observations with overlaid pdf
+    plot_dist = function(name, par = NULL) {
+      # Extract observed values for relevant variable
+      obs <- private$data_$data()[[name]]
+      
+      # Histogram of observations
+      hist(obs, col = "lightgrey", border = "white", prob = TRUE, 
+           main = "", xlab = name)
+      
+      # Create list of arguments for pdf
+      grid <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length = 1e3)
+      args <- list(grid)
+      if(!is.null(par)) {
+        for(i in 1:length(par))
+          args[[i+1]] <- par[i]        
+      } else {
+        for(i in 1:length(private$par_))
+          args[[i+1]] <- private$par_[[i]]
+      }
+      
+      # Add pdf to histogram plot
+      points(grid, do.call(private$dists_[[name]]$pdf(), args), type = "l")
+    }
   ),
 
   private = list(
@@ -69,3 +89,4 @@ Observation <- R6Class("Observation",
 
   )
 )
+
