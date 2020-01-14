@@ -3,7 +3,6 @@ title: "HmmTmb vignette"
 author: "Richard Glennie, Théo Michelot"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_document
-# bibliography: 
 vignette: >
   %\VignetteIndexEntry{HmmTmb vignette}
   %\VignetteEncoding{UTF-8}
@@ -14,7 +13,7 @@ editor_options:
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  message = F, error = F, warning = F,
+  message = FALSE, error = FALSE, warning = FALSE,
   comment = NA
 )
 ```
@@ -24,7 +23,7 @@ library(HmmTmb)
 set.seed(342)
 ```
 
-# Observation distributions
+# Observation distribution
 
 Distributions for the observation process are created using the Dist class. To define a new distribution, we provide its name (as a string), its probability density/mass function (as a function), and the link functions for its parameters (as named lists of functions). For example, for the normal distribution, we have
 ```{r dist-def}
