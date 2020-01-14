@@ -41,3 +41,4 @@ src/*.o
 
 .Rbuildignore
 *.Rproj
+.Rproj.user
