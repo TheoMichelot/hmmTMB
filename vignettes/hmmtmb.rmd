@@ -73,7 +73,7 @@ data_prep$data()
 
 The class Observation encapsulates the model for the observed variables.
 
-```{r obs}
+```{r obs-create}
 # Create a dummy data set
 times <- seq(as.POSIXct("2020/01/01 00:00:00"), by = "hour", length = 100)
 data <- data.frame(ID = rep(1, 100),
@@ -85,11 +85,19 @@ data_prep <- HmmData$new(data = data)
 dists <- list(x = dist_norm)
 
 # List of observation parameters
-par <- list(mean = 0, sd = 1)
+par <- list(x = list(mean = 0, sd = 1))
 
 # Create observation process object
 obs_process <- Observation$new(data = data_prep, dists = dists, par = par)
+```
 
+The parameters on the working scale are calculated when the object is created:
+```{r obs-tpar}
+obs_process$tpar()
+```
+
+The function plot_dist generates a histogram of the observations with the probability density (or mass) function of the specified distribution.
+```{r obs-plot}
 # Plot histogram and pdf for variable "x"
 obs_process$plot_dist(name = "x")
 ```
