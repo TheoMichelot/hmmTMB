@@ -99,5 +99,5 @@ obs_process$tpar()
 The function plot_dist generates a histogram of the observations with the probability density (or mass) function of the specified distribution.
 ```{r obs-plot}
 # Plot histogram and pdf for variable "x"
-obs_process$plot_dist(name = "x")
+obs_process$plot_dist(name = "x", par = list(mean = 1, sd = 1))
 ```

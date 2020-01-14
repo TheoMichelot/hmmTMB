@@ -73,9 +73,11 @@ Observation <- R6Class("Observation",
       grid <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length = 1e3)
       args <- list(grid)
       if(!is.null(par)) {
+        # if parameter values provided by user
         for(i in 1:length(par))
-          args[[i+1]] <- par[i]        
+          args[[i+1]] <- par[[i]]        
       } else {
+        # else, use default parameter values
         for(i in 1:length(private$par_))
           args[[i+1]] <- private$par_[[name]][[i]]
       }
