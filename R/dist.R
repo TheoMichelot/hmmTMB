@@ -30,12 +30,17 @@
 #' @description Distribution for observed variables.
 #' Object can be created using $new with arguments:
 #' \itemize{
-#'   \item
+#'   \item name Name of distribution
+#'   \item pdf Probability density/mass function of the distribution
+#'   \item link Named list of link functions for distribution parameters
+#'   \item invlink Name list of inverse link functions for distribution
+#'   parameters
 #' }
 #'
 #' Methods include:
 #' \itemize{
-#'  \item  NA
+#'  \item n2w Transforms parameters from natural to working scale
+#'  \item w2n Transforms parameters from working to natural scale
 #' }
 #'
 
