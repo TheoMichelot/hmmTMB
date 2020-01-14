@@ -31,11 +31,14 @@
 #' \itemize{
 #'   \item data: a HmmData object
 #'   \item dists: named list of distributions for each data stream
+#'   \item par: list of observation parameters
 #' }
 #'
 #' Methods include:
 #' \itemize{
-#'  \item  NA
+#'  \item plot_dist Plot histogram of observations, overlaid with the pdf
+#'  of the specified distribution for that data stream. Helpful to select
+#'  initial parameter values for the model fitting.
 #' }
 #'
 
