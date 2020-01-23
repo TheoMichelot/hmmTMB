@@ -33,7 +33,7 @@
 #'   \item name Name of distribution
 #'   \item pdf Probability density/mass function of the distribution
 #'   \item link Named list of link functions for distribution parameters
-#'   \item invlink Name list of inverse link functions for distribution
+#'   \item invlink Named list of inverse link functions for distribution
 #'   parameters
 #' }
 #'

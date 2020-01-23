@@ -52,6 +52,7 @@ Observation <- R6Class("Observation",
        private$tpar_ <- lapply(1:length(dists), 
                                function(i) dists[[i]]$n2w(par[[i]]))
        names(private$tpar_) <- names(par)
+       private$tpar_ <- unlist(private$tpar_)
     },
 
     # Accessors
