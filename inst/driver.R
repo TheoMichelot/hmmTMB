@@ -30,9 +30,15 @@ simdat <- SimulatePoHmm(n, lambda, tpm, n.states)
 
 plot(simdat, type = "b", pch = 19)
 
+dist_pois <- Dist$new(name = "poisson", pdf = dpois,
+                      link = list(lambda = log),
+                      invlink = list(lambda = exp))
+
 # create objects
 dat <- HmmData$new(data.frame(count = simdat))
-obs <- Observations$new(dat, "count", "poisson", c(7, 7))
+dists <- list(count = dist_pois)
+par <- list(count = list(lambda = c(4, 4)))
+obs <- Observation$new(dat, dists = dists, par = par)
 hid <- MarkovChain$new(matrix(c(".", "~1", "~1", "."), nr = 2),
                        matrix(c(0.8, 0.2, 0.2, 0.8), nr = 2))
 mod <- Hmm$new(obs, hid)
