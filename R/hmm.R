@@ -28,15 +28,16 @@ Hmm <- R6Class("Hmm",
       if (is.null(private$fit_)) stop("Fit model first")
       return(private$fit_)
     },
-
+    
     # Fitting
     fit = function() {
 
       tmb_dat <- list(data = self$obs()$data()$data()[,1],
-                            n_states = self$hidden()$nstates())
+                            n_states = self$hidden()$nstates(),
+                      distname = self$obs()$dists()[[1]]$name())
 
       tmb_par <- list(ltpm = self$hidden()$par(),
-                      distpar = self$obs()$tpar())
+                      wpar = self$obs()$tpar())
 
       obj <- MakeADFun(tmb_dat, tmb_par, dll = "HmmTmb")
 
