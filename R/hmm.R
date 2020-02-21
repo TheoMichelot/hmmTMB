@@ -13,14 +13,15 @@
 #'  \item  NA
 #' }
 
-Hmm <- R6Class("Hmm",
-
+Hmm <- R6Class(
+  classname = "Hmm",
+  
   public = list(
     initialize = function(obs, hidden) {
-       private$obs_ <- obs
-       private$hidden_ <- hidden
+      private$obs_ <- obs
+      private$hidden_ <- hidden
     },
-
+    
     # Accessors
     obs = function() {return(private$obs_)},
     hidden = function() {return(private$hidden_)},
@@ -31,27 +32,27 @@ Hmm <- R6Class("Hmm",
     
     # Fitting
     fit = function() {
-
+      
       tmb_dat <- list(data = self$obs()$data()$data()[,1],
-                            n_states = self$hidden()$nstates(),
+                      n_states = self$hidden()$nstates(),
                       distname = self$obs()$dists()[[1]]$name())
-
+      
       tmb_par <- list(ltpm = self$hidden()$par(),
                       wpar = self$obs()$tpar())
-
+      
       obj <- MakeADFun(tmb_dat, tmb_par, dll = "HmmTmb")
-
+      
       private$fit_ <- do.call(optim, obj)
-
+      
     }
-
+    
   ),
-
+  
   private = list(
     obs_ = NULL,
     hidden_ = NULL,
     fit_ = NULL
-
+    
   )
 )
 

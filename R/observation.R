@@ -16,25 +16,26 @@
 #'  initial parameter values for model fitting.
 #' }
 
-Observation <- R6Class("Observation",
-
+Observation <- R6Class(
+  classname = "Observation",
+  
   public = list(
     initialize = function(data, dists, par) {
-       private$data_ <- data
-       private$dists_ <- dists
-       private$par_ <- par
-       private$tpar_ <- lapply(1:length(dists), 
-                               function(i) dists[[i]]$n2w(par[[i]]))
-       names(private$tpar_) <- names(par)
-       private$tpar_ <- unlist(private$tpar_)
+      private$data_ <- data
+      private$dists_ <- dists
+      private$par_ <- par
+      private$tpar_ <- lapply(1:length(dists), 
+                              function(i) dists[[i]]$n2w(par[[i]]))
+      names(private$tpar_) <- names(par)
+      private$tpar_ <- unlist(private$tpar_)
     },
-
+    
     # Accessors
     data = function() {return(private$data_)},
     dists = function() {return(private$dists_)},
     par = function() {return(private$par_)},
     tpar = function() {return(private$tpar_)},
-
+    
     # Histogram of observations with overlaid pdf
     plot_dist = function(name, par = NULL) {
       # Extract observed values for relevant variable
@@ -61,7 +62,7 @@ Observation <- R6Class("Observation",
       points(grid, do.call(private$dists_[[name]]$pdf(), args), type = "l")
     }
   ),
-
+  
   private = list(
     data_ = NULL,
     dists_ = NULL,

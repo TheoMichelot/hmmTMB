@@ -13,8 +13,9 @@
 #'  \item
 #' }
 
-HmmData <- R6Class("HmmData",
-
+HmmData <- R6Class(
+  classname = "HmmData",
+  
   public = list(
     initialize = function(data, interval = NA) {
       
@@ -48,10 +49,10 @@ HmmData <- R6Class("HmmData",
         private$data_ <- data
       }
     },
-
+    
     data = function() {return(private$data_)}
   ),
-
+  
   private = list(
     data_ = NULL
   )

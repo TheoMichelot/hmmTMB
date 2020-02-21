@@ -20,8 +20,9 @@
 #'  \item update_tpm (newtpm): set transition probability matrix to newtpm
 #' }
 
-MarkovChain <- R6Class("MarkovChain",
-
+MarkovChain <- R6Class(
+  classname = "MarkovChain",
+  
   public = list(
     initialize = function(structure, tpm) {
       private$structure_ <- structure
@@ -29,13 +30,13 @@ MarkovChain <- R6Class("MarkovChain",
       private$tpm_ <- tpm
       private$par_ <- private$tpm2par(tpm)
     },
-
+    
     # Accessors
     structure = function() {return(private$structure_)},
     tpm = function() {return(private$tpm_)},
     par = function() {return(private$par_)},
     nstates = function() {return(private$nstates_)},
-
+    
     # Mutators
     update_par = function(newpar) {
       private$par_ <- newpar
@@ -45,33 +46,33 @@ MarkovChain <- R6Class("MarkovChain",
       private$tpm_ <- newtpm
       private$par_ <- private$tpm2par(newtpm)
     }
-
+    
   ),
-
+  
   private = list(
     structure_ = NULL,
     par_ = NULL,
     tpm_ = NULL,
     nstates_ = NULL,
-
+    
     check_structure = function() {
       if (!all(diag(private$structure_) == ".")) stop("Diagonal of structure should be '.'")
       return(TRUE)
     },
-
+    
     tpm2par = function(tpm) {
       ltpm <- log(tpm / diag(tpm))
       par <- ltpm[!diag(self$nstates())]
       return(par)
     },
-
+    
     par2tpm = function(par) {
       tpm <- diag(self$nstates())
       tpm[!diag(self$nstates())] <- exp(par)
       tpm <- tpm / rowSums(tpm)
       return(tpm)
     }
-
+    
   )
 )
 
