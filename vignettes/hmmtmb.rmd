@@ -100,3 +100,20 @@ The function plot_dist generates a histogram of the observations with the probab
 # Plot histogram and pdf for variable "x"
 obs_process$plot_dist(name = "x", par = list(mean = 1, sd = 1))
 ```
+
+## User-specified observation distribution
+
+Include a file named custom.hpp in the folder src/ of the package. The file should contain the following function templates.
+
+ - Link function: `vector<Type> custom_link(vector<Type> par, int n_states)`
+ 
+ - Inverse link function: `matrix<Type> custom_invlink(vector<Type> wpar, int n_states)`
+ 
+ - Probability mass/density function: `Type custom_pdf(Type x, vector<Type> par, bool logpdf)`
+
+In R, define a Dist object with the name attribute set to "custom", e.g.
+```{r custom}
+dist_gamma <- Dist$new(name = "custom", pdf = dgamma,
+                       link = list(shape = log, scale = log),
+                       invlink = list(shape = exp, scale = exp))
+```
