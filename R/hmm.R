@@ -32,10 +32,12 @@ Hmm <- R6Class(
     
     # Fitting
     fit = function() {
+      # Vector of codes of observation distributions
+      distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
       
-      tmb_dat <- list(data = self$obs()$data()$data()[,1],
+      tmb_dat <- list(data = as.matrix(self$obs()$data()$data()),
                       n_states = self$hidden()$nstates(),
-                      distname = self$obs()$dists()[[1]]$name())
+                      distcode = distcode)
       
       tmb_par <- list(ltpm = self$hidden()$par(),
                       wpar = self$obs()$tpar())

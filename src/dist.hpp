@@ -20,8 +20,12 @@ class Dist {
   
 public:
   // Constructor
-  Dist(std::string distname) {
-    name = distname;
+  Dist(int distcode) {
+    vector<std::string> distname(3);
+    distname(0) = "pois";
+    distname(1) = "norm";
+    distname(2) = "custom";
+    name = distname(distcode);
   };
   // Link function
   vector<Type> link(vector<Type> par, int n_states);

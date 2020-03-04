@@ -26,6 +26,8 @@ Dist <- R6Class(
       private$pdf_ <- pdf
       private$link_ <- link
       private$invlink_ <- invlink
+      distnames <- c("pois", "norm", "custom")
+      private$code_ <- which(distnames == name) - 1 # Starts at 0 for C++
     },
     
     # Accessors
@@ -33,6 +35,7 @@ Dist <- R6Class(
     pdf = function() {return(private$pdf_)},
     link = function() {return(private$link_)},
     invlink = function() {return(private$invlink_)},
+    code = function() {return(private$code_)},
     
     # Transform parameters from natural to working scale
     n2w = function(par) {
@@ -68,6 +71,7 @@ Dist <- R6Class(
     name_ = NULL,
     pdf_ = NULL,
     link_ = NULL,
-    invlink_ = NULL
+    invlink_ = NULL,
+    code_ = NULL
   )
 )

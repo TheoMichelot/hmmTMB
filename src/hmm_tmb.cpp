@@ -13,23 +13,19 @@ template<class Type>
 Type objective_function<Type>::operator() ()
 {
   // DATA
-  DATA_VECTOR(data); // data stream
+  DATA_MATRIX(data); // data stream
   DATA_INTEGER(n_states); // number of states
-  DATA_STRING(distname); // name of observation distribution
+  DATA_IVECTOR(distcode); // codes of observation distributions
   
   // PARAMETERS
   PARAMETER_VECTOR(ltpm);
   PARAMETER_VECTOR(wpar);
   
-  // Define observation distribution
-  Dist <Type> obsdist(distname);
+  int n_var = distcode.size();
   
   //======================//
   // Transform parameters //
   //======================//
-  // Observation parameters
-  matrix<Type> par = obsdist.invlink(wpar, n_states);
-
   // Transition probability matrix
   matrix<Type> tpm(n_states, n_states);
   int cur = 0;
@@ -64,22 +60,36 @@ Type objective_function<Type>::operator() ()
     for (int i = 0; i < n_states; ++i) 
       delta(0, i) = 1.0 / n_states;
   }
-
+  
   //===================================//  
   // Compute observation probabilities //
   //===================================//
-  // Initialise matrix of probabilities
+  // Initialise matrix of probabilities to 1
   int n = data.rows();
   matrix<Type> prob(n, n_states);
+  for(int i = 0; i < n; i++) {
+    for(int s = 0; s < n_states; s++) {
+      prob(i, s) = 1;
+    }
+  }
   
-  // Loop over states (columns)
-  for (int s = 0; s < n_states; ++s) {
-    // Vector of parameters for state s
-    vector<Type> subpar = par.row(s);
+  // Loop over observed variables
+  for(int var = 0; var < n_var; var++) {
+    // Define observation distribution
+    Dist <Type> obsdist(distcode(var));
     
-    // Loop over observations (rows)
-    for (int i = 0; i < n; ++i) {
-      prob(i, s) = obsdist.pdf(data(i), subpar, false);
+    // Observation parameters
+    matrix<Type> par = obsdist.invlink(wpar, n_states);
+    
+    // Loop over states (columns)
+    for (int s = 0; s < n_states; ++s) {
+      // Vector of parameters for state s
+      vector<Type> subpar = par.row(s);
+      
+      // Loop over observations (rows)
+      for (int i = 0; i < n; ++i) {
+        prob(i, s) = prob(i, s) * obsdist.pdf(data(i, var), subpar, false);
+      }
     }
   }
   
