@@ -63,12 +63,9 @@ Hmm <- R6Class(
       # Transition probabilities
       ind_ltpm <- which(names(est_par) == "ltpm")
       ltpm <- est_par[ind_ltpm]
-      tpm <- diag(n_state)
-      tpm[!tpm] <- exp(ltpm)
-      tpm <- t(tpm)
-      tpm <- tpm/rowSums(tpm)
+      self$hidden()$update_par(ltpm)
       
-      return(list(obspar = par, tpm = tpm))
+      return(list(obspar = par, tpm = self$hidden()$tpm()))
     }
   ),
   
