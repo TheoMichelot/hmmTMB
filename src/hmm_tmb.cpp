@@ -37,7 +37,7 @@ Type objective_function<Type>::operator() ()
         ++cur;
       }
     }
-    tpm.row(i) /= tpm.row(i).sum();
+    tpm.row(i) = tpm.row(i)/tpm.row(i).sum();
   }
   
   //=================================//
@@ -46,7 +46,7 @@ Type objective_function<Type>::operator() ()
   matrix<Type> delta(1, n_states);
   matrix<Type> I = matrix<Type>::Identity(n_states, n_states);
   matrix<Type> tpminv = I;
-  tpminv -= tpm;
+  tpminv = tpminv - tpm;
   tpminv = (tpminv.array() + 1).matrix();
   matrix<Type> ivec(1, n_states); 
   for (int i = 0; i < n_states; ++i) 
@@ -108,8 +108,8 @@ Type objective_function<Type>::operator() ()
     phi = (phi.array() * prob.row(i).array()).matrix();
     phi = phi * tpm;
     sumphi = phi.sum();
-    llk += log(sumphi);
-    phi /= sumphi;
+    llk = llk + log(sumphi);
+    phi = phi / sumphi;
   }
   Type nll = -llk;
   
