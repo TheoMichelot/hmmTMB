@@ -111,7 +111,7 @@ Include a file named custom.hpp in the folder src/ of the package. The file shou
  
  - Probability mass/density function: `Type custom_pdf(Type x, vector<Type> par, bool logpdf)`
  
- - Number of parameters of the distribution: `int npar()`
+ - Number of parameters of the distribution: `int custom_npar()`
 
 In R, define a Dist object with the name attribute set to "custom", e.g.
 ```{r custom}
