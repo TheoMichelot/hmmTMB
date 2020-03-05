@@ -48,10 +48,8 @@ Hmm <- R6Class(
       obj <- MakeADFun(tmb_dat, tmb_par, dll = "HmmTmb")
       
       private$fit_ <- do.call(optim, obj)
-    },
-    
-    # Parameter estimates
-    est = function() {
+      
+      # Update model parameters
       est_par <- self$res()$par
       n_state <- self$hidden()$nstates()
       
@@ -59,13 +57,18 @@ Hmm <- R6Class(
       ind_wpar <- which(names(est_par) == "wpar")
       wpar <- est_par[ind_wpar]
       self$obs()$update_wpar(wpar = wpar, n_state = n_state)
-
+      
       # Transition probabilities
       ind_ltpm <- which(names(est_par) == "ltpm")
       ltpm <- est_par[ind_ltpm]
       self$hidden()$update_par(ltpm)
-      
-      return(list(obspar = self$obs()$par(), tpm = self$hidden()$tpm()))
+    },
+    
+    # Parameter estimates
+    est = function() {
+      par <- self$obs()$par()
+      tpm <- self$hidden()$tpm()
+      return(list(par = par, tpm = tpm))
     }
   ),
   
