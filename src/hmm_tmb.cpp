@@ -73,13 +73,18 @@ Type objective_function<Type>::operator() ()
     }
   }
   
+  // Counter to subset parameter vector
+  int par_count = 0;
+  
   // Loop over observed variables
   for(int var = 0; var < n_var; var++) {
     // Define observation distribution
     Dist <Type> obsdist(distcode(var));
     
-    // Observation parameters
-    matrix<Type> par = obsdist.invlink(wpar, n_states);
+    // Subset and transform observation parameters
+    vector<Type> sub_wpar = wpar.segment(par_count, obsdist.npar() * n_states);
+    par_count = par_count + obsdist.npar() * n_states;
+    matrix<Type> par = obsdist.invlink(sub_wpar, n_states);
     
     // Loop over states (columns)
     for (int s = 0; s < n_states; ++s) {

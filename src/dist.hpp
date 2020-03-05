@@ -33,6 +33,8 @@ public:
   matrix<Type> invlink(vector<Type> wpar, int n_states);
   // Probability density/mass function
   Type pdf(Type x, vector<Type> par, bool logpdf);
+  // Number of parameters
+  int npar();
 };
 
 //' Link function for distribution parameters
@@ -98,6 +100,22 @@ Type Dist<Type>::pdf(Type x, vector<Type> par, bool logpdf) {
   }
   
   return val;
+}
+
+// Number of distribution parameters
+template <class Type>
+int Dist<Type>::npar() {
+  int n = 0;
+  
+  if(name == "pois") { // Poisson distribution
+    n = 1;
+  } else if(name == "norm") { // Normal distribution
+    n = 2;
+  } else if(name == "custom") { // User-defined distribution
+    n = custom_npar();
+  }
+  
+  return n;
 }
 
 #endif

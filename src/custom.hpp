@@ -38,3 +38,8 @@ Type custom_pdf(Type x, vector<Type> par, bool logpdf) {
   val = dgamma(x, par(0), par(1), logpdf);
   return val;
 }
+
+// Number of distribution parameters
+int custom_npar() {
+  return 2;
+}
