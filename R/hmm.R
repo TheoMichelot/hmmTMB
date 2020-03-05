@@ -58,14 +58,14 @@ Hmm <- R6Class(
       # Observation parameters
       ind_wpar <- which(names(est_par) == "wpar")
       wpar <- est_par[ind_wpar]
-      par <- self$obs()$w2n(wpar = wpar, n_state = n_state)
-      
+      self$obs()$update_wpar(wpar = wpar, n_state = n_state)
+
       # Transition probabilities
       ind_ltpm <- which(names(est_par) == "ltpm")
       ltpm <- est_par[ind_ltpm]
       self$hidden()$update_par(ltpm)
       
-      return(list(obspar = par, tpm = self$hidden()$tpm()))
+      return(list(obspar = self$obs()$par(), tpm = self$hidden()$tpm()))
     }
   ),
   

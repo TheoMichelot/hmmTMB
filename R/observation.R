@@ -24,10 +24,7 @@ Observation <- R6Class(
       private$data_ <- data
       private$dists_ <- dists
       private$par_ <- par
-      private$tpar_ <- lapply(1:length(dists), 
-                              function(i) dists[[i]]$n2w(par[[i]]))
-      names(private$tpar_) <- names(par)
-      private$tpar_ <- unlist(private$tpar_)
+      private$tpar_ <- self$n2w(par)
     },
     
     # Accessors
@@ -35,6 +32,24 @@ Observation <- R6Class(
     dists = function() {return(private$dists_)},
     par = function() {return(private$par_)},
     tpar = function() {return(private$tpar_)},
+    
+    # Mutators
+    update_par = function(par) {
+      private$par_ <- par
+      private$tpar_ <- self$n2w(par)
+    },
+    update_wpar = function(wpar, n_state) {
+      private$tpar_ <- wpar
+      private$par_ <- self$w2n(wpar, n_state)
+    },
+
+    # Natural to working parameter transformation
+    n2w = function(par) {
+      wpar <- lapply(1:length(private$dists_), 
+                     function(i) dists[[i]]$n2w(par[[i]]))
+      names(wpar) <- names(par)
+      wpar <- unlist(wpar)
+    },
     
     # Working to natural parameter transformation
     w2n = function(wpar, n_state) {
