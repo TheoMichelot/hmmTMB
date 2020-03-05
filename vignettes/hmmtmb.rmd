@@ -110,6 +110,8 @@ Include a file named custom.hpp in the folder src/ of the package. The file shou
  - Inverse link function: `matrix<Type> custom_invlink(vector<Type> wpar, int n_states)`
  
  - Probability mass/density function: `Type custom_pdf(Type x, vector<Type> par, bool logpdf)`
+ 
+ - Number of parameters of the distribution: `int npar()`
 
 In R, define a Dist object with the name attribute set to "custom", e.g.
 ```{r custom}
