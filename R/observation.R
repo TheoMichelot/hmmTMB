@@ -36,6 +36,31 @@ Observation <- R6Class(
     par = function() {return(private$par_)},
     tpar = function() {return(private$tpar_)},
     
+    # Working to natural parameter transformation
+    w2n = function(wpar, n_state) {
+      # Initialise list of natural parameters
+      par <- list()
+      
+      # Number of observed variables
+      nvar <- length(private$dists_)
+      
+      # Counter to subset observation parameters
+      par_count <- 1
+      
+      # Loop over observed variables
+      for(var in 1:nvar) {
+        # Number of parameters for this distribution
+        npar <- length(private$dists_[[var]]$link())
+        # Subset and transform working parameters
+        sub_wpar <- wpar[par_count:(par_count + npar*n_state - 1)]
+        par_count <- par_count + npar*n_state
+        par[[var]] <- private$dists_[[var]]$w2n(sub_wpar)
+      }
+      
+      names(par) <- names(private$dists_)
+      return(par)
+    },
+    
     # Histogram of observations with overlaid pdf
     plot_dist = function(name, par = NULL) {
       # Extract observed values for relevant variable
