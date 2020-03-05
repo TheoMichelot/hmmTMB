@@ -60,6 +60,7 @@ Dist <- R6Class(
         i1 <- i*n_state
         sub_wpar <- wpar[i0:i1]
         par[[i]] <- private$invlink_[[i]](sub_wpar)
+        names(par[[i]]) <- NULL
       }
       
       names(par) <- names(private$link_)

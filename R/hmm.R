@@ -26,7 +26,10 @@ Hmm <- R6Class(
     obs = function() {return(private$obs_)},
     hidden = function() {return(private$hidden_)},
     res = function() {
-      if (is.null(private$fit_)) stop("Fit model first")
+      if (is.null(private$fit_)) {
+        stop("Fit model first")
+      }
+      
       return(private$fit_)
     },
     
@@ -45,16 +48,34 @@ Hmm <- R6Class(
       obj <- MakeADFun(tmb_dat, tmb_par, dll = "HmmTmb")
       
       private$fit_ <- do.call(optim, obj)
-      
-    }
+    },
     
+    # Parameter estimates
+    est = function() {
+      est_par <- self$res()$par
+      n_state <- self$hidden()$nstates()
+      
+      # Observation parameters
+      ind_wpar <- which(names(est_par) == "wpar")
+      wpar <- est_par[ind_wpar]
+      par <- self$obs()$w2n(wpar = wpar, n_state = n_state)
+      
+      # Transition probabilities
+      ind_ltpm <- which(names(est_par) == "ltpm")
+      ltpm <- est_par[ind_ltpm]
+      tpm <- diag(n_state)
+      tpm[!tpm] <- exp(ltpm)
+      tpm <- t(tpm)
+      tpm <- tpm/rowSums(tpm)
+      
+      return(list(obspar = par, tpm = tpm))
+    }
   ),
   
   private = list(
     obs_ = NULL,
     hidden_ = NULL,
     fit_ = NULL
-    
   )
 )
 
