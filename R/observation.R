@@ -20,11 +20,12 @@ Observation <- R6Class(
   classname = "Observation",
   
   public = list(
-    initialize = function(data, dists, par) {
+    initialize = function(data, dists, par, formulas) {
       private$data_ <- data
       private$dists_ <- dists
       private$par_ <- par
       private$tpar_ <- self$n2w(par)
+      private$formulas_ <- formulas
     },
     
     # Accessors
@@ -32,6 +33,7 @@ Observation <- R6Class(
     dists = function() {return(private$dists_)},
     par = function() {return(private$par_)},
     tpar = function() {return(private$tpar_)},
+    formulas = function() {return(private$formulas_)},
     
     # Mutators
     update_par = function(par) {
@@ -42,7 +44,25 @@ Observation <- R6Class(
       private$tpar_ <- wpar
       private$par_ <- self$w2n(wpar, n_state)
     },
-
+    
+    # Create block-diagonal design matrix
+    make_X = function() {
+      # List of design matrices (one for each parameter of each variable)
+      X_list <- unlist(lapply(private$formulas_, function(varforms) {
+        lapply(varforms, function(form) {
+          # Use mgcv to create model matrices for each parameter
+          gam_setup <- gam(formula = update(form, dummy ~ .), 
+                           data = cbind(dummy = 1, private$data_$data()), 
+                           fit = FALSE)
+          return(gam_setup$X)
+        })
+      }), recursive = FALSE)        
+      
+      # Create block diagonal matrix
+      X <- bdiag(X_list)
+      return(X)
+    },
+    
     # Natural to working parameter transformation
     n2w = function(par) {
       wpar <- lapply(1:length(private$dists_), 
@@ -107,6 +127,7 @@ Observation <- R6Class(
     data_ = NULL,
     dists_ = NULL,
     par_ = NULL,
-    tpar_ = NULL
+    tpar_ = NULL,
+    formulas_ = NULL
   )
 )
