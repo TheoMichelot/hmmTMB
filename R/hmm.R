@@ -35,10 +35,13 @@ Hmm <- R6Class(
     
     # Fitting
     fit = function() {
+      X <- self$obs()$make_X(n_states = private$hidden_$nstates())
+      
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
       
-      tmb_dat <- list(data = as.matrix(self$obs()$data()$data()),
+      tmb_dat <- list(data = as.matrix(self$obs()$obs_var()),
+                      X = X,
                       n_states = self$hidden()$nstates(),
                       distcode = distcode)
       

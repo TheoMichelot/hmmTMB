@@ -20,12 +20,27 @@ Observation <- R6Class(
   classname = "Observation",
   
   public = list(
-    initialize = function(data, dists, par, formulas) {
+    initialize = function(data, dists, par = NULL, 
+                          wpar = NULL, formulas = NULL) {
       private$data_ <- data
       private$dists_ <- dists
-      private$par_ <- par
-      private$tpar_ <- self$n2w(par)
-      private$formulas_ <- formulas
+      if(is.null(formulas)) {
+        # Case with no covariates
+        private$par_ <- par 
+        private$tpar_ <- self$n2w(par)
+        private$formulas_ <- lapply(par, function(varpar) {
+          f <- lapply(varpar, function(...) {
+            return(~1) # Set all formulas to ~1
+          })
+          return(f)
+        })
+      } else if(is.null(wpar)) {
+        stop("'wpar' needs to be specified if covariates in observation parameters")
+      } else {
+        # Case with covariates
+        private$tpar_ <- wpar
+        private$formulas_ <- formulas        
+      }
     },
     
     # Accessors
@@ -42,11 +57,21 @@ Observation <- R6Class(
     },
     update_wpar = function(wpar, n_state) {
       private$tpar_ <- wpar
-      private$par_ <- self$w2n(wpar, n_state)
+      if(!all(rapply(private$formulas_, function(f) { f == ~1 }))) {
+        # Only update natural parameters if no covariates
+        private$par_ <- self$w2n(wpar, n_state)
+      }
     },
     
-    # Create block-diagonal design matrix
-    make_X = function() {
+    # Data frame of response variables
+    obs_var = function() {
+      obs_names <- names(private$dists_)
+      obs_var <- private$data_$data()[, obs_names]
+      return(obs_var)
+    },
+
+    # Create block-diagonal design matrix (same for all states for now)
+    make_X = function(n_states) {
       # List of design matrices (one for each parameter of each variable)
       X_list <- unlist(lapply(private$formulas_, function(varforms) {
         lapply(varforms, function(form) {
@@ -59,19 +84,22 @@ Observation <- R6Class(
       }), recursive = FALSE)        
       
       # Create block diagonal matrix
-      X <- bdiag(X_list)
+      X <- bdiag(rep(X_list, each = n_states))
       return(X)
     },
     
     # Natural to working parameter transformation
+    # (No covariates)
     n2w = function(par) {
       wpar <- lapply(1:length(private$dists_), 
                      function(i) dists[[i]]$n2w(par[[i]]))
       names(wpar) <- names(par)
       wpar <- unlist(wpar)
+      return(wpar)
     },
     
     # Working to natural parameter transformation
+    # (No covariates)
     w2n = function(wpar, n_state) {
       # Initialise list of natural parameters
       par <- list()

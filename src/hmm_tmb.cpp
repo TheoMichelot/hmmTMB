@@ -14,6 +14,7 @@ Type objective_function<Type>::operator() ()
 {
   // DATA
   DATA_MATRIX(data); // data stream
+  DATA_SPARSE_MATRIX(X); // design matrix
   DATA_INTEGER(n_states); // number of states
   DATA_IVECTOR(distcode); // codes of observation distributions
   
@@ -21,11 +22,23 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(ltpm);
   PARAMETER_VECTOR(wpar);
   
+  // Number of observed variables
   int n_var = distcode.size();
+  // Number of data rows
+  int n = data.rows();
   
   //======================//
   // Transform parameters //
   //======================//
+  // Observation parameters
+  vector<Type> par_vec = X * wpar;
+  matrix<Type> par_mat(n, par_vec.size()/n);
+  for(int i = 0; i < par_mat.cols(); i++) {
+    // Matrix with one row for each time step and
+    // one column for each parameter
+    par_mat.col(i) = par_vec.segment(i*n, n);
+  }
+  
   // Transition probability matrix
   matrix<Type> tpm(n_states, n_states);
   int cur = 0;
@@ -65,7 +78,6 @@ Type objective_function<Type>::operator() ()
   // Compute observation probabilities //
   //===================================//
   // Initialise matrix of probabilities to 1
-  int n = data.rows();
   matrix<Type> prob(n, n_states);
   for(int i = 0; i < n; i++) {
     for(int s = 0; s < n_states; s++) {
@@ -81,21 +93,22 @@ Type objective_function<Type>::operator() ()
     // Define observation distribution
     Dist <Type> obsdist(distcode(var));
     
-    // Subset and transform observation parameters
-    vector<Type> sub_wpar = wpar.segment(par_count, obsdist.npar() * n_states);
-    par_count = par_count + obsdist.npar() * n_states;
-    matrix<Type> par = obsdist.invlink(sub_wpar, n_states);
-    
-    // Loop over states (columns)
-    for (int s = 0; s < n_states; ++s) {
-      // Vector of parameters for state s
-      vector<Type> subpar = par.row(s);
+    // Loop over observations (rows)
+    for (int i = 0; i < n; ++i) {
+      // Subset and transform observation parameters
+      vector<Type> sub_wpar = par_mat.row(i).segment(par_count, obsdist.npar() * n_states);
+      matrix<Type> par = obsdist.invlink(sub_wpar, n_states);
       
-      // Loop over observations (rows)
-      for (int i = 0; i < n; ++i) {
+      // Loop over states (columns)
+      for (int s = 0; s < n_states; ++s) {
+        // Vector of parameters for state s
+        vector<Type> subpar = par.row(s);
+        
         prob(i, s) = prob(i, s) * obsdist.pdf(data(i, var), subpar, false);
       }
     }
+    
+    par_count = par_count + obsdist.npar() * n_states;
   }
   
   //========================//
