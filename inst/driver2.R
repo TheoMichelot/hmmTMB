@@ -70,14 +70,6 @@ simdat <- simHMM(n = n, shape_par = shape_par, scale_par = scale_par,
                  lambda_par = lambda_par, tpm = tpm, X = as.matrix(X))
 
 # Observation distributions
-dist_pois <- Dist$new(name = "pois", pdf = dpois,
-                      link = list(lambda = log),
-                      invlink = list(lambda = exp))
-
-dist_gamma <- Dist$new(name = "custom", pdf = dgamma,
-                       link = list(shape = log, scale = log),
-                       invlink = list(shape = exp, scale = exp))
-
 dists <- list(step = dist_gamma, count = dist_pois)
 
 # Initial parameters (working scale)

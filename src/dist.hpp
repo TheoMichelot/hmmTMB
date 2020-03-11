@@ -21,10 +21,12 @@ class Dist {
 public:
   // Constructor
   Dist(int distcode) {
-    vector<std::string> distname(3);
+    vector<std::string> distname(6);
     distname(0) = "pois";
     distname(1) = "norm";
-    distname(2) = "custom";
+    distname(2) = "gamma";
+    distname(3) = "beta";
+    distname(5) = "custom";
     name = distname(distcode);
   };
   // Link function
@@ -52,6 +54,10 @@ vector<Type> Dist<Type>::link(vector<Type> par, int n_states) {
     // Standard deviation
     for(int i = n_states; i < 2*n_states; i++)
       wpar(i) = log(par(i));
+  } else if(name == "gamma") { // Gamma distribution
+    wpar = log(par);
+  } else if(name == "beta") { // Beta distribution
+    wpar = log(par);
   } else if(name == "custom") { // User-defined distribution
     wpar = custom_link(par, n_states);
   }
@@ -79,6 +85,22 @@ matrix<Type> Dist<Type>::invlink(vector<Type> wpar, int n_states) {
     // Standard deviation
     for(int i = 0; i < n_states; i++)
       par(i, 1) = exp(wpar(i + n_states));
+  } else if(name == "gamma") { // Gamma distribution
+    // Shape
+    for(int i = 0; i < n_states; i++)
+      par(i, 0) = exp(wpar(i));
+    
+    // Scale
+    for(int i = 0; i < n_states; i++)
+      par(i, 1) = exp(wpar(i + n_states));
+  } else if(name == "beta") { // Beta distribution
+    // Shape 1
+    for(int i = 0; i < n_states; i++)
+      par(i, 0) = exp(wpar(i));
+    
+    // Shape 2
+    for(int i = 0; i < n_states; i++)
+      par(i, 1) = exp(wpar(i + n_states));
   } else if(name == "custom") { // User-defined distribution
     par = custom_invlink(wpar, n_states);
   }
@@ -95,6 +117,10 @@ Type Dist<Type>::pdf(Type x, vector<Type> par, bool logpdf) {
     val = dpois(x, par(0), logpdf);
   } else if(name == "norm") { // Normal distribution
     val = dnorm(x, par(0), par(1), logpdf);
+  } else if(name == "gamma") { // Gamma distribution
+    val = dgamma(x, par(0), par(1), logpdf);
+  } else if(name == "beta") { // Beta distribution
+    val = dbeta(x, par(0), par(1), logpdf);
   } else if(name == "custom") { // User-defined distribution
     val = custom_pdf(x, par, logpdf);
   }
@@ -110,6 +136,10 @@ int Dist<Type>::npar() {
   if(name == "pois") { // Poisson distribution
     n = 1;
   } else if(name == "norm") { // Normal distribution
+    n = 2;
+  } else if(name == "gamma") { // Gamma distribution
+    n = 2;
+  } else if(name == "beta") { // Beta distribution
     n = 2;
   } else if(name == "custom") { // User-defined distribution
     n = custom_npar();

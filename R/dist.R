@@ -26,7 +26,7 @@ Dist <- R6Class(
       private$pdf_ <- pdf
       private$link_ <- link
       private$invlink_ <- invlink
-      distnames <- c("pois", "norm", "custom")
+      distnames <- c("pois", "norm", "gamma", "beta", "custom")
       private$code_ <- which(distnames == name) - 1 # Starts at 0 for C++
     },
     
