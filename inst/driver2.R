@@ -1,19 +1,21 @@
 ## Driver script
 
 library(HmmTmb)
+set.seed(6932)
 
-#' Simulate gamma HMM
+#' Simulate HMM
 #'
 #' @param n number of samples
-#' @param lambda rate of Poisson for each state
-#' @param shape shape of gamma for each state
-#' @param scale scale of gamma for each state
+#' @param shape_par parameters for gamma shape (matrix with
+#' one row for each column of X, and one column for each state)
+#' @param scale_par parameters of gamma scale for each state
+#' @param lambda_par parameters of Poisson rate for each state
 #' @param tpm transition probability matrix
-#' @param n.states number of states
+#' @param X design matrix (covariates)
 #'
 #' @return vector of observed counts
-simHMM <- function(n, lambda, shape, scale, tpm) {
-  n.states <- length(lambda)
+simHMM <- function(n, shape_par, scale_par, lambda_par, tpm, X) {
+  n.states <- ncol(lambda_par)
   
   # Initial distribution (stationary)
   delta <- solve(t(diag(n.states) - tpm  + 1), rep(1, n.states))
@@ -25,25 +27,49 @@ simHMM <- function(n, lambda, shape, scale, tpm) {
   for (t in 2:n) 
     s[t] <- sample(state.space, 1, prob = tpm[s[t - 1], ])
   
-  # Simulate observations
-  data <- data.frame(step = rgamma(n = n, shape = shape[s], scale = scale[s]),
-                     count = rpois(n = n, lambda = lambda[s]))
+  # Get observation parameters  
+  shape <- exp(X %*% shape_par)
+  scale <- exp(X %*% scale_par)
+  lambda <- exp(X %*% lambda_par)
   
-  return(data)
+  # Simulate observations
+  step <- rep(NA, n)
+  count <- rep(NA, n)
+  for(t in 1:n) {
+    step[t] <- rgamma(1, shape = shape[t, s[t]], scale = scale[t, s[t]])
+    count[t] <- rpois(1, lambda = lambda[t, s[t]])
+  }
+  
+  obs <- data.frame(step = step, count = count)
+  return(cbind(obs, X))
 }
 
-n <- 10000
-shape <- c(0.5, 6)
-scale <- c(2, 3)
-lambda <- c(5, 10)
+# Simulation parameters
+n <- 1e3
+shape_par <- matrix(c(log(0.5), log(6),
+                      -0.1, -0.1,
+                      0, 0),
+                    ncol = 2, byrow = TRUE)
+scale_par <- matrix(c(log(2), log(3),
+                      0, 0,
+                      0, 0),
+                    ncol = 2, byrow = TRUE)
+lambda_par <- matrix(c(log(5), log(10),
+                       0.5, 0.3,
+                       0, -0.5),
+                     ncol = 2, byrow = TRUE)
 tpm <- matrix(c(0.9, 0.3, 0.1, 0.7), nc = 2)
-n.states <- 2
 
-simdat <- simHMM(n = n, lambda = lambda, shape = shape, scale = scale, 
-                 tpm = tpm)
+# Simulate covariates
+X <- data.frame(Intercept = 1,
+                x1 = rnorm(n),
+                x2 = rnorm(n))
 
-plot.ts(simdat)
+# Simulate HMM data
+simdat <- simHMM(n = n, shape_par = shape_par, scale_par = scale_par, 
+                 lambda_par = lambda_par, tpm = tpm, X = as.matrix(X))
 
+# Observation distributions
 dist_pois <- Dist$new(name = "pois", pdf = dpois,
                       link = list(lambda = log),
                       invlink = list(lambda = exp))
@@ -52,18 +78,28 @@ dist_gamma <- Dist$new(name = "custom", pdf = dgamma,
                        link = list(shape = log, scale = log),
                        invlink = list(shape = exp, scale = exp))
 
-# create objects
-dat <- HmmData$new(simdat)
 dists <- list(step = dist_gamma, count = dist_pois)
-par <- list(step = list(shape = c(1, 3), scale = c(1, 2)),
-            count = list(lambda = c(3, 6)))
-obs <- Observation$new(dat, dists = dists, par = par)
+
+# Initial parameters (working scale)
+wpar <- rep(0, 12)
+
+# Formulas on observation parameters
+formulas <- list(step = list(shape = ~ x1, scale = ~ 1),
+                 count = list(lambda = ~ x1 + x2))
+
+# Create objects
+dat <- HmmData$new(simdat)
+obs <- Observation$new(dat, dists = dists, wpar = wpar, 
+                       formulas = formulas)
 hid <- MarkovChain$new(matrix(c(".", "~1", "~1", "."), nr = 2),
                        matrix(c(0.8, 0.2, 0.2, 0.8), nr = 2))
 mod <- Hmm$new(obs, hid)
 
-#fit model
+# Fit model
 mod$fit()
 
-# get parameter estimates
-mod$est()
+# Unpack parameters
+wpar <- obs$tpar()
+shape_est <- matrix(wpar[1:4], ncol = 2)
+scale_est <- matrix(wpar[5:6], ncol = 2)
+lambda_est <- matrix(wpar[7:12], ncol = 2)
