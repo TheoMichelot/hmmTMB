@@ -6,7 +6,7 @@ Author: Richard Glennie, Théo Michelot
 Maintainer: Richard Glennie <rg374@st-andrews.ac.uk>
 Description: Fitting hidden Markov models with template model builder allows for models to be fit using automatic differentiation and Laplace approximation: faster inference and more flexible random effect / smoothing spline structures. 
 License: MIT + License
-Depends: R6, mgcv, TMB, RcppEigen
+Depends: R6, mgcv, TMB, RcppEigen, Matrix
 LinkingTo: TMB, RcppEigen
 Encoding: UTF-8
 LazyData: true
