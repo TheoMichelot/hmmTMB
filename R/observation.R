@@ -6,14 +6,25 @@
 #' \itemize{
 #'   \item data: a HmmData object
 #'   \item dists: named list of distributions for each data stream
-#'   \item par: list of observation parameters
+#'   \item par: list of observation parameters (for covariate-free model)
+#'   \item wpar: vector of observation parameters on working scale (for
+#'   model with covariates)
+#'   \item formulas: list of formulas for observation parameters
 #' }
 #'
 #' Methods include:
 #' \itemize{
-#'  \item plot_dist Plot histogram of observations, overlaid with the pdf
+#'  \item plot_dist: Plot histogram of observations, overlaid with the pdf
 #'  of the specified distribution for that data stream. Helpful to select
 #'  initial parameter values for model fitting.
+#'  \item update_par: Update parameters to par
+#'  \item update_wpar: Update working parameters to wpar
+#'  \item make_X: Create design matrix for observation model
+#'  \item obs_var: Data frame of observed (response) variables
+#'  \item n2w: Transform parameters from natural to working scale
+#'  (for model with no covariates)
+#'  \item w2n: Transform parameters from working to natural scale
+#'  (for model with no covariates)
 #' }
 
 Observation <- R6Class(

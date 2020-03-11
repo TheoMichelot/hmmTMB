@@ -10,7 +10,9 @@
 #'
 #' Methods include:
 #' \itemize{
-#'  \item  NA
+#'  \item fit: fit the model
+#'  \item res: fitted model object, after optimisation
+#'  \item est: parameter estimates
 #' }
 
 Hmm <- R6Class(
