@@ -56,7 +56,9 @@ MarkovChain <- R6Class(
     nstates_ = NULL,
     
     check_structure = function() {
-      if (!all(diag(private$structure_) == ".")) stop("Diagonal of structure should be '.'")
+      if (!all(diag(self$structure()) == ".")) {
+        stop("Diagonal of structure should be '.'")
+      }
       return(TRUE)
     },
     

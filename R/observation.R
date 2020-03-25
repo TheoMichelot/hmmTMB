@@ -76,19 +76,19 @@ Observation <- R6Class(
     
     # Data frame of response variables
     obs_var = function() {
-      obs_names <- names(private$dists_)
-      obs_var <- private$data_$data()[, obs_names]
+      obs_names <- names(self$dists())
+      obs_var <- self$data()$data()[, obs_names]
       return(obs_var)
     },
 
     # Create block-diagonal design matrix (same for all states for now)
     make_X = function(n_states) {
       # List of design matrices (one for each parameter of each variable)
-      X_list <- unlist(lapply(private$formulas_, function(varforms) {
+      X_list <- unlist(lapply(self$formulas(), function(varforms) {
         lapply(varforms, function(form) {
           # Use mgcv to create model matrices for each parameter
           gam_setup <- gam(formula = update(form, dummy ~ .), 
-                           data = cbind(dummy = 1, private$data_$data()), 
+                           data = cbind(dummy = 1, self$data()$data()), 
                            fit = FALSE)
           return(gam_setup$X)
         })
@@ -102,7 +102,7 @@ Observation <- R6Class(
     # Natural to working parameter transformation
     # (No covariates)
     n2w = function(par) {
-      wpar <- lapply(1:length(private$dists_), 
+      wpar <- lapply(1:length(self$dists()), 
                      function(i) dists[[i]]$n2w(par[[i]]))
       names(wpar) <- names(par)
       wpar <- unlist(wpar)
@@ -116,7 +116,7 @@ Observation <- R6Class(
       par <- list()
       
       # Number of observed variables
-      nvar <- length(private$dists_)
+      nvar <- length(self$dists())
       
       # Counter to subset observation parameters
       par_count <- 1
@@ -124,21 +124,21 @@ Observation <- R6Class(
       # Loop over observed variables
       for(var in 1:nvar) {
         # Number of parameters for this distribution
-        npar <- length(private$dists_[[var]]$link())
+        npar <- length(self$dists()[[var]]$link())
         # Subset and transform working parameters
         sub_wpar <- wpar[par_count:(par_count + npar*n_state - 1)]
         par_count <- par_count + npar*n_state
-        par[[var]] <- private$dists_[[var]]$w2n(sub_wpar)
+        par[[var]] <- self$dists()[[var]]$w2n(sub_wpar)
       }
       
-      names(par) <- names(private$dists_)
+      names(par) <- names(self$dists())
       return(par)
     },
     
     # Histogram of observations with overlaid pdf
     plot_dist = function(name, par = NULL) {
       # Extract observed values for relevant variable
-      obs <- private$data_$data()[[name]]
+      obs <- self$data()$data()[[name]]
       
       # Histogram of observations
       hist(obs, col = "lightgrey", border = "white", prob = TRUE, 
@@ -153,12 +153,12 @@ Observation <- R6Class(
           args[[i+1]] <- par[[i]]        
       } else {
         # else, use default parameter values
-        for(i in 1:length(private$par_))
-          args[[i+1]] <- private$par_[[name]][[i]]
+        for(i in 1:length(self$par()))
+          args[[i+1]] <- self$par()[[name]][[i]]
       }
       
       # Add pdf to histogram plot
-      points(grid, do.call(private$dists_[[name]]$pdf(), args), type = "l")
+      points(grid, do.call(self$dists()[[name]]$pdf(), args), type = "l")
     }
   ),
   

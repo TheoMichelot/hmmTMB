@@ -40,7 +40,7 @@ Dist <- R6Class(
     # Transform parameters from natural to working scale
     n2w = function(par) {
       # Apply link functions to natural parameters
-      wpar_list <- Map(function(fn, arg) {fn(arg)}, private$link_, par)
+      wpar_list <- Map(function(fn, arg) {fn(arg)}, self$link(), par)
       wpar <- unlist(wpar_list)
       return(wpar)
     },
@@ -50,7 +50,7 @@ Dist <- R6Class(
       par <- list()
       
       # Number of parameters for this distribution
-      n_par <- length(private$link_)
+      n_par <- length(self$link())
       # Number of states
       n_state <- length(wpar)/n_par
       
@@ -59,11 +59,11 @@ Dist <- R6Class(
         i0 <- (i-1)*n_state + 1
         i1 <- i*n_state
         sub_wpar <- wpar[i0:i1]
-        par[[i]] <- private$invlink_[[i]](sub_wpar)
+        par[[i]] <- self$invlink()[[i]](sub_wpar)
         names(par[[i]]) <- NULL
       }
       
-      names(par) <- names(private$link_)
+      names(par) <- names(self$link())
       return(par)
     }
   ),
