@@ -31,8 +31,8 @@ Observation <- R6Class(
   classname = "Observation",
   
   public = list(
-    initialize = function(data, dists, par = NULL, 
-                          wpar = NULL, formulas = NULL) {
+    initialize = function(data, dists, par = NULL, wpar = NULL, 
+                          wpar_re = NULL, formulas = NULL) {
       private$data_ <- data
       private$dists_ <- dists
       if(is.null(formulas)) {
@@ -50,6 +50,7 @@ Observation <- R6Class(
       } else {
         # Case with covariates
         private$tpar_ <- wpar
+        private$tpar_re_ <- wpar_re
         private$formulas_ <- formulas        
       }
     },
@@ -59,6 +60,7 @@ Observation <- R6Class(
     dists = function() {return(private$dists_)},
     par = function() {return(private$par_)},
     tpar = function() {return(private$tpar_)},
+    tpar_re = function() {return(private$tpar_re_)},
     formulas = function() {return(private$formulas_)},
     
     # Mutators
@@ -187,6 +189,7 @@ Observation <- R6Class(
     dists_ = NULL,
     par_ = NULL,
     tpar_ = NULL,
+    tpar_re_ = NULL,
     formulas_ = NULL
   )
 )

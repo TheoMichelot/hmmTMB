@@ -1,4 +1,4 @@
-## Driver script
+## Driver script (with covariates)
 
 library(HmmTmb)
 set.seed(6932)

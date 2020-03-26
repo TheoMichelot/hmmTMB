@@ -14,13 +14,17 @@ Type objective_function<Type>::operator() ()
 {
   // DATA
   DATA_MATRIX(data); // data stream
-  DATA_SPARSE_MATRIX(X); // design matrix
+  DATA_SPARSE_MATRIX(X_fe); // design matrix for fixed effects
+  DATA_SPARSE_MATRIX(X_re); // design matrix for random effects
+  DATA_SPARSE_MATRIX(S); // Penalty matrix
   DATA_INTEGER(n_states); // number of states
   DATA_IVECTOR(distcode); // codes of observation distributions
   
   // PARAMETERS
-  PARAMETER_VECTOR(ltpm);
-  PARAMETER_VECTOR(wpar);
+  PARAMETER_VECTOR(ltpm); // transition probabilities
+  PARAMETER_VECTOR(wpar_fe); // observation parameters (fixed effects)
+  PARAMETER_VECTOR(wpar_re); // observation parameters (random effects)
+  PARAMETER(log_lambda);
   
   // Number of observed variables
   int n_var = distcode.size();
@@ -31,7 +35,7 @@ Type objective_function<Type>::operator() ()
   // Transform parameters //
   //======================//
   // Observation parameters
-  vector<Type> par_vec = X * wpar;
+  vector<Type> par_vec = X_fe * wpar_fe + X_re * wpar_re;
   matrix<Type> par_mat(n, par_vec.size()/n);
   for(int i = 0; i < par_mat.cols(); i++) {
     // Matrix with one row for each time step and
@@ -124,7 +128,14 @@ Type objective_function<Type>::operator() ()
     llk = llk + log(sumphi);
     phi = phi / sumphi;
   }
-  Type nll = -llk;
   
-  return nll;
+  //===================//
+  // Smoothing penalty //
+  //===================//
+  Type nllk = -llk;
+  nllk = nllk -
+    Type(0.5) * S.cols() * log_lambda +
+    Type(0.5) * exp(log_lambda) * density::GMRF(S).Quadform(wpar_re);
+  
+  return nllk;
 }

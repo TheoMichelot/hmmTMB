@@ -37,21 +37,40 @@ Hmm <- R6Class(
     
     # Fitting
     fit = function() {
-      mod_mat <- self$obs()$make_mat(n_states = self$hidden()$nstates())
-      X <- mod_mat$X_fe
-      
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
       
+      mod_mat <- self$obs()$make_mat(n_states = self$hidden()$nstates())
+      X_fe <- mod_mat$X_fe
+      X_re <- mod_mat$X_re
+      S <- mod_mat$S
+
+      tmb_par <- list(ltpm = self$hidden()$par(),
+                      wpar_fe = self$obs()$tpar(),
+                      log_lambda = 0)
+
+      map <- NULL
+      random <- NULL
+      if(is.null(S)) {
+        map <- c(map, list(wpar_re = factor(NA),
+                           log_lambda = factor(NA)))
+        tmb_par$wpar_re <- 0
+        S <- as(matrix(0, 1, 1), "sparseMatrix")
+      } else {
+        random <- c(random, "wpar_re")
+        tmb_par$wpar_re <- rep(0, ncol(S))
+      }
+      
       tmb_dat <- list(data = as.matrix(self$obs()$obs_var()),
-                      X = X,
+                      X_fe = X_fe,
+                      X_re = X_re,
+                      S = S,
                       n_states = self$hidden()$nstates(),
                       distcode = distcode)
-      
-      tmb_par <- list(ltpm = self$hidden()$par(),
-                      wpar = self$obs()$tpar())
-      
-      obj <- MakeADFun(tmb_dat, tmb_par, dll = "HmmTmb")
+
+      obj <- MakeADFun(tmb_dat, tmb_par, dll = "HmmTmb", 
+                       random = random,
+                       map = map)
       
       private$fit_ <- do.call(optim, obj)
       
@@ -60,7 +79,7 @@ Hmm <- R6Class(
       n_state <- self$hidden()$nstates()
       
       # Observation parameters
-      ind_wpar <- which(names(est_par) == "wpar")
+      ind_wpar <- which(names(est_par) == "wpar_fe")
       wpar <- est_par[ind_wpar]
       self$obs()$update_wpar(wpar = wpar, n_state = n_state)
       
