@@ -81,22 +81,42 @@ Observation <- R6Class(
       return(obs_var)
     },
 
-    # Create block-diagonal design matrix (same for all states for now)
-    make_X = function(n_states) {
-      # List of design matrices (one for each parameter of each variable)
-      X_list <- unlist(lapply(self$formulas(), function(varforms) {
-        lapply(varforms, function(form) {
-          # Use mgcv to create model matrices for each parameter
+    # Create model matrices (same for all states for now)
+    make_mat = function(n_states) {
+      # Initialise lists of matrices
+      X_list_fe <- list()
+      X_list_re <- list()
+      S_list <- list()
+      k <- 1
+      
+      # Loop over variables
+      for(varforms in self$formulas()) {
+        # Loop over parameters
+        for(form in varforms) {
+          # Create matrices based on formula for this parameter
           gam_setup <- gam(formula = update(form, dummy ~ .), 
                            data = cbind(dummy = 1, self$data()$data()), 
                            fit = FALSE)
-          return(gam_setup$X)
-        })
-      }), recursive = FALSE)        
+          
+          # Fixed effects design matrix
+          X_list_fe[[k]] <- gam_setup$X[, 1:gam_setup$nsdf]
+          
+          # Random effects design matrix
+          X_list_re[[k]] <- gam_setup$X[, -(1:gam_setup$nsdf)]
+          
+          # Smoothing matrix
+          S_list[[k]] <- bdiag_check(gam_setup$S)
+          
+          k <- k + 1
+        }
+      }
       
-      # Create block diagonal matrix
-      X <- bdiag(rep(X_list, each = n_states))
-      return(X)
+      # Store as block diagonal matrices
+      X_fe <- bdiag_check(rep(X_list_fe, each = n_states))
+      X_re <- bdiag_check(rep(X_list_re, each = n_states))
+      S <- bdiag_check(rep(S_list, each = n_states))
+      
+      return(list(X_fe = X_fe, X_re = X_re, S = S))
     },
     
     # Natural to working parameter transformation
