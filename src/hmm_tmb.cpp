@@ -13,6 +13,7 @@ template<class Type>
 Type objective_function<Type>::operator() ()
 {
   // DATA
+  DATA_VECTOR(ID); // vector of time series IDs
   DATA_MATRIX(data); // data stream
   DATA_SPARSE_MATRIX(X_fe); // design matrix for fixed effects
   DATA_SPARSE_MATRIX(X_re); // design matrix for random effects
@@ -122,6 +123,9 @@ Type objective_function<Type>::operator() ()
   matrix<Type> phi(delta);
   Type sumphi = 0;
   for (int i = 0; i < n; ++i) {
+    if(i == 0 || ID(i-1) != ID(i)) {
+      phi = delta;
+    }
     phi = (phi.array() * prob.row(i).array()).matrix();
     phi = phi * tpm;
     sumphi = phi.sum();

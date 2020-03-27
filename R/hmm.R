@@ -61,7 +61,8 @@ Hmm <- R6Class(
         tmb_par$wpar_re <- rep(0, ncol(S))
       }
       
-      tmb_dat <- list(data = as.matrix(self$obs()$obs_var()),
+      tmb_dat <- list(ID = self$obs()$data()$ID(),
+                      data = as.matrix(self$obs()$obs_var()),
                       X_fe = X_fe,
                       X_re = X_re,
                       S = S,
