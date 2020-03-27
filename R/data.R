@@ -50,7 +50,17 @@ HmmData <- R6Class(
       }
     },
     
-    data = function() {return(private$data_)}
+    # Accessors
+    data = function() {return(private$data_)},
+    
+    # Return vector of time series IDs (vector of 1s if not provided)
+    ID = function() {
+      if(is.null(self$data()$ID)) {
+        return(factor(rep(1, nrow(self$data()))))
+      } else {
+        return(self$data()$ID)
+      }
+    }
   ),
   
   private = list(
