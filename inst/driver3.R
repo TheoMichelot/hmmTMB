@@ -20,10 +20,13 @@ simHMM <- function(nind, n, shape_par, scale_par, lambda_par, lambda_re, tpm, X)
   # Initial distribution (stationary)
   delta <- solve(t(diag(n.states) - tpm  + 1), rep(1, n.states))
   
+  # Random intercepts
   lambda_ind <- rnorm(nind, 0, lambda_re)
   
+  # Initialise data frame
   obs <- NULL
   
+  # Loop over individuals
   for(zoo in 1:nind) {
     # Simulate state process
     s <- numeric(n)
@@ -77,7 +80,7 @@ X <- data.frame(Intercept = 1,
                 x2 = rnorm(n))
 
 # Simulate HMM data
-simdat <- simHMM(nID = nind, n = n, shape_par = shape_par, scale_par = scale_par, 
+simdat <- simHMM(nind = nind, n = n, shape_par = shape_par, scale_par = scale_par, 
                  lambda_par = lambda_par, lambda_re = lambda_re, 
                  tpm = tpm, X = as.matrix(X))
 
