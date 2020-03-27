@@ -70,7 +70,7 @@ Observation <- R6Class(
     },
     update_wpar = function(wpar, n_state) {
       private$tpar_ <- wpar
-      if(!all(rapply(private$formulas_, function(f) { f == ~1 }))) {
+      if(all(rapply(private$formulas_, function(f) { f == ~1 }))) {
         # Only update natural parameters if no covariates
         private$par_ <- self$w2n(wpar, n_state)
       }
