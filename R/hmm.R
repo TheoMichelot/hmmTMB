@@ -44,9 +44,11 @@ Hmm <- R6Class(
       X_fe <- mod_mat$X_fe
       X_re <- mod_mat$X_re
       S <- mod_mat$S
+      ncol_re <- mod_mat$ncol_re
 
       tmb_par <- list(ltpm = self$hidden()$par(),
                       wpar_fe = self$obs()$tpar(),
+                      wpar_re = 0,
                       log_lambda = 0)
 
       map <- NULL
@@ -54,11 +56,12 @@ Hmm <- R6Class(
       if(is.null(S)) {
         map <- c(map, list(wpar_re = factor(NA),
                            log_lambda = factor(NA)))
-        tmb_par$wpar_re <- 0
         S <- as(matrix(0, 1, 1), "sparseMatrix")
+        ncol_re <- 0
       } else {
         random <- c(random, "wpar_re")
         tmb_par$wpar_re <- rep(0, ncol(S))
+        tmb_par$log_lambda <- rep(0, length(ncol_re))
       }
       
       tmb_dat <- list(ID = self$obs()$data()$ID(),
@@ -66,6 +69,7 @@ Hmm <- R6Class(
                       X_fe = X_fe,
                       X_re = X_re,
                       S = S,
+                      ncol_re = ncol_re,
                       n_states = self$hidden()$nstates(),
                       distcode = distcode)
 

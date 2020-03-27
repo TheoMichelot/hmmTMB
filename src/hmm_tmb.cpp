@@ -18,6 +18,7 @@ Type objective_function<Type>::operator() ()
   DATA_SPARSE_MATRIX(X_fe); // design matrix for fixed effects
   DATA_SPARSE_MATRIX(X_re); // design matrix for random effects
   DATA_SPARSE_MATRIX(S); // Penalty matrix
+  DATA_IVECTOR(ncol_re); // number of columns of S and X_re for each random effect
   DATA_INTEGER(n_states); // number of states
   DATA_IVECTOR(distcode); // codes of observation distributions
   
@@ -25,7 +26,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(ltpm); // transition probabilities
   PARAMETER_VECTOR(wpar_fe); // observation parameters (fixed effects)
   PARAMETER_VECTOR(wpar_re); // observation parameters (random effects)
-  PARAMETER(log_lambda);
+  PARAMETER_VECTOR(log_lambda); // smoothness parameters
   
   // Number of observed variables
   int n_var = distcode.size();
@@ -137,9 +138,18 @@ Type objective_function<Type>::operator() ()
   // Smoothing penalty //
   //===================//
   Type nllk = -llk;
-  nllk = nllk -
-    Type(0.5) * S.cols() * log_lambda +
-    Type(0.5) * exp(log_lambda) * density::GMRF(S).Quadform(wpar_re);
+  int S_start = 0;
+  if(ncol_re(0) > 0) {
+    for(int i = 0; i < ncol_re.size(); i++) {
+      int Sn = ncol_re(i);
+      Eigen::SparseMatrix<Type> this_S = S.block(S_start, S_start, Sn, Sn);
+      vector<Type> this_wpar_re = wpar_re.segment(S_start, Sn);
+      nllk = nllk -
+        Type(0.5) * Sn * log_lambda(i) +
+        Type(0.5) * exp(log_lambda(i)) * density::GMRF(this_S).Quadform(this_wpar_re);    
+      S_start = S_start + Sn;
+    }
+  }
   
   return nllk;
 }

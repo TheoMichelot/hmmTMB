@@ -118,7 +118,11 @@ Observation <- R6Class(
       X_re <- bdiag_check(rep(X_list_re, each = n_states))
       S <- bdiag_check(rep(S_list, each = n_states))
       
-      return(list(X_fe = X_fe, X_re = X_re, S = S))
+      # Number of columns for each random effect
+      ncol_re <- sapply(rep(X_list_re, each = n_states), ncol)
+      ncol_re <- ncol_re[which(ncol_re > 0)]
+      
+      return(list(X_fe = X_fe, X_re = X_re, S = S, ncol_re = ncol_re))
     },
     
     # Natural to working parameter transformation
