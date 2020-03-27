@@ -89,6 +89,7 @@ Observation <- R6Class(
       X_list_fe <- list()
       X_list_re <- list()
       S_list <- list()
+      ncol_re <- NULL
       k <- 1
       
       # Loop over variables
@@ -109,6 +110,10 @@ Observation <- R6Class(
           # Smoothing matrix
           S_list[[k]] <- bdiag_check(gam_setup$S)
           
+          # Number of columns for each random effect (rep to duplicate for each state)
+          if(length(gam_setup$S) > 0)
+            ncol_re <- c(ncol_re, rep(sapply(gam_setup$S, ncol), n_states))
+          
           k <- k + 1
         }
       }
@@ -117,10 +122,6 @@ Observation <- R6Class(
       X_fe <- bdiag_check(rep(X_list_fe, each = n_states))
       X_re <- bdiag_check(rep(X_list_re, each = n_states))
       S <- bdiag_check(rep(S_list, each = n_states))
-      
-      # Number of columns for each random effect
-      ncol_re <- sapply(rep(X_list_re, each = n_states), ncol)
-      ncol_re <- ncol_re[which(ncol_re > 0)]
       
       return(list(X_fe = X_fe, X_re = X_re, S = S, ncol_re = ncol_re))
     },
