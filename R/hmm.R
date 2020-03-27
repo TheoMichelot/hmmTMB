@@ -40,12 +40,15 @@ Hmm <- R6Class(
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
       
+      # Create observation model matrices
+      # (Design matrices for fixed and random effects, and smoothing matrix)
       mod_mat <- self$obs()$make_mat(n_states = self$hidden()$nstates())
       X_fe <- mod_mat$X_fe
       X_re <- mod_mat$X_re
       S <- mod_mat$S
       ncol_re <- mod_mat$ncol_re
 
+      # Setup TMB parameters
       tmb_par <- list(ltpm = self$hidden()$par(),
                       wpar_fe = self$obs()$tpar(),
                       wpar_re = 0,
@@ -54,16 +57,21 @@ Hmm <- R6Class(
       map <- NULL
       random <- NULL
       if(is.null(S)) {
+        # If there are no random effects, 
+        # wpar_re and log_lambda are not estimated
         map <- c(map, list(wpar_re = factor(NA),
                            log_lambda = factor(NA)))
         S <- as(matrix(0, 1, 1), "sparseMatrix")
         ncol_re <- 0
       } else {
+        # If there are random effects, 
+        # set initial values for wpar_re and log_lambda
         random <- c(random, "wpar_re")
         tmb_par$wpar_re <- rep(0, ncol(S))
         tmb_par$log_lambda <- rep(0, length(ncol_re))
       }
       
+      # Data for TMB
       tmb_dat <- list(ID = self$obs()$data()$ID(),
                       data = as.matrix(self$obs()$obs_var()),
                       X_fe = X_fe,
@@ -73,10 +81,12 @@ Hmm <- R6Class(
                       n_states = self$hidden()$nstates(),
                       distcode = distcode)
 
+      # Create TMB model
       obj <- MakeADFun(tmb_dat, tmb_par, dll = "HmmTmb", 
                        random = random,
                        map = map)
       
+      # Fit model
       private$fit_ <- do.call(optim, obj)
       
       # Update model parameters

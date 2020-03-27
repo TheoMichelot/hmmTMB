@@ -120,10 +120,14 @@ Type objective_function<Type>::operator() ()
   //========================//
   // Compute log-likelihood //
   //========================//
+  // Initialise log-likelihood
   Type llk = 0;
   matrix<Type> phi(delta);
   Type sumphi = 0;
+  
+  // Forward algorithm
   for (int i = 0; i < n; ++i) {
+    // Re-initialise phi at first observation of each time series
     if(i == 0 || ID(i-1) != ID(i)) {
       phi = delta;
     }
@@ -134,19 +138,34 @@ Type objective_function<Type>::operator() ()
     phi = phi / sumphi;
   }
   
+  // Negative log-likelihood
+  Type nllk = -llk;
+  
   //===================//
   // Smoothing penalty //
   //===================//
-  Type nllk = -llk;
-  int S_start = 0;
+  // Are there smooths?
   if(ncol_re(0) > 0) {
+    // Index in matrix S
+    int S_start = 0;
+    
+    // Loop over smooths
     for(int i = 0; i < ncol_re.size(); i++) {
+      // Size of penalty matrix for this smooth
       int Sn = ncol_re(i);
+      
+      // Penalty matrix for this smooth
       Eigen::SparseMatrix<Type> this_S = S.block(S_start, S_start, Sn, Sn);
+      
+      // Coefficients for this smooth
       vector<Type> this_wpar_re = wpar_re.segment(S_start, Sn);
+      
+      // Add penalty
       nllk = nllk -
         Type(0.5) * Sn * log_lambda(i) +
         Type(0.5) * exp(log_lambda(i)) * density::GMRF(this_S).Quadform(this_wpar_re);    
+      
+      // Increase index
       S_start = S_start + Sn;
     }
   }
