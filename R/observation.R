@@ -101,10 +101,10 @@ Observation <- R6Class(
                            fit = FALSE)
           
           # Fixed effects design matrix
-          X_list_fe[[k]] <- gam_setup$X[, 1:gam_setup$nsdf]
+          X_list_fe[[k]] <- gam_setup$X[, 1:gam_setup$nsdf, drop = FALSE]
           
           # Random effects design matrix
-          X_list_re[[k]] <- gam_setup$X[, -(1:gam_setup$nsdf)]
+          X_list_re[[k]] <- gam_setup$X[, -(1:gam_setup$nsdf), drop = FALSE]
           
           # Smoothing matrix
           S_list[[k]] <- bdiag_check(gam_setup$S)
