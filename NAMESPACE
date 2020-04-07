@@ -1,2 +1,2 @@
-useDynLib(HmmTmb)
+useDynLib(hmm_tmb)
 exportPattern("^[[:alpha:]]+")
