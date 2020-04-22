@@ -54,8 +54,10 @@ make_formulas <- function(input_forms, n_states) {
       # (i.e. covariates that are included in all states)
       which_all_states <- which(! (1:n_terms) %in% unlist(attr(form_terms, "specials")))
       
-      # Loop over states
+      # Initialise list of state-specific formulas
       state_forms <- list()
+      
+      # Loop over states
       for(s in 1:n_states) {
         # Find covariates included in this state
         which_this_state <- attr(form_terms, "specials")[[paste0("state", s)]]
