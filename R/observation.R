@@ -44,6 +44,7 @@ Observation <- R6Class(
             g <- lapply(1:n_states, function(...) {
               return(~1) # Set all formulas to ~1              
             })
+            names(g) <- paste0("state", 1:n_states)
             return(g)
           })
           return(f)

@@ -28,8 +28,6 @@ n.states <- 2
 
 simdat <- SimulatePoHmm(n, lambda, tpm, n.states)
 
-plot(simdat, type = "b", pch = 19)
-
 dist_pois <- Dist$new(name = "pois", pdf = dpois,
                       link = list(lambda = log),
                       invlink = list(lambda = exp))
