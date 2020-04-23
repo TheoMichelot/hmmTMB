@@ -6,6 +6,7 @@
 #' \itemize{
 #'   \item data: a HmmData object
 #'   \item dists: named list of distributions for each data stream
+#'   \item n_states: number of states (needed to construct model formulas)
 #'   \item par: list of observation parameters (for covariate-free model)
 #'   \item wpar: vector of observation parameters on working scale (for
 #'   model with covariates)
@@ -89,53 +90,10 @@ Observation <- R6Class(
 
     # Create model matrices
     make_mat = function() {
-      # Initialise lists of matrices
-      X_list_fe <- list()
-      X_list_re <- list()
-      S_list <- list()
-      ncol_re <- NULL
-      k <- 1
-      
-      # Loop over variables
-      for(var_forms in self$formulas()) {
-        
-        # Loop over parameters
-        for(par_forms in var_forms) {
-          
-          # Loop over states
-          for(form in par_forms) {
-            
-            # Create matrices based on this formula
-            gam_setup <- gam(formula = update(form, dummy ~ .), 
-                             data = cbind(dummy = 1, self$data()$data()), 
-                             fit = FALSE)
-            
-            # Fixed effects design matrix
-            X_list_fe[[k]] <- gam_setup$X[, 1:gam_setup$nsdf, drop = FALSE]
-            
-            # Random effects design matrix
-            X_list_re[[k]] <- gam_setup$X[, -(1:gam_setup$nsdf), drop = FALSE]
-            
-            # Smoothing matrix
-            S_list[[k]] <- bdiag_check(gam_setup$S)
-            
-            # Number of columns for each random effect
-            if(length(gam_setup$S) > 0)
-              ncol_re <- c(ncol_re, sapply(gam_setup$S, ncol))
-            
-            k <- k + 1
-          }
-        }
-      }
-      
-      # Store as block diagonal matrices
-      X_fe <- bdiag_check(X_list_fe)
-      X_re <- bdiag_check(X_list_re)
-      S <- bdiag_check(S_list)
-      
-      return(list(X_fe = X_fe, X_re = X_re, S = S, ncol_re = ncol_re))
+      make_mat(formulas = self$formulas(),
+               data = self$data()$data())
     },
-    
+
     # Natural to working parameter transformation
     # (No covariates)
     n2w = function(par) {
