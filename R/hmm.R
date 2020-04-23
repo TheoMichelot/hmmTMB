@@ -42,7 +42,7 @@ Hmm <- R6Class(
       
       # Create observation model matrices
       # (Design matrices for fixed and random effects, and smoothing matrix)
-      mod_mat <- self$obs()$make_mat(n_states = self$hidden()$nstates())
+      mod_mat <- self$obs()$make_mat()
       X_fe <- mod_mat$X_fe
       X_re <- mod_mat$X_re
       S <- mod_mat$S

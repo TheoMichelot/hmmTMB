@@ -31,7 +31,7 @@ Observation <- R6Class(
   classname = "Observation",
   
   public = list(
-    initialize = function(data, dists, par = NULL, wpar = NULL, 
+    initialize = function(data, dists, n_states, par = NULL, wpar = NULL, 
                           wpar_re = NULL, formulas = NULL) {
       private$data_ <- data
       private$dists_ <- dists
@@ -41,7 +41,10 @@ Observation <- R6Class(
         private$tpar_ <- self$n2w(par)
         private$formulas_ <- lapply(par, function(varpar) {
           f <- lapply(varpar, function(...) {
-            return(~1) # Set all formulas to ~1
+            g <- lapply(1:n_states, function(...) {
+              return(~1) # Set all formulas to ~1              
+            })
+            return(g)
           })
           return(f)
         })
@@ -51,7 +54,7 @@ Observation <- R6Class(
         # Case with covariates
         private$tpar_ <- wpar
         private$tpar_re_ <- wpar_re
-        private$formulas_ <- formulas        
+        private$formulas_ <- make_formulas(formulas, n_states = n_states)        
       }
     },
     
@@ -83,8 +86,8 @@ Observation <- R6Class(
       return(obs_var)
     },
 
-    # Create model matrices (same for all states for now)
-    make_mat = function(n_states) {
+    # Create model matrices
+    make_mat = function() {
       # Initialise lists of matrices
       X_list_fe <- list()
       X_list_re <- list()
@@ -93,35 +96,41 @@ Observation <- R6Class(
       k <- 1
       
       # Loop over variables
-      for(varforms in self$formulas()) {
+      for(var_forms in self$formulas()) {
+        
         # Loop over parameters
-        for(form in varforms) {
-          # Create matrices based on formula for this parameter
-          gam_setup <- gam(formula = update(form, dummy ~ .), 
-                           data = cbind(dummy = 1, self$data()$data()), 
-                           fit = FALSE)
+        for(par_forms in var_forms) {
           
-          # Fixed effects design matrix
-          X_list_fe[[k]] <- gam_setup$X[, 1:gam_setup$nsdf, drop = FALSE]
-          
-          # Random effects design matrix
-          X_list_re[[k]] <- gam_setup$X[, -(1:gam_setup$nsdf), drop = FALSE]
-          
-          # Smoothing matrix
-          S_list[[k]] <- bdiag_check(gam_setup$S)
-          
-          # Number of columns for each random effect (rep to duplicate for each state)
-          if(length(gam_setup$S) > 0)
-            ncol_re <- c(ncol_re, rep(sapply(gam_setup$S, ncol), n_states))
-          
-          k <- k + 1
+          # Loop over states
+          for(form in par_forms) {
+            
+            # Create matrices based on this formula
+            gam_setup <- gam(formula = update(form, dummy ~ .), 
+                             data = cbind(dummy = 1, self$data()$data()), 
+                             fit = FALSE)
+            
+            # Fixed effects design matrix
+            X_list_fe[[k]] <- gam_setup$X[, 1:gam_setup$nsdf, drop = FALSE]
+            
+            # Random effects design matrix
+            X_list_re[[k]] <- gam_setup$X[, -(1:gam_setup$nsdf), drop = FALSE]
+            
+            # Smoothing matrix
+            S_list[[k]] <- bdiag_check(gam_setup$S)
+            
+            # Number of columns for each random effect
+            if(length(gam_setup$S) > 0)
+              ncol_re <- c(ncol_re, sapply(gam_setup$S, ncol))
+            
+            k <- k + 1
+          }
         }
       }
       
       # Store as block diagonal matrices
-      X_fe <- bdiag_check(rep(X_list_fe, each = n_states))
-      X_re <- bdiag_check(rep(X_list_re, each = n_states))
-      S <- bdiag_check(rep(S_list, each = n_states))
+      X_fe <- bdiag_check(X_list_fe)
+      X_re <- bdiag_check(X_list_re)
+      S <- bdiag_check(S_list)
       
       return(list(X_fe = X_fe, X_re = X_re, S = S, ncol_re = ncol_re))
     },
