@@ -100,7 +100,7 @@ formulas <- list(step = list(shape = ~ x1 + x2, scale = ~ 1),
 
 # Create objects
 dat <- HmmData$new(simdat)
-obs <- Observation$new(dat, dists = dists, wpar = wpar_fe, 
+obs <- Observation$new(dat, dists = dists, n_states = 2, wpar = wpar_fe, 
                        wpar_re = wpar_re, formulas = formulas)
 hid <- MarkovChain$new(matrix(c(".", "~1", "~1", "."), nr = 2),
                        matrix(c(0.8, 0.2, 0.2, 0.8), nr = 2))

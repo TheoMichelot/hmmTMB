@@ -38,7 +38,7 @@ dist_pois <- Dist$new(name = "pois", pdf = dpois,
 dat <- HmmData$new(data.frame(count = simdat))
 dists <- list(count = dist_pois)
 par <- list(count = list(lambda = c(3, 6)))
-obs <- Observation$new(dat, dists = dists, par = par)
+obs <- Observation$new(dat, dists = dists, n_states = 2, par = par)
 hid <- MarkovChain$new(matrix(c(".", "~1", "~1", "."), nr = 2),
                        matrix(c(0.8, 0.2, 0.2, 0.8), nr = 2))
 mod <- Hmm$new(obs, hid)
