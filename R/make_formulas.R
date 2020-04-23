@@ -37,7 +37,6 @@ make_formulas <- function(input_forms, n_states) {
       
       # Term labels for this formula
       labs <- attr(form_terms, "term.labels")
-      n_terms <- length(labs)
       
       # Extract covariate names (remove special functions, e.g. state1, state2...)
       # The regular expression means the following:
@@ -52,7 +51,7 @@ make_formulas <- function(input_forms, n_states) {
       
       # Find covariates which don't appear in any special function
       # (i.e. covariates that are included in all states)
-      which_all_states <- which(! (1:n_terms) %in% unlist(attr(form_terms, "specials")))
+      which_all_states <- which(!seq_along(labs) %in% unlist(attr(form_terms, "specials")))
       
       # Initialise list of state-specific formulas
       state_forms <- list()
