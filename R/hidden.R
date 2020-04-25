@@ -4,9 +4,9 @@
 #' @description Encapsulates the Markov chain for the hidden component of the HMM.
 #' Object can be created using $new with arguments:
 #' \itemize{
-#'   \item structure: does nothing yet. Will be a matrix with an entry of "." on diagonal, a "0" for
-#'   transitions that are not allowed, and a formula "~1" for covarites affecting transitions that are to
-#'   be estimated.
+#'   \item structure: matrix with an entry of "." on diagonal, a "0" for 
+#'   transitions that are not allowed (not implemented yet), and a formula "~1" 
+#'   for covariates affecting transitions that are to be estimated.
 #'   \item tpm: an initial transition probability matrix.
 #' }
 #'
@@ -45,9 +45,21 @@ MarkovChain <- R6Class(
     update_tpm = function(newtpm) {
       private$tpm_ <- newtpm
       private$par_ <- private$tpm2par(newtpm)
-    }
+    },
     
+    make_mat = function(data) {
+      struct <- self$structure()[!diag(self$nstates())]
+      formulas <- lapply(as.list(struct), function(string) {
+        if(string == ".")
+          return(NULL)
+        else
+          return(as.formula(string))
+      })
+      
+      make_mat_2(formulas = formulas, data = data)
+    }
   ),
+  
   
   private = list(
     structure_ = NULL,
@@ -71,6 +83,7 @@ MarkovChain <- R6Class(
     par2tpm = function(par) {
       tpm <- diag(self$nstates())
       tpm[!diag(self$nstates())] <- exp(par)
+      tpm <- t(tpm) # transpose to fill by rows (like in C++)
       tpm <- tpm / rowSums(tpm)
       return(tpm)
     }

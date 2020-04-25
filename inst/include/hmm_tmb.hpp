@@ -4,7 +4,7 @@
 #ifndef _HMMTMB_
 #define _HMMTMB_
 #include <TMB.hpp>
-#endif 
+#endif
 
 //' Compute Negative log-likelihood for HMM
 //' DATA:
@@ -28,18 +28,27 @@ Type objective_function<Type>::operator() ()
   // DATA
   DATA_VECTOR(ID); // vector of time series IDs
   DATA_MATRIX(data); // data stream
-  DATA_SPARSE_MATRIX(X_fe); // design matrix for fixed effects
-  DATA_SPARSE_MATRIX(X_re); // design matrix for random effects
-  DATA_SPARSE_MATRIX(S); // Penalty matrix
-  DATA_IVECTOR(ncol_re); // number of columns of S and X_re for each random effect
   DATA_INTEGER(n_states); // number of states
   DATA_IVECTOR(distcode); // codes of observation distributions
+  // model matrices for observation process
+  DATA_SPARSE_MATRIX(X_fe_obs); // design matrix for fixed effects
+  DATA_SPARSE_MATRIX(X_re_obs); // design matrix for random effects
+  DATA_SPARSE_MATRIX(S_obs); // penalty matrix
+  DATA_IVECTOR(ncol_re_obs); // number of columns of S and X_re for each random effect
+  // model matrices for hidden state process
+  DATA_SPARSE_MATRIX(X_fe_hid); // design matrix for fixed effects
+  DATA_SPARSE_MATRIX(X_re_hid); // design matrix for random effects
+  DATA_SPARSE_MATRIX(S_hid); // penalty matrix
+  DATA_IVECTOR(ncol_re_hid); // number of columns of S and X_re for each random effect
   
   // PARAMETERS
-  PARAMETER_VECTOR(ltpm); // transition probabilities
-  PARAMETER_VECTOR(wpar_fe); // observation parameters (fixed effects)
-  PARAMETER_VECTOR(wpar_re); // observation parameters (random effects)
-  PARAMETER_VECTOR(log_lambda); // smoothness parameters
+  PARAMETER_VECTOR(wpar_fe_obs); // observation parameters (fixed effects)
+  PARAMETER_VECTOR(wpar_re_obs); // observation parameters (random effects)
+  PARAMETER_VECTOR(log_lambda_obs); // smoothness parameters
+  PARAMETER_VECTOR(wpar_fe_hid); // state process parameters (fixed effects)
+  PARAMETER_VECTOR(wpar_re_hid); // state process parameters (random effects)
+  PARAMETER_VECTOR(log_lambda_hid); // smoothness parameters
+  PARAMETER_VECTOR(log_delta); // initial distribution
   
   // Number of observed variables
   int n_var = distcode.size();
@@ -50,7 +59,7 @@ Type objective_function<Type>::operator() ()
   // Transform parameters //
   //======================//
   // Observation parameters
-  vector<Type> par_vec = X_fe * wpar_fe + X_re * wpar_re;
+  vector<Type> par_vec = X_fe_obs * wpar_fe_obs + X_re_obs * wpar_re_obs;
   matrix<Type> par_mat(n, par_vec.size()/n);
   for(int i = 0; i < par_mat.cols(); i++) {
     // Matrix with one row for each time step and
@@ -58,40 +67,39 @@ Type objective_function<Type>::operator() ()
     par_mat.col(i) = par_vec.segment(i*n, n);
   }
   
-  // Transition probability matrix
-  matrix<Type> tpm(n_states, n_states);
-  int cur = 0;
-  for (int i = 0; i < n_states; ++i) {
-    tpm(i, i) = 1;
-    for (int j = 0; j < n_states; ++j) {
-      if (i != j) {
-        tpm(i, j) = exp(ltpm(cur));
-        ++cur;
+  // Transition probabilities
+  vector<Type> ltpm_vec = X_fe_hid * wpar_fe_hid + X_re_hid * wpar_re_hid;
+  matrix<Type> ltpm_mat(n, ltpm_vec.size()/n);
+  for(int i = 0; i < ltpm_mat.cols(); i++) {
+    // Matrix with one row for each time step and
+    // one column for each transition probability
+    ltpm_mat.col(i) = ltpm_vec.segment(i*n, n);
+  }
+
+  // Create vector of transition probability matrices
+  vector<matrix<Type> > tpm_array(n);
+  for(int i = 0; i < n; i++) {
+    matrix<Type> tpm(n_states, n_states);
+    int cur = 0;
+    for (int j = 0; j < n_states; j++) {
+      tpm(j, j) = 1;
+      for (int k = 0; k < n_states; k++) {
+        if (j != k) {
+          tpm(j, k) = exp(ltpm_mat(i, cur));
+          cur++;
+        }
       }
+      tpm.row(j) = tpm.row(j)/tpm.row(j).sum();
     }
-    tpm.row(i) = tpm.row(i)/tpm.row(i).sum();
+    tpm_array(i) = tpm;
   }
   
-  //=================================//
-  // Compute stationary distribution //
-  //=================================//
+  // Initial distribution
   matrix<Type> delta(1, n_states);
-  matrix<Type> I = matrix<Type>::Identity(n_states, n_states);
-  matrix<Type> tpminv = I;
-  tpminv = tpminv - tpm;
-  tpminv = (tpminv.array() + 1).matrix();
-  matrix<Type> ivec(1, n_states); 
-  for (int i = 0; i < n_states; ++i) 
-    ivec(0, i) = 1;
-  
-  // if tpm is ill-conditioned then just use uniform initial distribution
-  try {
-    tpminv = tpminv.inverse();
-    delta = ivec * tpminv;
-  } catch(...) {
-    for (int i = 0; i < n_states; ++i) 
-      delta(0, i) = 1.0 / n_states;
-  }
+  delta.setOnes();
+  for(int i = 0; i < n_states - 1; i++)
+    delta(0, i) = exp(log_delta(i));
+  delta = delta/delta.sum();
   
   //===================================//  
   // Compute observation probabilities //
@@ -145,7 +153,7 @@ Type objective_function<Type>::operator() ()
       phi = delta;
     }
     phi = (phi.array() * prob.row(i).array()).matrix();
-    phi = phi * tpm;
+    phi = phi * tpm_array(i);
     sumphi = phi.sum();
     llk = llk + log(sumphi);
     phi = phi / sumphi;
@@ -157,27 +165,53 @@ Type objective_function<Type>::operator() ()
   //===================//
   // Smoothing penalty //
   //===================//
-  // Are there smooths?
-  if(ncol_re(0) > 0) {
+  // Are there smooths in the observation model?
+  if(ncol_re_obs(0) > 0) {
     // Index in matrix S
     int S_start = 0;
-    
+
     // Loop over smooths
-    for(int i = 0; i < ncol_re.size(); i++) {
+    for(int i = 0; i < ncol_re_obs.size(); i++) {
       // Size of penalty matrix for this smooth
-      int Sn = ncol_re(i);
-      
+      int Sn = ncol_re_obs(i);
+
       // Penalty matrix for this smooth
-      Eigen::SparseMatrix<Type> this_S = S.block(S_start, S_start, Sn, Sn);
-      
+      Eigen::SparseMatrix<Type> this_S = S_obs.block(S_start, S_start, Sn, Sn);
+
       // Coefficients for this smooth
-      vector<Type> this_wpar_re = wpar_re.segment(S_start, Sn);
-      
+      vector<Type> this_wpar_re = wpar_re_obs.segment(S_start, Sn);
+
       // Add penalty
       nllk = nllk -
-        Type(0.5) * Sn * log_lambda(i) +
-        Type(0.5) * exp(log_lambda(i)) * density::GMRF(this_S).Quadform(this_wpar_re);    
-      
+        Type(0.5) * Sn * log_lambda_obs(i) +
+        Type(0.5) * exp(log_lambda_obs(i)) * density::GMRF(this_S).Quadform(this_wpar_re);
+
+      // Increase index
+      S_start = S_start + Sn;
+    }
+  }
+
+  // Are there smooths in the hidden state model?
+  if(ncol_re_hid(0) > 0) {
+    // Index in matrix S
+    int S_start = 0;
+
+    // Loop over smooths
+    for(int i = 0; i < ncol_re_hid.size(); i++) {
+      // Size of penalty matrix for this smooth
+      int Sn = ncol_re_hid(i);
+
+      // Penalty matrix for this smooth
+      Eigen::SparseMatrix<Type> this_S = S_hid.block(S_start, S_start, Sn, Sn);
+
+      // Coefficients for this smooth
+      vector<Type> this_wpar_re = wpar_re_hid.segment(S_start, Sn);
+
+      // Add penalty
+      nllk = nllk -
+        Type(0.5) * Sn * log_lambda_hid(i) +
+        Type(0.5) * exp(log_lambda_hid(i)) * density::GMRF(this_S).Quadform(this_wpar_re);
+
       // Increase index
       S_start = S_start + Sn;
     }
