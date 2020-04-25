@@ -57,8 +57,8 @@ simHMM <- function(nind, n, shape_par, scale_par, lambda_par, lambda_re, tpm, X)
 }
 
 # Simulation parameters
-nind <- 10
-n <- 100
+nind <- 50
+n <- 200
 shape_par <- matrix(c(log(0.5), log(6),
                       -0.1, -0.1,
                       0, -0.5),
@@ -117,4 +117,4 @@ scale_est <- matrix(wpar[7:8], ncol = 2)
 lambda_est <- matrix(wpar[9:10], ncol = 2)
 
 # Random effect parameter
-1/sqrt(exp(mod$res()$par["log_lambda"]))
+1/sqrt(exp(mod$res()$par["log_lambda_obs"]))

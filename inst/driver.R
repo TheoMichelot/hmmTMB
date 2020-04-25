@@ -44,8 +44,8 @@ mod <- Hmm$new(obs, hid)
 #fit model
 mod$fit()
 
-ltpm <- mod$res()$par[1:2]
-llam <- mod$res()$par[3:4]
+llam <- mod$res()$par[1:2]
+ltpm <- mod$res()$par[3:4]
 
 exp(llam)
 exp(ltpm) / (1 + exp(ltpm))
