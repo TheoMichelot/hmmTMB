@@ -56,7 +56,7 @@ MarkovChain <- R6Class(
           return(as.formula(string))
       })
       
-      make_mat_2(formulas = formulas, data = data)
+      make_mat_hid(formulas = formulas, data = data)
     }
   ),
   

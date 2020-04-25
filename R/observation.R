@@ -87,13 +87,13 @@ Observation <- R6Class(
       obs_var <- self$data()$data()[, obs_names]
       return(obs_var)
     },
-
+    
     # Create model matrices
     make_mat = function() {
-      make_mat(formulas = self$formulas(),
-               data = self$data()$data())
+      make_mat_obs(formulas = self$formulas(),
+                   data = self$data()$data())
     },
-
+    
     # Natural to working parameter transformation
     # (No covariates)
     n2w = function(par) {
