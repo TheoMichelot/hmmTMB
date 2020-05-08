@@ -35,16 +35,23 @@ MarkovChain <- R6Class(
     structure = function() {return(private$structure_)},
     tpm = function() {return(private$tpm_)},
     par = function() {return(private$par_)},
+    par_re = function() {return(private$par_re_)},
     nstates = function() {return(private$nstates_)},
     
     # Mutators
-    update_par = function(newpar) {
-      private$par_ <- newpar
-      private$tpm_ <- private$par2tpm(newpar)
-    },
     update_tpm = function(newtpm) {
       private$tpm_ <- newtpm
       private$par_ <- private$tpm2par(newtpm)
+    },
+    update_par = function(newpar) {
+      private$par_ <- newpar
+      if(all(self$structure() %in% c(".", "~1"))) {
+        # Only update tpm if no covariates
+        private$tpm_ <- private$par2tpm(newpar)        
+      }
+    },
+    update_par_re = function(newpar) {
+      private$par_re_ <- newpar
     },
     
     make_mat = function(data) {
@@ -57,6 +64,14 @@ MarkovChain <- R6Class(
       })
       
       make_mat_hid(formulas = formulas, data = data)
+    },
+    
+    tpm_all = function(X_fe, X_re, n) {
+      ltpm <- X_fe %*% self$par() + X_re %*% self$par_re()
+      ltpm_mat <- matrix(ltpm, nrow = n)
+      tpm <- apply(ltpm_mat, 1, private$par2tpm)
+      tpm <- array(tpm, dim = c(self$nstates(), self$nstates(), n))
+      return(tpm)
     }
   ),
   
@@ -64,6 +79,7 @@ MarkovChain <- R6Class(
   private = list(
     structure_ = NULL,
     par_ = NULL,
+    par_re_ = NULL,
     tpm_ = NULL,
     nstates_ = NULL,
     
