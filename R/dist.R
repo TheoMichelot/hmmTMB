@@ -21,11 +21,12 @@ Dist <- R6Class(
   classname = "Dist",
   
   public = list(
-    initialize = function(name, pdf, link, invlink) {
+    initialize = function(name, pdf, link, invlink, npar) {
       private$name_ <- name
       private$pdf_ <- pdf
       private$link_ <- link
       private$invlink_ <- invlink
+      private$npar_ <- npar
       distnames <- c("pois", "norm", "gamma", "beta", "custom")
       private$code_ <- which(distnames == name) - 1 # Starts at 0 for C++
     },
@@ -35,7 +36,23 @@ Dist <- R6Class(
     pdf = function() {return(private$pdf_)},
     link = function() {return(private$link_)},
     invlink = function() {return(private$invlink_)},
+    npar = function() {return(private$npar_)},
     code = function() {return(private$code_)},
+    
+    pdf_apply = function(x, par, log = FALSE) {
+      args <- list(x = x)
+      args <- c(args, par, log = log)
+      do.call(self$pdf(), args)
+    },
+    
+    invlink_apply = function(wpar, n_states) {
+      par <- lapply(seq_along(self$link()), function(i) {
+        ind <- ((i-1) * n_states + 1) : (i * n_states)
+        self$invlink()[[i]](wpar[ind])
+      })
+      par <- matrix(unlist(par), nrow = n_states)
+      return(par)
+    },
     
     # Transform parameters from natural to working scale
     n2w = function(par) {
@@ -52,12 +69,12 @@ Dist <- R6Class(
       # Number of parameters for this distribution
       n_par <- length(self$link())
       # Number of states
-      n_state <- length(wpar)/n_par
+      n_states <- length(wpar)/n_par
       
       # Loop over parameters and apply inverse link functions
       for(i in 1:n_par) {
-        i0 <- (i-1)*n_state + 1
-        i1 <- i*n_state
+        i0 <- (i-1)*n_states + 1
+        i1 <- i*n_states
         sub_wpar <- wpar[i0:i1]
         par[[i]] <- self$invlink()[[i]](sub_wpar)
         names(par[[i]]) <- NULL
@@ -73,6 +90,7 @@ Dist <- R6Class(
     pdf_ = NULL,
     link_ = NULL,
     invlink_ = NULL,
+    npar_ = NULL,
     code_ = NULL
   )
 )
