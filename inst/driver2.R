@@ -41,11 +41,11 @@ simHMM <- function(n, shape_par, scale_par, lambda_par, tpm, X) {
   }
   
   obs <- data.frame(step = step, count = count)
-  return(cbind(obs, X))
+  return(list(data = cbind(obs, X), state = s))
 }
 
 # Simulation parameters
-n <- 1e3
+n <- 3e3
 shape_par <- matrix(c(log(0.5), log(6),
                       -0.1, -0.1,
                       0, 0),
@@ -54,11 +54,11 @@ scale_par <- matrix(c(log(2), log(3),
                       0, 0,
                       0, 0),
                     ncol = 2, byrow = TRUE)
-lambda_par <- matrix(c(log(5), log(10),
+lambda_par <- matrix(c(log(2), log(20),
                        0.5, 0.3,
                        0, -0.5),
                      ncol = 2, byrow = TRUE)
-tpm <- matrix(c(0.9, 0.3, 0.1, 0.7), nc = 2)
+tpm <- matrix(c(0.95, 0.1, 0.05, 0.9), nc = 2)
 
 # Simulate covariates
 X <- data.frame(Intercept = 1,
@@ -68,6 +68,8 @@ X <- data.frame(Intercept = 1,
 # Simulate HMM data
 simdat <- simHMM(n = n, shape_par = shape_par, scale_par = scale_par, 
                  lambda_par = lambda_par, tpm = tpm, X = as.matrix(X))
+data <- simdat$data
+states <- simdat$state
 
 # Observation distributions
 dists <- list(step = dist_gamma, count = dist_pois)
@@ -80,7 +82,7 @@ formulas <- list(step = list(shape = ~ x1, scale = ~ 1),
                  count = list(lambda = ~ x1 + x2))
 
 # Create objects
-dat <- HmmData$new(simdat)
+dat <- HmmData$new(data)
 obs <- Observation$new(dat, dists = dists, n_states = 2, wpar = wpar, 
                        formulas = formulas)
 hid <- MarkovChain$new(matrix(c(".", "~1", "~1", "."), nr = 2),
@@ -95,3 +97,6 @@ wpar <- obs$tpar()
 shape_est <- matrix(wpar[1:4], ncol = 2)
 scale_est <- matrix(wpar[5:6], ncol = 2)
 lambda_est <- matrix(wpar[7:12], ncol = 2)
+
+s <- mod$viterbi()
+length(which(s == states))/length(s)

@@ -18,22 +18,20 @@ SimulatePoHmm <- function(n, lambda, tpm, n.states) {
   s <- sample(state.space, 1, prob = delta)
   for (t in 2:n) s[t] <- sample(state.space, 1, prob = tpm[s[t - 1], ])
   data <- rpois(n, lambda = lambda[s])
-  return(data)
+  return(list(data = data, state = s))
 }
 
 n <- 10000
-lambda <- c(5, 10)
-tpm <- matrix(c(0.9, 0.3, 0.1, 0.7), nc = 2)
+lambda <- c(2, 20)
+tpm <- matrix(c(0.95, 0.1, 0.05, 0.9), nc = 2)
 n.states <- 2
 
 simdat <- SimulatePoHmm(n, lambda, tpm, n.states)
-
-dist_pois <- Dist$new(name = "pois", pdf = dpois,
-                      link = list(lambda = log),
-                      invlink = list(lambda = exp))
+counts <- simdat$data
+states <- simdat$state
 
 # create objects
-dat <- HmmData$new(data.frame(count = simdat))
+dat <- HmmData$new(data.frame(count = counts))
 dists <- list(count = dist_pois)
 par <- list(count = list(lambda = c(3, 6)))
 obs <- Observation$new(dat, dists = dists, n_states = 2, par = par)
@@ -43,9 +41,6 @@ mod <- Hmm$new(obs, hid)
 
 #fit model
 mod$fit()
+mod$est()
 
-llam <- mod$res()$par[1:2]
-ltpm <- mod$res()$par[3:4]
-
-exp(llam)
-exp(ltpm) / (1 + exp(ltpm))
+s <- mod$viterbi()
