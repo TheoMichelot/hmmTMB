@@ -46,11 +46,13 @@ Dist <- R6Class(
     },
     
     invlink_apply = function(wpar, n_states) {
-      par <- lapply(seq_along(self$link()), function(i) {
+      invlink <- self$invlink()
+      par <- lapply(seq_along(invlink), function(i) {
         ind <- ((i-1) * n_states + 1) : (i * n_states)
-        self$invlink()[[i]](wpar[ind])
+        invlink[[i]](wpar[ind])
       })
       par <- matrix(unlist(par), nrow = n_states)
+      colnames(par) <- names(invlink)
       return(par)
     },
     
