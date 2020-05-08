@@ -130,19 +130,24 @@ Hmm <- R6Class(
       
       # Update model parameters
       est_par <- self$res()$par
-
-      # Observation parameters
-      ind_wpar <- which(names(est_par) == "wpar_fe_obs")
-      wpar <- est_par[ind_wpar]
-      self$obs()$update_wpar(wpar = wpar, n_state = n_states)
       
-      # Transition probabilities
-      ind_ltpm <- which(names(est_par) == "wpar_fe_hid")
-      if(length(ind_ltpm) == n_states * (n_states - 1)) {
-        # Only update if no covariates
-        ltpm <- est_par[ind_ltpm]
-        self$hidden()$update_par(ltpm)        
-      }
+      # Observation parameters (fixed effects)
+      ind_wpar_fe <- which(names(est_par) == "wpar_fe_obs")
+      wpar_fe <- est_par[ind_wpar_fe]
+      self$obs()$update_wpar(wpar = wpar_fe, n_state = n_states)
+      # Observation parameters (random effects)
+      ind_wpar_re <- which(names(est_par) == "wpar_re_obs")
+      wpar_re <- est_par[ind_wpar_re]
+      self$obs()$update_wpar_re(wpar = wpar_re)
+      
+      # Transition probabilities (fixed effects)
+      ind_ltpm_fe <- which(names(est_par) == "wpar_fe_hid")
+      ltpm <- est_par[ind_ltpm_fe]
+      self$hidden()$update_par(ltpm)
+      # Transition probabilities (random effects)
+      ind_ltpm_re <- which(names(est_par) == "wpar_re_hid")
+      ltpm_re <- est_par[ind_ltpm_re]
+      self$hidden()$update_par_re(ltpm_re)
     },
     
     # Parameter estimates
@@ -150,6 +155,73 @@ Hmm <- R6Class(
       par <- self$obs()$par()
       tpm <- self$hidden()$tpm()
       return(list(par = par, tpm = tpm))
+    },
+    
+    # Viterbi algorithm
+    viterbi = function() {
+      data <- self$obs()$data()$data()
+      ID <- self$obs()$data()$ID()
+      
+      # Number of observations
+      n <- nrow(data)
+      # Number of states
+      n_states <- self$hidden()$nstates()
+      # Number of variables
+      n_var <- length(self$obs()$dists())
+      
+      # Observation probabilities
+      mod_mat_obs <-  self$obs()$make_mat()
+      obs_probs <- self$obs()$obs_probs(X_fe = mod_mat_obs$X_fe, 
+                                        X_re = mod_mat_obs$X_re)
+      
+      # Transition probability matrices      
+      mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
+      tpm_all <- self$hidden()$tpm_all(X_fe = mod_mat_hid$X_fe, 
+                                       X_re = mod_mat_hid$X_re,
+                                       n = n)
+      
+      # Number of unique IDs
+      n_id <- length(unique(ID))
+      # First index for each ID
+      i0 <- c(1, which(ID[-1] != ID[-n]) + 1, n + 1)
+      
+      # Initialise state sequence
+      all_states <- NULL
+      
+      # For now, uniform initial distribution
+      delta <- rep(1/n_states, n_states)
+      
+      # Loop over IDs
+      for(id in 1:n_id) {
+        # Subset to this ID
+        ind_this_id <- which(ID == unique(ID)[id])
+        sub_obs_probs <- obs_probs[ind_this_id,]
+        sub_tpm_all <- tpm_all[,,ind_this_id]
+        
+        # Number of observations for this ID
+        n_this_id <- length(ind_this_id)
+        
+        # Forward iterations
+        xi <- matrix(NA, n_this_id, n_states)
+        v <- delta * sub_obs_probs[1,]
+        xi[1,] <- v/sum(v)
+        for(i in 2:n_this_id) {
+          v <- apply(xi[i-1,] * sub_tpm_all[,,i], 2, max) * sub_obs_probs[i,]
+          xi[i,] <- v/sum(v)
+        }
+        
+        # Backward iterations
+        states <- rep(NA, n_this_id)
+        states[n_this_id] <- which.max(xi[n_this_id,])
+        for(i in (n_this_id - 1):1) {
+          states[i] <- which.max(sub_tpm_all[, states[i+1], i+1] * xi[i,])
+        }
+        
+        # Append estimated states for this ID
+        all_states <- c(all_states, states)
+      }
+      
+      return(all_states)
     }
   ),
   
