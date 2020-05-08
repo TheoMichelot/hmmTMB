@@ -7,7 +7,7 @@ dist_pois <- Dist$new(
   name = "pois", 
   pdf = dpois,
   link = list(lambda = log),
-  invlink = list(lambda = log),
+  invlink = list(lambda = exp),
   npar = 1
 )
 
