@@ -36,6 +36,7 @@ Observation <- R6Class(
                           wpar_re = NULL, formulas = NULL) {
       private$data_ <- data
       private$dists_ <- dists
+      private$nstates_ <- n_states
       if(is.null(formulas)) {
         # Case with no covariates
         private$par_ <- par 
@@ -63,6 +64,7 @@ Observation <- R6Class(
     # Accessors
     data = function() {return(private$data_)},
     dists = function() {return(private$dists_)},
+    nstates = function() {return(private$nstates_)},
     par = function() {return(private$par_)},
     tpar = function() {return(private$tpar_)},
     tpar_re = function() {return(private$tpar_re_)},
@@ -80,11 +82,14 @@ Observation <- R6Class(
         private$par_ <- self$w2n(wpar, n_state)
       }
     },
+    update_wpar_re = function(wpar_re) {
+      private$tpar_re_ <- wpar_re
+    },
     
     # Data frame of response variables
     obs_var = function() {
       obs_names <- names(self$dists())
-      obs_var <- self$data()$data()[, obs_names]
+      obs_var <- self$data()$data()[, obs_names, drop = FALSE]
       return(obs_var)
     },
     
@@ -92,6 +97,53 @@ Observation <- R6Class(
     make_mat = function() {
       make_mat_obs(formulas = self$formulas(),
                    data = self$data()$data())
+    },
+    
+    # Compute observation probabilities
+    obs_probs = function(X_fe, X_re) {
+      # Data frame of observations
+      data <- self$obs_var()
+      
+      # Number of observations
+      n <- nrow(data)
+      # Number of states
+      n_states <- self$nstates()
+      # Number of variables
+      n_var <- ncol(data)
+      
+      # Matrix of observation parameters
+      wpar <- X_fe %*% self$tpar() + X_re %*% self$tpar_re()
+      par_mat <- matrix(wpar, nrow = n)
+      
+      # Initialise matrix of probabilities to 1
+      prob <- matrix(1, nrow = n, ncol = n_states)
+      
+      # Counter to subset parameter vector
+      par_count <- 1
+      
+      # Loop over observed variables
+      for(var in 1:n_var) {
+        obsdist <- self$dists()[[var]]
+        
+        # Loop over observations (rows)
+        for (i in 1:n) {
+          # Subset and transform observation parameters
+          sub_wpar <- par_mat[i, par_count:(par_count + obsdist$npar() * n_states - 1)]
+          par <- obsdist$invlink_apply(sub_wpar, n_states)
+          
+          # Loop over states (columns)
+          for (s in 1:n_states) {
+            # Vector of parameters for state s
+            subpar <- par[s,]
+            
+            prob[i, s] <- prob[i, s] * obsdist$pdf_apply(x = data[i, var], par = subpar)
+          }
+        }
+        
+        par_count <- par_count + obsdist$npar() * n_states
+      }
+      
+      return(prob)
     },
     
     # Natural to working parameter transformation
@@ -160,6 +212,7 @@ Observation <- R6Class(
   private = list(
     data_ = NULL,
     dists_ = NULL,
+    nstates_ = NULL,
     par_ = NULL,
     tpar_ = NULL,
     tpar_re_ = NULL,
