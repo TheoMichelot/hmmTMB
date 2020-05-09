@@ -122,16 +122,19 @@ Type objective_function<Type>::operator() ()
 
     // Loop over observations (rows)
     for (int i = 0; i < n; ++i) {
-      // Subset and transform observation parameters
-      vector<Type> sub_wpar = par_mat.row(i).segment(par_count, obsdist->npar() * n_states);
-      matrix<Type> par = obsdist->invlink(sub_wpar, n_states);
-
-      // Loop over states (columns)
-      for (int s = 0; s < n_states; ++s) {
-        // Vector of parameters for state s
-        vector<Type> subpar = par.row(s);
-
-        prob(i, s) = prob(i, s) * obsdist->pdf(data(i, var), subpar, false);
+      // Don't update likelihood if the observation is missing
+      if(!R_IsNA(asDouble(data(i, var)))) {
+        // Subset and transform observation parameters
+        vector<Type> sub_wpar = par_mat.row(i).segment(par_count, obsdist->npar() * n_states);
+        matrix<Type> par = obsdist->invlink(sub_wpar, n_states);
+        
+        // Loop over states (columns)
+        for (int s = 0; s < n_states; ++s) {
+          // Vector of parameters for state s
+          vector<Type> subpar = par.row(s);
+          
+          prob(i, s) = prob(i, s) * obsdist->pdf(data(i, var), subpar, false);
+        }        
       }
     }
 
