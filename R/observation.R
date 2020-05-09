@@ -127,16 +127,19 @@ Observation <- R6Class(
         
         # Loop over observations (rows)
         for (i in 1:n) {
-          # Subset and transform observation parameters
-          sub_wpar <- par_mat[i, par_count:(par_count + obsdist$npar() * n_states - 1)]
-          par <- obsdist$invlink_apply(sub_wpar, n_states)
-          
-          # Loop over states (columns)
-          for (s in 1:n_states) {
-            # Vector of parameters for state s
-            subpar <- par[s,]
+          # Don't update likelihood is observation is missing
+          if(!is.na(data[i, var])) {
+            # Subset and transform observation parameters
+            sub_wpar <- par_mat[i, par_count:(par_count + obsdist$npar() * n_states - 1)]
+            par <- obsdist$invlink_apply(sub_wpar, n_states)
             
-            prob[i, s] <- prob[i, s] * obsdist$pdf_apply(x = data[i, var], par = subpar)
+            # Loop over states (columns)
+            for (s in 1:n_states) {
+              # Vector of parameters for state s
+              subpar <- par[s,]
+              
+              prob[i, s] <- prob[i, s] * obsdist$pdf_apply(x = data[i, var], par = subpar)
+            }            
           }
         }
         
@@ -183,33 +186,56 @@ Observation <- R6Class(
     },
     
     # Histogram of observations with overlaid pdf
-    plot_dist = function(name, par = NULL) {
+    plot_dist = function(name, par = NULL, weights = NULL, ...) {
+      # Colour palette
+      pal <- c(
+        "blue"   = "#00798c",
+        "red"    = "#d1495b",
+        "yellow" = "#edae49",
+        "green"  = "#66a182",
+        "navy"   = "#2e4057", 
+        "grey"   = "#8d96a3"
+      )
+      
       # Extract observed values for relevant variable
       obs <- self$data()$data()[[name]]
       
       # Histogram of observations
       hist(obs, col = "lightgrey", border = "white", prob = TRUE, 
-           main = "", xlab = name)
+           main = "", xlab = name, ...)
       
       # Matrix of parameters
       if(is.null(par)) {
-        par <- self$dists()[[name]]$invlink_apply(wpar = self$tpar(), 
-                                                  n_states = self$nstates())
+        par <- matrix(unlist(self$par()[[name]]), nrow = self$nstates())
+        colnames(par) <- names(self$dists()[[name]]$link())
       }
       
-      # Grid over range of observed variable
-      grid <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length = 1e3)
+      # Weights for each state-dependent distribution
+      if(is.null(weights))
+        weights <- rep(1, self$nstates())
       
+      # Grid over range of observed variable
+      n_grid <- 1e3
+      grid <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length = n_grid)
+
       # Loop over states
+      vals <- matrix(NA, nrow = self$nstates(), ncol = n_grid)
       for(state in 1:self$nstates()) {
         # Define list of arguments to pass to pdf
         args <- list(grid)
         args <- c(args, par[state,])
 
         # Add pdf to histogram plot
-        points(grid, do.call(self$dists()[[name]]$pdf(), args), type = "l")        
+        vals[state,] <- weights[state] * do.call(self$dists()[[name]]$pdf(), args)
+        points(grid, vals[state,], type = "l", col = pal[state], lwd = 2)
       }
 
+      # Plot weighted sum of state-dependent pdfs
+      points(grid, colSums(vals), type = "l", lwd = 2, lty = 2)
+      
+      legend("topright", lwd = 2, lty = c(rep(1, self$nstates()), 2),
+             legend = c(paste("State", 1:self$nstates()), "Total"), 
+             col = c(pal[1:self$nstates()], "black"), bty = "n")
     }
   ),
   
