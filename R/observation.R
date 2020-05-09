@@ -191,21 +191,25 @@ Observation <- R6Class(
       hist(obs, col = "lightgrey", border = "white", prob = TRUE, 
            main = "", xlab = name)
       
-      # Create list of arguments for pdf
-      grid <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length = 1e3)
-      args <- list(grid)
-      if(!is.null(par)) {
-        # if parameter values provided by user
-        for(i in 1:length(par))
-          args[[i+1]] <- par[[i]]        
-      } else {
-        # else, use default parameter values
-        for(i in 1:length(self$par()))
-          args[[i+1]] <- self$par()[[name]][[i]]
+      # Matrix of parameters
+      if(is.null(par)) {
+        par <- self$dists()[[name]]$invlink_apply(wpar = self$tpar(), 
+                                                  n_states = self$nstates())
       }
       
-      # Add pdf to histogram plot
-      points(grid, do.call(self$dists()[[name]]$pdf(), args), type = "l")
+      # Grid over range of observed variable
+      grid <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length = 1e3)
+      
+      # Loop over states
+      for(state in 1:self$nstates()) {
+        # Define list of arguments to pass to pdf
+        args <- list(grid)
+        args <- c(args, par[state,])
+
+        # Add pdf to histogram plot
+        points(grid, do.call(self$dists()[[name]]$pdf(), args), type = "l")        
+      }
+
     }
   ),
   
