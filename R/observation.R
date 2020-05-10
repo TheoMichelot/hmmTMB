@@ -131,7 +131,7 @@ Observation <- R6Class(
           if(!is.na(data[i, var])) {
             # Subset and transform observation parameters
             sub_wpar <- par_mat[i, par_count:(par_count + obsdist$npar() * n_states - 1)]
-            par <- obsdist$invlink_apply(sub_wpar, n_states)
+            par <- obsdist$w2n(sub_wpar, as_matrix = TRUE)
             
             # Loop over states (columns)
             for (s in 1:n_states) {

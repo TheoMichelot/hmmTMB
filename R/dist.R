@@ -39,21 +39,11 @@ Dist <- R6Class(
     npar = function() {return(private$npar_)},
     code = function() {return(private$code_)},
     
+    # Evaluate the pdf of x for a generic parameter vector par
     pdf_apply = function(x, par, log = FALSE) {
       args <- list(x = x)
       args <- c(args, par, log = log)
       do.call(self$pdf(), args)
-    },
-    
-    invlink_apply = function(wpar, n_states) {
-      invlink <- self$invlink()
-      par <- lapply(seq_along(invlink), function(i) {
-        ind <- ((i-1) * n_states + 1) : (i * n_states)
-        invlink[[i]](wpar[ind])
-      })
-      par <- matrix(unlist(par), nrow = n_states)
-      colnames(par) <- names(invlink)
-      return(par)
     },
     
     # Transform parameters from natural to working scale
@@ -65,24 +55,28 @@ Dist <- R6Class(
     },
     
     # Transform parameters from working to natural scale
-    w2n = function(wpar) {
-      par <- list()
-      
+    w2n = function(wpar, as_matrix = FALSE) {
+      invlink <- self$invlink()
       # Number of parameters for this distribution
-      n_par <- length(self$link())
+      n_par <- length(invlink)
       # Number of states
       n_states <- length(wpar)/n_par
       
-      # Loop over parameters and apply inverse link functions
-      for(i in 1:n_par) {
-        i0 <- (i-1)*n_states + 1
-        i1 <- i*n_states
-        sub_wpar <- wpar[i0:i1]
-        par[[i]] <- self$invlink()[[i]](sub_wpar)
-        names(par[[i]]) <- NULL
+      # Apply inverse link functions
+      par_list <- lapply(seq_along(invlink), function(i) {
+        ind <- ((i-1) * n_states + 1) : (i * n_states)
+        invlink[[i]](wpar[ind])
+      })
+      
+      # Format into matrix or list
+      if(as_matrix) {
+        par <- matrix(unlist(par_list), nrow = n_states)
+        colnames(par) <- names(invlink)        
+      } else {
+        par <- par_list
+        names(par) <- names(invlink)        
       }
       
-      names(par) <- names(self$link())
       return(par)
     }
   ),
