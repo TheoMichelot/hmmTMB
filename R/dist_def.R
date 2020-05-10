@@ -37,3 +37,17 @@ dist_beta <- Dist$new(
   invlink = list(shape1 = exp, shape2 = exp),
   npar = 2
 )
+
+# von Mises
+dist_vm <- Dist$new(
+  name = "vm",
+  pdf = function(x, mu = 0, kappa = 1) {
+    b <- besselI(kappa, 0)
+    val = 1/(2 * pi * b) * exp(kappa * cos(x - mu))
+  },
+  link = list(mu = function(x) qlogis((x + pi) / (2 * pi)), 
+              kappa = log),
+  invlink = list(mu = function(x) 2 * pi * plogis(x) - pi, 
+                 kappa = exp),
+  npar = 2
+)

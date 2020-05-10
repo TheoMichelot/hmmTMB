@@ -27,7 +27,7 @@ Dist <- R6Class(
       private$link_ <- link
       private$invlink_ <- invlink
       private$npar_ <- npar
-      distnames <- c("pois", "norm", "gamma", "beta", "custom")
+      distnames <- c("pois", "norm", "gamma", "beta", "vm", "custom")
       private$code_ <- which(distnames == name) - 1 # Starts at 0 for C++
     },
     

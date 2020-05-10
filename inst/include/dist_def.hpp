@@ -139,3 +139,43 @@ public:
 };
 
 #endif
+
+template<class Type> 
+class VonMises : public Dist<Type> {
+public:
+  // Constructor
+  VonMises() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    // Mean in (-pi, pi]
+    for(int i = 0; i < n_states; i++)
+      wpar(i) = logit((par(i) + pi) / (2 * pi));
+    // Concentration > 0
+    for(int i = n_states; i < 2*n_states; i++)
+      wpar(i) = log(par(i));
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    // Mean
+    for (int i = 0; i < n_states; i++) 
+      par(i, 0) = 2 * pi * invlogit(wpar(i)) - pi; 
+    // Concentration
+    for (int i = 0; i < n_states; i++) 
+      par(i, 1) = exp(wpar(i + n_states));
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type b = besselI(par(1), 0);
+    Type val = 1/(2 * M_PI * b) * exp(par(1) * cos(x - par(0)));
+    return(val); 
+  }
+  // Number of parameters 
+  int npar() { return 2; }
+};
+
+#endif
