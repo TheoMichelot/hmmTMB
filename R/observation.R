@@ -188,21 +188,10 @@ Observation <- R6Class(
     # Histogram of observations with overlaid pdf
     plot_dist = function(name, par = NULL, weights = NULL, ...) {
       # Colour palette
-      pal <- c(
-        "blue"   = "#00798c",
-        "red"    = "#d1495b",
-        "yellow" = "#edae49",
-        "green"  = "#66a182",
-        "navy"   = "#2e4057", 
-        "grey"   = "#8d96a3"
-      )
+      pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
       
       # Extract observed values for relevant variable
-      obs <- self$data()$data()[[name]]
-      
-      # Histogram of observations
-      hist(obs, col = "lightgrey", border = "white", prob = TRUE, 
-           main = "", xlab = name, ...)
+      obs <- data.frame(val = self$data()$data()[[name]])
       
       # Matrix of parameters
       if(is.null(par)) {
@@ -217,25 +206,39 @@ Observation <- R6Class(
       # Grid over range of observed variable
       n_grid <- 1e3
       grid <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length = n_grid)
-
+      
       # Loop over states
-      vals <- matrix(NA, nrow = self$nstates(), ncol = n_grid)
+      vals <- matrix(NA, nrow = n_grid, ncol = self$nstates() + 1)
       for(state in 1:self$nstates()) {
         # Define list of arguments to pass to pdf
         args <- list(grid)
         args <- c(args, par[state,])
-
-        # Add pdf to histogram plot
-        vals[state,] <- weights[state] * do.call(self$dists()[[name]]$pdf(), args)
-        points(grid, vals[state,], type = "l", col = pal[state], lwd = 2)
+        
+        # Compute state-dependent pdf
+        vals[,state] <- weights[state] * do.call(self$dists()[[name]]$pdf(), args)
       }
-
-      # Plot weighted sum of state-dependent pdfs
-      points(grid, colSums(vals), type = "l", lwd = 2, lty = 2)
+      # Weighted sum of state-dependent pdfs
+      vals[, self$nstates() + 1] <- rowSums(vals[, 1:self$nstates()])
       
-      legend("topright", lwd = 2, lty = c(rep(1, self$nstates()), 2),
-             legend = c(paste("State", 1:self$nstates()), "Total"), 
-             col = c(pal[1:self$nstates()], "black"), bty = "n")
+      # Data frame of state-dependent densities
+      df_dens <- data.frame(
+        state = rep(c(paste("State", 1:self$nstates()), "Total"), each = n_grid),
+        grid = grid,
+        val = as.vector(vals))
+      
+      # Create hist object to extract ylim
+      breaks <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length = 20)
+      h <- hist(obs$val, breaks = breaks, plot = FALSE)
+      
+      # Create ggplot histogram
+      p <- ggplot(obs, aes(x = val)) + xlab(name) +
+        geom_histogram(breaks = breaks, aes(y=..density..), col = "white", na.rm = TRUE) + 
+        geom_line(aes(grid, val, col = state, linetype = state), data = df_dens, size = 0.7) +
+        scale_color_manual("", values = c(pal[1:self$nstates()], "black")) +
+        scale_linetype_manual("", values = c(rep(1, self$nstates()), 2)) +
+        coord_cartesian(ylim = c(0, 1.1 * max(h$density)))
+      
+      return(p)
     }
   ),
   
