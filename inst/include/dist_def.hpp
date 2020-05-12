@@ -10,7 +10,7 @@
 #define _HMMTMB_
 #include <TMB.hpp>
 #endif 
- 
+
 template <class Type>
 class Dist {
 public:
@@ -138,8 +138,6 @@ public:
   int npar() { return 2; }
 };
 
-#endif
-
 template<class Type> 
 class VonMises : public Dist<Type> {
 public:
@@ -150,7 +148,7 @@ public:
     vector<Type> wpar(par.size()); 
     // Mean in (-pi, pi]
     for(int i = 0; i < n_states; i++)
-      wpar(i) = logit((par(i) + pi) / (2 * pi));
+      wpar(i) = logit((par(i) + M_PI) / (2 * M_PI));
     // Concentration > 0
     for(int i = n_states; i < 2*n_states; i++)
       wpar(i) = log(par(i));
@@ -162,7 +160,7 @@ public:
     matrix<Type> par(n_states, n_par);
     // Mean
     for (int i = 0; i < n_states; i++) 
-      par(i, 0) = 2 * pi * invlogit(wpar(i)) - pi; 
+      par(i, 0) = 2 * M_PI * invlogit(wpar(i)) - M_PI; 
     // Concentration
     for (int i = 0; i < n_states; i++) 
       par(i, 1) = exp(wpar(i + n_states));
@@ -170,8 +168,12 @@ public:
   }
   // Probability density/mass function
   Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
-    Type b = besselI(par(1), 0);
-    Type val = 1/(2 * M_PI * b) * exp(par(1) * cos(x - par(0)));
+    Type b = besselI(Type(par(1)), Type(0));
+    Type val = 0;
+    if(!logpdf)
+      val = 1/(2 * M_PI * b) * exp(par(1) * cos(x - par(0)));
+    else
+      val = - log(2 * M_PI * b) + par(1) * cos(x - par(0));
     return(val); 
   }
   // Number of parameters 
