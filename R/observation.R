@@ -76,6 +76,7 @@ Observation <- R6Class(
       private$tpar_ <- self$n2w(par)
     },
     update_wpar = function(wpar, n_state) {
+      names(wpar) <- NULL
       private$tpar_ <- wpar
       if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {
         # Only update natural parameters if no covariates
