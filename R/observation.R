@@ -232,7 +232,8 @@ Observation <- R6Class(
       
       # Create ggplot histogram
       p <- ggplot(obs, aes(x = val)) + xlab(name) +
-        geom_histogram(breaks = breaks, aes(y=..density..), col = "white", na.rm = TRUE) + 
+        geom_histogram(breaks = breaks, aes(y=..density..), 
+                       col = "white", bg = "lightgrey", na.rm = TRUE) + 
         geom_line(aes(grid, val, col = state, linetype = state), data = df_dens, size = 0.7) +
         scale_color_manual("", values = c(pal[1:self$nstates()], "black")) +
         scale_linetype_manual("", values = c(rep(1, self$nstates()), 2)) +
