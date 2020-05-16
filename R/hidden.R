@@ -25,9 +25,13 @@ MarkovChain <- R6Class(
   
   public = list(
     initialize = function(n_states = 2, structure = NULL, tpm = NULL) {
-      # Set default structure (no covariate effects)
       if(is.null(structure)) {
+        # Default structure: no covariate effects
         structure <- matrix("~1", nrow = n_states, ncol = n_states)
+        diag(structure) <- "."
+      } else if(length(structure) == 1) {
+        # Same formula for all transitions
+        structure <- matrix(structure, nrow = n_states, ncol = n_states)
         diag(structure) <- "."
       } else {
         nstates_ <- nrow(structure)
