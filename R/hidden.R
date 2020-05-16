@@ -35,7 +35,7 @@ MarkovChain <- R6Class(
       
       # Set default initial tpm (0.9 on diagonal)
       if(is.null(tpm)) {
-        tpm <- matrix(0.1/n_states, nrow = n_states, ncol = n_states)
+        tpm <- matrix(0.1/(n_states-1), nrow = n_states, ncol = n_states)
         diag(tpm) <- 0.9
       }
       
