@@ -34,6 +34,18 @@ Hmm <- R6Class(
       
       return(private$fit_)
     },
+    tmb_obj = function() {
+      if(is.null(private$tmb_obj_)) {
+        stop("Setup model first")
+      }
+      
+      return(private$tmb_obj_)
+    },
+    
+    # Objective function
+    nllk = function(par) {
+      self$tmb_obj()$fn(par)
+    },
     
     # Fitting
     fit = function() {
@@ -124,6 +136,9 @@ Hmm <- R6Class(
       obj <- MakeADFun(tmb_dat, tmb_par, dll = "HmmTmb", 
                        random = random,
                        map = map)
+      
+      # Negative log-likelihood function
+      private$tmb_obj_ <- obj
       
       # Fit model
       private$fit_ <- do.call(optim, obj)
@@ -223,7 +238,8 @@ Hmm <- R6Class(
   private = list(
     obs_ = NULL,
     hidden_ = NULL,
-    fit_ = NULL
+    fit_ = NULL,
+    tmb_obj_ = NULL
   )
 )
 
