@@ -128,26 +128,21 @@ Hmm <- R6Class(
       # Fit model
       private$fit_ <- do.call(optim, obj)
       
-      # Update model parameters
-      est_par <- self$res()$par
+      # Get estimates and precision matrix for all parameters
+      sd_rep <- sdreport(obj)
+      par_list <- as.list(sd_rep, "Estimate")
       
-      # Observation parameters (fixed effects)
-      ind_wpar_fe <- which(names(est_par) == "wpar_fe_obs")
-      wpar_fe <- est_par[ind_wpar_fe]
-      self$obs()$update_wpar(wpar = wpar_fe, n_state = n_states)
-      # Observation parameters (random effects)
-      ind_wpar_re <- which(names(est_par) == "wpar_re_obs")
-      wpar_re <- est_par[ind_wpar_re]
-      self$obs()$update_wpar_re(wpar = wpar_re)
+      # Observation parameters
+      self$obs()$update_wpar(wpar = par_list$wpar_fe_obs, n_state = n_states)
+      if(ncol_re_obs[1] > 0) { # Only update if there are random effects
+        self$obs()$update_wpar_re(wpar = par_list$wpar_re_obs)
+      }
       
-      # Transition probabilities (fixed effects)
-      ind_ltpm_fe <- which(names(est_par) == "wpar_fe_hid")
-      ltpm <- est_par[ind_ltpm_fe]
-      self$hidden()$update_par(ltpm)
-      # Transition probabilities (random effects)
-      ind_ltpm_re <- which(names(est_par) == "wpar_re_hid")
-      ltpm_re <- est_par[ind_ltpm_re]
-      self$hidden()$update_par_re(ltpm_re)
+      # Transition probabilities
+      self$hidden()$update_par(newpar = par_list$wpar_fe_hid)
+      if(ncol_re_hid[1] > 0) { # Only update if there are random effects
+        self$hidden()$update_par_re(newpar = par_list$wpar_re_hid)        
+      }
     },
     
     # Parameter estimates
