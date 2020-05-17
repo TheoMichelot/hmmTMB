@@ -41,6 +41,7 @@ Observation <- R6Class(
         # Case with no covariates
         private$par_ <- par 
         private$tpar_ <- self$n2w(par)
+        private$tpar_re_ <- integer(0) # so that X_re %*% tpar_re is valid
         private$formulas_ <- lapply(par, function(varpar) {
           f <- lapply(varpar, function(...) {
             g <- lapply(1:n_states, function(...) {

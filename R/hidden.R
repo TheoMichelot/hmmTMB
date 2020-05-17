@@ -48,6 +48,7 @@ MarkovChain <- R6Class(
       private$structure_ <- structure
       private$tpm_ <- tpm
       private$par_ <- private$tpm2par(tpm)
+      private$par_re_ <- integer(0)  # so that X_re %*% par_re is valid
     },
     
     # Accessors
@@ -93,7 +94,6 @@ MarkovChain <- R6Class(
       return(tpm)
     }
   ),
-  
   
   private = list(
     structure_ = NULL,
