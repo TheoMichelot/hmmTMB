@@ -41,6 +41,13 @@ Hmm <- R6Class(
       
       return(private$tmb_obj_)
     },
+    states = function() {
+      if(is.null(private$states_)) {
+        stop("Run viterbi first")
+      }
+      
+      return(private$states_)
+    },
     
     # Objective function
     nllk = function(par) {
@@ -231,6 +238,9 @@ Hmm <- R6Class(
         all_states <- c(all_states, states)
       }
       
+      # Save state sequence
+      private$states_ <- all_states
+      
       return(all_states)
     }
   ),
@@ -239,7 +249,8 @@ Hmm <- R6Class(
     obs_ = NULL,
     hidden_ = NULL,
     fit_ = NULL,
-    tmb_obj_ = NULL
+    tmb_obj_ = NULL,
+    states_ = NULL
   )
 )
 
