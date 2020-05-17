@@ -24,7 +24,7 @@ MarkovChain <- R6Class(
   classname = "MarkovChain",
   
   public = list(
-    initialize = function(n_states = 2, structure = NULL, tpm = NULL) {
+    initialize = function(n_states = NULL, structure = NULL, tpm = NULL) {
       if(is.null(structure)) {
         # Default structure: no covariate effects
         structure <- matrix("~1", nrow = n_states, ncol = n_states)
@@ -34,7 +34,7 @@ MarkovChain <- R6Class(
         structure <- matrix(structure, nrow = n_states, ncol = n_states)
         diag(structure) <- "."
       } else {
-        nstates_ <- nrow(structure)
+        n_states <- nrow(structure)
       }
       
       # Set default initial tpm (0.9 on diagonal)
