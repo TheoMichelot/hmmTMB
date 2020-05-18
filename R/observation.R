@@ -76,7 +76,7 @@ Observation <- R6Class(
       private$par_ <- par
       private$tpar_ <- self$n2w(par)
     },
-    update_wpar = function(wpar, n_state) {
+    update_wpar = function(wpar, n_states) {
       names(wpar) <- NULL
       private$tpar_ <- wpar
       if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {

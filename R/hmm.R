@@ -166,7 +166,7 @@ Hmm <- R6Class(
       par_list <- as.list(tmb_rep, "Estimate")
       
       # Observation parameters
-      self$obs()$update_wpar(wpar = par_list$wpar_fe_obs, n_state = n_states)
+      self$obs()$update_wpar(wpar = par_list$wpar_fe_obs, n_states = n_states)
       mats_obs <- self$obs()$make_mat()
       if(!is.null(mats_obs$ncol_re)) { # Only update if there are random effects
         self$obs()$update_wpar_re(wpar = par_list$wpar_re_obs)
