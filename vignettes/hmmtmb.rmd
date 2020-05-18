@@ -91,8 +91,8 @@ obs_process <- Observation$new(data = data_prep, dists = dists, par = par)
 ```
 
 The parameters on the working scale are calculated when the object is created:
-```{r obs-tpar}
-obs_process$tpar()
+```{r obs-wpar}
+obs_process$wpar()
 ```
 
 The function plot_dist generates a histogram of the observations with the probability density (or mass) function of the specified distribution.

@@ -40,8 +40,8 @@ Observation <- R6Class(
       if(is.null(formulas)) {
         # Case with no covariates
         private$par_ <- par 
-        private$tpar_ <- self$n2w(par)
-        private$tpar_re_ <- integer(0) # so that X_re %*% tpar_re is valid
+        private$wpar_ <- self$n2w(par)
+        private$wpar_re_ <- integer(0) # so that X_re %*% wpar_re is valid
         private$formulas_ <- lapply(par, function(varpar) {
           f <- lapply(varpar, function(...) {
             g <- lapply(1:n_states, function(...) {
@@ -56,8 +56,8 @@ Observation <- R6Class(
         stop("'wpar' needs to be specified if covariates in observation parameters")
       } else {
         # Case with covariates
-        private$tpar_ <- wpar
-        private$tpar_re_ <- wpar_re
+        private$wpar_ <- wpar
+        private$wpar_re_ <- wpar_re
         private$formulas_ <- make_formulas(formulas, n_states = n_states)        
       }
     },
@@ -67,25 +67,25 @@ Observation <- R6Class(
     dists = function() {return(private$dists_)},
     nstates = function() {return(private$nstates_)},
     par = function() {return(private$par_)},
-    tpar = function() {return(private$tpar_)},
-    tpar_re = function() {return(private$tpar_re_)},
+    wpar = function() {return(private$wpar_)},
+    wpar_re = function() {return(private$wpar_re_)},
     formulas = function() {return(private$formulas_)},
     
     # Mutators
     update_par = function(par) {
       private$par_ <- par
-      private$tpar_ <- self$n2w(par)
+      private$wpar_ <- self$n2w(par)
     },
     update_wpar = function(wpar, n_states) {
       names(wpar) <- NULL
-      private$tpar_ <- wpar
+      private$wpar_ <- wpar
       if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {
         # Only update natural parameters if no covariates
         private$par_ <- self$w2n(wpar, n_state)
       }
     },
     update_wpar_re = function(wpar_re) {
-      private$tpar_re_ <- wpar_re
+      private$wpar_re_ <- wpar_re
     },
     
     # Data frame of response variables
@@ -114,7 +114,7 @@ Observation <- R6Class(
       n_var <- ncol(data)
       
       # Matrix of observation parameters
-      wpar <- X_fe %*% self$tpar() + X_re %*% self$tpar_re()
+      wpar <- X_fe %*% self$wpar() + X_re %*% self$wpar_re()
       par_mat <- matrix(wpar, nrow = n)
       
       # Initialise matrix of probabilities to 1
@@ -251,8 +251,8 @@ Observation <- R6Class(
     dists_ = NULL,
     nstates_ = NULL,
     par_ = NULL,
-    tpar_ = NULL,
-    tpar_re_ = NULL,
+    wpar_ = NULL,
+    wpar_re_ = NULL,
     formulas_ = NULL
   )
 )

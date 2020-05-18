@@ -93,7 +93,7 @@ mod <- Hmm$new(obs, hid)
 mod$fit()
 
 # Unpack parameters
-wpar <- obs$tpar()
+wpar <- obs$wpar()
 shape_est <- matrix(wpar[1:4], ncol = 2)
 scale_est <- matrix(wpar[5:6], ncol = 2)
 lambda_est <- matrix(wpar[7:12], ncol = 2)

@@ -79,7 +79,7 @@ Hmm <- R6Class(
       ncol_re_hid <- mod_mat_hid$ncol_re
       
       # Setup TMB parameters
-      tmb_par <- list(wpar_fe_obs = self$obs()$tpar(),
+      tmb_par <- list(wpar_fe_obs = self$obs()$wpar(),
                       wpar_re_obs = 0,
                       log_lambda_obs = 0,
                       wpar_fe_hid = rep(0, ncol(X_fe_hid)),
