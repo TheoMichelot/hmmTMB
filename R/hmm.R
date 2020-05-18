@@ -162,8 +162,8 @@ Hmm <- R6Class(
       private$fit_ <- do.call(optim, private$tmb_obj_)
       
       # Get estimates and precision matrix for all parameters
-      tmb_rep <- sdreport(private$tmb_obj_)
-      par_list <- as.list(tmb_rep, "Estimate")
+      private$tmb_rep_ <- sdreport(private$tmb_obj_)
+      par_list <- as.list(private$tmb_rep_, "Estimate")
       
       # Observation parameters
       self$obs()$update_wpar(wpar = par_list$wpar_fe_obs, n_states = n_states)
@@ -178,6 +178,26 @@ Hmm <- R6Class(
       if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
         self$hidden()$update_par_re(newpar = par_list$wpar_re_hid)        
       }
+    },
+    
+    CI_wpar = function() {
+      if(is.null(private$tmb_rep_)) {
+        stop("Fit model first")
+      }
+      
+      par_list <- as.list(private$tmb_rep_, "Estimate")
+      se_list <- as.list(private$tmb_rep_, "Std. Error")
+      
+      lower <- lapply(seq_along(par_list), function(i) {
+        par_list[[i]] - 1.96 * se_list[[i]]
+      })
+      upper <- lapply(seq_along(par_list), function(i) {
+        par_list[[i]] + 1.96 * se_list[[i]]
+      })
+      
+      return(cbind(estimate = unlist(par_list),
+                   lower = unlist(lower),
+                   upper = unlist(upper)))
     },
     
     # Model parameters
@@ -263,11 +283,7 @@ Hmm <- R6Class(
     hidden_ = NULL,
     fit_ = NULL,
     tmb_obj_ = NULL,
+    tmb_rep_ = NULL,
     states_ = NULL
   )
 )
-
-
-
-
-
