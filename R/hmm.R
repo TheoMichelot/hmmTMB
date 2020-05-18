@@ -180,8 +180,8 @@ Hmm <- R6Class(
       }
     },
     
-    # Parameter estimates
-    est = function() {
+    # Model parameters
+    par = function() {
       par <- self$obs()$par()
       tpm <- self$hidden()$tpm()
       return(list(par = par, tpm = tpm))
