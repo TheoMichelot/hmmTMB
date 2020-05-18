@@ -162,8 +162,8 @@ Hmm <- R6Class(
       private$fit_ <- do.call(optim, private$tmb_obj_)
       
       # Get estimates and precision matrix for all parameters
-      sd_rep <- sdreport(private$tmb_obj_)
-      par_list <- as.list(sd_rep, "Estimate")
+      tmb_rep <- sdreport(private$tmb_obj_)
+      par_list <- as.list(tmb_rep, "Estimate")
       
       # Observation parameters
       self$obs()$update_wpar(wpar = par_list$wpar_fe_obs, n_state = n_states)
