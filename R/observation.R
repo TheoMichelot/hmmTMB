@@ -81,7 +81,7 @@ Observation <- R6Class(
       private$wpar_ <- wpar
       if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {
         # Only update natural parameters if no covariates
-        private$par_ <- self$w2n(wpar, n_state)
+        private$par_ <- self$w2n(wpar, n_states)
       }
     },
     update_wpar_re = function(wpar_re) {
@@ -163,7 +163,7 @@ Observation <- R6Class(
     
     # Working to natural parameter transformation
     # (No covariates)
-    w2n = function(wpar, n_state) {
+    w2n = function(wpar, n_states) {
       # Initialise list of natural parameters
       par <- list()
       
@@ -178,8 +178,8 @@ Observation <- R6Class(
         # Number of parameters for this distribution
         npar <- length(self$dists()[[var]]$link())
         # Subset and transform working parameters
-        sub_wpar <- wpar[par_count:(par_count + npar*n_state - 1)]
-        par_count <- par_count + npar*n_state
+        sub_wpar <- wpar[par_count:(par_count + npar*n_states - 1)]
+        par_count <- par_count + npar*n_states
         par[[var]] <- self$dists()[[var]]$w2n(sub_wpar)
       }
       
