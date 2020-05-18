@@ -54,8 +54,8 @@ Hmm <- R6Class(
       self$tmb_obj()$fn(par)
     },
     
-    # Fitting
-    fit = function() {
+    # TMB setup
+    setup = function() {
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
       
@@ -146,23 +146,36 @@ Hmm <- R6Class(
       
       # Negative log-likelihood function
       private$tmb_obj_ <- obj
+    },
+
+    # Fitting
+    fit = function() {
+      # Setup if necessary
+      if(is.null(private$tmb_obj_)) {
+        self$setup()
+      }
+      
+      # Number of states
+      n_states <- self$hidden()$nstates()
       
       # Fit model
-      private$fit_ <- do.call(optim, obj)
+      private$fit_ <- do.call(optim, private$tmb_obj_)
       
       # Get estimates and precision matrix for all parameters
-      sd_rep <- sdreport(obj)
+      sd_rep <- sdreport(private$tmb_obj_)
       par_list <- as.list(sd_rep, "Estimate")
       
       # Observation parameters
       self$obs()$update_wpar(wpar = par_list$wpar_fe_obs, n_state = n_states)
-      if(ncol_re_obs[1] > 0) { # Only update if there are random effects
+      mats_obs <- self$obs()$make_mat()
+      if(!is.null(mats_obs$ncol_re)) { # Only update if there are random effects
         self$obs()$update_wpar_re(wpar = par_list$wpar_re_obs)
       }
       
       # Transition probabilities
       self$hidden()$update_par(newpar = par_list$wpar_fe_hid)
-      if(ncol_re_hid[1] > 0) { # Only update if there are random effects
+      mats_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
+      if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
         self$hidden()$update_par_re(newpar = par_list$wpar_re_hid)        
       }
     },
