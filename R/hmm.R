@@ -180,7 +180,8 @@ Hmm <- R6Class(
       }
     },
     
-    CI_wpar = function() {
+    # Wald confidence intervals for the parameters on working scale
+    CI_wpar = function(level = 0.95) {
       if(is.null(private$tmb_rep_)) {
         stop("Fit model first")
       }
@@ -189,10 +190,10 @@ Hmm <- R6Class(
       se_list <- as.list(private$tmb_rep_, "Std. Error")
       
       lower <- lapply(seq_along(par_list), function(i) {
-        par_list[[i]] - 1.96 * se_list[[i]]
+        par_list[[i]] - qnorm(1 - (1 - level)/2) * se_list[[i]]
       })
       upper <- lapply(seq_along(par_list), function(i) {
-        par_list[[i]] + 1.96 * se_list[[i]]
+        par_list[[i]] + qnorm(1 - (1 - level)/2) * se_list[[i]]
       })
       
       return(cbind(estimate = unlist(par_list),
