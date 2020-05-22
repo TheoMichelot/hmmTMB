@@ -210,9 +210,9 @@ Hmm <- R6Class(
     
     # Model parameters
     par = function() {
-      par <- self$obs()$par()
+      obspar <- self$obs()$par()
       tpm <- self$hidden()$tpm()
-      return(list(par = par, tpm = tpm))
+      return(list(obspar = obspar, tpm = tpm))
     },
     
     # Viterbi algorithm
