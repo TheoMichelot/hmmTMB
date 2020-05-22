@@ -1,6 +1,6 @@
 ## Driver script
 
-library(HmmTmb)
+library(hmmTMB)
 
 #' Simulate Poisson HMM
 #'

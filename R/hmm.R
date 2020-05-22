@@ -147,7 +147,7 @@ Hmm <- R6Class(
                       ncol_re_hid = ncol_re_hid)
       
       # Create TMB model
-      obj <- MakeADFun(tmb_dat, tmb_par, dll = "HmmTmb", 
+      obj <- MakeADFun(tmb_dat, tmb_par, dll = "hmmTMB", 
                        random = random,
                        map = map)
       

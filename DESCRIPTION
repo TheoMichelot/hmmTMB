@@ -1,4 +1,4 @@
-Package: HmmTmb
+Package: hmmTMB
 Type: Package
 Title: Fit hidden Markov models using template model builder 
 Version: 0.1.0

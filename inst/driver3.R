@@ -1,6 +1,6 @@
 # Driver script (with random effects)
 
-library(HmmTmb)
+library(hmmTMB)
 set.seed(6932)
 
 #' Simulate HMM

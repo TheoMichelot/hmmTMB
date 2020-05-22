@@ -1,10 +1,10 @@
 ---
-title: "HmmTmb vignette"
+title: "hmmTMB vignette"
 author: "Richard Glennie, Théo Michelot"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_document
 vignette: >
-  %\VignetteIndexEntry{HmmTmb vignette}
+  %\VignetteIndexEntry{hmmTMB vignette}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r load-package, echo = FALSE}
-library(HmmTmb)
+library(hmmTMB)
 set.seed(342)
 ```
 
