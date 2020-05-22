@@ -27,10 +27,16 @@ set.seed(342)
 
 Distributions for the observation process are created using the Dist class. To define a new distribution, we provide its name (as a string), its probability density/mass function (as a function), and the link functions for its parameters (as named lists of functions). For example, for the normal distribution, we have
 ```{r dist-def}
-dist_norm <- Dist$new(name = "normal", pdf = dnorm,
-                      link = list(mean = identity, sd = log),
-                      invlink = list(mean = identity, sd = exp))
+dist_norm <- Dist$new(
+  name = "norm", 
+  pdf = dnorm,
+  link = list(mean = identity, sd = log),
+  invlink = list(mean = identity, sd = exp),
+  npar = 2
+)
 ```
+
+The Poisson, gamma, normal, beta, and von Mises distributions are included in the package, and more will be implemented in the future.
 
 The functions n2w and w2n transform parameters of the observation distributions from the natural to the working scale and vice-versa. We can verify that applying the two functions successively returns the original parameter values:
 ```{r norm-test}
@@ -84,10 +90,14 @@ data_prep <- HmmData$new(data = data)
 dists <- list(x = dist_norm)
 
 # List of observation parameters
-par <- list(x = list(mean = 0, sd = 1))
+par <- list(x = list(mean = c(0, 0), sd = c(1, 10)))
+
+# Number of states
+n_states <- 2
 
 # Create observation process object
-obs_process <- Observation$new(data = data_prep, dists = dists, par = par)
+obs_process <- Observation$new(data = data_prep, dists = dists, 
+                               n_states = n_states, par = par)
 ```
 
 The parameters on the working scale are calculated when the object is created:
@@ -98,24 +108,49 @@ obs_process$wpar()
 The function plot_dist generates a histogram of the observations with the probability density (or mass) function of the specified distribution.
 ```{r obs-plot}
 # Plot histogram and pdf for variable "x"
-obs_process$plot_dist(name = "x", par = list(mean = 1, sd = 1))
+obs_process$plot_dist(name = "x")
 ```
 
 ## User-specified observation distribution
 
-Include a file named custom.hpp in the folder src/ of the package. The file should contain the following function templates.
+_Here we will need to explain how additional distributions can be added by users._
 
- - Link function: `vector<Type> custom_link(vector<Type> par, int n_states)`
- 
- - Inverse link function: `matrix<Type> custom_invlink(vector<Type> wpar, int n_states)`
- 
- - Probability mass/density function: `Type custom_pdf(Type x, vector<Type> par, bool logpdf)`
- 
- - Number of parameters of the distribution: `int custom_npar()`
+## Future work
 
-In R, define a Dist object with the name attribute set to "custom", e.g.
-```{r custom}
-dist_gamma <- Dist$new(name = "custom", pdf = dgamma,
-                       link = list(shape = log, scale = log),
-                       invlink = list(shape = exp, scale = exp))
-```
+ - AIC
+ 
+ - confidence intervals
+    + on natural parameters
+    + on transformed quantities (e.g. covariate-dependent parameters)
+ 
+ - pseudo-residuals
+ 
+ - stationary state probabilities as functions of covariates
+ 
+ - state probabilities (local decoding)
+ 
+ - additional observation distributions
+    + Weibull
+    + log-normal
+    + wrapped Cauchy
+    + Bernoulli...
+    
+ - zero inflation
+ 
+ - improve parametrisation of mean of circular distributions
+ 
+ - allow for input of known states (semi-supervised learning)
+ 
+ - allow for constraints on parameters
+    + inequalities, e.g. $\mu_1 < \mu_2$
+    + bounds, e.g. $-1 < \mu_1 < 1$
+    + fixed value, e.g. $\mu_1 = 0$
+    
+ - obtain starting values for complex models from simpler nested model (e.g. for smooth effects)
+ 
+ - plotting functions to visualise fitted model
+    + time series coloured by states
+    + covariate effects...
+    
+ - update/create documentation for class methods and attributes
+ 
