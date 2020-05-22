@@ -41,6 +41,13 @@ Hmm <- R6Class(
       
       return(private$tmb_obj_)
     },
+    tmb_rep = function() {
+      if(is.null(private$tmb_rep_)) {
+        stop("Fit model first")
+      }
+      
+      return(private$tmb_rep_)
+    },
     states = function() {
       if(is.null(private$states_)) {
         stop("Run viterbi first")
