@@ -1,45 +1,7 @@
 
-#' Hidden Markov chain class
+#' R6 class for HMM hidden process model
 #'
-#' @description Encapsulates the Markov chain for the hidden component of the HMM.
-#' Object can be created using $new with arguments:
-#' \itemize{
-#'   \item n_states: number of states. If not specified, then \code{structure} 
-#'   needs to be provided as a matrix, and n_states is deduced from its dimensions.
-#'   \item structure: either (1) matrix with an entry of "." on diagonal, a "0" for 
-#'   transitions that are not allowed (not implemented yet), and a formula "~1" 
-#'   for covariates affecting transitions that are to be estimated, or (2) single
-#'   formula, assumed for all transition probabilities. (Default: no covariate
-#'   dependence.)
-#'   \item tpm: an initial transition probability matrix. (Default: 0.9 on diagonal,
-#'   and 0.1/(n_states - 1) for all other entries.)
-#' }
-#'
-#' @section Methods:
-#' \itemize{
-#'  
-#'  \item{\code{structure()}}{specified structure of the Markov chain}
-#'  
-#'  \item{\code{tpm()}}{current transition probability matrix}
-#'  
-#'  \item{\code{par()}}{current parameter estimates for transitions}
-#'  
-#'  \item{\code{nstates()}}{number of states in Markov chain}
-#'  
-#'  \item{\code{update_par(newpar)}}{set parameters to newpar}
-#'  
-#'  \item{\code{update_tpm(newtpm)}}{set transition probability matrix to newtpm}
-#'  
-#'  \item{\code{make_mat(data)}}{create model matrices for hidden state model, 
-#'  i.e. design matrices for fixed and random effects, and smoothness matrix 
-#'  for random effects. \code{data} is a data frame including the covariates
-#'  needed to create the model matrices.}
-#'  
-#'  \item{\code{tpm_all(X_fe, X_re)}}{transition probability matrices, for
-#'  design matrices \code{X_fe} and \code{X_re}. Returns an array where
-#'  each slice is a transition probability matrix.}
-#' }
-
+#' Contains the parameters and model formulas for the hidden process model.
 MarkovChain <- R6Class(
   classname = "MarkovChain",
   
@@ -47,6 +9,19 @@ MarkovChain <- R6Class(
     #################
     ## Constructor ##
     #################
+    #' @description Create new MarkovChain object
+    #' 
+    #' @param n_states Number of states. If not specified, then \code{structure} 
+    #' needs to be provided as a matrix, and n_states is deduced from its dimensions.
+    #' @param structure Either (1) matrix with an entry of "." on diagonal, a "0" for 
+    #' transitions that are not allowed (not implemented yet), and a formula "~1" 
+    #' for covariates affecting transitions that are to be estimated, or (2) single
+    #' formula, assumed for all transition probabilities. (Default: no covariate
+    #' dependence.)
+    #' @param tpm Initial transition probability matrix. (Default: 0.9 on diagonal,
+    #' and 0.1/(n_states - 1) for all other entries.)
+    #' 
+    #' @return A new MarkovChain object
     initialize = function(n_states = NULL, structure = NULL, tpm = NULL) {
       if(is.null(structure)) {
         # Default structure: no covariate effects
@@ -77,19 +52,35 @@ MarkovChain <- R6Class(
     ###############
     ## Accessors ##
     ###############
+    #' @description Formulas for MarkovChain model
     structure = function() {return(private$structure_)},
+    
+    #' @description Current transition probability matrix
     tpm = function() {return(private$tpm_)},
+    
+    #' @description Current parameter estimates (fixed effects)
     par = function() {return(private$par_)},
+    
+    #' @description Current parameter estimates (random effects)
     par_re = function() {return(private$par_re_)},
+    
+    #' @description Number of states
     nstates = function() {return(private$nstates_)},
     
     ##############
     ## Mutators ##
     ##############
+    #' @description Update transition probability matrix
+    #' 
+    #' @param newtpm New transition probability matrix
     update_tpm = function(newtpm) {
       private$tpm_ <- newtpm
       private$par_ <- private$tpm2par(newtpm)
     },
+    
+    #' @description Update parameters (fixed effects)
+    #' 
+    #' @param newpar New parameters (fixed effects)
     update_par = function(newpar) {
       private$par_ <- newpar
       if(all(self$structure() %in% c(".", "~1"))) {
@@ -97,13 +88,28 @@ MarkovChain <- R6Class(
         private$tpm_ <- private$par2tpm(newpar)        
       }
     },
+    
+    #' @description Update parameters (random effects)
+    #' 
+    #' @param newpar New parameters (random effects)
     update_par_re = function(newpar) {
       private$par_re_ <- newpar
     },
     
-    #########################
-    ## Make model matrices ##
-    #########################
+    ###################
+    ## Other methods ##
+    ###################
+    #' @description Make model matrices
+    #' 
+    #' @param data Data frame containing all needed covariates
+    #' 
+    #' @return A list with elements:
+    #' \itemize{
+    #'   \item{X_fe}{Design matrix for fixed effects}
+    #'   \item{X_re}{Design matrix for random effects}
+    #'   \item{S}{Smoothness matrix for random effects}
+    #'   \item{ncol_re}{Number of columns of X_re and S for each random effect}
+    #' }
     make_mat = function(data) {
       struct <- self$structure()[!diag(self$nstates())]
       formulas <- lapply(as.list(struct), function(string) {
@@ -116,9 +122,14 @@ MarkovChain <- R6Class(
       make_mat_hid(formulas = formulas, data = data)
     },
     
-    #####################################
-    ## Transition probability matrices ##
-    #####################################
+    #' @description Transition probability matrices
+    #' 
+    #' @param X_fe Design matrix for fixed effects, as returned
+    #' by \code{make_mat}
+    #' @param X_re Design matrix for random effects, as returned
+    #' by \code{make_mat}
+    #' 
+    #' @return Array with one slice for each transition probability matrix
     tpm_all = function(X_fe, X_re) {
       n_states <- self$nstates()
       ltpm <- X_fe %*% self$par() + X_re %*% self$par_re()

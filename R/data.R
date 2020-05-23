@@ -1,24 +1,8 @@
 
-#' Hidden Markov model data class
+#' R6 class for HMM data
 #'
-#' @description Encapsulates data observing one or more time series.
-#' Object can be created using $new with arguments:
-#' \itemize{
-#'   \item data: a data frame with at least one column of observations. 
-#'   A column called "time" can be given for the time of each observation, 
-#'   otherwise assumed observations are regular in time. Other columns should
-#'   include "ID" (time series ID), and any covariates needed in the model.
-#' }
-#'
-#' @section Methods:
-#' \itemize{
-#'   
-#'   \item{\code{data()}}{data frame}
-#'   
-#'   \item{\code{ID()}}{vector of time series IDs (vector of 1s if not provided
-#'  in input data frame)}
-#' }
-
+#' Contains a data frame containing observations for the response variables,
+#' as well as the covariates.
 HmmData <- R6Class(
   classname = "HmmData",
   
@@ -26,6 +10,16 @@ HmmData <- R6Class(
     #################
     ## Constructor ##
     #################
+    #' @description Create new HmmData object
+    #' 
+    #' @param data A data frame with at least one column of observations. A column
+    #' called "time" can be given for the time of each observation, otherwise
+    #' it is assumed that observations are regular in time. Other columns should
+    #' include "ID" (time series ID) if necessary, and any covariates needed in
+    #' the model.
+    #' @param interval Time interval of observation. Optional.
+    #' 
+    #' @return A new HmmData object
     initialize = function(data, interval = NA) {
       
       # If time column and interval provided, insert NAs to obtain regular time grid
@@ -62,11 +56,16 @@ HmmData <- R6Class(
     ###############
     ## Accessors ##
     ###############
+    #' @description Data frame
     data = function() {return(private$data_)},
     
-    ###############################
-    ## Vector of time series IDs ##
-    ###############################
+    ###################
+    ## Other methods ##
+    ###################
+    #' @description Get IDs
+    #' 
+    #' @return Vector of time series IDs. Defaults to a vector
+    #' of 1s if there is no ID columns in the input data set.
     ID = function() {
       if(is.null(self$data()$ID)) {
         return(factor(rep(1, nrow(self$data()))))

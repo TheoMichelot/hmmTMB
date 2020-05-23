@@ -1,55 +1,8 @@
 
-#' Hidden Markov observation class
+#' R6 class for HMM observation model
 #'
-#' @description Encapsulates the observation model from a hidden Markov model.
-#' Object can be created using $new with arguments:
-#' \itemize{
-#'   \item data: a HmmData object
-#'   \item dists: named list of distributions for each data stream
-#'   \item n_states: number of states (needed to construct model formulas)
-#'   \item par: list of observation parameters (for covariate-free model)
-#'   \item wpar: vector of observation parameters on working scale (for
-#'   model with covariates)
-#'   \item formulas: list of formulas for observation parameters
-#' }
-#'
-#' @section Methods:
-#' \itemize{
-#'  
-#'  \item{\code{plot_dist(name, par = NULL, weights = NULL)}}{Plot 
-#'  histogram of observations for the variable specified by the argument name, 
-#'  overlaid with the pdf of the specified distribution for that data stream. 
-#'  Helpful to select initial parameter values for model fitting, or to visualise 
-#'  fitted state-dependent distributions. Parameters can be passed through
-#'  the argument par, as a matrix with one row for each state and one column
-#'  for each parameter. The columns should be named with the names of the
-#'  parameters, e.g. "mean" and "sd" for a normal distribution. The argument
-#'  weights is an optional vector of length the number of pdfs that are plotted,
-#'  e.g. useful to visualise a mixture of distributions weighted by the proportion
-#'  of time spent in the different states.}
-#'  
-#'  \item{\code{update_par(par)}}{Update parameters to par}
-#'  
-#'  \item{\code{update_wpar(wpar)}}{Update working parameters to wpar}
-#'  
-#'  \item{\code{make_mat()}}{Create model matrices for observation model 
-#'  (design matrices for fixed and random effects, and smoothness matrix 
-#'  for random effects)}
-#'  
-#'  \item{\code{obs_var()}}{Data frame of observed (response) variables}
-#'  
-#'  \item{\code{n2w(par)}}{Transform parameters from natural to working scale
-#'  (for model with no covariates)}
-#'  
-#'  \item{\code{w2n(wpar)}}{Transform parameters from working to natural scale
-#'  (for model with no covariates)}
-#'  
-#'  \item{\code{obs_probs(X_fe, X_re)}}{Matrix of likelihoods of observations, 
-#'  with one row for each time step, and one column for each state. The design
-#'  matrices X_fe (fixed effects) and X_re (random effects) are passed as 
-#'  arguments.}
-#' }
-
+#' Contains the data, distributions, parameters, and formulas for
+#' the observation model from a hidden Markov model.
 Observation <- R6Class(
   classname = "Observation",
   
@@ -57,6 +10,18 @@ Observation <- R6Class(
     #################
     ## Constructor ##
     #################
+    #' @description Create new Observation object
+    #' 
+    #' @param data HmmData object
+    #' @param dists Named list of Distribution objects for each data stream
+    #' @param n_states Number of states (needed to construct model formulas)
+    #' @param par List of observation parameters (for covariate-free model)
+    #' @param wpar Vector of fixed effect parameters on working scale
+    #' @param wpar_re Vector of random effect parameters. Defaults to a
+    #' vector of zeros if not provided.
+    #' @param formulas List of formulas for observation parameters
+    #' 
+    #' @return A new Observation object
     initialize = function(data, dists, n_states, par = NULL, wpar = NULL, 
                           wpar_re = NULL, formulas = NULL) {
       private$data_ <- data
@@ -104,15 +69,28 @@ Observation <- R6Class(
     ###############
     ## Accessors ##
     ###############
+    #' @description HmmData object
     data = function() {return(private$data_)},
+    
+    #' @description List of distributions
     dists = function() {return(private$dists_)},
+    
+    #' @description Number of states
     nstates = function() {return(private$nstates_)},
+    
+    #' @description Parameters on natural scale
     par = function() {return(private$par_)},
+    
+    #' @description Fixed effect parameters on working scale
     wpar = function() {return(private$wpar_)},
+    
+    #' @description Random effect parameters
     wpar_re = function() {return(private$wpar_re_)},
+    
+    #' @description List of model formulas for observation model
     formulas = function() {return(private$formulas_)},
     
-    # Data frame of response variables
+    #' @description  Data frame of response variables
     obs_var = function() {
       obs_names <- names(self$dists())
       obs_var <- self$data()$data()[, obs_names, drop = FALSE]
@@ -122,10 +100,17 @@ Observation <- R6Class(
     ##############
     ## Mutators ##
     ##############
+    #' @description Update parameters
+    #' 
+    #' @param par New list of parameters
     update_par = function(par) {
       private$par_ <- par
       private$wpar_ <- self$n2w(par)
     },
+    
+    #' @description Update fixed effect parameters on working scale
+    #' 
+    #' @param wpar New vector of fixed effect parameters on working scale
     update_wpar = function(wpar) {
       names(wpar) <- NULL
       private$wpar_ <- wpar
@@ -134,21 +119,38 @@ Observation <- R6Class(
         private$par_ <- self$w2n(wpar)
       }
     },
+    
+    #' @description Update random effect parameters
+    #' 
+    #' @param wpar_re New vector og random effect parameters
     update_wpar_re = function(wpar_re) {
       private$wpar_re_ <- wpar_re
     },
     
-    ###########################
-    ## Create model matrices ##
-    ###########################
+    ###################
+    ## Other methods ##
+    ###################
+    #' @description Make model matrices
+    #' 
+    #' @return A list with elements:
+    #' \itemize{
+    #'   \item{X_fe}{Design matrix for fixed effects}
+    #'   \item{X_re}{Design matrix for random effects}
+    #'   \item{S}{Smoothness matrix for random effects}
+    #'   \item{ncol_re}{Number of columns of X_re and S for each random effect}
+    #' }
     make_mat = function() {
       make_mat_obs(formulas = self$formulas(),
                    data = self$data()$data())
     },
     
-    #####################################
-    ## Compute observation likelihoods ##
-    #####################################
+    #' @description Observation likelihoods
+    #' 
+    #' @param X_fe Design matrix for fixed effects
+    #' @param X_re Design matrix for random effects
+    #' 
+    #' @return Matrix of likelihoods of observations, with one row for each 
+    #' time step, and one column for each state.
     obs_probs = function(X_fe, X_re) {
       # Data frame of observations
       data <- self$obs_var()
@@ -198,9 +200,11 @@ Observation <- R6Class(
       return(prob)
     },
     
-    #################################################
-    ## Natural to working parameter transformation ##
-    #################################################
+    #' @description Natural to working parameter transformation
+    #' 
+    #' @param par List of parameters on natural scale
+    #' 
+    #' @return Vector of parameters on working scale
     n2w = function(par) {
       wpar <- lapply(1:length(self$dists()), 
                      function(i) dists[[i]]$n2w(par[[i]]))
@@ -209,9 +213,11 @@ Observation <- R6Class(
       return(wpar)
     },
     
-    #################################################
-    ## Working to natural parameter transformation ##
-    #################################################
+    #' @description  Working to natural parameter transformation
+    #'
+    #' @param wpar Vector of parameters on working scale
+    #' 
+    #' @return List of parameters on natural scale
     w2n = function(wpar) {
       # Initialise list of natural parameters
       par <- list()
@@ -237,11 +243,27 @@ Observation <- R6Class(
       names(par) <- names(self$dists())
       return(par)
     },
-    
-    #####################################
-    ## Plot histogram of data and pdfs ##
-    #####################################
-    plot_dist = function(name, par = NULL, weights = NULL, ...) {
+
+    #' @description Plot histogram of data and pdfs
+    #' 
+    #' Plot histogram of observations for the variable specified by the argument name, 
+    #' overlaid with the pdf of the specified distribution for that data stream. 
+    #' Helpful to select initial parameter values for model fitting, or to visualise 
+    #' fitted state-dependent distributions.
+    #' 
+    #' @param name Name of response variable for which the histogram
+    #' and pdfs should be plotted.
+    #' @param par Optional matrix of parameters, with one row for each state
+    #' and one column for each parameter. The columns of the matrix should be
+    #' named with the names of the parameters, e.g. "mean" and "sd" for normal
+    #' distribution. If not provided, the parameters stored in the object are
+    #' used (default).
+    #' @param weights Optional vector of length the number of pdfs that are
+    #' plotted. Useful to visualise a mixture of distributions weighted by the
+    #' proportion of time spent in the different states.
+    #' 
+    #' @return A ggplot object
+    plot_dist = function(name, par = NULL, weights = NULL) {
       # Colour palette
       pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
       

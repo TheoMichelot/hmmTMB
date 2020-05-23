@@ -1,6 +1,6 @@
 
-##' This file contains the distributions currently included in hmmTMB, but
-##' user-specified distributions can be added with the name "custom"
+# This file contains the distributions currently included in hmmTMB, but
+# user-specified distributions can be added with the name "custom"
 
 # Poisson
 dist_pois <- Dist$new(

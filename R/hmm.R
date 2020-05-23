@@ -1,49 +1,8 @@
 
-#' Hidden Markov model class
+#' R6 class for hidden Markov model
 #'
-#' @description Encapsulates the hidden Markov model.
-#' Object can be created using $new with arguments:
-#' \itemize{
-#'   \item obs: a Observation object
-#'   \item hidden: a MarkovChain object
-#' }
-#'
-#' @section Methods:
-#' \itemize{
-#' 
-#'  \item{\code{setup()}}{setup model with TMB. This creates an attribute 
-#'  \code{tmb_obj}, which can be used to evaluate the negative log-likelihood
-#'  function.}
-#'  
-#'  \item{\code{fit()}}{fit the model}
-#'  
-#'  \item{\code{viterbi()}}{estimate most likely state sequence using the Viterbi
-#'  algorithm}
-#'  
-#'  \item{\code{res()}}{fitted model object, after optimisation}
-#'  
-#'  \item{\code{par()}}{current model parameters}
-#'  
-#'  \item{\code{CI_wpar(level = 0.95)}}{confidence intervals for model parameters 
-#'  on the working scale. The argument specifies the confidence level (default: 0.95
-#'  for 95% confidence intervals). These are Wald confidence intervals, obtained
-#'  from the standard errors returned by the TMB function \code{sdreport}. See the
-#'  TMB documentation for more details.}
-#'  
-#'  \item{\code{nllk(par)}}{negative log-likelihood function, taking a vector of
-#'  parameters on the working scale as input}
-#'  
-#'  \item{\code{tmb_obj()}}{access the model object created by TMB. This is the
-#'  output of the TMB function \code{MakeADFun}, and it is a list including elements 
-#'  \code{fn} (objective function), \code{gr} (gradient function of fn), and
-#'  \code{par} (initial parameters on working scale).}
-#'  
-#'  \item{\code{tmb_rep()}}{access the output of the TMB function \code{sdreport},
-#'  which includes estimates and standard errors for all model parameters.
-#'  
-#'  \item{\code{states()}}{most likely state sequence, after viterbi has been run}
-#' }
-
+#' Encapsulates the observation and hidden state models for a hidden
+#' Markov model.
 Hmm <- R6Class(
   classname = "Hmm",
   
@@ -51,6 +10,12 @@ Hmm <- R6Class(
     #################
     ## Constructor ##
     #################
+    #' @description Create new Hmm object
+    #' 
+    #' @param obs Observation object
+    #' @param hidden MarkovChain object
+    #' 
+    #' @return A new Hmm object
     initialize = function(obs, hidden) {
       private$obs_ <- obs
       private$hidden_ <- hidden
@@ -59,8 +24,13 @@ Hmm <- R6Class(
     ###############
     ## Accessors ##
     ###############
+    #' @description Observation object for this model
     obs = function() {return(private$obs_)},
+    
+    #' @description MarkovChain object for this model
     hidden = function() {return(private$hidden_)},
+    
+    #' @description Output of optimiser after model fitting
     res = function() {
       if (is.null(private$fit_)) {
         stop("Fit model first")
@@ -68,6 +38,14 @@ Hmm <- R6Class(
       
       return(private$fit_)
     },
+    
+    #' @description Model object created by TMB. This is the output of 
+    #' the TMB function \code{MakeADFun}, and it is a list including elements
+    #' \itemize{
+    #'   \item{\code{fn}}{Objective function}
+    #'   \item{\code{gr}}{Gradient function of fn}
+    #'   \item{\code{par}}{Vector of initial parameters on working scale}
+    #' }
     tmb_obj = function() {
       if(is.null(private$tmb_obj_)) {
         stop("Setup model first")
@@ -75,6 +53,9 @@ Hmm <- R6Class(
       
       return(private$tmb_obj_)
     },
+    
+    #' @description Output of the TMB function \code{sdreport}, which includes 
+    #' estimates and standard errors for all model parameters.
     tmb_rep = function() {
       if(is.null(private$tmb_rep_)) {
         stop("Fit model first")
@@ -82,6 +63,9 @@ Hmm <- R6Class(
       
       return(private$tmb_rep_)
     },
+    
+    #' @description Vector of estimated states, after \code{viterbi} has
+    #' been run
     states = function() {
       if(is.null(private$states_)) {
         stop("Run viterbi first")
@@ -90,25 +74,36 @@ Hmm <- R6Class(
       return(private$states_)
     },
     
-    ######################
-    ## Model parameters ##
-    ######################
+    ###################
+    ## Other methods ##
+    ###################
+    #' @description Model parameters
+    #' 
+    #' @return A list with elements:
+    #' \itemize{
+    #'   \item{\code{obspar}}{Parameters of observation model}
+    #'   \item{\code{tpm}}{Transition probability matrix of hidden state model}
+    #' }
     par = function() {
       obspar <- self$obs()$par()
       tpm <- self$hidden()$tpm()
       return(list(obspar = obspar, tpm = tpm))
     },
     
-    ########################
-    ## Objective function ##
-    ########################
+    #' @description Objective function
+    #' 
+    #' @param par Vector of parameters for which the function should be
+    #' evaluated (on the working scale).
+    #' 
+    #' @return Negative log-likelihood
     nllk = function(par) {
       self$tmb_obj()$fn(par)
     },
     
-    ###############
-    ## TMB setup ##
-    ###############
+    #' @description TMB setup
+    #' 
+    #' This creates an attribute \code{tmb_obj}, which can be used to 
+    #' evaluate the negative log-likelihood function.
     setup = function() {
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
@@ -202,9 +197,14 @@ Hmm <- R6Class(
       private$tmb_obj_ <- obj
     },
     
-    ###################
-    ## Model fitting ##
-    ###################
+    #' @description Model fitting
+    #' 
+    #' The negative log-likelihood of the model is minimised using the
+    #' function \code{optim}. TMB uses the Laplace approximation to integrate 
+    #' the random effects out of the likelihood.
+    #' 
+    #' After the model has been fitted, the output of \code{optim} can be
+    #' accessed using the method \code{res}.
     fit = function() {
       # Setup if necessary
       if(is.null(private$tmb_obj_)) {
@@ -236,9 +236,9 @@ Hmm <- R6Class(
       }
     },
     
-    #######################
-    ## Viterbi algorithm ##
-    #######################
+    #' @description Viterbi algorithm
+    #' 
+    #' @return Most likely state sequence
     viterbi = function() {
       data <- self$obs()$data()$data()
       ID <- self$obs()$data()$ID()
@@ -307,9 +307,16 @@ Hmm <- R6Class(
       return(all_states)
     },
     
-    ###########################################
-    ## Confidence intervals on working scale ##
-    ###########################################
+    #' @description Confidence intervals for model parameters on the working scale 
+    #' 
+    #' These are Wald confidence intervals, obtained from the standard errors 
+    #' returned by the TMB function \code{sdreport}. See the TMB documentation 
+    #' for more details.
+    #' 
+    #' @param level Confidence level (default: 0.95 for 95\% confidence intervals)
+    #' 
+    #' @return Matrix with three columns: (1) estimates, (2) lower bounds of
+    #' confidence intervals, (3) upper bounds of confidence intervals.
     CI_wpar = function(level = 0.95) {
       if(is.null(private$tmb_rep_)) {
         stop("Fit model first")
