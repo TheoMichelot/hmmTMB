@@ -26,6 +26,9 @@ simHMM <- function(nind, n, shape_par, scale_par, lambda_par, lambda_re, tpm, X)
   # Initialise data frame
   obs <- NULL
   
+  # Initialise state vector
+  states <- NULL
+  
   # Loop over individuals
   for(zoo in 1:nind) {
     # Simulate state process
@@ -51,9 +54,11 @@ simHMM <- function(nind, n, shape_par, scale_par, lambda_par, lambda_re, tpm, X)
     obs <- rbind(obs, data.frame(ID = factor(zoo),
                                  step = step,
                                  count = count))
+    
+    states <- c(states, s)
   }
   
-  return(list(data = cbind(obs, X), state = s))
+  return(list(data = cbind(obs, X), states = states))
 }
 
 # Simulation parameters
@@ -76,15 +81,15 @@ tpm <- matrix(c(0.95, 0.1, 0.05, 0.9), nc = 2)
 
 # Simulate covariates
 X <- data.frame(Intercept = 1,
-                x1 = rnorm(n),
-                x2 = rnorm(n))
+                x1 = cumsum(rnorm(n, 0, 0.05)),
+                x2 = cumsum(rnorm(n, 0, 0.05)))
 
 # Simulate HMM data
 simdat <- simHMM(nind = nind, n = n, shape_par = shape_par, scale_par = scale_par, 
                  lambda_par = lambda_par, lambda_re = lambda_re, 
                  tpm = tpm, X = as.matrix(X))
 data <- simdat$data
-states <- simdat$states
+states <- simdat$state
 
 # Observation distributions
 dists <- list(step = dist_gamma, count = dist_pois)
@@ -94,7 +99,6 @@ par0_shape <- c(log(1), log(4), 0, 0, 0, 0)
 par0_scale <- c(log(1), log(4))
 par0_lambda <- c(log(3), log(7))
 wpar_fe <- c(par0_shape, par0_scale, par0_lambda)
-wpar_re <- rep(0, 2*nind)
 
 # Formulas on observation parameters
 formulas <- list(step = list(shape = ~ x1 + x2, scale = ~ 1),
@@ -103,9 +107,8 @@ formulas <- list(step = list(shape = ~ x1 + x2, scale = ~ 1),
 # Create objects
 dat <- HmmData$new(data)
 obs <- Observation$new(dat, dists = dists, n_states = 2, wpar = wpar_fe, 
-                       wpar_re = wpar_re, formulas = formulas)
-hid <- MarkovChain$new(matrix(c(".", "~1", "~1", "."), nr = 2),
-                       matrix(c(0.8, 0.2, 0.2, 0.8), nr = 2))
+                       formulas = formulas)
+hid <- MarkovChain$new(n_states = 2)
 mod <- Hmm$new(obs, hid)
 
 # Fit model
@@ -122,4 +125,4 @@ lambda_est <- matrix(wpar[9:10], ncol = 2)
 1/sqrt(exp(mod$res()$par["log_lambda_obs"]))
 
 s <- mod$viterbi()
-length(which(states == s))/length(states)
+table(s == states)/length(s)
