@@ -185,12 +185,14 @@ Observation <- R6Class(
     
     # Working to natural parameter transformation
     # (No covariates)
-    w2n = function(wpar, n_states) {
+    w2n = function(wpar) {
       # Initialise list of natural parameters
       par <- list()
       
       # Number of observed variables
       nvar <- length(self$dists())
+      # Number of states
+      n_states <- self$nstates()
       
       # Counter to subset observation parameters
       par_count <- 1
