@@ -222,7 +222,7 @@ Hmm <- R6Class(
       par_list <- as.list(private$tmb_rep_, "Estimate")
       
       # Observation parameters
-      self$obs()$update_wpar(wpar = par_list$wpar_fe_obs, n_states = n_states)
+      self$obs()$update_wpar(wpar = par_list$wpar_fe_obs)
       mats_obs <- self$obs()$make_mat()
       if(!is.null(mats_obs$ncol_re)) { # Only update if there are random effects
         self$obs()$update_wpar_re(wpar = par_list$wpar_re_obs)
@@ -258,8 +258,7 @@ Hmm <- R6Class(
       # Transition probability matrices      
       mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
       tpm_all <- self$hidden()$tpm_all(X_fe = mod_mat_hid$X_fe, 
-                                       X_re = mod_mat_hid$X_re,
-                                       n = n)
+                                       X_re = mod_mat_hid$X_re)
       
       # Number of unique IDs
       n_id <- length(unique(ID))

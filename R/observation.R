@@ -112,12 +112,12 @@ Observation <- R6Class(
       private$par_ <- par
       private$wpar_ <- self$n2w(par)
     },
-    update_wpar = function(wpar, n_states) {
+    update_wpar = function(wpar) {
       names(wpar) <- NULL
       private$wpar_ <- wpar
       if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {
         # Only update natural parameters if no covariates
-        private$par_ <- self$w2n(wpar, n_states)
+        private$par_ <- self$w2n(wpar)
       }
     },
     update_wpar_re = function(wpar_re) {
