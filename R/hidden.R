@@ -97,11 +97,12 @@ MarkovChain <- R6Class(
       make_mat_hid(formulas = formulas, data = data)
     },
     
-    tpm_all = function(X_fe, X_re, n) {
+    tpm_all = function(X_fe, X_re) {
+      n_states <- self$nstates()
       ltpm <- X_fe %*% self$par() + X_re %*% self$par_re()
-      ltpm_mat <- matrix(ltpm, nrow = n)
+      ltpm_mat <- matrix(ltpm, ncol = n_states)
       tpm <- apply(ltpm_mat, 1, private$par2tpm)
-      tpm <- array(tpm, dim = c(self$nstates(), self$nstates(), n))
+      tpm <- array(tpm, dim = c(n_states, n_states, nrow(ltpm_mat)))
       return(tpm)
     }
   ),
