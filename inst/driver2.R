@@ -85,8 +85,7 @@ formulas <- list(step = list(shape = ~ x1, scale = ~ 1),
 dat <- HmmData$new(data)
 obs <- Observation$new(dat, dists = dists, n_states = 2, wpar = wpar, 
                        formulas = formulas)
-hid <- MarkovChain$new(matrix(c(".", "~1", "~1", "."), nr = 2),
-                       matrix(c(0.8, 0.2, 0.2, 0.8), nr = 2))
+hid <- MarkovChain$new(n_states = 2)
 mod <- Hmm$new(obs, hid)
 
 # Fit model
