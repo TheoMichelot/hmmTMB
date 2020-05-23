@@ -62,15 +62,17 @@ Observation <- R6Class(
       private$data_ <- data
       private$dists_ <- dists
       private$nstates_ <- n_states
+      
       if(is.null(formulas)) {
         # Case with no covariates
         private$par_ <- par 
         private$wpar_ <- self$n2w(par)
-        private$wpar_re_ <- integer(0) # so that X_re %*% wpar_re is valid
+        
+        # Set all formulas to ~1
         private$formulas_ <- lapply(par, function(varpar) {
           f <- lapply(varpar, function(...) {
             g <- lapply(1:n_states, function(...) {
-              return(~1) # Set all formulas to ~1              
+              return(~1)              
             })
             names(g) <- paste0("state", 1:n_states)
             return(g)
@@ -82,8 +84,20 @@ Observation <- R6Class(
       } else {
         # Case with covariates
         private$wpar_ <- wpar
-        private$wpar_re_ <- wpar_re
         private$formulas_ <- make_formulas(formulas, n_states = n_states)        
+      }
+      
+      # Initialise random effect parameters
+      mats <- self$make_mat()
+      if(ncol(mats$X_re) == 0) {
+        # integer(0) rather than NULL so that X_re %*% wpar_re 
+        # is valid when X_re has zero columns
+        private$wpar_re_ <- integer(0) 
+      } else if(is.null(wpar_re)) {
+        # if no value provided, wpar_re initialised to vector of zeros
+        private$wpar_re_ <- rep(0, ncol(mats$X_re))
+      } else {
+        private$wpar_re_ <- wpar_re
       }
     },
     

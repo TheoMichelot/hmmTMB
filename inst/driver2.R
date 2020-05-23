@@ -98,4 +98,4 @@ scale_est <- matrix(wpar[5:6], ncol = 2)
 lambda_est <- matrix(wpar[7:12], ncol = 2)
 
 s <- mod$viterbi()
-length(which(s == states))/length(s)
+table(s == states)/length(s)
