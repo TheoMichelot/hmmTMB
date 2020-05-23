@@ -1,5 +1,6 @@
 
 #' Distribution class
+#' @name Dist
 #'
 #' @description Distribution for observed variables.
 #' Object can be created using $new with arguments:
@@ -11,10 +12,12 @@
 #'   parameters
 #' }
 #'
-#' Methods include:
+#' @section Methods:
 #' \itemize{
-#'  \item n2w Transforms parameters from natural to working scale
-#'  \item w2n Transforms parameters from working to natural scale
+#'  \item{\code{n2w(par)}}{Transforms parameters from natural to working scale.}
+#'  \item{\code{w2n(wpar, as_matrix = FALSE)}}{Transforms parameters from working 
+#'  to natural scale. Returns a list if as_matrix = FALSE, else returns a matrix
+#'  with one row for each state and one column for each parameter.}
 #' }
 
 Dist <- R6Class(
@@ -40,6 +43,7 @@ Dist <- R6Class(
     code = function() {return(private$code_)},
     
     # Evaluate the pdf of x for a generic parameter vector par
+    # (used in Observation$obs_probs)
     pdf_apply = function(x, par, log = FALSE) {
       args <- list(x = x)
       args <- c(args, par, log = log)

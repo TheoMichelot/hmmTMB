@@ -4,15 +4,23 @@
 #' @description Encapsulates the hidden Markov model.
 #' Object can be created using $new with arguments:
 #' \itemize{
-#'   \item obs: a Observations object
+#'   \item obs: a Observation object
 #'   \item hidden: a MarkovChain object
 #' }
 #'
 #' Methods include:
 #' \itemize{
+#'  \item setup: setup model with TMB
 #'  \item fit: fit the model
+#'  \item viterbi: estimate most likely state sequence using the Viterbi
+#'  algorithm
 #'  \item res: fitted model object, after optimisation
-#'  \item est: parameter estimates
+#'  \item par: model parameters
+#'  \item CI_wpar: confidence intervals for model parameters 
+#'  on the working scale
+#'  \item nllk: negative log-likelihood function, taking a vector of
+#'  parameters on the working scale as input
+#'  \item 
 #' }
 
 Hmm <- R6Class(

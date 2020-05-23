@@ -17,15 +17,20 @@
 #' \itemize{
 #'  \item plot_dist: Plot histogram of observations, overlaid with the pdf
 #'  of the specified distribution for that data stream. Helpful to select
-#'  initial parameter values for model fitting.
+#'  initial parameter values for model fitting, or to visualise fitted
+#'  state-dependent distributions.
 #'  \item update_par: Update parameters to par
 #'  \item update_wpar: Update working parameters to wpar
-#'  \item make_X: Create design matrix for observation model
+#'  \item make_mat: Create model matrices for observation model (design
+#'  matrices for fixed and random effects, and smoothness matrix for
+#'  random effects)
 #'  \item obs_var: Data frame of observed (response) variables
 #'  \item n2w: Transform parameters from natural to working scale
 #'  (for model with no covariates)
 #'  \item w2n: Transform parameters from working to natural scale
 #'  (for model with no covariates)
+#'  \item obs_probs: Matrix of likelihoods of observations, with one row
+#'  for each time step, and one column for each state.
 #' }
 
 Observation <- R6Class(

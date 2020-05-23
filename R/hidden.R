@@ -4,20 +4,31 @@
 #' @description Encapsulates the Markov chain for the hidden component of the HMM.
 #' Object can be created using $new with arguments:
 #' \itemize{
-#'   \item structure: matrix with an entry of "." on diagonal, a "0" for 
+#'   \item n_states: number of states. If not specified, then \code{structure} 
+#'   needs to be provided as a matrix, and n_states is deduced from its dimensions.
+#'   \item structure: either (1) matrix with an entry of "." on diagonal, a "0" for 
 #'   transitions that are not allowed (not implemented yet), and a formula "~1" 
-#'   for covariates affecting transitions that are to be estimated.
-#'   \item tpm: an initial transition probability matrix.
+#'   for covariates affecting transitions that are to be estimated, or (2) single
+#'   formula, assumed for all transition probabilities. (Default: no covariate
+#'   dependence.)
+#'   \item tpm: an initial transition probability matrix. (Default: 0.9 on diagonal,
+#'   and 0.1/(n_states - 1) for all other entries.)
 #' }
 #'
-#' Methods include:
+#' @section Methods:
 #' \itemize{
-#'  \item  structure: returns the specified structure of the Markov chain
-#'  \item tpm: return current transition probability matrix
-#'  \item par: return current parameter estimates for transitions
-#'  \item nstates: return number of states in Markov chain
-#'  \item update_par (newpar): set parameters to newpar
-#'  \item update_tpm (newtpm): set transition probability matrix to newtpm
+#'  \item{\code{structure}}{specified structure of the Markov chain}
+#'  \item{\code{tpm}}{current transition probability matrix}
+#'  \item{\code{par}}{current parameter estimates for transitions}
+#'  \item{\code{nstates}}{number of states in Markov chain}
+#'  \item{\code{update_par(newpar)}}{set parameters to newpar}
+#'  \item{\code{update_tpm(newtpm)}}{set transition probability matrix to newtpm}
+#'  \item{\code{make_mat(data)}}{create model matrices for hidden state model, 
+#'  i.e. design matrices for fixed and random effects, and smoothness matrix 
+#'  for random effects. \code{data} is a data frame including the covariates
+#'  needed to create the model matrices.}
+#'  \item{\code{tpm_all(X_fe, X_re)}}{transition probability matrices, for
+#'  design matrices \code{X_fe} and \code{X_re}}
 #' }
 
 MarkovChain <- R6Class(
