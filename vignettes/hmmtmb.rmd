@@ -122,6 +122,7 @@ _Here we will need to explain how additional distributions can be added by users
  - confidence intervals
     + on natural parameters
     + on transformed quantities (e.g. covariate-dependent parameters)
+    + run simulation experiments to check coverage
  
  - pseudo-residuals
  
@@ -157,4 +158,7 @@ _Here we will need to explain how additional distributions can be added by users
  - informative error messages in constructors
  
  - deal with NAs in covariates (linear interpolation? nearest value?)
+ 
+ - simulation function, to simulate either from a fitted model or based
+ on parameter values given as input. Method of Hmm class?
  
