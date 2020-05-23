@@ -48,12 +48,17 @@ Hmm <- R6Class(
   classname = "Hmm",
   
   public = list(
+    #################
+    ## Constructor ##
+    #################
     initialize = function(obs, hidden) {
       private$obs_ <- obs
       private$hidden_ <- hidden
     },
     
-    # Accessors
+    ###############
+    ## Accessors ##
+    ###############
     obs = function() {return(private$obs_)},
     hidden = function() {return(private$hidden_)},
     res = function() {
@@ -85,12 +90,25 @@ Hmm <- R6Class(
       return(private$states_)
     },
     
-    # Objective function
+    ######################
+    ## Model parameters ##
+    ######################
+    par = function() {
+      obspar <- self$obs()$par()
+      tpm <- self$hidden()$tpm()
+      return(list(obspar = obspar, tpm = tpm))
+    },
+    
+    ########################
+    ## Objective function ##
+    ########################
     nllk = function(par) {
       self$tmb_obj()$fn(par)
     },
     
-    # TMB setup
+    ###############
+    ## TMB setup ##
+    ###############
     setup = function() {
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
@@ -183,8 +201,10 @@ Hmm <- R6Class(
       # Negative log-likelihood function
       private$tmb_obj_ <- obj
     },
-
-    # Fitting
+    
+    ###################
+    ## Model fitting ##
+    ###################
     fit = function() {
       # Setup if necessary
       if(is.null(private$tmb_obj_)) {
@@ -216,35 +236,9 @@ Hmm <- R6Class(
       }
     },
     
-    # Wald confidence intervals for the parameters on working scale
-    CI_wpar = function(level = 0.95) {
-      if(is.null(private$tmb_rep_)) {
-        stop("Fit model first")
-      }
-      
-      par_list <- as.list(private$tmb_rep_, "Estimate")
-      se_list <- as.list(private$tmb_rep_, "Std. Error")
-      
-      lower <- lapply(seq_along(par_list), function(i) {
-        par_list[[i]] - qnorm(1 - (1 - level)/2) * se_list[[i]]
-      })
-      upper <- lapply(seq_along(par_list), function(i) {
-        par_list[[i]] + qnorm(1 - (1 - level)/2) * se_list[[i]]
-      })
-      
-      return(cbind(estimate = unlist(par_list),
-                   lower = unlist(lower),
-                   upper = unlist(upper)))
-    },
-    
-    # Model parameters
-    par = function() {
-      obspar <- self$obs()$par()
-      tpm <- self$hidden()$tpm()
-      return(list(obspar = obspar, tpm = tpm))
-    },
-    
-    # Viterbi algorithm
+    #######################
+    ## Viterbi algorithm ##
+    #######################
     viterbi = function() {
       data <- self$obs()$data()$data()
       ID <- self$obs()$data()$ID()
@@ -312,6 +306,29 @@ Hmm <- R6Class(
       private$states_ <- all_states
       
       return(all_states)
+    },
+    
+    ###########################################
+    ## Confidence intervals on working scale ##
+    ###########################################
+    CI_wpar = function(level = 0.95) {
+      if(is.null(private$tmb_rep_)) {
+        stop("Fit model first")
+      }
+      
+      par_list <- as.list(private$tmb_rep_, "Estimate")
+      se_list <- as.list(private$tmb_rep_, "Std. Error")
+      
+      lower <- lapply(seq_along(par_list), function(i) {
+        par_list[[i]] - qnorm(1 - (1 - level)/2) * se_list[[i]]
+      })
+      upper <- lapply(seq_along(par_list), function(i) {
+        par_list[[i]] + qnorm(1 - (1 - level)/2) * se_list[[i]]
+      })
+      
+      return(cbind(estimate = unlist(par_list),
+                   lower = unlist(lower),
+                   upper = unlist(upper)))
     }
   ),
   

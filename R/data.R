@@ -23,6 +23,9 @@ HmmData <- R6Class(
   classname = "HmmData",
   
   public = list(
+    #################
+    ## Constructor ##
+    #################
     initialize = function(data, interval = NA) {
       
       # If time column and interval provided, insert NAs to obtain regular time grid
@@ -56,10 +59,14 @@ HmmData <- R6Class(
       }
     },
     
-    # Accessors
+    ###############
+    ## Accessors ##
+    ###############
     data = function() {return(private$data_)},
     
-    # Return vector of time series IDs (vector of 1s if not provided)
+    ###############################
+    ## Vector of time series IDs ##
+    ###############################
     ID = function() {
       if(is.null(self$data()$ID)) {
         return(factor(rep(1, nrow(self$data()))))

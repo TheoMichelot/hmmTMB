@@ -36,13 +36,17 @@
 #'  needed to create the model matrices.}
 #'  
 #'  \item{\code{tpm_all(X_fe, X_re)}}{transition probability matrices, for
-#'  design matrices \code{X_fe} and \code{X_re}}
+#'  design matrices \code{X_fe} and \code{X_re}. Returns an array where
+#'  each slice is a transition probability matrix.}
 #' }
 
 MarkovChain <- R6Class(
   classname = "MarkovChain",
   
   public = list(
+    #################
+    ## Constructor ##
+    #################
     initialize = function(n_states = NULL, structure = NULL, tpm = NULL) {
       if(is.null(structure)) {
         # Default structure: no covariate effects
@@ -70,14 +74,18 @@ MarkovChain <- R6Class(
       private$par_re_ <- integer(0)  # so that X_re %*% par_re is valid
     },
     
-    # Accessors
+    ###############
+    ## Accessors ##
+    ###############
     structure = function() {return(private$structure_)},
     tpm = function() {return(private$tpm_)},
     par = function() {return(private$par_)},
     par_re = function() {return(private$par_re_)},
     nstates = function() {return(private$nstates_)},
     
-    # Mutators
+    ##############
+    ## Mutators ##
+    ##############
     update_tpm = function(newtpm) {
       private$tpm_ <- newtpm
       private$par_ <- private$tpm2par(newtpm)
@@ -93,6 +101,9 @@ MarkovChain <- R6Class(
       private$par_re_ <- newpar
     },
     
+    #########################
+    ## Make model matrices ##
+    #########################
     make_mat = function(data) {
       struct <- self$structure()[!diag(self$nstates())]
       formulas <- lapply(as.list(struct), function(string) {
@@ -105,6 +116,9 @@ MarkovChain <- R6Class(
       make_mat_hid(formulas = formulas, data = data)
     },
     
+    #####################################
+    ## Transition probability matrices ##
+    #####################################
     tpm_all = function(X_fe, X_re) {
       n_states <- self$nstates()
       ltpm <- X_fe %*% self$par() + X_re %*% self$par_re()

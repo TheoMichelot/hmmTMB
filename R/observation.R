@@ -54,6 +54,9 @@ Observation <- R6Class(
   classname = "Observation",
   
   public = list(
+    #################
+    ## Constructor ##
+    #################
     initialize = function(data, dists, n_states, par = NULL, wpar = NULL, 
                           wpar_re = NULL, formulas = NULL) {
       private$data_ <- data
@@ -84,7 +87,9 @@ Observation <- R6Class(
       }
     },
     
-    # Accessors
+    ###############
+    ## Accessors ##
+    ###############
     data = function() {return(private$data_)},
     dists = function() {return(private$dists_)},
     nstates = function() {return(private$nstates_)},
@@ -93,7 +98,16 @@ Observation <- R6Class(
     wpar_re = function() {return(private$wpar_re_)},
     formulas = function() {return(private$formulas_)},
     
-    # Mutators
+    # Data frame of response variables
+    obs_var = function() {
+      obs_names <- names(self$dists())
+      obs_var <- self$data()$data()[, obs_names, drop = FALSE]
+      return(obs_var)
+    },
+    
+    ##############
+    ## Mutators ##
+    ##############
     update_par = function(par) {
       private$par_ <- par
       private$wpar_ <- self$n2w(par)
@@ -110,20 +124,17 @@ Observation <- R6Class(
       private$wpar_re_ <- wpar_re
     },
     
-    # Data frame of response variables
-    obs_var = function() {
-      obs_names <- names(self$dists())
-      obs_var <- self$data()$data()[, obs_names, drop = FALSE]
-      return(obs_var)
-    },
-    
-    # Create model matrices
+    ###########################
+    ## Create model matrices ##
+    ###########################
     make_mat = function() {
       make_mat_obs(formulas = self$formulas(),
                    data = self$data()$data())
     },
     
-    # Compute observation probabilities
+    #####################################
+    ## Compute observation likelihoods ##
+    #####################################
     obs_probs = function(X_fe, X_re) {
       # Data frame of observations
       data <- self$obs_var()
@@ -173,8 +184,9 @@ Observation <- R6Class(
       return(prob)
     },
     
-    # Natural to working parameter transformation
-    # (No covariates)
+    #################################################
+    ## Natural to working parameter transformation ##
+    #################################################
     n2w = function(par) {
       wpar <- lapply(1:length(self$dists()), 
                      function(i) dists[[i]]$n2w(par[[i]]))
@@ -183,8 +195,9 @@ Observation <- R6Class(
       return(wpar)
     },
     
-    # Working to natural parameter transformation
-    # (No covariates)
+    #################################################
+    ## Working to natural parameter transformation ##
+    #################################################
     w2n = function(wpar) {
       # Initialise list of natural parameters
       par <- list()
@@ -211,7 +224,9 @@ Observation <- R6Class(
       return(par)
     },
     
-    # Histogram of observations with overlaid pdf
+    #####################################
+    ## Plot histogram of data and pdfs ##
+    #####################################
     plot_dist = function(name, par = NULL, weights = NULL, ...) {
       # Colour palette
       pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")

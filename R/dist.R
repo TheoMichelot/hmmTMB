@@ -26,6 +26,9 @@ Dist <- R6Class(
   classname = "Dist",
   
   public = list(
+    #################
+    ## Constructor ##
+    #################
     initialize = function(name, pdf, link, invlink, npar) {
       private$name_ <- name
       private$pdf_ <- pdf
@@ -36,7 +39,9 @@ Dist <- R6Class(
       private$code_ <- which(distnames == name) - 1 # Starts at 0 for C++
     },
     
-    # Accessors
+    ###############
+    ## Accessors ##
+    ###############
     name = function() {return(private$name_)},
     pdf = function() {return(private$pdf_)},
     link = function() {return(private$link_)},
@@ -44,7 +49,9 @@ Dist <- R6Class(
     npar = function() {return(private$npar_)},
     code = function() {return(private$code_)},
     
-    # Evaluate the pdf of x for a generic parameter vector par
+    ###############################################
+    ## pdf of x for generic parameter vector par ##
+    ###############################################
     # (used in Observation$obs_probs)
     pdf_apply = function(x, par, log = FALSE) {
       args <- list(x = x)
@@ -52,7 +59,9 @@ Dist <- R6Class(
       do.call(self$pdf(), args)
     },
     
-    # Transform parameters from natural to working scale
+    ########################################################
+    ## Transform parameters from natural to working scale ##
+    ########################################################
     n2w = function(par) {
       # Apply link functions to natural parameters
       wpar_list <- Map(function(fn, arg) {fn(arg)}, self$link(), par)
@@ -60,7 +69,9 @@ Dist <- R6Class(
       return(wpar)
     },
     
-    # Transform parameters from working to natural scale
+    ########################################################
+    ## Transform parameters from working to natural scale ##
+    ########################################################
     w2n = function(wpar, as_matrix = FALSE) {
       invlink <- self$invlink()
       # Number of parameters for this distribution
