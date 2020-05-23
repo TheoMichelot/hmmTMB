@@ -8,19 +8,40 @@
 #'   \item hidden: a MarkovChain object
 #' }
 #'
-#' Methods include:
+#' @section Methods:
 #' \itemize{
-#'  \item setup: setup model with TMB
-#'  \item fit: fit the model
-#'  \item viterbi: estimate most likely state sequence using the Viterbi
-#'  algorithm
-#'  \item res: fitted model object, after optimisation
-#'  \item par: model parameters
-#'  \item CI_wpar: confidence intervals for model parameters 
-#'  on the working scale
-#'  \item nllk: negative log-likelihood function, taking a vector of
-#'  parameters on the working scale as input
-#'  \item 
+#' 
+#'  \item{\code{setup()}}{setup model with TMB. This creates an attribute 
+#'  \code{tmb_obj}, which can be used to evaluate the negative log-likelihood
+#'  function.}
+#'  
+#'  \item{\code{fit()}}{fit the model}
+#'  
+#'  \item{\code{viterbi()}}{estimate most likely state sequence using the Viterbi
+#'  algorithm}
+#'  
+#'  \item{\code{res()}}{fitted model object, after optimisation}
+#'  
+#'  \item{\code{par()}}{current model parameters}
+#'  
+#'  \item{\code{CI_wpar(level = 0.95)}}{confidence intervals for model parameters 
+#'  on the working scale. The argument specifies the confidence level (default: 0.95
+#'  for 95% confidence intervals). These are Wald confidence intervals, obtained
+#'  from the standard errors returned by the TMB function \code{sdreport}. See the
+#'  TMB documentation for more details.}
+#'  
+#'  \item{\code{nllk(par)}}{negative log-likelihood function, taking a vector of
+#'  parameters on the working scale as input}
+#'  
+#'  \item{\code{tmb_obj()}}{access the model object created by TMB. This is the
+#'  output of the TMB function \code{MakeADFun}, and it is a list including elements 
+#'  \code{fn} (objective function), \code{gr} (gradient function of fn), and
+#'  \code{par} (initial parameters on working scale).}
+#'  
+#'  \item{\code{tmb_rep()}}{access the output of the TMB function \code{sdreport},
+#'  which includes estimates and standard errors for all model parameters.
+#'  
+#'  \item{\code{states()}}{most likely state sequence, after viterbi has been run}
 #' }
 
 Hmm <- R6Class(

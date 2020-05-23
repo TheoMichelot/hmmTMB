@@ -14,7 +14,9 @@
 #'
 #' @section Methods:
 #' \itemize{
+#'  
 #'  \item{\code{n2w(par)}}{Transforms parameters from natural to working scale.}
+#'  
 #'  \item{\code{w2n(wpar, as_matrix = FALSE)}}{Transforms parameters from working 
 #'  to natural scale. Returns a list if as_matrix = FALSE, else returns a matrix
 #'  with one row for each state and one column for each parameter.}

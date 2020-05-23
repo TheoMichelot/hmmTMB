@@ -13,24 +13,41 @@
 #'   \item formulas: list of formulas for observation parameters
 #' }
 #'
-#' Methods include:
+#' @section Methods:
 #' \itemize{
-#'  \item plot_dist: Plot histogram of observations, overlaid with the pdf
-#'  of the specified distribution for that data stream. Helpful to select
-#'  initial parameter values for model fitting, or to visualise fitted
-#'  state-dependent distributions.
-#'  \item update_par: Update parameters to par
-#'  \item update_wpar: Update working parameters to wpar
-#'  \item make_mat: Create model matrices for observation model (design
-#'  matrices for fixed and random effects, and smoothness matrix for
-#'  random effects)
-#'  \item obs_var: Data frame of observed (response) variables
-#'  \item n2w: Transform parameters from natural to working scale
-#'  (for model with no covariates)
-#'  \item w2n: Transform parameters from working to natural scale
-#'  (for model with no covariates)
-#'  \item obs_probs: Matrix of likelihoods of observations, with one row
-#'  for each time step, and one column for each state.
+#'  
+#'  \item{\code{plot_dist(name, par = NULL, weights = NULL)}}{Plot 
+#'  histogram of observations for the variable specified by the argument name, 
+#'  overlaid with the pdf of the specified distribution for that data stream. 
+#'  Helpful to select initial parameter values for model fitting, or to visualise 
+#'  fitted state-dependent distributions. Parameters can be passed through
+#'  the argument par, as a matrix with one row for each state and one column
+#'  for each parameter. The columns should be named with the names of the
+#'  parameters, e.g. "mean" and "sd" for a normal distribution. The argument
+#'  weights is an optional vector of length the number of pdfs that are plotted,
+#'  e.g. useful to visualise a mixture of distributions weighted by the proportion
+#'  of time spent in the different states.}
+#'  
+#'  \item{\code{update_par(par)}}{Update parameters to par}
+#'  
+#'  \item{\code{update_wpar(wpar)}}{Update working parameters to wpar}
+#'  
+#'  \item{\code{make_mat()}}{Create model matrices for observation model 
+#'  (design matrices for fixed and random effects, and smoothness matrix 
+#'  for random effects)}
+#'  
+#'  \item{\code{obs_var()}}{Data frame of observed (response) variables}
+#'  
+#'  \item{\code{n2w(par)}}{Transform parameters from natural to working scale
+#'  (for model with no covariates)}
+#'  
+#'  \item{\code{w2n(wpar)}}{Transform parameters from working to natural scale
+#'  (for model with no covariates)}
+#'  
+#'  \item{\code{obs_probs(X_fe, X_re)}}{Matrix of likelihoods of observations, 
+#'  with one row for each time step, and one column for each state. The design
+#'  matrices X_fe (fixed effects) and X_re (random effects) are passed as 
+#'  arguments.}
 #' }
 
 Observation <- R6Class(

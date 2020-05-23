@@ -17,16 +17,24 @@
 #'
 #' @section Methods:
 #' \itemize{
-#'  \item{\code{structure}}{specified structure of the Markov chain}
-#'  \item{\code{tpm}}{current transition probability matrix}
-#'  \item{\code{par}}{current parameter estimates for transitions}
-#'  \item{\code{nstates}}{number of states in Markov chain}
+#'  
+#'  \item{\code{structure()}}{specified structure of the Markov chain}
+#'  
+#'  \item{\code{tpm()}}{current transition probability matrix}
+#'  
+#'  \item{\code{par()}}{current parameter estimates for transitions}
+#'  
+#'  \item{\code{nstates()}}{number of states in Markov chain}
+#'  
 #'  \item{\code{update_par(newpar)}}{set parameters to newpar}
+#'  
 #'  \item{\code{update_tpm(newtpm)}}{set transition probability matrix to newtpm}
+#'  
 #'  \item{\code{make_mat(data)}}{create model matrices for hidden state model, 
 #'  i.e. design matrices for fixed and random effects, and smoothness matrix 
 #'  for random effects. \code{data} is a data frame including the covariates
 #'  needed to create the model matrices.}
+#'  
 #'  \item{\code{tpm_all(X_fe, X_re)}}{transition probability matrices, for
 #'  design matrices \code{X_fe} and \code{X_re}}
 #' }

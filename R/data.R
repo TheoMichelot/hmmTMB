@@ -4,13 +4,19 @@
 #' @description Encapsulates data observing one or more time series.
 #' Object can be created using $new with arguments:
 #' \itemize{
-#'   \item data: a data frame with at least one column of observations. A column called "time" can be
-#'   given for the time of each observation, otherwise assumed observations are regular in time.
+#'   \item data: a data frame with at least one column of observations. 
+#'   A column called "time" can be given for the time of each observation, 
+#'   otherwise assumed observations are regular in time. Other columns should
+#'   include "ID" (time series ID), and any covariates needed in the model.
 #' }
 #'
-#' Methods include:
+#' @section Methods:
 #' \itemize{
-#'  \item
+#'   
+#'   \item{\code{data()}}{data frame}
+#'   
+#'   \item{\code{ID()}}{vector of time series IDs (vector of 1s if not provided
+#'  in input data frame)}
 #' }
 
 HmmData <- R6Class(
