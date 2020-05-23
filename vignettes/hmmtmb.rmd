@@ -137,7 +137,7 @@ _Here we will need to explain how additional distributions can be added by users
     
  - zero inflation
  
- - improve parametrisation of mean of circular distributions
+ - improve parametrisation of mean of circular distributions (avoid numerical issues around -pi and pi)
  
  - allow for input of known states (semi-supervised learning)
  
@@ -153,4 +153,8 @@ _Here we will need to explain how additional distributions can be added by users
     + covariate effects...
     
  - update/create documentation for class methods and attributes
+ 
+ - informative error messages in constructors
+ 
+ - deal with NAs in covariates (linear interpolation? nearest value?)
  
