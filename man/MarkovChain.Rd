@@ -26,6 +26,7 @@ Contains the parameters and model formulas for the hidden process model.
 \item \href{#method-make_mat}{\code{MarkovChain$make_mat()}}
 \item \href{#method-tpm_all}{\code{MarkovChain$tpm_all()}}
 \item \href{#method-stat_dists}{\code{MarkovChain$stat_dists()}}
+\item \href{#method-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
 \item \href{#method-clone}{\code{MarkovChain$clone()}}
 }
 }
@@ -34,7 +35,7 @@ Contains the parameters and model formulas for the hidden process model.
 \subsection{Method \code{new()}}{
 Create new MarkovChain object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$new(n_states = NULL, structure = NULL, tpm = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$new(n_states = NULL, structure = NULL, tpm = NULL, par = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -51,6 +52,8 @@ dependence.)}
 
 \item{\code{tpm}}{Initial transition probability matrix. (Default: 0.9 on diagonal,
 and 0.1/(n_states - 1) for all other entries.)}
+
+\item{\code{par}}{Initial parameters of the state process, on the working scale.}
 }
 \if{html}{\out{</div>}}
 }
@@ -221,6 +224,35 @@ by \code{make_mat}}
 \subsection{Returns}{
 Matrix of stationary distributions. Each row corresponds to
 a row of the design matrices, and each column corresponds to a state.
+Design matrices for grid of covariates
+
+Used in plotting functions such as Hmm$plot_tpm and Hmm$plot_stat_dist
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-make_mat_grid"></a>}}
+\subsection{Method \code{make_mat_grid()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$make_mat_grid(var, data, covs = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var}}{Name of variable}
+
+\item{\code{data}}{Data frame containing the covariates}
+
+\item{\code{covs}}{Optional data frame with a single row and one column
+for each covariate, giving the values that should be used. If this is
+not specified, the mean value is used for numeric variables, and the
+first level for factor variables.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A list with the same elements as the output of make_mat, 
+plus a data frame of covariates values.
 }
 }
 \if{html}{\out{<hr>}}

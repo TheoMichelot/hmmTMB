@@ -29,6 +29,8 @@ Markov model.
 \item \href{#method-viterbi}{\code{Hmm$viterbi()}}
 \item \href{#method-CI_wpar}{\code{Hmm$CI_wpar()}}
 \item \href{#method-plot_ts}{\code{Hmm$plot_ts()}}
+\item \href{#method-plot_tpm}{\code{Hmm$plot_tpm()}}
+\item \href{#method-plot_stat_dist}{\code{Hmm$plot_stat_dist()}}
 \item \href{#method-clone}{\code{Hmm$clone()}}
 }
 }
@@ -159,9 +161,16 @@ TMB setup
 This creates an attribute \code{tmb_obj}, which can be used to 
 evaluate the negative log-likelihood function.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Hmm$setup()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Hmm$setup(silent = TRUE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{silent}}{Logical. If TRUE, all tracing outputs are hidden (default).}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-fit"></a>}}
@@ -175,9 +184,16 @@ the random effects out of the likelihood.
 After the model has been fitted, the output of \code{optim} can be
 accessed using the method \code{res}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Hmm$fit()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Hmm$fit(silent = TRUE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{silent}}{Logical. If TRUE, all tracing outputs are hidden (default).}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-viterbi"></a>}}
@@ -234,6 +250,56 @@ are plotted against each other.
 \item{\code{var1}}{Name of the variable to plot.}
 
 \item{\code{var2}}{Optional name of a second variable, for 2-d plot.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A ggplot object
+Plot transition probability matrix
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plot_tpm"></a>}}
+\subsection{Method \code{plot_tpm()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Hmm$plot_tpm(var, covs = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var}}{Name of covariate as a function of which the transition
+probabilities should be plotted}
+
+\item{\code{covs}}{Optional data frame with a single row and one column
+for each covariate, giving the values that should be used. If this is
+not specified, the mean value is used for numeric variables, and the
+first level for factor variables.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A ggplot object
+Plot stationary state probabilities
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plot_stat_dist"></a>}}
+\subsection{Method \code{plot_stat_dist()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Hmm$plot_stat_dist(var, covs = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var}}{Name of covariate as a function of which the state
+probabilities should be plotted}
+
+\item{\code{covs}}{Optional data frame with a single row and one column
+for each covariate, giving the values that should be used. If this is
+not specified, the mean value is used for numeric variables, and the
+first level for factor variables.}
 }
 \if{html}{\out{</div>}}
 }
