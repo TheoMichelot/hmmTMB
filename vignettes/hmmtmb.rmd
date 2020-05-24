@@ -115,6 +115,126 @@ obs_process$plot_dist(name = "x")
 
 _Here we will need to explain how additional distributions can be added by users._
 
+## Example of use
+
+We illustrate the use of the package on a data set of elk movement (from Morales et al., 2004, Ecology), accessible through the moveHMM package.
+
+```{r load-packs}
+# Load packages
+library(hmmTMB)
+library(moveHMM)
+```
+
+
+In analyses of animal movement, the step lengths and turning angles are modelled to capture features of the speed and directionality of the movement. We derive those variables from the location using the function prepData in moveHMM.
+
+```{r prep-data}
+tracks <- prepData(elk_data, type = "UTM", coordNames = c("Easting", "Northing"))
+
+head(tracks)
+```
+
+The data set now has columns for the coordinates (x and y), the step lengths and turning angles, the ID (track identifier), and a covariate (distance to water). hmmTMB doesn't allow for zero inflation for observation distributions with positive support (e.g. gamma), so we jitter step lengths with value zero.
+
+```{r jitter}
+indz <- which(tracks$step == 0)
+tracks$step[indz] <- runif(length(indz), 0, 1)
+```
+
+We create an HmmData object from the data frame. It should include columns for ID if necessary, as well as for any response variables and covariates included in the model.
+```{r hmmdata-new}
+data <- HmmData$new(data = tracks)
+```
+
+The class Observation encapsulates the observation process model of the hidden Markov model. To create an object of that class, we need to specify distributions for the response variables, as well as initial parameter values. We could also include covariate dependence in the parameters of the observation distributions. We use gamma distributions for the step lengths, and von Mises distributions for the turning angles.
+
+```{r obs-new}
+# Number of states of the HMM 
+n_states <- 2
+
+# Observation distributions: gamma for the step lengths, and
+# von Mises for the turning angles
+dists <- list(step = dist_gamma, angle = dist_vm)
+
+# Initial parameters
+mean0 <- c(300, 3000)
+sd0 <- c(400, 4000)
+par0_obs <- list(step = list(shape = mean0^2/sd0^2,
+                             scale = sd0^2/mean0),
+                 angle = list(mu = c(3, 0),
+                              kappa = c(0.2, 1)))
+
+# Create Observation object
+obs <- Observation$new(data = data, dists = dists, 
+                       n_states = n_states, par = par0_obs)
+```
+
+Similarly, we need to create an object of the class MarkovChain for the hidden process model, encapsulating the formulas and parameter values. Here, we formulate the transition probabilities as functions of the distance to water covariate.
+
+```{r hid-new}
+# Formula for transition probabilities
+formula <- "~ dist_water"
+
+# Initial parameters on working scale, chosen for dominant diagonal terms, and
+# no covariate effects
+par0_hid <- c(-2, 0, -2, 0)
+hid <- MarkovChain$new(n_states = n_states, 
+                       structure = formula,
+                       par = par0_hid)
+```
+
+Combining the MarkovChain and Observation object, we create an object of the Hmm class.
+
+```{r hmm-new}
+hmm <- Hmm$new(obs = obs, hidden = hid)
+```
+
+We fit the model with the method fit, and print the output of the optimiser with res.
+
+```{r hmm-fit}
+hmm$fit()
+
+hmm$res()
+```
+
+The method viterbi implements the Viterbi algorithm, to estimate the most likely state sequence.
+```{r hmm-viterbi}
+states <- hmm$viterbi()
+
+head(states)
+```
+
+Various plotting functions are provided to visualise a fitted model. Using the method Observation\$plot_dist, we can plot histograms of the observed data, overlaid with the estimated state-dependent probability density functions.
+
+```{r plot-dist}
+# Proportion of states in Viterbi sequence, to weigh pdfs
+w <- table(states)/length(states)
+obs$plot_dist("step", weights = w)
+obs$plot_dist("angle", weights = w)
+```
+
+We can plot the data coloured by the Viterbi-decoded states.
+
+```{r plot-ts}
+hmm$plot_ts("step")
+hmm$plot_ts("x", "y") + coord_equal() + geom_point(size = 0.3)
+```
+
+There is no dedicated function yet, but the model outputs can be used to plot the transition probabilities as functions of the covariate.
+
+```{r plot-tpm}
+new_data <- data.frame(dist_water = seq(0, 4000, length = 1e3))
+mats <- hid$make_mat(data = new_data)
+tpms <- hid$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
+par(mfrow = c(2, 2))
+for(i in 1:2) {
+  for(j in 1:2) {
+    plot(tpms[i,j,], type = "l", xlab = "dist_water", ylab = paste(i, "->", j), 
+         ylim = c(0, 1))
+  }
+}
+```
+
 ## Future work
 
  - AIC
