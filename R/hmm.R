@@ -74,9 +74,6 @@ Hmm <- R6Class(
       return(private$states_)
     },
     
-    ###################
-    ## Other methods ##
-    ###################
     #' @description Model parameters
     #' 
     #' @return A list with elements:
@@ -100,6 +97,9 @@ Hmm <- R6Class(
       self$tmb_obj()$fn(par)
     },
     
+    #################################
+    ## Model fitting and inference ##
+    #################################
     #' @description TMB setup
     #' 
     #' This creates an attribute \code{tmb_obj}, which can be used to 
@@ -341,6 +341,9 @@ Hmm <- R6Class(
                    upper = unlist(upper)))
     },
     
+    ######################
+    ## Plotting methods ##
+    ######################
     #' Time series plot coloured by states
     #' 
     #' Creates a plot of the data coloured by the most likely state sequence,
@@ -390,42 +393,28 @@ Hmm <- R6Class(
     #' 
     #' @param var Name of covariate as a function of which the transition
     #' probabilities should be plotted
+    #' @param covs Optional data frame with a single row and one column
+    #' for each covariate, giving the values that should be used. If this is
+    #' not specified, the mean value is used for numeric variables, and the
+    #' first level for factor variables.
     #' 
     #' @return A ggplot object
-    plot_tpm = function(var) {
+    plot_tpm = function(var, covs = NULL) {
       # Number of states
       n_states <- self$hidden()$nstates()
       
-      # Assumes the same formula for all transitions for now
-      formula <- as.formula(self$hidden()$structure()[1,2])
-      # Get data frame of covariates
-      all_vars <- get_all_vars(formula = formula, data = self$obs()$data()$data())
-      
-      # Create matrix for grid of covariates
-      n_grid <- 1e3
-      new_data <- matrix(NA, nrow = n_grid, ncol = ncol(all_vars))
-      colnames(new_data) <- colnames(all_vars)
-      
-      # Grid over covariate range for "var"
-      new_data[, var] <- seq(min(all_vars[, var]), max(all_vars[, var]), length = n_grid)
-      
-      # Set other covariates to their mean value
-      new_data[, which(colnames(new_data) != var)] <- 
-        rep(colMeans(new_data[, which(colnames(new_data) != var)]), each = n_grid)
-      
-      # Make into data frame
-      new_data <- as.data.frame(new_data)
-      
       # Create design matrices
-      mats <- hid$make_mat(data = new_data)
-      tpms <- hid$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
+      mats <- self$hidden()$make_mat_grid(var = var, 
+                                          data = self$obs()$data()$data(), 
+                                          covs = covs)
+      tpms <- self$hidden()$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
       
       # Data frame for plot
       df <- as.data.frame.table(tpms)
       colnames(df) <- c("from", "to", "var", "prob")
       levels(df$from) <- paste("State", 1:n_states)
       levels(df$to) <- paste("State", 1:n_states)
-      df$var <- rep(new_data[, var], each = n_states * n_states)
+      df$var <- rep(mats$data[, var], each = n_states * n_states)
       
       # Create plot using facets
       p <- ggplot(df, aes(var, prob)) + geom_line() + 
@@ -445,44 +434,30 @@ Hmm <- R6Class(
     #' 
     #' @param var Name of covariate as a function of which the state
     #' probabilities should be plotted
+    #' @param covs Optional data frame with a single row and one column
+    #' for each covariate, giving the values that should be used. If this is
+    #' not specified, the mean value is used for numeric variables, and the
+    #' first level for factor variables.
     #' 
     #' @return A ggplot object
-    plot_stat_dist = function(var) {
+    plot_stat_dist = function(var, covs = NULL) {
       # Colour palette
       pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
       
       # Number of states
       n_states <- self$hidden()$nstates()
       
-      # Assumes the same formula for all transitions for now
-      formula <- as.formula(self$hidden()$structure()[1,2])
-      # Get data frame of covariates
-      all_vars <- get_all_vars(formula = formula, data = self$obs()$data()$data())
-      
-      # Create matrix for grid of covariates
-      n_grid <- 1e3
-      new_data <- matrix(NA, nrow = n_grid, ncol = ncol(all_vars))
-      colnames(new_data) <- colnames(all_vars)
-      
-      # Grid over covariate range for "var"
-      new_data[, var] <- seq(min(all_vars[, var]), max(all_vars[, var]), length = n_grid)
-      
-      # Set other covariates to their mean value
-      new_data[, which(colnames(new_data) != var)] <- 
-        rep(colMeans(new_data[, which(colnames(new_data) != var)]), each = n_grid)
-      
-      # Make into data frame
-      new_data <- as.data.frame(new_data)
-      
       # Create design matrices
-      mats <- self$hidden()$make_mat(data = new_data)
+      mats <- self$hidden()$make_mat_grid(var = var, 
+                                          data = self$obs()$data()$data(), 
+                                          covs = covs)
       stat_dists <- self$hidden()$stat_dists(X_fe = mats$X_fe, X_re = mats$X_re)
       
       # Data frame for plot
       df <- as.data.frame.table(stat_dists)
       colnames(df) <- c("var", "state", "prob")
       levels(df$state) <- paste("State", 1:n_states)
-      df$var <- rep(new_data[, var], n_states)
+      df$var <- rep(mats$data[, var], n_states)
       
       # Create plot
       p <- ggplot(df, aes(var, prob, group = state, col = state)) + 

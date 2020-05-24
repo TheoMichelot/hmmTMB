@@ -185,6 +185,65 @@ MarkovChain <- R6Class(
       })
       
       return(stat_dists)
+    },
+    
+    #' Design matrices for grid of covariates
+    #' 
+    #' Used in plotting functions such as Hmm$plot_tpm and Hmm$plot_stat_dist
+    #' 
+    #' @param var Name of variable
+    #' @param data Data frame containing the covariates
+    #' @param covs Optional data frame with a single row and one column
+    #' for each covariate, giving the values that should be used. If this is
+    #' not specified, the mean value is used for numeric variables, and the
+    #' first level for factor variables.
+    #' 
+    #' @return A list with the same elements as the output of make_mat, 
+    #' plus a data frame of covariates values.
+    make_mat_grid = function(var, data, covs = NULL) {
+      # Assumes the same formula for all transitions for now
+      formula <- as.formula(self$structure()[1,2])
+      # Get data frame of covariates
+      all_vars <- get_all_vars(formula = formula, data = data)
+      
+      # Grid of covariate
+      if(is.factor(all_vars[, var])) {
+        n_grid <- length(unique(all_vars[, var]))
+        grid <- unique(all_vars[, var])
+      } else {
+        n_grid <- 1e3
+        grid <- seq(min(all_vars[, var]), max(all_vars[, var]), length = n_grid)
+      }
+      
+      # New data frame for covariate grid
+      new_data <- matrix(NA, nrow = n_grid, ncol = ncol(all_vars))
+      colnames(new_data) <- colnames(all_vars)
+      new_data <- as.data.frame(new_data)
+      new_data[, var] <- grid
+      
+      # Select value for other covariates
+      if(is.null(covs)) {
+        covs_list <- lapply(all_vars, function(col) {
+          if(is.numeric(col)) {
+            # If numeric, use mean value
+            return(mean(col, na.rm = TRUE)) 
+          } else {
+            # If factor, use first factor level
+            return(unique(col)[1])
+          }
+        })
+        covs <- as.data.frame(covs_list)
+      }
+      new_data[, which(colnames(new_data) != var)] <- 
+        rep(covs[, which(colnames(covs) != var)], each = n_grid)
+      
+      # Create design matrices
+      mats <- self$make_mat(data = new_data)  
+      
+      # Save data frame of covariate values
+      mats$data <- new_data
+      
+      return(mats)
     }
   ),
   
