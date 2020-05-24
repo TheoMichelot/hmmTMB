@@ -25,6 +25,7 @@ Contains the parameters and model formulas for the hidden process model.
 \item \href{#method-update_par_re}{\code{MarkovChain$update_par_re()}}
 \item \href{#method-make_mat}{\code{MarkovChain$make_mat()}}
 \item \href{#method-tpm_all}{\code{MarkovChain$tpm_all()}}
+\item \href{#method-stat_dists}{\code{MarkovChain$stat_dists()}}
 \item \href{#method-clone}{\code{MarkovChain$clone()}}
 }
 }
@@ -196,6 +197,30 @@ by \code{make_mat}}
 }
 \subsection{Returns}{
 Array with one slice for each transition probability matrix
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-stat_dists"></a>}}
+\subsection{Method \code{stat_dists()}}{
+Stationary distributions
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$stat_dists(X_fe, X_re)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{X_fe}}{Design matrix for fixed effects, as returned
+by \code{make_mat}}
+
+\item{\code{X_re}}{Design matrix for random effects, as returned
+by \code{make_mat}}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Matrix of stationary distributions. Each row corresponds to
+a row of the design matrices, and each column corresponds to a state.
 }
 }
 \if{html}{\out{<hr>}}

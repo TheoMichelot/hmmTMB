@@ -137,6 +137,36 @@ MarkovChain <- R6Class(
       tpm <- apply(ltpm_mat, 1, private$par2tpm)
       tpm <- array(tpm, dim = c(n_states, n_states, nrow(ltpm_mat)))
       return(tpm)
+    },
+    
+    #' @description Stationary distributions
+    #' 
+    #' @param X_fe Design matrix for fixed effects, as returned
+    #' by \code{make_mat}
+    #' @param X_re Design matrix for random effects, as returned
+    #' by \code{make_mat}
+    #'
+    #' @return Matrix of stationary distributions. Each row corresponds to
+    #' a row of the design matrices, and each column corresponds to a state.
+    stat_dists = function(X_fe, X_re) {
+      # Number of states
+      n_states <- self$nstates()
+      
+      # Derive transition probability matrices
+      tpms <- self$tpm_all(X_fe = X_fe, X_re = X_re)
+      
+      tryCatch({
+        # For each transition matrix, get corresponding stationary distribution
+        stat_dists <- apply(tpms, 3, function(tpm)
+          solve(t(diag(n_states) - tpm + 1), rep(1, n_states)))
+        stat_dists <- t(stat_dists)
+      },
+      error = function(e) {
+        stop(paste("The stationary distributions cannot be calculated",
+                   "for these covariate values (singular system)."))
+      })
+      
+      return(stat_dists)
     }
   ),
   
