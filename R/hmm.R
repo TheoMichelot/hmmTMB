@@ -335,6 +335,51 @@ Hmm <- R6Class(
       return(cbind(estimate = unlist(par_list),
                    lower = unlist(lower),
                    upper = unlist(upper)))
+    },
+    
+    #' Time series plot coloured by states
+    #' 
+    #' Creates a plot of the data coloured by the most likely state sequence,
+    #' as estimated by the Viterbi algorithm. If one variable name is passed
+    #' as input, it is plotted against time. If two variables are passed, they
+    #' are plotted against each other. 
+    #' 
+    #' @param var1 Name of the variable to plot.
+    #' @param var2 Optional name of a second variable, for 2-d plot.
+    #' 
+    #' @return A ggplot object
+    plot_ts = function(var1, var2 = NULL) {
+      # Colour palette
+      pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
+      
+      # Data frame for plot
+      data <- self$obs()$data()$data()
+      # State sequence as factor
+      state <- as.factor(self$states())
+      # Time series ID
+      ID <- self$obs()$data()$ID()
+      
+      if(is.null(var2)) {
+        # 1d time series plot
+        df <- data.frame(index = 1:nrow(data),
+                         x = data[[var1]])
+        
+        p <- ggplot(data = df, mapping = aes(index, x, col = state, group = ID)) +
+          geom_line() + xlab("time") + ylab(var1)
+      } else {
+        # 2d plot
+        df <- data.frame(x = data[[var1]],
+                         y = data[[var2]])
+        
+        p <- ggplot(data = df, mapping = aes(x, y, col = state, group = ID)) +
+          geom_path() + xlab(var1) + ylab(var2)
+      }
+      
+      p <- p + 
+        scale_color_manual(values = pal) +
+        theme_light()
+      
+      return(p)
     }
   ),
   
