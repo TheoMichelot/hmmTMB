@@ -20,32 +20,48 @@ MarkovChain <- R6Class(
     #' dependence.)
     #' @param tpm Initial transition probability matrix. (Default: 0.9 on diagonal,
     #' and 0.1/(n_states - 1) for all other entries.)
+    #' @param par Initial parameters of the state process, on the working scale.
     #' 
     #' @return A new MarkovChain object
-    initialize = function(n_states = NULL, structure = NULL, tpm = NULL) {
+    initialize = function(n_states = NULL, structure = NULL, tpm = NULL, par = NULL) {
+      
       if(is.null(structure)) {
-        # Default structure: no covariate effects
+        # No covariate effects
         structure <- matrix("~1", nrow = n_states, ncol = n_states)
         diag(structure) <- "."
-      } else if(length(structure) == 1) {
-        # Same formula for all transitions
-        structure <- matrix(structure, nrow = n_states, ncol = n_states)
-        diag(structure) <- "."
+        private$nstates_ <- n_states
+        
+        # Set initial tpm (default: 0.9 on diagonal)
+        if(is.null(tpm) & is.null(par)) {
+          tpm <- matrix(0.1/(n_states-1), nrow = n_states, ncol = n_states)
+          diag(tpm) <- 0.9
+          par <- private$tpm2par(tpm)
+        } else if(is.null(par)) {
+          par <- private$tpm2par(tpm)
+        } else {
+          tpm <- private$par2tpm(par)
+        }
+        private$tpm_ <- tpm
+        private$par_ <- par
+      
       } else {
-        n_states <- nrow(structure)
+        # Covariate effects
+        if(length(structure) == 1) {
+          # Same formula for all transitions
+          structure <- matrix(structure, nrow = n_states, ncol = n_states)
+          diag(structure) <- "."
+        } else {
+          n_states <- nrow(structure)
+        }
+        
+        private$nstates_ <- n_states
+        
+        # Set initial parameters 
+        private$par_ <- par
       }
       
-      # Set default initial tpm (0.9 on diagonal)
-      if(is.null(tpm)) {
-        tpm <- matrix(0.1/(n_states-1), nrow = n_states, ncol = n_states)
-        diag(tpm) <- 0.9
-      }
-      
-      # Set private attributes
-      private$nstates_ <- n_states
+      # Set remaining private attributes
       private$structure_ <- structure
-      private$tpm_ <- tpm
-      private$par_ <- private$tpm2par(tpm)
       private$par_re_ <- integer(0)  # so that X_re %*% par_re is valid
     },
     
