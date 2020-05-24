@@ -28,6 +28,7 @@ Markov model.
 \item \href{#method-fit}{\code{Hmm$fit()}}
 \item \href{#method-viterbi}{\code{Hmm$viterbi()}}
 \item \href{#method-CI_wpar}{\code{Hmm$CI_wpar()}}
+\item \href{#method-plot_ts}{\code{Hmm$plot_ts()}}
 \item \href{#method-clone}{\code{Hmm$clone()}}
 }
 }
@@ -212,6 +213,32 @@ for more details.
 \subsection{Returns}{
 Matrix with three columns: (1) estimates, (2) lower bounds of
 confidence intervals, (3) upper bounds of confidence intervals.
+Time series plot coloured by states
+
+Creates a plot of the data coloured by the most likely state sequence,
+as estimated by the Viterbi algorithm. If one variable name is passed
+as input, it is plotted against time. If two variables are passed, they
+are plotted against each other.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plot_ts"></a>}}
+\subsection{Method \code{plot_ts()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Hmm$plot_ts(var1, var2 = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var1}}{Name of the variable to plot.}
+
+\item{\code{var2}}{Optional name of a second variable, for 2-d plot.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A ggplot object
 }
 }
 \if{html}{\out{<hr>}}
