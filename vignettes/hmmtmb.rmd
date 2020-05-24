@@ -226,6 +226,12 @@ The function plot_tpm creates graphs of the transition probabilities as function
 hmm$plot_tpm("dist_water") + xlab("Distance to water (m)")
 ```
 
+With the function plot_stat_dist, we can visualise the stationary state probabilities as functions of the distance to water.
+
+```{r plot-stat}
+hmm$plot_stat_dist("dist_water") + xlab("Distance to water (m)")
+```
+
 ## Future work
 
  - AIC

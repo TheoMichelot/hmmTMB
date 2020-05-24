@@ -434,6 +434,58 @@ Hmm <- R6Class(
               strip.text = element_text(colour = "black"))
       
       return(p)
+    },
+    
+    #' Plot stationary state probabilities
+    #' 
+    #' @param var Name of covariate as a function of which the state
+    #' probabilities should be plotted
+    #' 
+    #' @return A ggplot object
+    plot_stat_dist = function(var) {
+      # Colour palette
+      pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
+      
+      # Number of states
+      n_states <- self$hidden()$nstates()
+      
+      # Assumes the same formula for all transitions for now
+      formula <- as.formula(self$hidden()$structure()[1,2])
+      # Get data frame of covariates
+      all_vars <- get_all_vars(formula = formula, data = self$obs()$data()$data())
+      
+      # Create matrix for grid of covariates
+      n_grid <- 1e3
+      new_data <- matrix(NA, nrow = n_grid, ncol = ncol(all_vars))
+      colnames(new_data) <- colnames(all_vars)
+      
+      # Grid over covariate range for "var"
+      new_data[, var] <- seq(min(all_vars[, var]), max(all_vars[, var]), length = n_grid)
+      
+      # Set other covariates to their mean value
+      new_data[, which(colnames(new_data) != var)] <- 
+        rep(colMeans(new_data[, which(colnames(new_data) != var)]), each = n_grid)
+      
+      # Make into data frame
+      new_data <- as.data.frame(new_data)
+      
+      # Create design matrices
+      mats <- self$hidden()$make_mat(data = new_data)
+      stat_dists <- self$hidden()$stat_dists(X_fe = mats$X_fe, X_re = mats$X_re)
+      
+      # Data frame for plot
+      df <- as.data.frame.table(stat_dists)
+      colnames(df) <- c("var", "state", "prob")
+      levels(df$state) <- paste("State", 1:n_states)
+      df$var <- rep(new_data[, var], n_states)
+      
+      # Create plot
+      p <- ggplot(df, aes(var, prob, group = state, col = state)) + 
+        geom_line(size = 0.7) + scale_color_manual("", values = pal) +
+        xlab(var) + ylab("State probabilities") +
+        theme_light()
+      
+      return(p)
     }
   ),
   
