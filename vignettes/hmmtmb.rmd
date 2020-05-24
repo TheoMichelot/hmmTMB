@@ -157,8 +157,10 @@ _Here we will need to explain how additional distributions can be added by users
  
  - informative error messages in constructors
  
- - deal with NAs in covariates (linear interpolation? nearest value?)
+ - deal with NAs in covariates (linear interpolation? nearest value? error message?)
  
  - simulation function, to simulate either from a fitted model or based
  on parameter values given as input. Method of Hmm class?
+ 
+ - stationary = TRUE/FALSE option in MarkovChain class
  
