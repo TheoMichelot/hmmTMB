@@ -237,8 +237,6 @@ hmm$plot_tpm("dist_water") + xlab("Distance to water (m)")
  
  - pseudo-residuals
  
- - stationary state probabilities as functions of covariates
- 
  - state probabilities (local decoding)
  
  - additional observation distributions
@@ -259,13 +257,7 @@ hmm$plot_tpm("dist_water") + xlab("Distance to water (m)")
     + fixed value, e.g. $\mu_1 = 0$
     
  - obtain starting values for complex models from simpler nested model (e.g. for smooth effects)
- 
- - plotting functions to visualise fitted model
-    + time series coloured by states
-    + covariate effects...
-    
- - update/create documentation for class methods and attributes
- 
+
  - informative error messages in constructors
  
  - deal with NAs in covariates (linear interpolation? nearest value? error message?)
