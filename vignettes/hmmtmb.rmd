@@ -189,12 +189,18 @@ Combining the MarkovChain and Observation object, we create an object of the Hmm
 hmm <- Hmm$new(obs = obs, hidden = hid)
 ```
 
-We fit the model with the method fit, and print the output of the optimiser with res.
+We fit the model with the method fit, and print the output of the optimiser with res. It contains the parameters estimates (fixed effects), the value of the objective function at the optimum, and diagnostics from the optimiser.
 
 ```{r hmm-fit}
 hmm$fit()
 
 hmm$res()
+```
+
+We can get confidence intervals for the parameters (on the working scale) with the method CI_wpar. By default, it returns 95\% confidence intervals, but the argument level can be specified for different confidence levels.
+
+```{r hmm-ci}
+hmm$CI_wpar()
 ```
 
 The method viterbi implements the Viterbi algorithm, to estimate the most likely state sequence.
