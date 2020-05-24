@@ -425,7 +425,8 @@ Hmm <- R6Class(
         theme_light() +
         theme(strip.background = element_blank(),
               strip.placement = "outside", 
-              strip.text = element_text(colour = "black"))
+              strip.text = element_text(colour = "black")) + 
+        coord_cartesian(ylim = c(0, 1))
       
       return(p)
     },
@@ -463,7 +464,8 @@ Hmm <- R6Class(
       p <- ggplot(df, aes(var, prob, group = state, col = state)) + 
         geom_line(size = 0.7) + scale_color_manual("", values = pal) +
         xlab(var) + ylab("State probabilities") +
-        theme_light()
+        theme_light() +
+        coord_cartesian(ylim = c(0, 1))
       
       return(p)
     }
