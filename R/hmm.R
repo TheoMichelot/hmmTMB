@@ -131,7 +131,7 @@ Hmm <- R6Class(
       tmb_par <- list(wpar_fe_obs = self$obs()$wpar(),
                       wpar_re_obs = 0,
                       log_lambda_obs = 0,
-                      wpar_fe_hid = rep(0, ncol(X_fe_hid)),
+                      wpar_fe_hid = self$hidden()$par(),
                       wpar_re_hid = 0,
                       log_lambda_hid = 0,
                       log_delta = rep(0, n_states - 1))
