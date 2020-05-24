@@ -46,9 +46,11 @@ MarkovChain <- R6Class(
       
       } else {
         # Covariate effects
-        if(length(structure) == 1) {
+        if(length(structure) == 1 | inherits(structure, "formula")) {
           # Same formula for all transitions
-          structure <- matrix(structure, nrow = n_states, ncol = n_states)
+          structure <- matrix(format(structure), 
+                              nrow = n_states, 
+                              ncol = n_states)
           diag(structure) <- "."
         } else {
           n_states <- nrow(structure)
