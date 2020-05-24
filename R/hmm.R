@@ -104,7 +104,9 @@ Hmm <- R6Class(
     #' 
     #' This creates an attribute \code{tmb_obj}, which can be used to 
     #' evaluate the negative log-likelihood function.
-    setup = function() {
+    #' 
+    #' @param silent Logical. If TRUE, all tracing outputs are hidden (default).
+    setup = function(silent = TRUE) {
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
       
@@ -191,7 +193,8 @@ Hmm <- R6Class(
       # Create TMB model
       obj <- MakeADFun(tmb_dat, tmb_par, dll = "hmmTMB", 
                        random = random,
-                       map = map)
+                       map = map, 
+                       silent = silent)
       
       # Negative log-likelihood function
       private$tmb_obj_ <- obj
@@ -205,10 +208,12 @@ Hmm <- R6Class(
     #' 
     #' After the model has been fitted, the output of \code{optim} can be
     #' accessed using the method \code{res}.
-    fit = function() {
+    #' 
+    #' @param silent Logical. If TRUE, all tracing outputs are hidden (default).
+    fit = function(silent = TRUE) {
       # Setup if necessary
       if(is.null(private$tmb_obj_)) {
-        self$setup()
+        self$setup(silent = silent)
       }
       
       # Number of states
