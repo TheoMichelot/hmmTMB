@@ -213,26 +213,17 @@ obs$plot_dist("step", weights = w)
 obs$plot_dist("angle", weights = w)
 ```
 
-We can plot the data coloured by the Viterbi-decoded states.
+We can plot the data coloured by the Viterbi-decoded states. All plotting functions return ggplot objects, and can easily be edited using ggplot commands, e.g.\ to change axis labels or colours.
 
 ```{r plot-ts}
 hmm$plot_ts("step")
-hmm$plot_ts("x", "y") + coord_equal() + geom_point(size = 0.3)
+hmm$plot_ts("x", "y") + coord_equal() + geom_point(size = 0.5)
 ```
 
-There is no dedicated function yet, but the model outputs can be used to plot the transition probabilities as functions of the covariate.
+The function plot_tpm creates graphs of the transition probabilities as functions of a covariate, here distance to water.
 
 ```{r plot-tpm}
-new_data <- data.frame(dist_water = seq(0, 4000, length = 1e3))
-mats <- hid$make_mat(data = new_data)
-tpms <- hid$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
-par(mfrow = c(2, 2))
-for(i in 1:2) {
-  for(j in 1:2) {
-    plot(tpms[i,j,], type = "l", xlab = "dist_water", ylab = paste(i, "->", j), 
-         ylim = c(0, 1))
-  }
-}
+hmm$plot_tpm("dist_water") + xlab("Distance to water (m)")
 ```
 
 ## Future work
