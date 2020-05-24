@@ -318,16 +318,15 @@ Hmm <- R6Class(
     #' @return Matrix with three columns: (1) estimates, (2) lower bounds of
     #' confidence intervals, (3) upper bounds of confidence intervals.
     CI_wpar = function(level = 0.95) {
-      if(is.null(private$tmb_rep_)) {
-        stop("Fit model first")
-      }
+      # Extract parameter estimates and standard errors from TMB output
+      par_list <- as.list(self$tmb_rep(), "Estimate")
+      se_list <- as.list(self$tmb_rep(), "Std. Error")
       
-      par_list <- as.list(private$tmb_rep_, "Estimate")
-      se_list <- as.list(private$tmb_rep_, "Std. Error")
-      
+      # Lower bounds
       lower <- lapply(seq_along(par_list), function(i) {
         par_list[[i]] - qnorm(1 - (1 - level)/2) * se_list[[i]]
       })
+      # Upper bounds
       upper <- lapply(seq_along(par_list), function(i) {
         par_list[[i]] + qnorm(1 - (1 - level)/2) * se_list[[i]]
       })
