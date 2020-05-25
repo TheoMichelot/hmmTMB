@@ -64,6 +64,11 @@ make_mat_obs = function(formulas, data) {
 #' 
 #' @param formulas List of formulas
 #' @param data Data frame including covariates
+#' @param new_data Optional new data set, including covariates for which
+#' the design matrices should be created. This needs to be passed in addition
+#' to the argument '\code{data}', for cases where smooth terms or factor
+#' covariates are included, and the original data set is needed to determine
+#' the full range of covariate values.
 #' 
 #' @return A list of
 #' \itemize{
@@ -72,7 +77,7 @@ make_mat_obs = function(formulas, data) {
 #'   \item S Smoothness matrix
 #'   \item ncol_re Number of columns of X_re and S for each random effect
 #' }
-make_mat_hid = function(formulas, data) {
+make_mat_hid = function(formulas, data, new_data = NULL) {
   # Initialise lists of matrices
   X_list_fe <- list()
   X_list_re <- list()
@@ -83,15 +88,23 @@ make_mat_hid = function(formulas, data) {
   # Loop over formulas
   for(form in formulas) {
     # Create matrices based on this formula
-    gam_setup <- gam(formula = update(form, dummy ~ .), 
-                     data = cbind(dummy = 1, data), 
-                     fit = FALSE)
-    
+    if(is.null(new_data)) {
+      gam_setup <- gam(formula = update(form, dummy ~ .), 
+                       data = cbind(dummy = 1, data), 
+                       fit = FALSE)
+      Xmat <- gam_setup$X
+    } else {
+      # Get design matrix for new data set
+      gam_setup <- gam(formula = update(form, dummy ~ .), 
+                       data = cbind(dummy = 1, data))
+      Xmat <- predict(gam_setup, newdata = new_data, type = "lpmatrix")
+    }
+
     # Fixed effects design matrix
-    X_list_fe[[k]] <- gam_setup$X[, 1:gam_setup$nsdf, drop = FALSE]
+    X_list_fe[[k]] <- Xmat[, 1:gam_setup$nsdf, drop = FALSE]
     
     # Random effects design matrix
-    X_list_re[[k]] <- gam_setup$X[, -(1:gam_setup$nsdf), drop = FALSE]
+    X_list_re[[k]] <- Xmat[, -(1:gam_setup$nsdf), drop = FALSE]
     
     # Smoothing matrix
     S_list[[k]] <- bdiag_check(gam_setup$S)

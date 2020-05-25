@@ -120,6 +120,11 @@ MarkovChain <- R6Class(
     #' @description Make model matrices
     #' 
     #' @param data Data frame containing all needed covariates
+    #' @param new_data Optional new data set, including covariates for which
+    #' the design matrices should be created. This needs to be passed in addition
+    #' to the argument '\code{data}', for cases where smooth terms or factor
+    #' covariates are included, and the original data set is needed to determine
+    #' the full range of covariate values.
     #' 
     #' @return A list with elements:
     #' \itemize{
@@ -128,7 +133,7 @@ MarkovChain <- R6Class(
     #'   \item{S}{Smoothness matrix for random effects}
     #'   \item{ncol_re}{Number of columns of X_re and S for each random effect}
     #' }
-    make_mat = function(data) {
+    make_mat = function(data, new_data = NULL) {
       struct <- self$structure()[!diag(self$nstates())]
       formulas <- lapply(as.list(struct), function(string) {
         if(string == ".")
@@ -137,7 +142,7 @@ MarkovChain <- R6Class(
           return(as.formula(string))
       })
       
-      make_mat_hid(formulas = formulas, data = data)
+      make_mat_hid(formulas = formulas, data = data, new_data = new_data)
     },
     
     #' @description Transition probability matrices
@@ -241,7 +246,7 @@ MarkovChain <- R6Class(
       }
       
       # Create design matrices
-      mats <- self$make_mat(data = new_data)  
+      mats <- self$make_mat(data = data, new_data = new_data)
       
       # Save data frame of covariate values
       mats$data <- new_data
