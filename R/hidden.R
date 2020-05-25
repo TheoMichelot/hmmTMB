@@ -234,8 +234,11 @@ MarkovChain <- R6Class(
         })
         covs <- as.data.frame(covs_list)
       }
-      new_data[, which(colnames(new_data) != var)] <- 
-        rep(covs[, which(colnames(covs) != var)], each = n_grid)
+      # Fill columns for other covariates
+      for(var_name in colnames(new_data)) {
+        if(var_name != var)
+          new_data[, var_name] <- covs[, var_name]
+      }
       
       # Create design matrices
       mats <- self$make_mat(data = new_data)  
