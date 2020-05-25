@@ -414,7 +414,7 @@ Hmm <- R6Class(
       colnames(df) <- c("from", "to", "var", "prob")
       levels(df$from) <- paste("State", 1:n_states)
       levels(df$to) <- paste("State", 1:n_states)
-      df$var <- rep(mats$data[, var], each = n_states * n_states)
+      df$var <- rep(mats$new_data[, var], each = n_states * n_states)
       
       # Create plot using facets
       p <- ggplot(df, aes(var, prob)) + geom_line() + 
@@ -458,7 +458,7 @@ Hmm <- R6Class(
       df <- as.data.frame.table(stat_dists)
       colnames(df) <- c("var", "state", "prob")
       levels(df$state) <- paste("State", 1:n_states)
-      df$var <- rep(mats$data[, var], n_states)
+      df$var <- rep(mats$new_data[, var], n_states)
       
       # Create plot
       p <- ggplot(df, aes(var, prob, group = state, col = state)) + 
