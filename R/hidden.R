@@ -62,16 +62,29 @@ MarkovChain <- R6Class(
         private$par_ <- par
       }
       
+      # Create list of formulas
+      ls_form_char <- as.list(structure[!diag(self$nstates())])
+      ls_form <- lapply(ls_form_char, function(form_char) {
+        if(form_char == ".")
+          return(NULL)
+        else
+          return(as.formula(form_char))
+      })
+      
       # Set remaining private attributes
       private$structure_ <- structure
+      private$formulas_ <- ls_form
       private$par_re_ <- integer(0)  # so that X_re %*% par_re is valid
     },
     
     ###############
     ## Accessors ##
     ###############
-    #' @description Formulas for MarkovChain model
+    #' @description Structure of MarkovChain model
     structure = function() {return(private$structure_)},
+    
+    #' @description List of formulas for MarkovChain model
+    formulas = function() {return(private$formulas_)},
     
     #' @description Current transition probability matrix
     tpm = function() {return(private$tpm_)},
@@ -134,15 +147,7 @@ MarkovChain <- R6Class(
     #'   \item{ncol_re}{Number of columns of X_re and S for each random effect}
     #' }
     make_mat = function(data, new_data = NULL) {
-      struct <- self$structure()[!diag(self$nstates())]
-      formulas <- lapply(as.list(struct), function(string) {
-        if(string == ".")
-          return(NULL)
-        else
-          return(as.formula(string))
-      })
-      
-      make_mat_hid(formulas = formulas, data = data, new_data = new_data)
+      make_mat_hid(formulas = self$formulas(), data = data, new_data = new_data)
     },
     
     #' @description Transition probability matrices
@@ -249,7 +254,7 @@ MarkovChain <- R6Class(
       mats <- self$make_mat(data = data, new_data = new_data)
       
       # Save data frame of covariate values
-      mats$data <- new_data
+      mats$new_data <- new_data
       
       return(mats)
     }
@@ -257,6 +262,7 @@ MarkovChain <- R6Class(
   
   private = list(
     structure_ = NULL,
+    formulas_ = NULL,
     par_ = NULL,
     par_re_ = NULL,
     tpm_ = NULL,
