@@ -241,8 +241,6 @@ Design matrices for grid of covariates
 for each covariate, giving the values that should be used. If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
-
-\item{\code{data}}{Data frame containing the covariates}
 }
 \if{html}{\out{</div>}}
 }
@@ -271,7 +269,8 @@ by \code{make_mat}}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Array with one slice for each transition probability matrix
+Array with one slice for each time step, one row 
+for each observation parameter, and one column for each state.
 }
 }
 \if{html}{\out{<hr>}}

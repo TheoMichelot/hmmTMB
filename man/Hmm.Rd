@@ -31,6 +31,7 @@ Markov model.
 \item \href{#method-plot_ts}{\code{Hmm$plot_ts()}}
 \item \href{#method-plot_tpm}{\code{Hmm$plot_tpm()}}
 \item \href{#method-plot_stat_dist}{\code{Hmm$plot_stat_dist()}}
+\item \href{#method-plot_obspar}{\code{Hmm$plot_obspar()}}
 \item \href{#method-clone}{\code{Hmm$clone()}}
 }
 }
@@ -229,17 +230,17 @@ for more details.
 \subsection{Returns}{
 Matrix with three columns: (1) estimates, (2) lower bounds of
 confidence intervals, (3) upper bounds of confidence intervals.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plot_ts"></a>}}
+\subsection{Method \code{plot_ts()}}{
 Time series plot coloured by states
 
 Creates a plot of the data coloured by the most likely state sequence,
 as estimated by the Viterbi algorithm. If one variable name is passed
 as input, it is plotted against time. If two variables are passed, they
 are plotted against each other.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plot_ts"></a>}}
-\subsection{Method \code{plot_ts()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Hmm$plot_ts(var1, var2 = NULL)}\if{html}{\out{</div>}}
 }
@@ -255,12 +256,12 @@ are plotted against each other.
 }
 \subsection{Returns}{
 A ggplot object
-Plot transition probability matrix
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plot_tpm"></a>}}
 \subsection{Method \code{plot_tpm()}}{
+Plot transition probability matrix
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Hmm$plot_tpm(var, covs = NULL)}\if{html}{\out{</div>}}
 }
@@ -280,12 +281,12 @@ first level for factor variables.}
 }
 \subsection{Returns}{
 A ggplot object
-Plot stationary state probabilities
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plot_stat_dist"></a>}}
 \subsection{Method \code{plot_stat_dist()}}{
+Plot stationary state probabilities
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Hmm$plot_stat_dist(var, covs = NULL)}\if{html}{\out{</div>}}
 }
@@ -295,6 +296,31 @@ Plot stationary state probabilities
 \describe{
 \item{\code{var}}{Name of covariate as a function of which the state
 probabilities should be plotted}
+
+\item{\code{covs}}{Optional data frame with a single row and one column
+for each covariate, giving the values that should be used. If this is
+not specified, the mean value is used for numeric variables, and the
+first level for factor variables.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A ggplot object
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-plot_obspar"></a>}}
+\subsection{Method \code{plot_obspar()}}{
+Plot observation parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Hmm$plot_obspar(var, covs = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var}}{Name of covariate as a function of which the parameters
+should be plotted}
 
 \item{\code{covs}}{Optional data frame with a single row and one column
 for each covariate, giving the values that should be used. If this is
