@@ -150,7 +150,7 @@ MarkovChain <- R6Class(
       make_mat_hid(formulas = self$formulas(), data = data, new_data = new_data)
     },
     
-    #' @description Transition probability matrices
+    #' @description Get transition probability matrices from design matrices
     #' 
     #' @param X_fe Design matrix for fixed effects, as returned
     #' by \code{make_mat}

@@ -4,7 +4,7 @@
 \alias{make_mat_obs}
 \title{Create model matrices (observation model)}
 \usage{
-make_mat_obs(formulas, data)
+make_mat_obs(formulas, data, new_data = NULL)
 }
 \arguments{
 \item{formulas}{Nested list of formulas, with three levels: (1) variable,

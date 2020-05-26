@@ -4,12 +4,18 @@
 \alias{make_mat_hid}
 \title{Create model matrices (transition probabilities)}
 \usage{
-make_mat_hid(formulas, data)
+make_mat_hid(formulas, data, new_data = NULL)
 }
 \arguments{
 \item{formulas}{List of formulas}
 
 \item{data}{Data frame including covariates}
+
+\item{new_data}{Optional new data set, including covariates for which
+the design matrices should be created. This needs to be passed in addition
+to the argument '\code{data}', for cases where smooth terms or factor
+covariates are included, and the original data set is needed to determine
+the full range of covariate values.}
 }
 \value{
 A list of

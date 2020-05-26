@@ -16,6 +16,7 @@ Contains the parameters and model formulas for the hidden process model.
 \itemize{
 \item \href{#method-new}{\code{MarkovChain$new()}}
 \item \href{#method-structure}{\code{MarkovChain$structure()}}
+\item \href{#method-formulas}{\code{MarkovChain$formulas()}}
 \item \href{#method-tpm}{\code{MarkovChain$tpm()}}
 \item \href{#method-par}{\code{MarkovChain$par()}}
 \item \href{#method-par_re}{\code{MarkovChain$par_re()}}
@@ -64,9 +65,18 @@ A new MarkovChain object
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-structure"></a>}}
 \subsection{Method \code{structure()}}{
-Formulas for MarkovChain model
+Structure of MarkovChain model
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$structure()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-formulas"></a>}}
+\subsection{Method \code{formulas()}}{
+List of formulas for MarkovChain model
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$formulas()}\if{html}{\out{</div>}}
 }
 
 }
@@ -159,13 +169,19 @@ Update parameters (random effects)
 \subsection{Method \code{make_mat()}}{
 Make model matrices
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$make_mat(data)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$make_mat(data, new_data = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{data}}{Data frame containing all needed covariates}
+
+\item{\code{new_data}}{Optional new data set, including covariates for which
+the design matrices should be created. This needs to be passed in addition
+to the argument '\code{data}', for cases where smooth terms or factor
+covariates are included, and the original data set is needed to determine
+the full range of covariate values.}
 }
 \if{html}{\out{</div>}}
 }
@@ -182,7 +198,7 @@ A list with elements:
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-tpm_all"></a>}}
 \subsection{Method \code{tpm_all()}}{
-Transition probability matrices
+Get transition probability matrices from design matrices
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$tpm_all(X_fe, X_re)}\if{html}{\out{</div>}}
 }
