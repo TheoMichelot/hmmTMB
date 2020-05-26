@@ -211,52 +211,9 @@ MarkovChain <- R6Class(
     #' @return A list with the same elements as the output of make_mat, 
     #' plus a data frame of covariates values.
     make_mat_grid = function(var, data, covs = NULL) {
-      formulas <- self$formulas()
-      
-      # Get covariate names
-      var_names <- unique(rapply(formulas, all.vars))
-      
-      # pi might appear in the formulas (e.g. used in periodic terms)
-      if(any(var_names == "pi")) {
-        data$pi <- pi
-      }
-      
-      # Get data frame of covariates
-      all_vars <- data[, var_names, drop = FALSE]
-      
-      # Grid of covariate
-      if(is.factor(all_vars[, var])) {
-        n_grid <- length(unique(all_vars[, var]))
-        grid <- unique(all_vars[, var])
-      } else {
-        n_grid <- 1e3
-        grid <- seq(min(all_vars[, var]), max(all_vars[, var]), length = n_grid)
-      }
-      
-      # New data frame for covariate grid
-      new_data <- matrix(NA, nrow = n_grid, ncol = ncol(all_vars))
-      colnames(new_data) <- colnames(all_vars)
-      new_data <- as.data.frame(new_data)
-      new_data[, var] <- grid
-      
-      # Select value for other covariates
-      if(is.null(covs)) {
-        covs_list <- lapply(all_vars, function(col) {
-          if(is.numeric(col)) {
-            # If numeric, use mean value
-            return(mean(col, na.rm = TRUE)) 
-          } else {
-            # If factor, use first factor level
-            return(unique(col)[1])
-          }
-        })
-        covs <- as.data.frame(covs_list)
-      }
-      # Fill columns for other covariates
-      for(var_name in colnames(new_data)) {
-        if(var_name != var)
-          new_data[, var_name] <- covs[, var_name]
-      }
+      # Data frame for covariate grid
+      new_data <- cov_grid(var = var, data = data, covs = covs, 
+                           formulas = self$formulas())
       
       # Create design matrices
       mats <- self$make_mat(data = data, new_data = new_data)
