@@ -12,7 +12,7 @@
 #'   \item S Smoothness matrix
 #'   \item ncol_re Number of columns of X_re and S for each random effect
 #' }
-make_mat_obs = function(formulas, data) {
+make_mat_obs = function(formulas, data, new_data = NULL) {
   # Initialise lists of matrices
   X_list_fe <- list()
   X_list_re <- list()
@@ -28,17 +28,24 @@ make_mat_obs = function(formulas, data) {
       
       # Loop over states
       for(form in par_forms) {
-        
         # Create matrices based on this formula
-        gam_setup <- gam(formula = update(form, dummy ~ .), 
-                         data = cbind(dummy = 1, data), 
-                         fit = FALSE)
+        if(is.null(new_data)) {
+          gam_setup <- gam(formula = update(form, dummy ~ .), 
+                           data = cbind(dummy = 1, data), 
+                           fit = FALSE)
+          Xmat <- gam_setup$X
+        } else {
+          # Get design matrix for new data set
+          gam_setup <- gam(formula = update(form, dummy ~ .), 
+                           data = cbind(dummy = 1, data))
+          Xmat <- predict(gam_setup, newdata = new_data, type = "lpmatrix")
+        }
         
         # Fixed effects design matrix
-        X_list_fe[[k]] <- gam_setup$X[, 1:gam_setup$nsdf, drop = FALSE]
+        X_list_fe[[k]] <- Xmat[, 1:gam_setup$nsdf, drop = FALSE]
         
         # Random effects design matrix
-        X_list_re[[k]] <- gam_setup$X[, -(1:gam_setup$nsdf), drop = FALSE]
+        X_list_re[[k]] <- Xmat[, -(1:gam_setup$nsdf), drop = FALSE]
         
         # Smoothing matrix
         S_list[[k]] <- bdiag_check(gam_setup$S)
