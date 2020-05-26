@@ -344,7 +344,7 @@ Hmm <- R6Class(
     ######################
     ## Plotting methods ##
     ######################
-    #' Time series plot coloured by states
+    #' @description Time series plot coloured by states
     #' 
     #' Creates a plot of the data coloured by the most likely state sequence,
     #' as estimated by the Viterbi algorithm. If one variable name is passed
@@ -389,7 +389,7 @@ Hmm <- R6Class(
       return(p)
     },
     
-    #' Plot transition probability matrix
+    #' @description Plot transition probability matrix
     #' 
     #' @param var Name of covariate as a function of which the transition
     #' probabilities should be plotted
@@ -431,7 +431,7 @@ Hmm <- R6Class(
       return(p)
     },
     
-    #' Plot stationary state probabilities
+    #' @description Plot stationary state probabilities
     #' 
     #' @param var Name of covariate as a function of which the state
     #' probabilities should be plotted
@@ -466,6 +466,47 @@ Hmm <- R6Class(
         xlab(var) + ylab("State probabilities") +
         theme_light() +
         coord_cartesian(ylim = c(0, 1))
+      
+      return(p)
+    },
+    
+    #' @description Plot observation parameters
+    #' 
+    #' @param var Name of covariate as a function of which the parameters
+    #' should be plotted
+    #' @param covs Optional data frame with a single row and one column
+    #' for each covariate, giving the values that should be used. If this is
+    #' not specified, the mean value is used for numeric variables, and the
+    #' first level for factor variables.
+    #' 
+    #' @return A ggplot object
+    plot_obspar = function(var, covs = NULL) {
+      # Colour palette
+      pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
+      
+      # Number of states
+      n_states <- self$hidden()$nstates()
+      
+      # Create design matrices
+      mats <- self$obs()$make_mat_grid(var = var, covs = covs)
+      obs_par <- self$obs()$par_all(X_fe = mats$X_fe, X_re = mats$X_re)
+      
+      # Data frame for plot
+      df <- as.data.frame.table(obs_par)
+      colnames(df) <- c("par", "state", "var", "val")
+      levels(df$state) <- paste("State", 1:n_states)
+      df$var <- rep(mats$new_data[, var], each = nrow(df)/nrow(mats$new_data))
+      
+      # Create plot
+      p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
+        geom_line(size = 0.7) + scale_color_manual("", values = pal) +
+        facet_wrap(c("par"), scales = "free_y",
+                   strip.position = "left",
+                   labeller = label_bquote(.(as.character(par)))) +
+        xlab(var) + ylab(NULL) +
+        theme(strip.background = element_blank(),
+              strip.placement = "outside", 
+              strip.text = element_text(colour = "black"))
       
       return(p)
     }
