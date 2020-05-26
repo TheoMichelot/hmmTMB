@@ -139,9 +139,35 @@ Observation <- R6Class(
     #'   \item{S}{Smoothness matrix for random effects}
     #'   \item{ncol_re}{Number of columns of X_re and S for each random effect}
     #' }
-    make_mat = function() {
+    make_mat = function(new_data = NULL) {
       make_mat_obs(formulas = self$formulas(),
-                   data = self$data()$data())
+                   data = self$data()$data(),
+                   new_data = new_data)
+    },
+    
+    #' Design matrices for grid of covariates
+    #' 
+    #' @param var Name of variable
+    #' @param data Data frame containing the covariates
+    #' @param covs Optional data frame with a single row and one column
+    #' for each covariate, giving the values that should be used. If this is
+    #' not specified, the mean value is used for numeric variables, and the
+    #' first level for factor variables.
+    #' 
+    #' @return A list with the same elements as the output of make_mat, 
+    #' plus a data frame of covariates values.
+    make_mat_grid = function(var, covs = NULL) {
+      # Data frame for covariate grid
+      new_data <- cov_grid(var = var, data = data, covs = covs, 
+                           formulas = self$formulas())
+      
+      # Create design matrices
+      mats <- self$make_mat(new_data = new_data)
+      
+      # Save data frame of covariate values
+      mats$new_data <- new_data
+      
+      return(mats)
     },
     
     #' @description Observation likelihoods
