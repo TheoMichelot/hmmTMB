@@ -132,6 +132,10 @@ Observation <- R6Class(
     ###################
     #' @description Make model matrices
     #' 
+    #' @param new_data Optional new data set, including covariates for which
+    #' the design matrices should be created. If this argument is not specified,
+    #' the design matrices are based on the original data frame. 
+    #' 
     #' @return A list with elements:
     #' \itemize{
     #'   \item{X_fe}{Design matrix for fixed effects}
@@ -148,7 +152,6 @@ Observation <- R6Class(
     #' Design matrices for grid of covariates
     #' 
     #' @param var Name of variable
-    #' @param data Data frame containing the covariates
     #' @param covs Optional data frame with a single row and one column
     #' for each covariate, giving the values that should be used. If this is
     #' not specified, the mean value is used for numeric variables, and the
@@ -168,6 +171,54 @@ Observation <- R6Class(
       mats$new_data <- new_data
       
       return(mats)
+    },
+    
+    #' @description Get observation parameters from design matrices
+    #' 
+    #' @param X_fe Design matrix for fixed effects, as returned
+    #' by \code{make_mat}
+    #' @param X_re Design matrix for random effects, as returned
+    #' by \code{make_mat}
+    #' 
+    #' @return Array with one slice for each time step, one row 
+    #' for each observation parameter, and one column for each state.
+    par_all = function(X_fe, X_re) {
+      # Number of states
+      n_states <- self$nstates()
+      
+      # Number of parameters on natural scale (in each state)
+      n_par <- sum(sapply(obs$dists(), function(d) d$npar()))
+      
+      # Get linear predictor
+      lp <- X_fe %*% self$wpar() + X_re %*% self$wpar_re()
+      lp_mat <- matrix(lp, ncol = n_par * n_states)
+      
+      # Number of observations
+      n <- nrow(lp_mat)
+      
+      # Matrix of natural parameters
+      par_mat <- apply(lp_mat, 1, function(lp_vec) {
+        par_ls <- self$w2n(lp_vec)
+        par_vec <- unlist(par_ls, use.names = FALSE)
+        return(par_vec)
+      })
+      
+      # Array of natural parameters
+      par_array <- array(par_mat, dim = c(n_states, n_par, n))
+      
+      # Hacky way to get parameter names
+      par_names <- names(unlist(rapply(self$w2n(lp_mat[1,]), 
+                                       function(v) v[1])))
+      
+      # Set dimension names for rows and columns
+      dimnames(par_array) <- list(paste("state", 1:n_states),
+                                  par_names,
+                                  NULL)
+      
+      # Transpose each slice
+      par_array <- aperm(par_array, perm = c(2, 1, 3))
+      
+      return(par_array)
     },
     
     #' @description Observation likelihoods
@@ -269,7 +320,7 @@ Observation <- R6Class(
       names(par) <- names(self$dists())
       return(par)
     },
-
+    
     #' @description Plot histogram of data and pdfs
     #' 
     #' Plot histogram of observations for the variable specified by the argument name, 
