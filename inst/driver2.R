@@ -89,7 +89,7 @@ hid <- MarkovChain$new(n_states = 2)
 mod <- Hmm$new(obs, hid)
 
 # Fit model
-mod$fit()
+mod$fit(silent = FALSE)
 
 # Unpack parameters
 wpar <- obs$wpar()
