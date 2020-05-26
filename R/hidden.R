@@ -211,10 +211,18 @@ MarkovChain <- R6Class(
     #' @return A list with the same elements as the output of make_mat, 
     #' plus a data frame of covariates values.
     make_mat_grid = function(var, data, covs = NULL) {
-      # Assumes the same formula for all transitions for now
-      formula <- as.formula(self$structure()[1,2])
+      formulas <- self$formulas()
+      
+      # Get covariate names
+      var_names <- unique(rapply(formulas, all.vars))
+      
+      # pi might appear in the formulas (e.g. used in periodic terms)
+      if(any(var_names == "pi")) {
+        data$pi <- pi
+      }
+      
       # Get data frame of covariates
-      all_vars <- get_all_vars(formula = formula, data = data)
+      all_vars <- data[, var_names, drop = FALSE]
       
       # Grid of covariate
       if(is.factor(all_vars[, var])) {
