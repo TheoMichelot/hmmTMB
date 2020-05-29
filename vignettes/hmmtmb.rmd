@@ -240,42 +240,47 @@ hmm$plot_stat_dist("dist_water") + xlab("Distance to water (m)")
 
 ## Future work
 
- - AIC
+### Higher priority
+
+ - simulation function, to simulate either from a fitted model or based
+ on parameter values given as input. Method of Hmm class?
  
  - confidence intervals
     + on natural parameters
     + on transformed quantities (e.g. covariate-dependent parameters)
     + run simulation experiments to check coverage
- 
- - pseudo-residuals
- 
+
  - state probabilities (local decoding)
+
+### Lower priority (easy?)
+
+ - pseudo-residuals
+
+ - allow for input of known states (semi-supervised learning)
+
+ - informative error messages in constructors
+
+ - deal with NAs in covariates (linear interpolation? nearest value? error message?)
+
+ - stationary = TRUE/FALSE option in MarkovChain class
  
  - additional observation distributions
     + Weibull
     + log-normal
     + wrapped Cauchy
     + Bernoulli...
-    
+
+### Lower priority (difficult?)
+
+ - AIC
+   
  - zero inflation
  
  - improve parametrisation of mean of circular distributions (avoid numerical issues around -pi and pi)
  
- - allow for input of known states (semi-supervised learning)
- 
  - allow for constraints on parameters
     + inequalities, e.g. $\mu_1 < \mu_2$
-    + bounds, e.g. $-1 < \mu_1 < 1$
-    + fixed value, e.g. $\mu_1 = 0$
-    
- - obtain starting values for complex models from simpler nested model (e.g. for smooth effects)
+    + bounds, e.g. $-1 < \mu_1 < 1$ (using custom link function)
+    + fixed value, e.g. $\mu_1 = 0$ (using map)
 
- - informative error messages in constructors
- 
- - deal with NAs in covariates (linear interpolation? nearest value? error message?)
- 
- - simulation function, to simulate either from a fitted model or based
- on parameter values given as input. Method of Hmm class?
- 
- - stationary = TRUE/FALSE option in MarkovChain class
- 
+ - obtain starting values for complex models from simpler nested model (e.g. for smooth effects)
