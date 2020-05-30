@@ -351,6 +351,8 @@ Hmm <- R6Class(
     simulate = function(n, data = NULL) {
       if(is.null(data)) {
         data <- data.frame(ID = rep(factor(1), n))
+      } else if(is.null(data$ID)) {
+        data$ID <- rep(factor(1), n)
       }
       
       # Number of states
@@ -365,14 +367,22 @@ Hmm <- R6Class(
       lp <- mats_obs$X_fe %*% self$obs()$wpar() + mats_obs$X_re %*% self$obs()$wpar_re()
       lp_mat <- matrix(lp, nrow = n)
 
+      # Uniform initial distribution for now
+      delta <- rep(1/n_states, n_states) 
+      
       # Simulate state process      
       S <- rep(NA, n)
-      S[1] <- sample(1:n_states, size = 1, prob = )
+      S[1] <- sample(1:n_states, size = 1, prob = delta)
       for(i in 2:n) {
         if(round(i/n*100)%%10 == 0) {
           cat("\rSimulating states... ", round(i/n*100), "%", sep = "")        
         }
-        S[i] <- sample(1:n_states, size = 1, prob = tpms[S[i-1], , i-1])
+        
+        if(data$ID[i] != data$ID[i-1]) {
+          S[i] <- sample(1:n_states, size = 1, prob = delta)
+        } else {
+          S[i] <- sample(1:n_states, size = 1, prob = tpms[S[i-1], , i-1])          
+        }
       }
       cat("\n")
       
