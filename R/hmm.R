@@ -341,6 +341,77 @@ Hmm <- R6Class(
                    upper = unlist(upper)))
     },
     
+    #' @description Simulate from hidden Markov model
+    #' 
+    #' @param n Number of time steps to simulate
+    #' @param data Optional data frame including covariates
+    #' 
+    #' @return Data frame including columns of data (if provided), and simulated
+    #' data variables
+    simulate = function(n, data = NULL) {
+      if(is.null(data)) {
+        data <- data.frame(ID = rep(factor(1), n))
+      }
+      
+      # Number of states
+      n_states <- self$hidden()$nstates()
+      
+      # Create transition probability matrices
+      mats_hid <- self$hidden()$make_mat(data = self$obs()$data()$data(), new_data = data)
+      tpms <- self$hidden()$tpm_all(X_fe = mats_hid$X_fe, X_re = mats_hid$X_re)
+      
+      # Create observation parameters
+      mats_obs <- self$obs()$make_mat(new_data = data)
+      lp <- mats_obs$X_fe %*% self$obs()$wpar() + mats_obs$X_re %*% self$obs()$wpar_re()
+      lp_mat <- matrix(lp, nrow = n)
+
+      # Simulate state process      
+      S <- rep(NA, n)
+      S[1] <- sample(1:n_states, size = 1, prob = )
+      for(i in 2:n) {
+        if(round(i/n*100)%%10 == 0) {
+          cat("\rSimulating states... ", round(i/n*100), "%", sep = "")        
+        }
+        S[i] <- sample(1:n_states, size = 1, prob = tpms[S[i-1], , i-1])
+      }
+      cat("\n")
+      
+      # Simulate observation process
+      obs_dists <- self$obs()$dists()
+      obs_all <- data.frame(state = S)
+      par_count <- 1
+      for(var in seq_along(obs_dists)) {
+        # Distribution and name for this variable
+        obsdist <- obs_dists[[var]]
+        var_name <- names(obs_dists)[var]
+        
+        # Simulate n realisations for variable "var"
+        obs <- rep(NA, n)
+        for(i in 1:n) {
+          if(round(i/n*100)%%10 == 0) {
+            cat("\rSimulating ", var_name, "... ", round(i/n*100), "%", sep = "")        
+          }
+          
+          # Subset and transform observation parameters
+          sub_lp <- lp_mat[i, par_count:(par_count + obsdist$npar() * n_states - 1)]
+          par <- obsdist$w2n(sub_lp, as_matrix = TRUE)
+          
+          # Generate realisation
+          obs[i] <- obsdist$rng_apply(n = 1, par = par[S[i],])
+        }
+        
+        # Add variable to data frame
+        obs_all[[var_name]] <- obs
+        par_count <- par_count + obsdist$npar() * n_states
+        cat("\n")
+      }
+      
+      # Combine original data set and simulated variables
+      obs_all <- cbind(data, obs_all)
+      
+      return(obs_all)
+    },
+    
     ######################
     ## Plotting methods ##
     ######################
