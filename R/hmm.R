@@ -494,12 +494,20 @@ Hmm <- R6Class(
       levels(df$to) <- paste("State", 1:n_states)
       df$var <- rep(mats$new_data[, var], each = n_states * n_states)
       
+      # Create caption with values of other (fixed) covariates      
+      plot_txt <- NULL
+      if(ncol(mats$new_data) > 1) {
+        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var)]
+        plot_txt <- paste(colnames(other_covs), "=", round(other_covs, 2), 
+                          collapse = ", ")
+      }
+      
       # Create plot using facets
       p <- ggplot(df, aes(var, prob)) + geom_line() + 
         facet_wrap(c("from", "to"), 
                    strip.position = "left",
                    labeller = label_bquote("Pr("*.(from)*" -> "*.(to)*")")) +
-        xlab(var) + ylab(NULL) +
+        xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
         theme_light() +
         theme(strip.background = element_blank(),
               strip.placement = "outside", 
@@ -534,12 +542,20 @@ Hmm <- R6Class(
       colnames(df) <- c("var", "state", "prob")
       levels(df$state) <- paste("State", 1:n_states)
       df$var <- rep(mats$new_data[, var], n_states)
+
+      # Create caption with values of other (fixed) covariates      
+      plot_txt <- NULL
+      if(ncol(mats$new_data) > 1) {
+        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var)]
+        plot_txt <- paste(colnames(other_covs), "=", round(other_covs, 2), 
+              collapse = ", ")
+      }
       
       # Create plot
       p <- ggplot(df, aes(var, prob, group = state, col = state)) + 
         geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
-        xlab(var) + ylab("State probabilities") +
-        theme_light() +
+        xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
+        theme_light() + 
         coord_cartesian(ylim = c(0, 1))
       
       return(p)
@@ -569,13 +585,22 @@ Hmm <- R6Class(
       levels(df$state) <- paste("State", 1:n_states)
       df$var <- rep(mats$new_data[, var], each = nrow(df)/nrow(mats$new_data))
       
+      # Create caption with values of other (fixed) covariates      
+      plot_txt <- NULL
+      if(ncol(mats$new_data) > 1) {
+        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var), 
+                                    drop = FALSE]
+        plot_txt <- paste(colnames(other_covs), "=", round(other_covs, 2), 
+                          collapse = ", ")
+      }
+      
       # Create plot
       p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
         geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
         facet_wrap(c("par"), scales = "free_y",
                    strip.position = "left",
                    labeller = label_bquote(.(as.character(par)))) +
-        xlab(var) + ylab(NULL) +
+        xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
         theme(strip.background = element_blank(),
               strip.placement = "outside", 
               strip.text = element_text(colour = "black"))
