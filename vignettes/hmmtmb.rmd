@@ -25,11 +25,12 @@ set.seed(342)
 
 # Observation distribution
 
-Distributions for the observation process are created using the Dist class. To define a new distribution, we provide its name (as a string), its probability density/mass function (as a function), and the link functions for its parameters (as named lists of functions). For example, for the normal distribution, we have
+Distributions for the observation process are created using the Dist class. To define a new distribution, we provide its name (as a string), its probability density/mass function (as a function), the random generator function, and the link functions for its parameters (as named lists of functions). For example, for the normal distribution, we have
 ```{r dist-def}
 dist_norm <- Dist$new(
   name = "norm", 
   pdf = dnorm,
+  rng = rnorm,
   link = list(mean = identity, sd = log),
   invlink = list(mean = identity, sd = exp),
   npar = 2
@@ -236,6 +237,43 @@ With the function plot_stat_dist, we can visualise the stationary state probabil
 
 ```{r plot-stat}
 hmm$plot_stat_dist("dist_water") + xlab("Distance to water (m)")
+```
+
+We can simulate from the fitted model with the method simulate, for example to check how well the model captures features of the real data. Here, we simulate step lengths and turning angles from the model.
+
+```{r hmm-sim, results = 'hide'}
+# Number of simulated realisations
+n_sim <- 500
+# Data frame of covariate values for simulation
+new_covs <- data.frame(dist_water = sample(tracks$dist_water, 
+                                           replace = TRUE, 
+                                           size = n_sim))
+
+# Simulate from fitted model
+sim_data <- hmm$simulate(n = n_sim, data = new_covs)
+```
+
+The output is a data frame with the same columns as the input, plus columns for the simulated variables, and a column for the simulated states.
+
+```{r hmm-sim-2}
+head(sim_data)
+```
+
+We then derive the corresponding locations to visualise the simulated movement trajectory.
+
+```{r hmm-sim-3, results = 'hide'}
+# Get locations from simulated step lengths and turning angles
+bearings <- cumsum(sim_data$angle)
+sim_dxy <- sim_data$step * cbind(cos(bearings), sin(bearings))
+sim_data$x <- cumsum(c(0, sim_dxy[-n_sim, 1]))
+sim_data$y <- cumsum(c(0, sim_dxy[-n_sim, 2]))
+
+# Plot simulated trajectory
+ggplot(sim_data, aes(x, y, col = factor(state), group = NA)) + 
+  scale_color_manual("State", values = hmmTMB_cols) +
+  geom_point(size = 0.7) + 
+  geom_path() +
+  coord_equal()
 ```
 
 ## Future work
