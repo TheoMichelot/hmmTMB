@@ -14,15 +14,19 @@ Dist <- R6Class(
     #' 
     #' @param name Name of distribution
     #' @param pdf Probability density/mass function of the distribution
+    #' (e.g. \code{dnorm} for normal distribution).
+    #' @param rng Random generator function of the distribution (e.g.
+    #' \code{rnorm} for normal distribution).
     #' @param link Named list of link functions for distribution parameters
     #' @param invlink Named list of inverse link functions for distribution
     #' parameters
     #' @param npar Number of parameters of the distribution
     #' 
     #' @return A new Dist object
-    initialize = function(name, pdf, link, invlink, npar) {
+    initialize = function(name, pdf, rng, link, invlink, npar) {
       private$name_ <- name
       private$pdf_ <- pdf
+      private$rng_ <- rng
       private$link_ <- link
       private$invlink_ <- invlink
       private$npar_ <- npar
@@ -38,6 +42,9 @@ Dist <- R6Class(
     
     #' @description Return pdf of Dist object
     pdf = function() {return(private$pdf_)},
+    
+    #' @description Return random generator function of Dist object
+    rng = function() {return(private$rng_)},
     
     #' @description Return link function of Dist object
     link = function() {return(private$link_)},
@@ -72,6 +79,20 @@ Dist <- R6Class(
       args <- list(x = x)
       args <- c(args, par, log = log)
       do.call(self$pdf(), args)
+    },
+    
+    #' @description Random number generator
+    #' 
+    #' @param n Number of realisations to generate
+    #' @param par Vector of parameters. The entries should be named if
+    #' they are not in the same order as expected by the R function. (E.g.
+    #' shape/scale rather than shape/rate for gamma distribution.)
+    #' 
+    #' @return Vector of \code{n} realisations of this distribution
+    rng_apply = function(n, par) {
+      args <- list(n = n)
+      args <- c(args, par)
+      do.call(self$rng(), args)
     },
     
     #' @description Natural to working parameter transformation
@@ -124,6 +145,7 @@ Dist <- R6Class(
   private = list(
     name_ = NULL,
     pdf_ = NULL,
+    rng_ = NULL,
     link_ = NULL,
     invlink_ = NULL,
     npar_ = NULL,

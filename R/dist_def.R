@@ -6,6 +6,7 @@
 dist_pois <- Dist$new(
   name = "pois", 
   pdf = dpois,
+  rng = rpois,
   link = list(lambda = log),
   invlink = list(lambda = exp),
   npar = 1
@@ -15,6 +16,7 @@ dist_pois <- Dist$new(
 dist_gamma <- Dist$new(
   name = "gamma", 
   pdf = dgamma,
+  rng = rgamma,
   link = list(shape = log, scale = log),
   invlink = list(shape = exp, scale = exp),
   npar = 2
@@ -24,6 +26,7 @@ dist_gamma <- Dist$new(
 dist_norm <- Dist$new(
   name = "norm", 
   pdf = dnorm,
+  rng = rnorm,
   link = list(mean = identity, sd = log),
   invlink = list(mean = identity, sd = exp),
   npar = 2
@@ -33,6 +36,7 @@ dist_norm <- Dist$new(
 dist_beta <- Dist$new(
   name = "beta",
   pdf = dbeta,
+  rng = rbeta,
   link = list(shape1 = log, shape2 = log),
   invlink = list(shape1 = exp, shape2 = exp),
   npar = 2
@@ -48,6 +52,10 @@ dist_vm <- Dist$new(
     else
       val <- - log(2 * pi * b) + kappa * cos(x - mu)
     return(val)
+  },
+  rng = function(n, mu, kappa) {
+    # rvm and dvm use different parameter names
+    rvm(n = n, mean = mu, k = kappa)
   },
   link = list(mu = function(x) qlogis((x + pi) / (2 * pi)), 
               kappa = log),
