@@ -2,17 +2,17 @@
 # Colour palette
 hmmTMB_cols <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
 
-##' Create block diagonal matrix (safe version)
-##' 
-##' This version of bdiag checks whether the matrices passed as
-##' arguments are NULL. This avoids errors that would arise if
-##' using bdiag directly.
-##' 
-##' @param ... Matrix or list of matrices (only the first argument is used)
-##' 
-##' @return Block diagonal matrix
-##' 
-##' @importFrom Matrix bdiag
+#' Create block diagonal matrix (safe version)
+#' 
+#' This version of bdiag checks whether the matrices passed as
+#' arguments are NULL. This avoids errors that would arise if
+#' using bdiag directly.
+#' 
+#' @param ... Matrix or list of matrices (only the first argument is used)
+#' 
+#' @return Block diagonal matrix
+#' 
+#' @importFrom Matrix bdiag
 bdiag_check <- function(...) {
   # Only use first argument (matrix or list of matrices)
   args <- list(...)[[1]]
