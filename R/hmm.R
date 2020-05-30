@@ -356,9 +356,6 @@ Hmm <- R6Class(
     #' 
     #' @return A ggplot object
     plot_ts = function(var1, var2 = NULL) {
-      # Colour palette
-      pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
-      
       # Data frame for plot
       data <- self$obs()$data()$data()
       # State sequence as factor
@@ -383,7 +380,7 @@ Hmm <- R6Class(
       }
       
       p <- p + 
-        scale_color_manual(values = pal) +
+        scale_color_manual(values = hmmTMB_cols) +
         theme_light()
       
       return(p)
@@ -442,9 +439,6 @@ Hmm <- R6Class(
     #' 
     #' @return A ggplot object
     plot_stat_dist = function(var, covs = NULL) {
-      # Colour palette
-      pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
-      
       # Number of states
       n_states <- self$hidden()$nstates()
       
@@ -462,7 +456,7 @@ Hmm <- R6Class(
       
       # Create plot
       p <- ggplot(df, aes(var, prob, group = state, col = state)) + 
-        geom_line(size = 0.7) + scale_color_manual("", values = pal) +
+        geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
         xlab(var) + ylab("State probabilities") +
         theme_light() +
         coord_cartesian(ylim = c(0, 1))
@@ -481,9 +475,6 @@ Hmm <- R6Class(
     #' 
     #' @return A ggplot object
     plot_obspar = function(var, covs = NULL) {
-      # Colour palette
-      pal <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
-      
       # Number of states
       n_states <- self$hidden()$nstates()
       
@@ -499,7 +490,7 @@ Hmm <- R6Class(
       
       # Create plot
       p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
-        geom_line(size = 0.7) + scale_color_manual("", values = pal) +
+        geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
         facet_wrap(c("par"), scales = "free_y",
                    strip.position = "left",
                    labeller = label_bquote(.(as.character(par)))) +

@@ -1,4 +1,7 @@
 
+# Colour palette
+hmmTMB_cols <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
+
 ##' Create block diagonal matrix (safe version)
 ##' 
 ##' This version of bdiag checks whether the matrices passed as
