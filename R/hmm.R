@@ -497,7 +497,8 @@ Hmm <- R6Class(
       # Create caption with values of other (fixed) covariates      
       plot_txt <- NULL
       if(ncol(mats$new_data) > 1) {
-        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var)]
+        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var),
+                                    drop = FALSE]
         plot_txt <- paste(colnames(other_covs), "=", round(other_covs, 2), 
                           collapse = ", ")
       }
@@ -546,7 +547,8 @@ Hmm <- R6Class(
       # Create caption with values of other (fixed) covariates      
       plot_txt <- NULL
       if(ncol(mats$new_data) > 1) {
-        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var)]
+        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var),
+                                    drop = FALSE]
         plot_txt <- paste(colnames(other_covs), "=", round(other_covs, 2), 
               collapse = ", ")
       }
