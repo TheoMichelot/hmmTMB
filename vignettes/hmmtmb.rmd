@@ -322,3 +322,5 @@ ggplot(sim_data, aes(x, y, col = factor(state), group = NA)) +
     + fixed value, e.g. $\mu_1 = 0$ (using map)
 
  - obtain starting values for complex models from simpler nested model (e.g. for smooth effects)
+
+ - method "update" similar to glmmTMB, to create a new model from an existing model?
