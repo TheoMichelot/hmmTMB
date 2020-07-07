@@ -364,17 +364,18 @@ Hmm <- R6Class(
       
       # Create observation parameters
       mats_obs <- self$obs()$make_mat(new_data = data)
-      lp <- mats_obs$X_fe %*% self$obs()$wpar() + mats_obs$X_re %*% self$obs()$wpar_re()
-      lp_mat <- matrix(lp, nrow = n)
-      
+      par_obs <- self$obs()$par_all(X_fe = mats_obs$X_fe, X_re = mats_obs$X_re,
+                                    full_names = FALSE)
+
       # Simulate observation process
       obs_dists <- self$obs()$dists()
       obs_all <- data.frame(state = S)
       par_count <- 1
       for(var in seq_along(obs_dists)) {
-        # Distribution and name for this variable
+        # Distribution, name, and parameter indices for this variable
         obsdist <- obs_dists[[var]]
         var_name <- names(obs_dists)[var]
+        par_ind <- par_count:(par_count + obsdist$npar() - 1)
         
         # Simulate n realisations for variable "var"
         obs <- rep(NA, n)
@@ -383,17 +384,13 @@ Hmm <- R6Class(
             cat("\rSimulating ", var_name, "... ", round(i/n*100), "%", sep = "")        
           }
           
-          # Subset and transform observation parameters
-          sub_lp <- lp_mat[i, par_count:(par_count + obsdist$npar() * n_states - 1)]
-          par <- obsdist$w2n(sub_lp, as_matrix = TRUE)
-          
           # Generate realisation
-          obs[i] <- obsdist$rng_apply(n = 1, par = par[S[i],])
+          obs[i] <- obsdist$rng_apply(n = 1, par = par_obs[par_ind, S[i], i])
         }
         
         # Add variable to data frame
         obs_all[[var_name]] <- obs
-        par_count <- par_count + obsdist$npar() * n_states
+        par_count <- par_count + obsdist$npar()
         cat("\n")
       }
       
