@@ -247,9 +247,8 @@ Observation <- R6Class(
       # Number of variables
       n_var <- ncol(data)
       
-      # Matrix of observation parameters
-      wpar <- X_fe %*% self$wpar() + X_re %*% self$wpar_re()
-      par_mat <- matrix(wpar, nrow = n)
+      # State-dependent parameters
+      par <- self$par_all(X_fe = X_fe, X_re = X_re, full_names = FALSE)
       
       # Initialise matrix of probabilities to 1
       prob <- matrix(1, nrow = n, ncol = n_states)
@@ -260,26 +259,21 @@ Observation <- R6Class(
       # Loop over observed variables
       for(var in 1:n_var) {
         obsdist <- self$dists()[[var]]
+        par_ind <- par_count:(par_count + obsdist$npar() - 1)
         
-        # Loop over observations (rows)
+        # Loop over observations (rows of prob)
         for (i in 1:n) {
           # Don't update likelihood is observation is missing
           if(!is.na(data[i, var])) {
-            # Subset and transform observation parameters
-            sub_wpar <- par_mat[i, par_count:(par_count + obsdist$npar() * n_states - 1)]
-            par <- obsdist$w2n(sub_wpar, as_matrix = TRUE)
-            
-            # Loop over states (columns)
+            # Loop over states (columns of prob)
             for (s in 1:n_states) {
-              # Vector of parameters for state s
-              subpar <- par[s,]
-              
-              prob[i, s] <- prob[i, s] * obsdist$pdf_apply(x = data[i, var], par = subpar)
+              prob[i, s] <- prob[i, s] * 
+                obsdist$pdf_apply(x = data[i, var], par = par[par_ind, s, i])
             }            
           }
         }
         
-        par_count <- par_count + obsdist$npar() * n_states
+        par_count <- par_count + obsdist$npar()
       }
       
       return(prob)
@@ -393,7 +387,8 @@ Observation <- R6Class(
       p <- ggplot(obs, aes(x = val)) + xlab(name) +
         geom_histogram(breaks = breaks, aes(y=..density..), 
                        col = "white", bg = "lightgrey", na.rm = TRUE) + 
-        geom_line(aes(grid, val, col = state, linetype = state), data = df_dens, size = 0.7) +
+        geom_line(aes(grid, val, col = state, linetype = state), 
+                  data = df_dens, size = 0.7) +
         scale_color_manual("", values = c(hmmTMB_cols[1:self$nstates()], "black")) +
         scale_linetype_manual("", values = c(rep(1, self$nstates()), 2)) +
         coord_cartesian(ylim = c(0, 1.1 * max(h$density))) +
