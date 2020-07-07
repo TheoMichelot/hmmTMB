@@ -161,8 +161,8 @@ Observation <- R6Class(
     #' plus a data frame of covariates values.
     make_mat_grid = function(var, covs = NULL) {
       # Data frame for covariate grid
-      new_data <- cov_grid(var = var, data = data, covs = covs, 
-                           formulas = self$formulas())
+      new_data <- cov_grid(var = var, data = self$data()$data(), 
+                           covs = covs, formulas = self$formulas())
       
       # Create design matrices
       mats <- self$make_mat(new_data = new_data)
