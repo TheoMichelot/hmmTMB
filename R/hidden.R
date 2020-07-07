@@ -161,7 +161,7 @@ MarkovChain <- R6Class(
     tpm_all = function(X_fe, X_re) {
       n_states <- self$nstates()
       ltpm <- X_fe %*% self$par() + X_re %*% self$par_re()
-      ltpm_mat <- matrix(ltpm, ncol = n_states)
+      ltpm_mat <- matrix(ltpm, ncol = n_states * (n_states - 1))
       tpm <- apply(ltpm_mat, 1, private$par2tpm)
       tpm <- array(tpm, dim = c(n_states, n_states, nrow(ltpm_mat)))
       return(tpm)
@@ -197,7 +197,7 @@ MarkovChain <- R6Class(
       return(stat_dists)
     },
     
-    #' Design matrices for grid of covariates
+    #' @description Design matrices for grid of covariates
     #' 
     #' Used in plotting functions such as Hmm$plot_tpm and Hmm$plot_stat_dist
     #' 
@@ -242,6 +242,7 @@ MarkovChain <- R6Class(
     
     tpm2par = function(tpm) {
       ltpm <- log(tpm / diag(tpm))
+      ltpm <- t(ltpm) # transpose to fill by rows (like in C++)
       par <- ltpm[!diag(self$nstates())]
       return(par)
     },
