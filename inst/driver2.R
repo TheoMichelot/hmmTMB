@@ -1,101 +1,61 @@
-## Driver script (with covariates)
 
 library(hmmTMB)
-set.seed(6932)
+set.seed(5738)
 
-#' Simulate HMM
-#'
-#' @param n number of samples
-#' @param shape_par parameters for gamma shape (matrix with
-#' one row for each column of X, and one column for each state)
-#' @param scale_par parameters of gamma scale for each state
-#' @param lambda_par parameters of Poisson rate for each state
-#' @param tpm transition probability matrix
-#' @param X design matrix (covariates)
-#'
-#' @return vector of observed counts
-simHMM <- function(n, shape_par, scale_par, lambda_par, tpm, X) {
-  n.states <- ncol(lambda_par)
-  
-  # Initial distribution (stationary)
-  delta <- solve(t(diag(n.states) - tpm  + 1), rep(1, n.states))
-  
-  # Simulate state process
-  s <- numeric(n)
-  state.space <- 1:n.states
-  s[1] <- sample(state.space, 1, prob = delta)
-  for (t in 2:n) 
-    s[t] <- sample(state.space, 1, prob = tpm[s[t - 1], ])
-  
-  # Get observation parameters  
-  shape <- exp(X %*% shape_par)
-  scale <- exp(X %*% scale_par)
-  lambda <- exp(X %*% lambda_par)
-  
-  # Simulate observations
-  step <- rep(NA, n)
-  count <- rep(NA, n)
-  for(t in 1:n) {
-    step[t] <- rgamma(1, shape = shape[t, s[t]], scale = scale[t, s[t]])
-    count[t] <- rpois(1, lambda = lambda[t, s[t]])
-  }
-  
-  obs <- data.frame(step = step, count = count)
-  return(list(data = cbind(obs, X), state = s))
-}
+###################
+## Simulate data ##
+###################
+# Generate two covariates (random walk)
+n_sim <- 1e4
+covs <- data.frame(ID = 1, 
+                   x1 = cumsum(rnorm(n_sim, 0, 0.1)),
+                   x2 = cumsum(rnorm(n_sim, 0, 0.1)))
+hmm_data <- HmmData$new(data = covs)
 
-# Simulation parameters
-n <- 3e3
-shape_par <- matrix(c(log(0.5), log(6),
-                      -0.1, -0.1,
-                      0, 0),
-                    ncol = 2, byrow = TRUE)
-scale_par <- matrix(c(log(2), log(3),
-                      0, 0,
-                      0, 0),
-                    ncol = 2, byrow = TRUE)
-lambda_par <- matrix(c(log(2), log(20),
-                       0.5, 0.3,
-                       0, -0.5),
-                     ncol = 2, byrow = TRUE)
-tpm <- matrix(c(0.95, 0.1, 0.05, 0.9), nc = 2)
+# Create observation model
+n_states <- 2
+dists <- list(step = dist_gamma,
+              count = dist_pois)
+par <- list(step = list(shape = c(1, 1),
+                        scale = c(1, 10)),
+            count = list(lambda = c(1, 10)))
+obs <- Observation$new(data = hmm_data, dists = dists, 
+                       n_states = n_states, par = par)
 
-# Simulate covariates
-X <- data.frame(Intercept = 1,
-                x1 = rnorm(n),
-                x2 = rnorm(n))
+# Create state process model
+form <- "~ x1 + x2"
+struct <- matrix(c(".", form,
+                   form, "."),
+                 nrow = 2, ncol = 2)
+par_hid <- c(-2, 0.12, -0.34, -2, -0.25, 0.07)
+hid <- MarkovChain$new(structure = struct, par = par_hid)
 
-# Simulate HMM data
-simdat <- simHMM(n = n, shape_par = shape_par, scale_par = scale_par, 
-                 lambda_par = lambda_par, tpm = tpm, X = as.matrix(X))
-data <- simdat$data
-states <- simdat$state
+# Create HMM object and simulate data
+mod <- Hmm$new(obs = obs, hidden = hid)
+sim <- mod$simulate(n = n_sim, data = covs)
 
-# Observation distributions
-dists <- list(step = dist_gamma, count = dist_pois)
+###############
+## Fit model ##
+###############
+hmm_data2 <- HmmData$new(data = sim)
 
-# Initial parameters (working scale)
-wpar <- rep(0, 12)
+# Initial parameters for estimation
+par0 <- list(step = list(shape = c(0.5, 2),
+                         scale = c(2, 8)),
+             count = list(lambda = c(3, 7)))
+obs2 <- Observation$new(data = hmm_data2, dists = dists, 
+                        n_states = n_states, par = par)
 
-# Formulas on observation parameters
-formulas <- list(step = list(shape = ~ x1, scale = ~ 1),
-                 count = list(lambda = ~ x1 + x2))
+mod2 <- Hmm$new(obs = obs2, hidden = hid)
 
-# Create objects
-dat <- HmmData$new(data)
-obs <- Observation$new(dat, dists = dists, n_states = 2, wpar = wpar, 
-                       formulas = formulas)
-hid <- MarkovChain$new(n_states = 2)
-mod <- Hmm$new(obs, hid)
+mod2$fit(silent = FALSE)
 
-# Fit model
-mod$fit(silent = FALSE)
+# Estimated observation parameters
+mod2$obs()$par()
 
-# Unpack parameters
-wpar <- obs$wpar()
-shape_est <- matrix(wpar[1:4], ncol = 2)
-scale_est <- matrix(wpar[5:6], ncol = 2)
-lambda_est <- matrix(wpar[7:12], ncol = 2)
+# Estimated parameters of the state process
+mod2$hidden()$par()
 
-s <- mod$viterbi()
-table(s == states)/length(s)
+# Compare estimated states and true states
+s <- mod2$viterbi()
+table(s == sim$state)/n_sim
