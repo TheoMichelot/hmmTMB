@@ -357,34 +357,15 @@ Hmm <- R6Class(
       
       # Number of states
       n_states <- self$hidden()$nstates()
-      
-      # Create transition probability matrices
-      mats_hid <- self$hidden()$make_mat(data = self$obs()$data()$data(), new_data = data)
-      tpms <- self$hidden()$tpm_all(X_fe = mats_hid$X_fe, X_re = mats_hid$X_re)
+
+      # Simulate state process      
+      S <- self$hidden()$simulate(n = n, data = self$obs()$data()$data(), 
+                                  new_data = data)
       
       # Create observation parameters
       mats_obs <- self$obs()$make_mat(new_data = data)
       lp <- mats_obs$X_fe %*% self$obs()$wpar() + mats_obs$X_re %*% self$obs()$wpar_re()
       lp_mat <- matrix(lp, nrow = n)
-
-      # Uniform initial distribution for now
-      delta <- rep(1/n_states, n_states) 
-      
-      # Simulate state process      
-      S <- rep(NA, n)
-      S[1] <- sample(1:n_states, size = 1, prob = delta)
-      for(i in 2:n) {
-        if(round(i/n*100)%%10 == 0) {
-          cat("\rSimulating states... ", round(i/n*100), "%", sep = "")        
-        }
-        
-        if(data$ID[i] != data$ID[i-1]) {
-          S[i] <- sample(1:n_states, size = 1, prob = delta)
-        } else {
-          S[i] <- sample(1:n_states, size = 1, prob = tpms[S[i-1], , i-1])          
-        }
-      }
-      cat("\n")
       
       # Simulate observation process
       obs_dists <- self$obs()$dists()

@@ -222,6 +222,59 @@ MarkovChain <- R6Class(
       mats$new_data <- new_data
       
       return(mats)
+    },
+    
+    #' @description Simulate from Markov chain
+    #' 
+    #' @param n Number of time steps to simulate
+    #' @param data Optional data frame containing all needed covariates
+    #' @param new_data Optional new data set, including covariates for which
+    #' the design matrices should be created. This needs to be passed in addition
+    #' to the argument '\code{data}', for cases where smooth terms or factor
+    #' covariates are included, and the original data set is needed to determine
+    #' the full range of covariate values.
+    #' 
+    #' @return Sequence of states of simulated chain
+    simulate = function(n, data = NULL, new_data = NULL) {
+      # Number of states
+      n_states <- self$nstates()
+      
+      # Time series ID
+      if(is.null(new_data)) {
+        ID <- rep(1, n)
+      } else {
+        ID <- new_data$ID
+      }
+      
+      # If no covariates, 'data' is optional
+      if(is.null(data)) {
+        data <- data.frame(ID = ID)
+      }
+      
+      # Create transition probability matrices
+      mats_hid <- self$make_mat(data = data, new_data = new_data)
+      tpms <- self$tpm_all(X_fe = mats_hid$X_fe, X_re = mats_hid$X_re)
+      
+      # Uniform initial distribution for now
+      delta <- rep(1/n_states, n_states) 
+      
+      # Simulate state process      
+      S <- rep(NA, n)
+      S[1] <- sample(1:n_states, size = 1, prob = delta)
+      for(i in 2:n) {
+        if(round(i/n*100)%%10 == 0) {
+          cat("\rSimulating states... ", round(i/n*100), "%", sep = "")        
+        }
+        
+        if(ID[i] != ID[i-1]) {
+          S[i] <- sample(1:n_states, size = 1, prob = delta)
+        } else {
+          S[i] <- sample(1:n_states, size = 1, prob = tpms[S[i-1], , i-1])          
+        }
+      }
+      cat("\n")
+      
+      return(S)
     }
   ),
   
