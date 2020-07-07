@@ -179,10 +179,15 @@ Observation <- R6Class(
     #' by \code{make_mat}
     #' @param X_re Design matrix for random effects, as returned
     #' by \code{make_mat}
+    #' @param full_names Logical. If TRUE, the rows of the output
+    #' are named in the format "variable.parameter" (default). If
+    #' FALSE, the rows are names in the format "parameter". The
+    #' latter is used in various internal functions, when the parameters
+    #' need to be passed on to an R function.
     #' 
     #' @return Array with one slice for each time step, one row 
     #' for each observation parameter, and one column for each state.
-    par_all = function(X_fe, X_re) {
+    par_all = function(X_fe, X_re, full_names = TRUE) {
       # Number of states
       n_states <- self$nstates()
       
@@ -207,9 +212,12 @@ Observation <- R6Class(
       par_array <- array(par_mat, dim = c(n_states, n_par, n))
       
       # Hacky way to get parameter names
-      par_names <- names(unlist(rapply(self$w2n(lp_mat[1,]), 
-                                       function(v) v[1])))
-      
+      if(full_names) {
+        par_names <- names(unlist(rapply(self$par(), function(v) v[1])))        
+      } else {
+        par_names <- unlist(lapply(obs$par(), names))
+      }
+
       # Set dimension names for rows and columns
       dimnames(par_array) <- list(paste("state", 1:n_states),
                                   par_names,
