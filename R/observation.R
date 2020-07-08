@@ -213,9 +213,10 @@ Observation <- R6Class(
       
       # Hacky way to get parameter names
       if(full_names) {
-        par_names <- names(unlist(rapply(self$par(), function(v) v[1])))        
+        par_names <- names(unlist(rapply(self$w2n(lp_mat[1,]),
+                                         function(v) v[1])))
       } else {
-        par_names <- unlist(lapply(obs$par(), names))
+        par_names <- unlist(lapply(self$w2n(lp_mat[1,]), names))
       }
       
       # Set dimension names for rows and columns
