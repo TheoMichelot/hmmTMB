@@ -133,7 +133,7 @@ Hmm <- R6Class(
       tmb_par <- list(wpar_fe_obs = self$obs()$wpar(),
                       wpar_re_obs = 0,
                       log_lambda_obs = 0,
-                      wpar_fe_hid = self$hidden()$par(),
+                      wpar_fe_hid = self$hidden()$par_fe(),
                       wpar_re_hid = 0,
                       log_lambda_hid = 0,
                       log_delta = rep(0, n_states - 1))
@@ -235,7 +235,7 @@ Hmm <- R6Class(
       }
       
       # Transition probabilities
-      self$hidden()$update_par(newpar = par_list$wpar_fe_hid)
+      self$hidden()$update_par_fe(newpar = par_list$wpar_fe_hid)
       mats_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
       if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
         self$hidden()$update_par_re(newpar = par_list$wpar_re_hid)        
