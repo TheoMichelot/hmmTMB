@@ -18,32 +18,20 @@ MarkovChain <- R6Class(
     #' for covariates affecting transitions that are to be estimated, or (2) single
     #' formula, assumed for all transition probabilities. (Default: no covariate
     #' dependence.)
-    #' @param tpm Initial transition probability matrix. (Default: 0.9 on diagonal,
-    #' and 0.1/(n_states - 1) for all other entries.)
-    #' @param par Initial parameters of the state process, on the working scale.
+    #' @param tpm0 Initial transition probability matrix. (Default: 0.9 on diagonal,
+    #' and 0.1/(n_states - 1) for all other entries.) If the model has covariates,
+    #' then \code{tpm0} is used to set the intercept parameters for the transition
+    #' probabilities, and the other parameters are set to 0.
+    #' @param data HmmData object, needed if the model includes covariates
     #' 
     #' @return A new MarkovChain object
-    initialize = function(n_states = NULL, structure = NULL, tpm = NULL, par = NULL) {
-      
+    initialize = function(n_states = NULL, structure = NULL, 
+                          tpm0 = NULL, data = NULL) {
       if(is.null(structure)) {
         # No covariate effects
         structure <- matrix("~1", nrow = n_states, ncol = n_states)
         diag(structure) <- "."
         private$nstates_ <- n_states
-        
-        # Set initial tpm (default: 0.9 on diagonal)
-        if(is.null(tpm) & is.null(par)) {
-          tpm <- matrix(0.1/(n_states-1), nrow = n_states, ncol = n_states)
-          diag(tpm) <- 0.9
-          par <- private$tpm2par(tpm)
-        } else if(is.null(par)) {
-          par <- private$tpm2par(tpm)
-        } else {
-          tpm <- private$par2tpm(par)
-        }
-        private$tpm_ <- tpm
-        private$par_ <- par
-      
       } else {
         # Covariate effects
         if(length(structure) == 1 | inherits(structure, "formula")) {
@@ -57,9 +45,6 @@ MarkovChain <- R6Class(
         }
         
         private$nstates_ <- n_states
-        
-        # Set initial parameters 
-        private$par_ <- par
       }
       
       # Create list of formulas
@@ -71,10 +56,12 @@ MarkovChain <- R6Class(
           return(as.formula(form_char))
       })
       
-      # Set remaining private attributes
+      # Set structure and formulas attributes
       private$structure_ <- structure
       private$formulas_ <- ls_form
-      private$par_re_ <- integer(0)  # so that X_re %*% par_re is valid
+      
+      # Set initial parameters (intercepts in par_fe) 
+      self$set_par0(tpm0 = tpm0, data = data)
     },
     
     ###############
@@ -90,7 +77,7 @@ MarkovChain <- R6Class(
     tpm = function() {return(private$tpm_)},
     
     #' @description Current parameter estimates (fixed effects)
-    par = function() {return(private$par_)},
+    par_fe = function() {return(private$par_fe_)},
     
     #' @description Current parameter estimates (random effects)
     par_re = function() {return(private$par_re_)},
@@ -106,14 +93,14 @@ MarkovChain <- R6Class(
     #' @param newtpm New transition probability matrix
     update_tpm = function(newtpm) {
       private$tpm_ <- newtpm
-      private$par_ <- private$tpm2par(newtpm)
+      private$par_fe_ <- private$tpm2par(newtpm)
     },
     
     #' @description Update parameters (fixed effects)
     #' 
     #' @param newpar New parameters (fixed effects)
-    update_par = function(newpar) {
-      private$par_ <- newpar
+    update_par_fe = function(newpar) {
+      private$par_fe_ <- newpar
       if(all(self$structure() %in% c(".", "~1"))) {
         # Only update tpm if no covariates
         private$tpm_ <- private$par2tpm(newpar)        
@@ -125,6 +112,61 @@ MarkovChain <- R6Class(
     #' @param newpar New parameters (random effects)
     update_par_re = function(newpar) {
       private$par_re_ <- newpar
+    },
+    
+    #' @description Set initial parameters (intercepts)
+    #' 
+    #' @param tpm0 Initial transition probability matrix (corresponding
+    #' to the intercept if covariates are included)
+    #' @param data HmmData object, needed if the model includes covariates
+    set_par0 = function(tpm0 = NULL, data = NULL) {
+      n_states <- self$nstates()
+      
+      # Does the hidden state model include covariates?
+      no_covs <- all(self$structure() %in% c(".", "~1"))
+      
+      # Defaults to diagonal of 0.9 if no initial tpm provided
+      if(is.null(tpm0)) {
+        tpm0 <- matrix(0.1/(n_states-1), nrow = n_states, ncol = n_states)
+        diag(tpm0) <- 0.9
+      } else if(!is.matrix(tpm0)) {
+        stop("'tpm0' should be a matrix")
+      } else if(nrow(tpm0) != n_states | ncol(tpm0) != n_states) {
+        stop("'tpm0' should have ", n_states, " rows and ", 
+             n_states, " columns")
+      } else if(any(rowSums(tpm0) != 1)) {
+        stop("The rows of 'tpm0' should sum to 1")
+      }
+
+      # Initialise par_fe and par_re (0 if not provided)
+      if(no_covs) {
+        # If no covariates, N*(N-1) fixed effects and 0 random effects
+        ncol_fe <- rep(1, n_states * (n_states - 1))
+        ncol_re <- 0
+      } else {
+        if(is.null(data)) {
+          stop("'data' must be provided if the model includes covariates")
+        }
+        
+        # If covariates, use make_mat to obtain ncol_fe and ncol_re
+        mats <- self$make_mat(data = data$data())
+        ncol_fe <- mats$ncol_fe
+        ncol_re <- mats$ncol_re        
+      }
+      private$par_fe_ <- rep(0, sum(ncol_fe))
+      private$par_re_ <- rep(0, sum(ncol_re))
+      
+      # First column of each X_fe for each SDE parameter
+      n_par <- length(ncol_fe)
+      i0 <- c(1, cumsum(ncol_fe)[-n_par] + 1)
+      
+      # Set intercepts using tpm0
+      private$par_fe_[i0] <- private$tpm2par(tpm0)
+      
+      # Set transition probability matrix if no covariate effects
+      if(no_covs) {
+        private$tpm_ <- tpm0 
+      }
     },
     
     ###################
@@ -160,7 +202,7 @@ MarkovChain <- R6Class(
     #' @return Array with one slice for each transition probability matrix
     tpm_all = function(X_fe, X_re) {
       n_states <- self$nstates()
-      ltpm <- X_fe %*% self$par() + X_re %*% self$par_re()
+      ltpm <- X_fe %*% self$par_fe() + X_re %*% self$par_re()
       ltpm_mat <- matrix(ltpm, ncol = n_states * (n_states - 1))
       tpm <- apply(ltpm_mat, 1, private$par2tpm)
       tpm <- array(tpm, dim = c(n_states, n_states, nrow(ltpm_mat)))
@@ -292,7 +334,7 @@ MarkovChain <- R6Class(
   private = list(
     structure_ = NULL,
     formulas_ = NULL,
-    par_ = NULL,
+    par_fe_ = NULL,
     par_re_ = NULL,
     tpm_ = NULL,
     nstates_ = NULL,
