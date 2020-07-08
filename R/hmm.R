@@ -587,6 +587,15 @@ Hmm <- R6Class(
               strip.text = element_text(colour = "black"))
       
       return(p)
+    },
+    
+    ###################
+    ## Other methods ##
+    ###################
+    #' @description Print model formulation
+    formulation = function() {
+      self$obs()$formulation()
+      self$hidden()$formulation()
     }
   ),
   

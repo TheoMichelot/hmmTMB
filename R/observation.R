@@ -217,7 +217,7 @@ Observation <- R6Class(
       } else {
         par_names <- unlist(lapply(obs$par(), names))
       }
-
+      
       # Set dimension names for rows and columns
       dimnames(par_array) <- list(paste("state", 1:n_states),
                                   par_names,
@@ -395,6 +395,33 @@ Observation <- R6Class(
         theme_light()
       
       return(p)
+    },
+    
+    #' @description Print model formulation
+    formulation = function() {
+      cat("## Observation model:\n")
+      # List of distribution names
+      d_list <- lapply(self$dists(), function(d) d$name())
+      # List of parameter names
+      p_list <- lapply(self$dists(), function(d) names(d$link()))
+      
+      # List of parameter formulas
+      s_list <- lapply(self$formulas(), function(f) {
+        ff <- unlist(f)
+        s <- NULL
+        for(i in seq_along(ff))
+          s <- paste0(s, "  * ", names(ff)[i], " ~ ", as.character(ff[[i]])[2], "\n")
+        return(s)
+      })
+      
+      # Loop over observed variables
+      for(i in seq_along(d_list)) {
+        # Print variable distribution
+        cat(paste0("# ", names(d_list)[i], " ~ ", d_list[[i]], "(", 
+                   paste0(p_list[[i]], collapse = ", "), ")"), "\n")
+        # Print parameter formulas
+        cat(s_list[[i]], "\n")
+      }
     }
   ),
   
