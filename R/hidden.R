@@ -22,11 +22,12 @@ MarkovChain <- R6Class(
     #' and 0.1/(n_states - 1) for all other entries.) If the model has covariates,
     #' then \code{tpm0} is used to set the intercept parameters for the transition
     #' probabilities, and the other parameters are set to 0.
+    #' @param par0 Initial parameters for fixed effects. 
     #' @param data HmmData object, needed if the model includes covariates
     #' 
     #' @return A new MarkovChain object
     initialize = function(n_states = NULL, structure = NULL, 
-                          tpm0 = NULL, data = NULL) {
+                          tpm0 = NULL, par0 = NULL, data = NULL) {
       if(is.null(structure)) {
         # No covariate effects
         structure <- matrix("~1", nrow = n_states, ncol = n_states)
@@ -61,7 +62,7 @@ MarkovChain <- R6Class(
       private$formulas_ <- ls_form
       
       # Set initial parameters (intercepts in par_fe) 
-      self$set_par0(tpm0 = tpm0, data = data)
+      self$set_par0(tpm0 = tpm0, par0 = par0, data = data)
     },
     
     ###############
@@ -118,27 +119,15 @@ MarkovChain <- R6Class(
     #' 
     #' @param tpm0 Initial transition probability matrix (corresponding
     #' to the intercept if covariates are included)
+    #' @param par0 Initial parameters for fixed effects
     #' @param data HmmData object, needed if the model includes covariates
-    set_par0 = function(tpm0 = NULL, data = NULL) {
+    set_par0 = function(tpm0 = NULL, par0 = NULL, data = NULL) {
       n_states <- self$nstates()
       
       # Does the hidden state model include covariates?
       no_covs <- all(self$structure() %in% c(".", "~1"))
       
-      # Defaults to diagonal of 0.9 if no initial tpm provided
-      if(is.null(tpm0)) {
-        tpm0 <- matrix(0.1/(n_states-1), nrow = n_states, ncol = n_states)
-        diag(tpm0) <- 0.9
-      } else if(!is.matrix(tpm0)) {
-        stop("'tpm0' should be a matrix")
-      } else if(nrow(tpm0) != n_states | ncol(tpm0) != n_states) {
-        stop("'tpm0' should have ", n_states, " rows and ", 
-             n_states, " columns")
-      } else if(any(rowSums(tpm0) != 1)) {
-        stop("The rows of 'tpm0' should sum to 1")
-      }
-
-      # Initialise par_fe and par_re (0 if not provided)
+      # Initialise par_fe and par_re to 0
       if(no_covs) {
         # If no covariates, N*(N-1) fixed effects and 0 random effects
         ncol_fe <- rep(1, n_states * (n_states - 1))
@@ -156,16 +145,37 @@ MarkovChain <- R6Class(
       private$par_fe_ <- rep(0, sum(ncol_fe))
       private$par_re_ <- rep(0, sum(ncol_re))
       
-      # First column of each X_fe for each SDE parameter
+      # Indices of intercept parameters in par_fe
       n_par <- length(ncol_fe)
-      i0 <- c(1, cumsum(ncol_fe)[-n_par] + 1)
+      ind0 <- c(1, cumsum(ncol_fe)[-n_par] + 1)
       
-      # Set intercepts using tpm0
-      private$par_fe_[i0] <- private$tpm2par(tpm0)
-      
-      # Set transition probability matrix if no covariate effects
-      if(no_covs) {
-        private$tpm_ <- tpm0 
+      # Set parameter attributes, using either par0 or tpm0
+      if(!is.null(par0)) {
+        # Set parameters from par0
+        if(length(par0) != sum(ncol_fe)) {
+          stop("'par0' should be of length ", sum(ncol_fe), " (one ",
+               "parameter for each column of the design matrix)")
+        }
+        private$par_fe_ <- par0
+        # Get tpm (in the absence of covariate effects)
+        private$tpm_ <- private$par2tpm(par0[ind0])
+      } else {
+        # Set parameters from tpm0
+        if(is.null(tpm0)) {
+          # Defaults to diagonal of 0.9 if no initial tpm provided
+          tpm0 <- matrix(0.1/(n_states-1), nrow = n_states, ncol = n_states)
+          diag(tpm0) <- 0.9
+        } else if(!is.matrix(tpm0)) {
+          stop("'tpm0' should be a matrix")
+        } else if(nrow(tpm0) != n_states | ncol(tpm0) != n_states) {
+          stop("'tpm0' should have ", n_states, " rows and ", 
+               n_states, " columns")
+        } else if(any(rowSums(tpm0) != 1)) {
+          stop("The rows of 'tpm0' should sum to 1")
+        }
+        
+        private$par_fe_[ind0] <- private$tpm2par(tpm0)
+        private$tpm_ <- tpm0
       }
     },
     
