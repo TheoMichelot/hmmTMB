@@ -223,7 +223,8 @@ Hmm <- R6Class(
       private$fit_ <- do.call(optim, private$tmb_obj_)
       
       # Get estimates and precision matrix for all parameters
-      private$tmb_rep_ <- sdreport(private$tmb_obj_)
+      private$tmb_rep_ <- sdreport(private$tmb_obj_, getJointPrecision = TRUE, 
+                                   skip.delta.method = FALSE)
       par_list <- as.list(private$tmb_rep_, "Estimate")
       
       # Observation parameters
