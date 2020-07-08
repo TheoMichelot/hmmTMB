@@ -24,11 +24,9 @@ obs <- Observation$new(data = hmm_data, dists = dists,
 
 # Create state process model
 form <- "~ x1 + x2"
-struct <- matrix(c(".", form,
-                   form, "."),
-                 nrow = 2, ncol = 2)
-par_hid <- c(-2, 0.12, -0.34, -2, -0.25, 0.07)
-hid <- MarkovChain$new(structure = struct, par = par_hid)
+par_hid0 <- c(-2, 0.12, -0.34, -2, -0.25, 0.07)
+hid <- MarkovChain$new(n_states = 2, structure = form, 
+                       par0 = par_hid0, data = hmm_data)
 
 # Create HMM object and simulate data
 mod <- Hmm$new(obs = obs, hidden = hid)
@@ -46,7 +44,9 @@ par0 <- list(step = list(shape = c(0.5, 2),
 obs2 <- Observation$new(data = hmm_data2, dists = dists, 
                         n_states = n_states, par = par)
 
-mod2 <- Hmm$new(obs = obs2, hidden = hid)
+hid2 <- MarkovChain$new(n_states = 2, structure = form, data = hmm_data)
+
+mod2 <- Hmm$new(obs = obs2, hidden = hid2)
 
 mod2$fit(silent = FALSE)
 
@@ -54,7 +54,7 @@ mod2$fit(silent = FALSE)
 mod2$obs()$par()
 
 # Estimated parameters of the state process
-mod2$hidden()$par()
+mod2$hidden()$par_fe()
 
 # Compare estimated states and true states
 s <- mod2$viterbi()
