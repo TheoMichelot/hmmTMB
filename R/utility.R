@@ -46,6 +46,9 @@ bdiag_check <- function(...) {
 cov_grid <- function(var, data, covs = NULL, formulas) {
   # Get covariate names
   var_names <- unique(rapply(formulas, all.vars))
+  # If no covariates in the model, only take covariate 'var'
+  if(length(var_names) == 0)
+    var_names <- var
   
   # pi might appear in the formulas (e.g. used in periodic terms),
   # in which case it needs to be added to the data frame
