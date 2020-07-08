@@ -17,6 +17,7 @@ make_mat_obs = function(formulas, data, new_data = NULL) {
   X_list_fe <- list()
   X_list_re <- list()
   S_list <- list()
+  ncol_fe <- NULL
   ncol_re <- NULL
   k <- 1
   
@@ -50,6 +51,9 @@ make_mat_obs = function(formulas, data, new_data = NULL) {
         # Smoothing matrix
         S_list[[k]] <- bdiag_check(gam_setup$S)
         
+        # Number of columns for fixed effects
+        ncol_fe <- c(ncol_fe, gam_setup$nsdf)
+        
         # Number of columns for each random effect
         if(length(gam_setup$S) > 0)
           ncol_re <- c(ncol_re, sapply(gam_setup$S, ncol))
@@ -64,7 +68,8 @@ make_mat_obs = function(formulas, data, new_data = NULL) {
   X_re <- bdiag_check(X_list_re)
   S <- bdiag_check(S_list)
   
-  return(list(X_fe = X_fe, X_re = X_re, S = S, ncol_re = ncol_re))
+  return(list(X_fe = X_fe, X_re = X_re, S = S, 
+              ncol_fe = ncol_fe, ncol_re = ncol_re))
 }
 
 #' Create model matrices (transition probabilities)
@@ -89,6 +94,7 @@ make_mat_hid = function(formulas, data, new_data = NULL) {
   X_list_fe <- list()
   X_list_re <- list()
   S_list <- list()
+  ncol_fe <- NULL
   ncol_re <- NULL
   k <- 1
   
@@ -116,6 +122,9 @@ make_mat_hid = function(formulas, data, new_data = NULL) {
     # Smoothing matrix
     S_list[[k]] <- bdiag_check(gam_setup$S)
     
+    # Number of columns for fixed effects
+    ncol_fe <- c(ncol_fe, gam_setup$nsdf)
+    
     # Number of columns for each random effect
     if(length(gam_setup$S) > 0)
       ncol_re <- c(ncol_re, sapply(gam_setup$S, ncol))
@@ -128,5 +137,6 @@ make_mat_hid = function(formulas, data, new_data = NULL) {
   X_re <- bdiag_check(X_list_re)
   S <- bdiag_check(S_list)
   
-  return(list(X_fe = X_fe, X_re = X_re, S = S, ncol_re = ncol_re))
+  return(list(X_fe = X_fe, X_re = X_re, S = S, 
+              ncol_fe = ncol_fe, ncol_re = ncol_re))
 }
