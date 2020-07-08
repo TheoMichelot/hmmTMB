@@ -28,11 +28,13 @@ Contains the parameters and model formulas for the hidden process model.
 \item \href{#method-tpm_all}{\code{MarkovChain$tpm_all()}}
 \item \href{#method-stat_dists}{\code{MarkovChain$stat_dists()}}
 \item \href{#method-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
+\item \href{#method-simulate}{\code{MarkovChain$simulate()}}
 \item \href{#method-clone}{\code{MarkovChain$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Create new MarkovChain object
 \subsection{Usage}{
@@ -64,6 +66,7 @@ A new MarkovChain object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-structure"></a>}}
+\if{latex}{\out{\hypertarget{method-structure}{}}}
 \subsection{Method \code{structure()}}{
 Structure of MarkovChain model
 \subsection{Usage}{
@@ -73,6 +76,7 @@ Structure of MarkovChain model
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-formulas"></a>}}
+\if{latex}{\out{\hypertarget{method-formulas}{}}}
 \subsection{Method \code{formulas()}}{
 List of formulas for MarkovChain model
 \subsection{Usage}{
@@ -82,6 +86,7 @@ List of formulas for MarkovChain model
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-tpm"></a>}}
+\if{latex}{\out{\hypertarget{method-tpm}{}}}
 \subsection{Method \code{tpm()}}{
 Current transition probability matrix
 \subsection{Usage}{
@@ -91,6 +96,7 @@ Current transition probability matrix
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-par"></a>}}
+\if{latex}{\out{\hypertarget{method-par}{}}}
 \subsection{Method \code{par()}}{
 Current parameter estimates (fixed effects)
 \subsection{Usage}{
@@ -100,6 +106,7 @@ Current parameter estimates (fixed effects)
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-par_re"></a>}}
+\if{latex}{\out{\hypertarget{method-par_re}{}}}
 \subsection{Method \code{par_re()}}{
 Current parameter estimates (random effects)
 \subsection{Usage}{
@@ -109,6 +116,7 @@ Current parameter estimates (random effects)
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-nstates"></a>}}
+\if{latex}{\out{\hypertarget{method-nstates}{}}}
 \subsection{Method \code{nstates()}}{
 Number of states
 \subsection{Usage}{
@@ -118,6 +126,7 @@ Number of states
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_tpm"></a>}}
+\if{latex}{\out{\hypertarget{method-update_tpm}{}}}
 \subsection{Method \code{update_tpm()}}{
 Update transition probability matrix
 \subsection{Usage}{
@@ -134,6 +143,7 @@ Update transition probability matrix
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_par"></a>}}
+\if{latex}{\out{\hypertarget{method-update_par}{}}}
 \subsection{Method \code{update_par()}}{
 Update parameters (fixed effects)
 \subsection{Usage}{
@@ -150,6 +160,7 @@ Update parameters (fixed effects)
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_par_re"></a>}}
+\if{latex}{\out{\hypertarget{method-update_par_re}{}}}
 \subsection{Method \code{update_par_re()}}{
 Update parameters (random effects)
 \subsection{Usage}{
@@ -166,6 +177,7 @@ Update parameters (random effects)
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-make_mat"></a>}}
+\if{latex}{\out{\hypertarget{method-make_mat}{}}}
 \subsection{Method \code{make_mat()}}{
 Make model matrices
 \subsection{Usage}{
@@ -197,6 +209,7 @@ A list with elements:
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-tpm_all"></a>}}
+\if{latex}{\out{\hypertarget{method-tpm_all}{}}}
 \subsection{Method \code{tpm_all()}}{
 Get transition probability matrices from design matrices
 \subsection{Usage}{
@@ -220,6 +233,7 @@ Array with one slice for each transition probability matrix
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-stat_dists"></a>}}
+\if{latex}{\out{\hypertarget{method-stat_dists}{}}}
 \subsection{Method \code{stat_dists()}}{
 Stationary distributions
 \subsection{Usage}{
@@ -240,14 +254,15 @@ by \code{make_mat}}
 \subsection{Returns}{
 Matrix of stationary distributions. Each row corresponds to
 a row of the design matrices, and each column corresponds to a state.
-Design matrices for grid of covariates
-
-Used in plotting functions such as Hmm$plot_tpm and Hmm$plot_stat_dist
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-make_mat_grid"></a>}}
+\if{latex}{\out{\hypertarget{method-make_mat_grid}{}}}
 \subsection{Method \code{make_mat_grid()}}{
+Design matrices for grid of covariates
+
+Used in plotting functions such as Hmm$plot_tpm and Hmm$plot_stat_dist
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$make_mat_grid(var, data, covs = NULL)}\if{html}{\out{</div>}}
 }
@@ -272,7 +287,36 @@ plus a data frame of covariates values.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-simulate"></a>}}
+\if{latex}{\out{\hypertarget{method-simulate}{}}}
+\subsection{Method \code{simulate()}}{
+Simulate from Markov chain
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$simulate(n, data = NULL, new_data = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{n}}{Number of time steps to simulate}
+
+\item{\code{data}}{Optional data frame containing all needed covariates}
+
+\item{\code{new_data}}{Optional new data set, including covariates for which
+the design matrices should be created. This needs to be passed in addition
+to the argument '\code{data}', for cases where smooth terms or factor
+covariates are included, and the original data set is needed to determine
+the full range of covariate values.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Sequence of states of simulated chain
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

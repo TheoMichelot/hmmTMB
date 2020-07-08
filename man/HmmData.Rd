@@ -23,6 +23,7 @@ as well as the covariates.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Create new HmmData object
 \subsection{Usage}{
@@ -48,6 +49,7 @@ A new HmmData object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-data"></a>}}
+\if{latex}{\out{\hypertarget{method-data}{}}}
 \subsection{Method \code{data()}}{
 Data frame
 \subsection{Usage}{
@@ -57,6 +59,7 @@ Data frame
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ID"></a>}}
+\if{latex}{\out{\hypertarget{method-ID}{}}}
 \subsection{Method \code{ID()}}{
 Get IDs
 \subsection{Usage}{
@@ -70,6 +73,7 @@ of 1s if there is no ID columns in the input data set.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

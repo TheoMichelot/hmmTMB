@@ -12,4 +12,4 @@ Depends: R6, mgcv, TMB, RcppEigen, Matrix, ggplot2
 LinkingTo: TMB, RcppEigen
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0

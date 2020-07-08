@@ -28,6 +28,7 @@ Markov model.
 \item \href{#method-fit}{\code{Hmm$fit()}}
 \item \href{#method-viterbi}{\code{Hmm$viterbi()}}
 \item \href{#method-CI_wpar}{\code{Hmm$CI_wpar()}}
+\item \href{#method-simulate}{\code{Hmm$simulate()}}
 \item \href{#method-plot_ts}{\code{Hmm$plot_ts()}}
 \item \href{#method-plot_tpm}{\code{Hmm$plot_tpm()}}
 \item \href{#method-plot_stat_dist}{\code{Hmm$plot_stat_dist()}}
@@ -37,6 +38,7 @@ Markov model.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Create new Hmm object
 \subsection{Usage}{
@@ -58,6 +60,7 @@ A new Hmm object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-obs"></a>}}
+\if{latex}{\out{\hypertarget{method-obs}{}}}
 \subsection{Method \code{obs()}}{
 Observation object for this model
 \subsection{Usage}{
@@ -67,6 +70,7 @@ Observation object for this model
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-hidden"></a>}}
+\if{latex}{\out{\hypertarget{method-hidden}{}}}
 \subsection{Method \code{hidden()}}{
 MarkovChain object for this model
 \subsection{Usage}{
@@ -76,6 +80,7 @@ MarkovChain object for this model
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-res"></a>}}
+\if{latex}{\out{\hypertarget{method-res}{}}}
 \subsection{Method \code{res()}}{
 Output of optimiser after model fitting
 \subsection{Usage}{
@@ -85,6 +90,7 @@ Output of optimiser after model fitting
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-tmb_obj"></a>}}
+\if{latex}{\out{\hypertarget{method-tmb_obj}{}}}
 \subsection{Method \code{tmb_obj()}}{
 Model object created by TMB. This is the output of 
 the TMB function \code{MakeADFun}, and it is a list including elements
@@ -100,6 +106,7 @@ the TMB function \code{MakeADFun}, and it is a list including elements
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-tmb_rep"></a>}}
+\if{latex}{\out{\hypertarget{method-tmb_rep}{}}}
 \subsection{Method \code{tmb_rep()}}{
 Output of the TMB function \code{sdreport}, which includes 
 estimates and standard errors for all model parameters.
@@ -110,6 +117,7 @@ estimates and standard errors for all model parameters.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-states"></a>}}
+\if{latex}{\out{\hypertarget{method-states}{}}}
 \subsection{Method \code{states()}}{
 Vector of estimated states, after \code{viterbi} has
 been run
@@ -120,6 +128,7 @@ been run
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-par"></a>}}
+\if{latex}{\out{\hypertarget{method-par}{}}}
 \subsection{Method \code{par()}}{
 Model parameters
 \subsection{Usage}{
@@ -136,6 +145,7 @@ A list with elements:
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-nllk"></a>}}
+\if{latex}{\out{\hypertarget{method-nllk}{}}}
 \subsection{Method \code{nllk()}}{
 Objective function
 \subsection{Usage}{
@@ -156,6 +166,7 @@ Negative log-likelihood
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-setup"></a>}}
+\if{latex}{\out{\hypertarget{method-setup}{}}}
 \subsection{Method \code{setup()}}{
 TMB setup
 
@@ -175,6 +186,7 @@ evaluate the negative log-likelihood function.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-fit"></a>}}
+\if{latex}{\out{\hypertarget{method-fit}{}}}
 \subsection{Method \code{fit()}}{
 Model fitting
 
@@ -198,6 +210,7 @@ accessed using the method \code{res}.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-viterbi"></a>}}
+\if{latex}{\out{\hypertarget{method-viterbi}{}}}
 \subsection{Method \code{viterbi()}}{
 Viterbi algorithm
 \subsection{Usage}{
@@ -210,6 +223,7 @@ Most likely state sequence
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-CI_wpar"></a>}}
+\if{latex}{\out{\hypertarget{method-CI_wpar}{}}}
 \subsection{Method \code{CI_wpar()}}{
 Confidence intervals for model parameters on the working scale 
 
@@ -233,7 +247,31 @@ confidence intervals, (3) upper bounds of confidence intervals.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-simulate"></a>}}
+\if{latex}{\out{\hypertarget{method-simulate}{}}}
+\subsection{Method \code{simulate()}}{
+Simulate from hidden Markov model
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Hmm$simulate(n, data = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{n}}{Number of time steps to simulate}
+
+\item{\code{data}}{Optional data frame including covariates}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Data frame including columns of data (if provided), and simulated
+data variables
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plot_ts"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_ts}{}}}
 \subsection{Method \code{plot_ts()}}{
 Time series plot coloured by states
 
@@ -260,6 +298,7 @@ A ggplot object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plot_tpm"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_tpm}{}}}
 \subsection{Method \code{plot_tpm()}}{
 Plot transition probability matrix
 \subsection{Usage}{
@@ -285,6 +324,7 @@ A ggplot object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plot_stat_dist"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_stat_dist}{}}}
 \subsection{Method \code{plot_stat_dist()}}{
 Plot stationary state probabilities
 \subsection{Usage}{
@@ -310,6 +350,7 @@ A ggplot object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plot_obspar"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_obspar}{}}}
 \subsection{Method \code{plot_obspar()}}{
 Plot observation parameters
 \subsection{Usage}{
@@ -335,6 +376,7 @@ A ggplot object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

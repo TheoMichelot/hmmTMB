@@ -39,6 +39,7 @@ the observation model from a hidden Markov model.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Create new Observation object
 \subsection{Usage}{
@@ -79,6 +80,7 @@ A new Observation object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-data"></a>}}
+\if{latex}{\out{\hypertarget{method-data}{}}}
 \subsection{Method \code{data()}}{
 HmmData object
 \subsection{Usage}{
@@ -88,6 +90,7 @@ HmmData object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-dists"></a>}}
+\if{latex}{\out{\hypertarget{method-dists}{}}}
 \subsection{Method \code{dists()}}{
 List of distributions
 \subsection{Usage}{
@@ -97,6 +100,7 @@ List of distributions
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-nstates"></a>}}
+\if{latex}{\out{\hypertarget{method-nstates}{}}}
 \subsection{Method \code{nstates()}}{
 Number of states
 \subsection{Usage}{
@@ -106,6 +110,7 @@ Number of states
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-par"></a>}}
+\if{latex}{\out{\hypertarget{method-par}{}}}
 \subsection{Method \code{par()}}{
 Parameters on natural scale
 \subsection{Usage}{
@@ -115,6 +120,7 @@ Parameters on natural scale
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-wpar"></a>}}
+\if{latex}{\out{\hypertarget{method-wpar}{}}}
 \subsection{Method \code{wpar()}}{
 Fixed effect parameters on working scale
 \subsection{Usage}{
@@ -124,6 +130,7 @@ Fixed effect parameters on working scale
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-wpar_re"></a>}}
+\if{latex}{\out{\hypertarget{method-wpar_re}{}}}
 \subsection{Method \code{wpar_re()}}{
 Random effect parameters
 \subsection{Usage}{
@@ -133,6 +140,7 @@ Random effect parameters
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-formulas"></a>}}
+\if{latex}{\out{\hypertarget{method-formulas}{}}}
 \subsection{Method \code{formulas()}}{
 List of model formulas for observation model
 \subsection{Usage}{
@@ -142,6 +150,7 @@ List of model formulas for observation model
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-obs_var"></a>}}
+\if{latex}{\out{\hypertarget{method-obs_var}{}}}
 \subsection{Method \code{obs_var()}}{
 Data frame of response variables
 \subsection{Usage}{
@@ -151,6 +160,7 @@ Data frame of response variables
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_par"></a>}}
+\if{latex}{\out{\hypertarget{method-update_par}{}}}
 \subsection{Method \code{update_par()}}{
 Update parameters
 \subsection{Usage}{
@@ -167,6 +177,7 @@ Update parameters
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_wpar"></a>}}
+\if{latex}{\out{\hypertarget{method-update_wpar}{}}}
 \subsection{Method \code{update_wpar()}}{
 Update fixed effect parameters on working scale
 \subsection{Usage}{
@@ -183,6 +194,7 @@ Update fixed effect parameters on working scale
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_wpar_re"></a>}}
+\if{latex}{\out{\hypertarget{method-update_wpar_re}{}}}
 \subsection{Method \code{update_wpar_re()}}{
 Update random effect parameters
 \subsection{Usage}{
@@ -199,6 +211,7 @@ Update random effect parameters
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-make_mat"></a>}}
+\if{latex}{\out{\hypertarget{method-make_mat}{}}}
 \subsection{Method \code{make_mat()}}{
 Make model matrices
 \subsection{Usage}{
@@ -227,6 +240,7 @@ Design matrices for grid of covariates
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-make_mat_grid"></a>}}
+\if{latex}{\out{\hypertarget{method-make_mat_grid}{}}}
 \subsection{Method \code{make_mat_grid()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$make_mat_grid(var, covs = NULL)}\if{html}{\out{</div>}}
@@ -251,10 +265,11 @@ plus a data frame of covariates values.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-par_all"></a>}}
+\if{latex}{\out{\hypertarget{method-par_all}{}}}
 \subsection{Method \code{par_all()}}{
 Get observation parameters from design matrices
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$par_all(X_fe, X_re)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$par_all(X_fe, X_re, full_names = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -265,6 +280,12 @@ by \code{make_mat}}
 
 \item{\code{X_re}}{Design matrix for random effects, as returned
 by \code{make_mat}}
+
+\item{\code{full_names}}{Logical. If TRUE, the rows of the output
+are named in the format "variable.parameter" (default). If
+FALSE, the rows are names in the format "parameter". The
+latter is used in various internal functions, when the parameters
+need to be passed on to an R function.}
 }
 \if{html}{\out{</div>}}
 }
@@ -275,6 +296,7 @@ for each observation parameter, and one column for each state.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-obs_probs"></a>}}
+\if{latex}{\out{\hypertarget{method-obs_probs}{}}}
 \subsection{Method \code{obs_probs()}}{
 Observation likelihoods
 \subsection{Usage}{
@@ -297,6 +319,7 @@ time step, and one column for each state.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-n2w"></a>}}
+\if{latex}{\out{\hypertarget{method-n2w}{}}}
 \subsection{Method \code{n2w()}}{
 Natural to working parameter transformation
 \subsection{Usage}{
@@ -316,6 +339,7 @@ Vector of parameters on working scale
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-w2n"></a>}}
+\if{latex}{\out{\hypertarget{method-w2n}{}}}
 \subsection{Method \code{w2n()}}{
 Working to natural parameter transformation
 \subsection{Usage}{
@@ -335,6 +359,7 @@ List of parameters on natural scale
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plot_dist"></a>}}
+\if{latex}{\out{\hypertarget{method-plot_dist}{}}}
 \subsection{Method \code{plot_dist()}}{
 Plot histogram of data and pdfs
 
@@ -370,6 +395,7 @@ A ggplot object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

@@ -18,11 +18,13 @@ functions for a probability distribution.
 \item \href{#method-new}{\code{Dist$new()}}
 \item \href{#method-name}{\code{Dist$name()}}
 \item \href{#method-pdf}{\code{Dist$pdf()}}
+\item \href{#method-rng}{\code{Dist$rng()}}
 \item \href{#method-link}{\code{Dist$link()}}
 \item \href{#method-invlink}{\code{Dist$invlink()}}
 \item \href{#method-npar}{\code{Dist$npar()}}
 \item \href{#method-code}{\code{Dist$code()}}
 \item \href{#method-pdf_apply}{\code{Dist$pdf_apply()}}
+\item \href{#method-rng_apply}{\code{Dist$rng_apply()}}
 \item \href{#method-n2w}{\code{Dist$n2w()}}
 \item \href{#method-w2n}{\code{Dist$w2n()}}
 \item \href{#method-clone}{\code{Dist$clone()}}
@@ -30,10 +32,11 @@ functions for a probability distribution.
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-new"></a>}}
+\if{latex}{\out{\hypertarget{method-new}{}}}
 \subsection{Method \code{new()}}{
 Create a Dist object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$new(name, pdf, link, invlink, npar)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Dist$new(name, pdf, rng, link, invlink, npar)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -41,7 +44,11 @@ Create a Dist object
 \describe{
 \item{\code{name}}{Name of distribution}
 
-\item{\code{pdf}}{Probability density/mass function of the distribution}
+\item{\code{pdf}}{Probability density/mass function of the distribution
+(e.g. \code{dnorm} for normal distribution).}
+
+\item{\code{rng}}{Random generator function of the distribution (e.g.
+\code{rnorm} for normal distribution).}
 
 \item{\code{link}}{Named list of link functions for distribution parameters}
 
@@ -58,6 +65,7 @@ A new Dist object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-name"></a>}}
+\if{latex}{\out{\hypertarget{method-name}{}}}
 \subsection{Method \code{name()}}{
 Return name of Dist object
 \subsection{Usage}{
@@ -67,6 +75,7 @@ Return name of Dist object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-pdf"></a>}}
+\if{latex}{\out{\hypertarget{method-pdf}{}}}
 \subsection{Method \code{pdf()}}{
 Return pdf of Dist object
 \subsection{Usage}{
@@ -75,7 +84,18 @@ Return pdf of Dist object
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-rng"></a>}}
+\if{latex}{\out{\hypertarget{method-rng}{}}}
+\subsection{Method \code{rng()}}{
+Return random generator function of Dist object
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$rng()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-link"></a>}}
+\if{latex}{\out{\hypertarget{method-link}{}}}
 \subsection{Method \code{link()}}{
 Return link function of Dist object
 \subsection{Usage}{
@@ -85,6 +105,7 @@ Return link function of Dist object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-invlink"></a>}}
+\if{latex}{\out{\hypertarget{method-invlink}{}}}
 \subsection{Method \code{invlink()}}{
 Return inverse link function 
 of Dist object
@@ -95,6 +116,7 @@ of Dist object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-npar"></a>}}
+\if{latex}{\out{\hypertarget{method-npar}{}}}
 \subsection{Method \code{npar()}}{
 Return number of parameters of Dist object
 \subsection{Usage}{
@@ -104,6 +126,7 @@ Return number of parameters of Dist object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-code"></a>}}
+\if{latex}{\out{\hypertarget{method-code}{}}}
 \subsection{Method \code{code()}}{
 Return code of Dist object
 \subsection{Usage}{
@@ -113,6 +136,7 @@ Return code of Dist object
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-pdf_apply"></a>}}
+\if{latex}{\out{\hypertarget{method-pdf_apply}{}}}
 \subsection{Method \code{pdf_apply()}}{
 Evaluate probability density/mass function
 
@@ -141,7 +165,32 @@ parameters par
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-rng_apply"></a>}}
+\if{latex}{\out{\hypertarget{method-rng_apply}{}}}
+\subsection{Method \code{rng_apply()}}{
+Random number generator
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$rng_apply(n, par)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{n}}{Number of realisations to generate}
+
+\item{\code{par}}{Vector of parameters. The entries should be named if
+they are not in the same order as expected by the R function. (E.g.
+shape/scale rather than shape/rate for gamma distribution.)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Vector of \code{n} realisations of this distribution
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-n2w"></a>}}
+\if{latex}{\out{\hypertarget{method-n2w}{}}}
 \subsection{Method \code{n2w()}}{
 Natural to working parameter transformation
 \subsection{Usage}{
@@ -161,6 +210,7 @@ Vector of parameters on the working scale
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-w2n"></a>}}
+\if{latex}{\out{\hypertarget{method-w2n}{}}}
 \subsection{Method \code{w2n()}}{
 Working to natural parameter transformation
 \subsection{Usage}{
@@ -185,6 +235,7 @@ List or matrix of parameters on natural scale
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
