@@ -34,13 +34,12 @@ states <- simdat$state
 dat <- HmmData$new(data.frame(count = counts))
 dists <- list(count = dist_pois)
 par <- list(count = list(lambda = c(3, 6)))
-obs <- Observation$new(dat, dists = dists, n_states = 2, par = par)
-hid <- MarkovChain$new(structure = matrix(c(".", "~1", "~1", "."), nr = 2),
-                       tpm = matrix(c(0.8, 0.2, 0.2, 0.8), nr = 2))
+obs <- Observation$new(data = dat, dists = dists, n_states = 2, par = par)
+hid <- MarkovChain$new(n_states = 2)
 mod <- Hmm$new(obs, hid)
 
 #fit model
-mod$fit()
+mod$fit(silent = FALSE)
 mod$par()
 
 s <- mod$viterbi()
