@@ -179,6 +179,11 @@ Observation <- R6Class(
     #' by \code{make_mat}
     #' @param X_re Design matrix for random effects, as returned
     #' by \code{make_mat}
+    #' @param par_fe Optional vector of parameters for fixed effects
+    #' (on working scale). If this isn't provided, the model parameters
+    #' are used.
+    #' @param par_re Optional vector of parameters for random effects.
+    #' If this isn't provided, the model parameters are used.
     #' @param full_names Logical. If TRUE, the rows of the output
     #' are named in the format "variable.parameter" (default). If
     #' FALSE, the rows are names in the format "parameter". The
@@ -187,15 +192,22 @@ Observation <- R6Class(
     #' 
     #' @return Array with one slice for each time step, one row 
     #' for each observation parameter, and one column for each state.
-    par_all = function(X_fe, X_re, full_names = TRUE) {
+    par_all = function(X_fe, X_re, par_fe = NULL, par_re = NULL, 
+                       full_names = TRUE) {
       # Number of states
       n_states <- self$nstates()
       
       # Number of parameters on natural scale (in each state)
       n_par <- sum(sapply(obs$dists(), function(d) d$npar()))
       
+      # Define parameters
+      if(length(par_fe) == 0)
+        par_fe <- self$wpar()
+      if(length(par_re) == 0)
+        par_re <- self$wpar_re()
+      
       # Get linear predictor
-      lp <- X_fe %*% self$wpar() + X_re %*% self$wpar_re()
+      lp <- X_fe %*% par_fe + X_re %*% par_re
       lp_mat <- matrix(lp, ncol = n_par * n_states)
       
       # Number of observations
