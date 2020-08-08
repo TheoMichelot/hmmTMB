@@ -94,11 +94,11 @@ states <- simdat$state
 # Observation distributions
 dists <- list(step = dist_gamma, count = dist_pois)
 
-# Initial parameters (working scale)
+# Initial coefficients for fixed effects
 par0_shape <- c(log(1), log(4), 0, 0, 0, 0)
 par0_scale <- c(log(1), log(4))
 par0_lambda <- c(log(3), log(7))
-wpar_fe <- c(par0_shape, par0_scale, par0_lambda)
+coeff_fe <- c(par0_shape, par0_scale, par0_lambda)
 
 # Formulas on observation parameters
 formulas <- list(step = list(shape = ~ x1 + x2, scale = ~ 1),
@@ -106,7 +106,7 @@ formulas <- list(step = list(shape = ~ x1 + x2, scale = ~ 1),
 
 # Create objects
 dat <- HmmData$new(data)
-obs <- Observation$new(dat, dists = dists, n_states = 2, wpar = wpar_fe, 
+obs <- Observation$new(dat, dists = dists, n_states = 2, coeff_fe = coeff_fe, 
                        formulas = formulas)
 hid <- MarkovChain$new(n_states = 2)
 mod <- Hmm$new(obs, hid)
@@ -115,11 +115,11 @@ mod <- Hmm$new(obs, hid)
 mod$fit(silent = FALSE)
 
 # Unpack parameters
-wpar <- obs$wpar()
+coeff_fe <- obs$coeff_fe()
 
-shape_est <- matrix(wpar[1:6], ncol = 2)
-scale_est <- matrix(wpar[7:8], ncol = 2)
-lambda_est <- matrix(wpar[9:10], ncol = 2)
+shape_est <- matrix(coeff_fe[1:6], ncol = 2)
+scale_est <- matrix(coeff_fe[7:8], ncol = 2)
+lambda_est <- matrix(coeff_fe[9:10], ncol = 2)
 
 # Random effect parameter
 1/sqrt(exp(mod$res()$par["log_lambda_obs"]))

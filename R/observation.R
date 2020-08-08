@@ -16,14 +16,14 @@ Observation <- R6Class(
     #' @param dists Named list of Distribution objects for each data stream
     #' @param n_states Number of states (needed to construct model formulas)
     #' @param par List of observation parameters (for covariate-free model)
-    #' @param wpar Vector of fixed effect parameters on working scale
-    #' @param wpar_re Vector of random effect parameters. Defaults to a
+    #' @param coeff_fe Vector of fixed effect parameters on working scale
+    #' @param coeff_re Vector of random effect parameters. Defaults to a
     #' vector of zeros if not provided.
     #' @param formulas List of formulas for observation parameters
     #' 
     #' @return A new Observation object
-    initialize = function(data, dists, n_states, par = NULL, wpar = NULL, 
-                          wpar_re = NULL, formulas = NULL) {
+    initialize = function(data, dists, n_states, par = NULL, coeff_fe = NULL, 
+                          coeff_re = NULL, formulas = NULL) {
       private$data_ <- data
       private$dists_ <- dists
       private$nstates_ <- n_states
@@ -31,7 +31,7 @@ Observation <- R6Class(
       if(is.null(formulas)) {
         # Case with no covariates
         private$par_ <- par 
-        private$wpar_ <- self$n2w(par)
+        private$coeff_fe_ <- self$n2w(par)
         
         # Set all formulas to ~1
         private$formulas_ <- lapply(par, function(varpar) {
@@ -44,25 +44,25 @@ Observation <- R6Class(
           })
           return(f)
         })
-      } else if(is.null(wpar)) {
-        stop("'wpar' needs to be specified if covariates in observation parameters")
+      } else if(is.null(coeff_fe)) {
+        stop("'coeff_fe' needs to be specified if covariates in observation parameters")
       } else {
         # Case with covariates
-        private$wpar_ <- wpar
+        private$coeff_fe_ <- coeff_fe
         private$formulas_ <- make_formulas(formulas, n_states = n_states)        
       }
       
       # Initialise random effect parameters
       mats <- self$make_mat()
       if(ncol(mats$X_re) == 0) {
-        # integer(0) rather than NULL so that X_re %*% wpar_re 
+        # integer(0) rather than NULL so that X_re %*% coeff_re 
         # is valid when X_re has zero columns
-        private$wpar_re_ <- integer(0) 
-      } else if(is.null(wpar_re)) {
-        # if no value provided, wpar_re initialised to vector of zeros
-        private$wpar_re_ <- rep(0, ncol(mats$X_re))
+        private$coeff_re_ <- integer(0) 
+      } else if(is.null(coeff_re)) {
+        # if no value provided, coeff_re initialised to vector of zeros
+        private$coeff_re_ <- rep(0, ncol(mats$X_re))
       } else {
-        private$wpar_re_ <- wpar_re
+        private$coeff_re_ <- coeff_re
       }
     },
     
@@ -82,10 +82,10 @@ Observation <- R6Class(
     par = function() {return(private$par_)},
     
     #' @description Fixed effect parameters on working scale
-    wpar = function() {return(private$wpar_)},
+    coeff_fe = function() {return(private$coeff_fe_)},
     
     #' @description Random effect parameters
-    wpar_re = function() {return(private$wpar_re_)},
+    coeff_re = function() {return(private$coeff_re_)},
     
     #' @description List of model formulas for observation model
     formulas = function() {return(private$formulas_)},
@@ -105,26 +105,26 @@ Observation <- R6Class(
     #' @param par New list of parameters
     update_par = function(par) {
       private$par_ <- par
-      private$wpar_ <- self$n2w(par)
+      private$coeff_fe_ <- self$n2w(par)
     },
     
     #' @description Update fixed effect parameters on working scale
     #' 
-    #' @param wpar New vector of fixed effect parameters on working scale
-    update_wpar = function(wpar) {
-      names(wpar) <- NULL
-      private$wpar_ <- wpar
+    #' @param coeff_fe New vector of fixed effect parameters on working scale
+    update_coeff_fe = function(coeff_fe) {
+      names(coeff_fe) <- NULL
+      private$coeff_fe_ <- coeff_fe
       if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {
         # Only update natural parameters if no covariates
-        private$par_ <- self$w2n(wpar)
+        private$par_ <- self$w2n(coeff_fe)
       }
     },
     
     #' @description Update random effect parameters
     #' 
-    #' @param wpar_re New vector og random effect parameters
-    update_wpar_re = function(wpar_re) {
-      private$wpar_re_ <- wpar_re
+    #' @param coeff_re New vector og random effect parameters
+    update_coeff_re = function(coeff_re) {
+      private$coeff_re_ <- coeff_re
     },
     
     ###################
@@ -202,9 +202,9 @@ Observation <- R6Class(
       
       # Define parameters
       if(length(par_fe) == 0)
-        par_fe <- self$wpar()
+        par_fe <- self$coeff_fe()
       if(length(par_re) == 0)
-        par_re <- self$wpar_re()
+        par_re <- self$coeff_re()
       
       # Get linear predictor
       lp <- X_fe %*% par_fe + X_re %*% par_re
@@ -298,19 +298,19 @@ Observation <- R6Class(
     #' 
     #' @return Vector of parameters on working scale
     n2w = function(par) {
-      wpar <- lapply(1:length(self$dists()), 
+      coeff_fe <- lapply(1:length(self$dists()), 
                      function(i) dists[[i]]$n2w(par[[i]]))
-      names(wpar) <- names(par)
-      wpar <- unlist(wpar)
-      return(wpar)
+      names(coeff_fe) <- names(par)
+      coeff_fe <- unlist(coeff_fe)
+      return(coeff_fe)
     },
     
     #' @description  Working to natural parameter transformation
     #'
-    #' @param wpar Vector of parameters on working scale
+    #' @param coeff_fe Vector of parameters on working scale
     #' 
     #' @return List of parameters on natural scale
-    w2n = function(wpar) {
+    w2n = function(coeff_fe) {
       # Initialise list of natural parameters
       par <- list()
       
@@ -327,9 +327,9 @@ Observation <- R6Class(
         # Number of parameters for this distribution
         npar <- length(self$dists()[[var]]$link())
         # Subset and transform working parameters
-        sub_wpar <- wpar[par_count:(par_count + npar*n_states - 1)]
+        sub_coeff_fe <- coeff_fe[par_count:(par_count + npar*n_states - 1)]
         par_count <- par_count + npar*n_states
-        par[[var]] <- self$dists()[[var]]$w2n(sub_wpar)
+        par[[var]] <- self$dists()[[var]]$w2n(sub_coeff_fe)
       }
       
       names(par) <- names(self$dists())
@@ -443,8 +443,8 @@ Observation <- R6Class(
     dists_ = NULL,
     nstates_ = NULL,
     par_ = NULL,
-    wpar_ = NULL,
-    wpar_re_ = NULL,
+    coeff_fe_ = NULL,
+    coeff_re_ = NULL,
     formulas_ = NULL
   )
 )

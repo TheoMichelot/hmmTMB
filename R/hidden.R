@@ -22,12 +22,12 @@ MarkovChain <- R6Class(
     #' and 0.1/(n_states - 1) for all other entries.) If the model has covariates,
     #' then \code{tpm0} is used to set the intercept parameters for the transition
     #' probabilities, and the other parameters are set to 0.
-    #' @param par0 Initial parameters for fixed effects. 
+    #' @param coeff_fe0 Initial parameters for fixed effects. 
     #' @param data HmmData object, needed if the model includes covariates
     #' 
     #' @return A new MarkovChain object
     initialize = function(n_states = NULL, structure = NULL, 
-                          tpm0 = NULL, par0 = NULL, data = NULL) {
+                          tpm0 = NULL, coeff_fe0 = NULL, data = NULL) {
       if(is.null(structure)) {
         # No covariate effects
         structure <- matrix("~1", nrow = n_states, ncol = n_states)
@@ -61,8 +61,8 @@ MarkovChain <- R6Class(
       private$structure_ <- structure
       private$formulas_ <- ls_form
       
-      # Set initial parameters (intercepts in par_fe) 
-      self$set_par0(tpm0 = tpm0, par0 = par0, data = data)
+      # Set initial parameters (intercepts in coeff_fe) 
+      self$set_par0(tpm0 = tpm0, coeff_fe0 = coeff_fe0, data = data)
     },
     
     ###############
@@ -78,10 +78,10 @@ MarkovChain <- R6Class(
     tpm = function() {return(private$tpm_)},
     
     #' @description Current parameter estimates (fixed effects)
-    par_fe = function() {return(private$par_fe_)},
+    coeff_fe = function() {return(private$coeff_fe_)},
     
     #' @description Current parameter estimates (random effects)
-    par_re = function() {return(private$par_re_)},
+    coeff_re = function() {return(private$coeff_re_)},
     
     #' @description Number of states
     nstates = function() {return(private$nstates_)},
@@ -94,14 +94,14 @@ MarkovChain <- R6Class(
     #' @param newtpm New transition probability matrix
     update_tpm = function(newtpm) {
       private$tpm_ <- newtpm
-      private$par_fe_ <- private$tpm2par(newtpm)
+      private$coeff_fe_ <- private$tpm2par(newtpm)
     },
     
     #' @description Update parameters (fixed effects)
     #' 
     #' @param newpar New parameters (fixed effects)
-    update_par_fe = function(newpar) {
-      private$par_fe_ <- newpar
+    update_coeff_fe = function(newpar) {
+      private$coeff_fe_ <- newpar
       if(all(self$structure() %in% c(".", "~1"))) {
         # Only update tpm if no covariates
         private$tpm_ <- private$par2tpm(newpar)        
@@ -111,23 +111,23 @@ MarkovChain <- R6Class(
     #' @description Update parameters (random effects)
     #' 
     #' @param newpar New parameters (random effects)
-    update_par_re = function(newpar) {
-      private$par_re_ <- newpar
+    update_coeff_re = function(newpar) {
+      private$coeff_re_ <- newpar
     },
     
     #' @description Set initial parameters (intercepts)
     #' 
     #' @param tpm0 Initial transition probability matrix (corresponding
     #' to the intercept if covariates are included)
-    #' @param par0 Initial parameters for fixed effects
+    #' @param coeff_fe0 Initial parameters for fixed effects
     #' @param data HmmData object, needed if the model includes covariates
-    set_par0 = function(tpm0 = NULL, par0 = NULL, data = NULL) {
+    set_par0 = function(tpm0 = NULL, coeff_fe0 = NULL, data = NULL) {
       n_states <- self$nstates()
       
       # Does the hidden state model include covariates?
       no_covs <- all(self$structure() %in% c(".", "~1"))
       
-      # Initialise par_fe and par_re to 0
+      # Initialise coeff_fe and coeff_re to 0
       if(no_covs) {
         # If no covariates, N*(N-1) fixed effects and 0 random effects
         ncol_fe <- rep(1, n_states * (n_states - 1))
@@ -142,23 +142,23 @@ MarkovChain <- R6Class(
         ncol_fe <- mats$ncol_fe
         ncol_re <- mats$ncol_re        
       }
-      private$par_fe_ <- rep(0, sum(ncol_fe))
-      private$par_re_ <- rep(0, sum(ncol_re))
+      private$coeff_fe_ <- rep(0, sum(ncol_fe))
+      private$coeff_re_ <- rep(0, sum(ncol_re))
       
-      # Indices of intercept parameters in par_fe
+      # Indices of intercept parameters in coeff_fe
       n_par <- length(ncol_fe)
       ind0 <- c(1, cumsum(ncol_fe)[-n_par] + 1)
       
-      # Set parameter attributes, using either par0 or tpm0
-      if(!is.null(par0)) {
-        # Set parameters from par0
-        if(length(par0) != sum(ncol_fe)) {
-          stop("'par0' should be of length ", sum(ncol_fe), " (one ",
+      # Set parameter attributes, using either coeff_fe0 or tpm0
+      if(!is.null(coeff_fe0)) {
+        # Set parameters from coeff_fe0
+        if(length(coeff_fe0) != sum(ncol_fe)) {
+          stop("'coeff_fe0' should be of length ", sum(ncol_fe), " (one ",
                "parameter for each column of the design matrix)")
         }
-        private$par_fe_ <- par0
+        private$coeff_fe_ <- coeff_fe0
         # Get tpm (in the absence of covariate effects)
-        private$tpm_ <- private$par2tpm(par0[ind0])
+        private$tpm_ <- private$par2tpm(coeff_fe0[ind0])
       } else {
         # Set parameters from tpm0
         if(is.null(tpm0)) {
@@ -174,7 +174,7 @@ MarkovChain <- R6Class(
           stop("The rows of 'tpm0' should sum to 1")
         }
         
-        private$par_fe_[ind0] <- private$tpm2par(tpm0)
+        private$coeff_fe_[ind0] <- private$tpm2par(tpm0)
         private$tpm_ <- tpm0
       }
     },
@@ -212,7 +212,7 @@ MarkovChain <- R6Class(
     #' @return Array with one slice for each transition probability matrix
     tpm_all = function(X_fe, X_re) {
       n_states <- self$nstates()
-      ltpm <- X_fe %*% self$par_fe() + X_re %*% self$par_re()
+      ltpm <- X_fe %*% self$coeff_fe() + X_re %*% self$coeff_re()
       ltpm_mat <- matrix(ltpm, ncol = n_states * (n_states - 1))
       tpm <- apply(ltpm_mat, 1, private$par2tpm)
       tpm <- array(tpm, dim = c(n_states, n_states, nrow(ltpm_mat)))
@@ -344,8 +344,8 @@ MarkovChain <- R6Class(
   private = list(
     structure_ = NULL,
     formulas_ = NULL,
-    par_fe_ = NULL,
-    par_re_ = NULL,
+    coeff_fe_ = NULL,
+    coeff_re_ = NULL,
     tpm_ = NULL,
     nstates_ = NULL,
     

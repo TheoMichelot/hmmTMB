@@ -26,7 +26,7 @@ obs <- Observation$new(data = hmm_data, dists = dists,
 form <- "~ x1 + x2"
 par_hid0 <- c(-2, 0.12, -0.34, -2, -0.25, 0.07)
 hid <- MarkovChain$new(n_states = 2, structure = form, 
-                       par0 = par_hid0, data = hmm_data)
+                       coeff_fe0 = par_hid0, data = hmm_data)
 
 # Create HMM object and simulate data
 mod <- Hmm$new(obs = obs, hidden = hid)
@@ -54,7 +54,7 @@ mod2$fit(silent = FALSE)
 mod2$obs()$par()
 
 # Estimated parameters of the state process
-mod2$hidden()$par_fe()
+mod2$hidden()$coeff_fe()
 
 # Compare estimated states and true states
 s <- mod2$viterbi()

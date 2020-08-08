@@ -130,11 +130,11 @@ Hmm <- R6Class(
       ncol_re_hid <- mod_mat_hid$ncol_re
       
       # Setup TMB parameters
-      tmb_par <- list(wpar_fe_obs = self$obs()$wpar(),
-                      wpar_re_obs = 0,
+      tmb_par <- list(coeff_fe_obs = self$obs()$coeff_fe(),
+                      coeff_re_obs = 0,
                       log_lambda_obs = 0,
-                      wpar_fe_hid = self$hidden()$par_fe(),
-                      wpar_re_hid = 0,
+                      coeff_fe_hid = self$hidden()$coeff_fe(),
+                      coeff_re_hid = 0,
                       log_lambda_hid = 0,
                       log_delta = rep(0, n_states - 1))
       
@@ -145,34 +145,34 @@ Hmm <- R6Class(
       # Setup random effects in observation model
       if(is.null(S_obs)) {
         # If there are no random effects, 
-        # wpar_re and log_lambda are not estimated
-        map <- c(map, list(wpar_re_obs = factor(NA),
+        # coeff_re and log_lambda are not estimated
+        map <- c(map, list(coeff_re_obs = factor(NA),
                            log_lambda_obs = factor(NA)))
         S_obs <- as(matrix(0, 1, 1), "sparseMatrix")
         ncol_re_obs <- 0
         X_re_obs <- as(rep(0, nrow(X_fe_obs)), "sparseMatrix")
       } else {
         # If there are random effects, 
-        # set initial values for wpar_re and log_lambda
-        random <- c(random, "wpar_re_obs")
-        tmb_par$wpar_re_obs <- rep(0, ncol(S_obs))
+        # set initial values for coeff_re and log_lambda
+        random <- c(random, "coeff_re_obs")
+        tmb_par$coeff_re_obs <- rep(0, ncol(S_obs))
         tmb_par$log_lambda_obs <- rep(0, length(ncol_re_obs))
       }
       
       # Setup random effects in hidden state model
       if(is.null(S_hid)) {
         # If there are no random effects, 
-        # wpar_re and log_lambda are not estimated
-        map <- c(map, list(wpar_re_hid = factor(NA),
+        # coeff_re and log_lambda are not estimated
+        map <- c(map, list(coeff_re_hid = factor(NA),
                            log_lambda_hid = factor(NA)))
         S_hid <- as(matrix(0, 1, 1), "sparseMatrix")
         ncol_re_hid <- 0
         X_re_hid <- as(rep(0, nrow(X_fe_hid)), "sparseMatrix")
       } else {
         # If there are random effects, 
-        # set initial values for wpar_re and log_lambda
-        random <- c(random, "wpar_re_hid")
-        tmb_par$wpar_re_hid <- rep(0, ncol(S_hid))
+        # set initial values for coeff_re and log_lambda
+        random <- c(random, "coeff_re_hid")
+        tmb_par$coeff_re_hid <- rep(0, ncol(S_hid))
         tmb_par$log_lambda_hid <- rep(0, length(ncol_re_hid))
       }
       
@@ -228,17 +228,17 @@ Hmm <- R6Class(
       par_list <- as.list(private$tmb_rep_, "Estimate")
       
       # Observation parameters
-      self$obs()$update_wpar(wpar = par_list$wpar_fe_obs)
+      self$obs()$update_coeff_fe(coeff_fe = par_list$coeff_fe_obs)
       mats_obs <- self$obs()$make_mat()
       if(!is.null(mats_obs$ncol_re)) { # Only update if there are random effects
-        self$obs()$update_wpar_re(wpar = par_list$wpar_re_obs)
+        self$obs()$update_coeff_re(coeff = par_list$coeff_re_obs)
       }
       
       # Transition probabilities
-      self$hidden()$update_par_fe(newpar = par_list$wpar_fe_hid)
+      self$hidden()$update_coeff_fe(newpar = par_list$coeff_fe_hid)
       mats_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
       if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
-        self$hidden()$update_par_re(newpar = par_list$wpar_re_hid)        
+        self$hidden()$update_coeff_re(newpar = par_list$coeff_re_hid)        
       }
     },
     
@@ -323,7 +323,7 @@ Hmm <- R6Class(
     #' 
     #' @return Matrix with three columns: (1) estimates, (2) lower bounds of
     #' confidence intervals, (3) upper bounds of confidence intervals.
-    CI_wpar = function(level = 0.95) {
+    CI_coeff = function(level = 0.95) {
       # Extract parameter estimates and standard errors from TMB output
       par_list <- as.list(self$tmb_rep(), "Estimate")
       se_list <- as.list(self$tmb_rep(), "Std. Error")

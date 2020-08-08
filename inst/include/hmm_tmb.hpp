@@ -18,8 +18,8 @@
 //'   distcode: vector of codes of observation distributions
 //' PARAMETERS:
 //'   ltpm: parameters for transition probabilities
-//'   wpar_fe: observation parameters (fixed effects)
-//'   wpar_re: observation parameters (random effects)
+//'   coeff_fe: observation parameters (fixed effects)
+//'   coeff_re: observation parameters (random effects)
 //'   log_lambda: vector of smoothness parameters
 
 template<class Type>
@@ -42,11 +42,11 @@ Type objective_function<Type>::operator() ()
   DATA_IVECTOR(ncol_re_hid); // number of columns of S and X_re for each random effect
   
   // PARAMETERS
-  PARAMETER_VECTOR(wpar_fe_obs); // observation parameters (fixed effects)
-  PARAMETER_VECTOR(wpar_re_obs); // observation parameters (random effects)
+  PARAMETER_VECTOR(coeff_fe_obs); // observation parameters (fixed effects)
+  PARAMETER_VECTOR(coeff_re_obs); // observation parameters (random effects)
   PARAMETER_VECTOR(log_lambda_obs); // smoothness parameters
-  PARAMETER_VECTOR(wpar_fe_hid); // state process parameters (fixed effects)
-  PARAMETER_VECTOR(wpar_re_hid); // state process parameters (random effects)
+  PARAMETER_VECTOR(coeff_fe_hid); // state process parameters (fixed effects)
+  PARAMETER_VECTOR(coeff_re_hid); // state process parameters (random effects)
   PARAMETER_VECTOR(log_lambda_hid); // smoothness parameters
   PARAMETER_VECTOR(log_delta); // initial distribution
   
@@ -59,7 +59,7 @@ Type objective_function<Type>::operator() ()
   // Transform parameters //
   //======================//
   // Observation parameters
-  vector<Type> par_vec = X_fe_obs * wpar_fe_obs + X_re_obs * wpar_re_obs;
+  vector<Type> par_vec = X_fe_obs * coeff_fe_obs + X_re_obs * coeff_re_obs;
   matrix<Type> par_mat(n, par_vec.size()/n);
   for(int i = 0; i < par_mat.cols(); i++) {
     // Matrix with one row for each time step and
@@ -68,7 +68,7 @@ Type objective_function<Type>::operator() ()
   }
   
   // Transition probabilities
-  vector<Type> ltpm_vec = X_fe_hid * wpar_fe_hid + X_re_hid * wpar_re_hid;
+  vector<Type> ltpm_vec = X_fe_hid * coeff_fe_hid + X_re_hid * coeff_re_hid;
   matrix<Type> ltpm_mat(n, ltpm_vec.size()/n);
   for(int i = 0; i < ltpm_mat.cols(); i++) {
     // Matrix with one row for each time step and
@@ -125,7 +125,8 @@ Type objective_function<Type>::operator() ()
       // Don't update likelihood if the observation is missing
       if(!R_IsNA(asDouble(data(i, var)))) {
         // Subset and transform observation parameters
-        vector<Type> sub_wpar = par_mat.row(i).segment(par_count, obsdist->npar() * n_states);
+        vector<Type> sub_wpar = 
+          par_mat.row(i).segment(par_count, obsdist->npar() * n_states);
         matrix<Type> par = obsdist->invlink(sub_wpar, n_states);
         
         // Loop over states (columns)
@@ -182,12 +183,12 @@ Type objective_function<Type>::operator() ()
       Eigen::SparseMatrix<Type> this_S = S_obs.block(S_start, S_start, Sn, Sn);
 
       // Coefficients for this smooth
-      vector<Type> this_wpar_re = wpar_re_obs.segment(S_start, Sn);
+      vector<Type> this_coeff_re = coeff_re_obs.segment(S_start, Sn);
 
       // Add penalty
       nllk = nllk -
         Type(0.5) * Sn * log_lambda_obs(i) +
-        Type(0.5) * exp(log_lambda_obs(i)) * density::GMRF(this_S).Quadform(this_wpar_re);
+        Type(0.5) * exp(log_lambda_obs(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
 
       // Increase index
       S_start = S_start + Sn;
@@ -208,12 +209,12 @@ Type objective_function<Type>::operator() ()
       Eigen::SparseMatrix<Type> this_S = S_hid.block(S_start, S_start, Sn, Sn);
 
       // Coefficients for this smooth
-      vector<Type> this_wpar_re = wpar_re_hid.segment(S_start, Sn);
+      vector<Type> this_coeff_re = coeff_re_hid.segment(S_start, Sn);
 
       // Add penalty
       nllk = nllk -
         Type(0.5) * Sn * log_lambda_hid(i) +
-        Type(0.5) * exp(log_lambda_hid(i)) * density::GMRF(this_S).Quadform(this_wpar_re);
+        Type(0.5) * exp(log_lambda_hid(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
 
       // Increase index
       S_start = S_start + Sn;
