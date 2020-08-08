@@ -235,10 +235,10 @@ Hmm <- R6Class(
       }
       
       # Transition probabilities
-      self$hidden()$update_coeff_fe(newpar = par_list$coeff_fe_hid)
+      self$hidden()$update_coeff_fe(coeff_fe = par_list$coeff_fe_hid)
       mats_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
       if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
-        self$hidden()$update_coeff_re(newpar = par_list$coeff_re_hid)        
+        self$hidden()$update_coeff_re(coeff_re = par_list$coeff_re_hid)        
       }
     },
     

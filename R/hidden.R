@@ -171,10 +171,10 @@ MarkovChain <- R6Class(
       }
     },
     
-    #' @description Update parameters (random effects)
+    #' @description Update coefficients for random effect parameters
     #' 
-    #' @param newpar New parameters (random effects)
-    update_coeff_re = function(newpar) {
+    #' @param coeff_re Vector of coefficients for random effect parameters
+    update_coeff_re = function(coeff_re) {
       private$coeff_re_ <- newpar
     },
 
