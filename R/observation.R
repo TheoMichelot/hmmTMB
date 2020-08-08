@@ -28,12 +28,9 @@ Observation <- R6Class(
       private$dists_ <- dists
       private$nstates_ <- n_states
       
+      # Set formulas
       if(is.null(formulas)) {
-        # Case with no covariates
-        private$par_ <- par 
-        private$coeff_fe_ <- self$n2w(par)
-        
-        # Set all formulas to ~1
+        # Default: set all formulas to ~1
         private$formulas_ <- lapply(par, function(varpar) {
           f <- lapply(varpar, function(...) {
             g <- lapply(1:n_states, function(...) {
@@ -44,25 +41,33 @@ Observation <- R6Class(
           })
           return(f)
         })
-      } else if(is.null(coeff_fe)) {
-        stop("'coeff_fe' needs to be specified if covariates in observation parameters")
       } else {
-        # Case with covariates
-        private$coeff_fe_ <- coeff_fe
         private$formulas_ <- make_formulas(formulas, n_states = n_states)        
       }
-      
-      # Initialise random effect parameters
+
+      # Save terms of model formulas
       mats <- self$make_mat()
-      if(ncol(mats$X_re) == 0) {
-        # integer(0) rather than NULL so that X_re %*% coeff_re 
-        # is valid when X_re has zero columns
-        private$coeff_re_ <- integer(0) 
-      } else if(is.null(coeff_re)) {
-        # if no value provided, coeff_re initialised to vector of zeros
-        private$coeff_re_ <- rep(0, ncol(mats$X_re))
+      ncol_fe <- mats$ncol_fe
+      ncol_re <- mats$ncol_re
+      private$terms_ <- list(ncol_fe = ncol_fe,
+                             ncol_re = ncol_re)
+
+      # Initialise parameters      
+      self$update_coeff_fe(rep(0, sum(ncol_fe)))
+      self$update_coeff_re(rep(0, sum(ncol_re)))
+
+      # Fixed effect parameters     
+      if(!is.null(par)) {
+        self$update_par(par)
+      } else if(!is.null(coeff_fe)) {
+        self$update_coeff_fe(coeff_fe)
       } else {
-        private$coeff_re_ <- coeff_re
+        stop("Either 'par' or 'coeff_fe' must be provided")
+      }
+
+      # Random effect parameters
+      if(!is.null(coeff_re)) {
+        self$update_re(coeff_re)
       }
     },
     
@@ -90,6 +95,9 @@ Observation <- R6Class(
     #' @description List of model formulas for observation model
     formulas = function() {return(private$formulas_)},
     
+    #' @description Terms of model formulas
+    terms = function() {return(private$terms_)},
+    
     #' @description  Data frame of response variables
     obs_var = function() {
       obs_names <- names(self$dists())
@@ -102,20 +110,32 @@ Observation <- R6Class(
     ##############
     #' @description Update parameters
     #' 
+    #' Updates the 'par' attribute to the list passed as input,
+    #' and updates the intercept elements of 'coeff_fe' using
+    #' the list passed as input
+    #' 
     #' @param par New list of parameters
     update_par = function(par) {
       private$par_ <- par
-      private$coeff_fe_ <- self$n2w(par)
+        
+      # Get index of first column of X_fe for each parameter
+      ncol_fe <- self$terms()$ncol_fe
+      n_par <- length(ncol_fe)
+      i0 <- c(1, cumsum(ncol_fe)[-n_par] + 1)
+      
+      # Apply link to get parameters on working scale
+      private$coeff_fe_[i0] <- self$n2w(par)
     },
     
-    #' @description Update fixed effect parameters on working scale
+    #' @description Update coefficients for fixed effect parameters
     #' 
-    #' @param coeff_fe New vector of fixed effect parameters on working scale
+    #' @param coeff_fe New vector of coefficients for fixed effect 
+    #' parameters
     update_coeff_fe = function(coeff_fe) {
       names(coeff_fe) <- NULL
       private$coeff_fe_ <- coeff_fe
       if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {
-        # Only update natural parameters if no covariates
+        # Only update par if no covariates
         private$par_ <- self$w2n(coeff_fe)
       }
     },
@@ -445,6 +465,7 @@ Observation <- R6Class(
     par_ = NULL,
     coeff_fe_ = NULL,
     coeff_re_ = NULL,
-    formulas_ = NULL
+    formulas_ = NULL,
+    terms_ = NULL
   )
 )
