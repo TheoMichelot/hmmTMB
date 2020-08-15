@@ -82,8 +82,8 @@ MarkovChain <- R6Class(
                              ncol_re = ncol_re)
       
       # Initialise coeff_fe and coeff_re to 0
-      private$coeff_fe_ <- rep(0, sum(ncol_fe))
-      private$coeff_re_ <- rep(0, sum(ncol_re))
+      self$update_coeff_fe(rep(0, sum(ncol_fe)))
+      self$update_coeff_re(rep(0, sum(ncol_re))) 
       
       # Set fixed effect parameters, using either coeff_fe0 or tpm0
       if(!is.null(coeff_fe0)) {
