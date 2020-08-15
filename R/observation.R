@@ -135,7 +135,7 @@ Observation <- R6Class(
     #' @param coeff_fe New vector of coefficients for fixed effect 
     #' parameters
     update_coeff_fe = function(coeff_fe) {
-      names(coeff_fe) <- NULL
+      names(coeff_fe) <- self$terms()$names_fe
       private$coeff_fe_ <- coeff_fe
       if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {
         # Only update par if no covariates
@@ -145,8 +145,10 @@ Observation <- R6Class(
     
     #' @description Update random effect parameters
     #' 
-    #' @param coeff_re New vector og random effect parameters
+    #' @param coeff_re New vector of coefficients for random effect 
+    #' parameters
     update_coeff_re = function(coeff_re) {
+      names(coeff_re) <- self$terms()$names_re_all
       private$coeff_re_ <- coeff_re
     },
     
