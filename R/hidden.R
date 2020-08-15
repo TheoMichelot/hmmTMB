@@ -57,6 +57,11 @@ MarkovChain <- R6Class(
         else
           return(as.formula(form_char))
       })
+      # Names for transition probabilities
+      tr_names <- paste(rep(1:n_states, n_states), 
+                        "->", 
+                        rep(1:n_states, each = n_states))
+      names(ls_form) <- tr_names[-which(diag(n_states) == 1)]
       
       # Set structure and formulas attributes
       private$structure_ <- structure
@@ -64,7 +69,7 @@ MarkovChain <- R6Class(
       
       # Does the hidden state model include covariates?
       no_covs <- all(structure %in% c(".", "~1"))
-
+      
       # Get structure of design matrices      
       if(no_covs) {
         # If no covariates, N*(N-1) fixed effects and 0 random effects
@@ -175,9 +180,9 @@ MarkovChain <- R6Class(
     #' 
     #' @param coeff_re Vector of coefficients for random effect parameters
     update_coeff_re = function(coeff_re) {
-      private$coeff_re_ <- newpar
+      private$coeff_re_ <- coeff_re
     },
-
+    
     ###################
     ## Other methods ##
     ###################
