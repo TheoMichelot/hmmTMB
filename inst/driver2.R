@@ -6,7 +6,7 @@ set.seed(5738)
 ## Simulate data ##
 ###################
 # Generate two covariates (random walk)
-n_sim <- 1e3
+n_sim <- 1e4
 covs <- data.frame(ID = 1, 
                    x1 = cumsum(rnorm(n_sim, 0, 0.1)),
                    x2 = cumsum(rnorm(n_sim, 0, 0.1)))
@@ -23,9 +23,11 @@ obs <- Observation$new(data = hmm_data, dists = dists,
                        n_states = n_states, par = par)
 
 # Create state process model
-form <- "~ x1 + x2"
-par_hid0 <- c(-2, 0.12, -0.34, -2, -0.25, 0.07)
-hid <- MarkovChain$new(n_states = 2, structure = form, 
+struct <- matrix(c(".", "~ x1 + x2",
+                   "~ x2", "."), 
+                 ncol = 2, byrow = TRUE)
+par_hid0 <- c(-1.5, 0.2, -0.3, -3, 0.5)
+hid <- MarkovChain$new(n_states = 2, structure = struct, 
                        coeff_fe0 = par_hid0, data = hmm_data)
 
 # Create HMM object and simulate data
@@ -44,7 +46,7 @@ par0 <- list(step = list(shape = c(0.5, 2),
 obs2 <- Observation$new(data = hmm_data2, dists = dists, 
                         n_states = n_states, par = par)
 
-hid2 <- MarkovChain$new(n_states = 2, structure = form, data = hmm_data)
+hid2 <- MarkovChain$new(n_states = 2, structure = struct, data = hmm_data)
 
 mod2 <- Hmm$new(obs = obs2, hidden = hid2)
 
@@ -68,15 +70,15 @@ rep <- mod2$tmb_rep()
 par <- rep$par.fixed
 V <- rep$cov.fixed
 
-n_sim <- 1e3
-post <- rmvn(n = n_sim, mu = par, V = V)
+n_post <- 1e3
+post <- rmvn(n = n_post, mu = par, V = V)
 
 par_fe_obs <- post[, which(colnames(post) == "wpar_fe_obs")]
 par_re_obs <- post[, which(colnames(post) == "wpar_re_obs")]
 
 m <- obs$make_mat(new_data = data.frame(ID = 1))
 
-foo <- sapply(1:n_sim, function(i) {
+foo <- sapply(1:n_post, function(i) {
   obs$par_all(X_fe = m$X_fe, X_re = m$X_re, 
               par_fe = par_fe_obs[i,], par_re = par_re_obs[i,])
 })

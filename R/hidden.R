@@ -49,8 +49,9 @@ MarkovChain <- R6Class(
         private$nstates_ <- n_states
       }
       
-      # Create list of formulas
-      ls_form_char <- as.list(structure[!diag(self$nstates())])
+      # Create list of formulas  ('structure' is transposed to get 
+      # the formulas in the order 1>2, 1>3, ..., 2>1, 2>3, ...)
+      ls_form_char <- as.list(t(structure)[!diag(self$nstates())])
       ls_form <- lapply(ls_form_char, function(form_char) {
         if(form_char == ".")
           return(NULL)
@@ -58,9 +59,8 @@ MarkovChain <- R6Class(
           return(as.formula(form_char))
       })
       # Names for transition probabilities
-      tr_names <- paste(rep(1:n_states, n_states), 
-                        "->", 
-                        rep(1:n_states, each = n_states))
+      tr_names <- paste0("S", rep(1:n_states, each = n_states), 
+                         ">S", rep(1:n_states, n_states))
       names(ls_form) <- tr_names[-which(diag(n_states) == 1)]
       
       # Set structure and formulas attributes
