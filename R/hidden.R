@@ -70,21 +70,23 @@ MarkovChain <- R6Class(
       # Does the hidden state model include covariates?
       no_covs <- all(structure %in% c(".", "~1"))
       
-      # Get structure of design matrices      
+      # Get structure of design matrices
       if(no_covs) {
-        # If no covariates, N*(N-1) fixed effects and 0 random effects
-        ncol_fe <- rep(1, n_states * (n_states - 1))
-        ncol_re <- 0
+        # Create temporary dummy data set to pass to make_mat
+        data <- data.frame(dummy = rep(1, 2))
+      } else if(is.null(data)) {
+        stop("'data' must be provided if the model includes covariates")
       } else {
-        if(is.null(data)) {
-          stop("'data' must be provided if the model includes covariates")
-        }
-        mats <- self$make_mat(data = data$data())
-        ncol_fe <- mats$ncol_fe
-        ncol_re <- mats$ncol_re        
+        data <- data$data()
       }
+      mats <- self$make_mat(data = data)
+      ncol_fe <- mats$ncol_fe
+      ncol_re <- mats$ncol_re       
       private$terms_ <- list(ncol_fe = ncol_fe,
-                             ncol_re = ncol_re)
+                             ncol_re = ncol_re,
+                             names_fe = colnames(mats$X_fe),
+                             names_re_all = colnames(mats$X_re),
+                             names_re = names(ncol_re))
       
       # Initialise coeff_fe and coeff_re to 0
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
@@ -156,7 +158,9 @@ MarkovChain <- R6Class(
       i0 <- c(1, cumsum(ncol_fe)[-n_par] + 1)
       
       # Update coeff_fe and tpm attributes
+      private$coeff_fe_ <- rep(0, sum(self$terms()$ncol_fe))
       private$coeff_fe_[i0] <- private$tpm2par(tpm)
+      names(private$coeff_fe_) <- self$terms()$names_fe
       private$tpm_ <- tpm
     },
     
@@ -169,6 +173,7 @@ MarkovChain <- R6Class(
         stop("'coeff_fe' should be of length ", ncol_total, " (one ",
              "parameter for each column of the design matrix)")
       }
+      names(coeff_fe) <- self$terms()$names_fe
       private$coeff_fe_ <- coeff_fe
       if(all(self$structure() %in% c(".", "~1"))) {
         # Only update tpm if no covariates
@@ -180,6 +185,7 @@ MarkovChain <- R6Class(
     #' 
     #' @param coeff_re Vector of coefficients for random effect parameters
     update_coeff_re = function(coeff_re) {
+      names(coeff_re) <- self$terms()$names_re_all
       private$coeff_re_ <- coeff_re
     },
     
