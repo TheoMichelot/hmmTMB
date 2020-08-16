@@ -130,46 +130,72 @@ make_mat_hid = function(formulas, data, new_data = NULL) {
   S_list <- list()
   ncol_fe <- NULL
   ncol_re <- NULL
-  k <- 1
-  
+  names_fe <- NULL
+  names_re <- NULL
+  names_ncol_re <- NULL
+
   # Loop over formulas
-  for(form in formulas) {
+  for(i in seq_along(formulas)) {
+    form <- formulas[[i]]
+    name <- names(formulas)[i]
+    
     # Create matrices based on this formula
     if(is.null(new_data)) {
       gam_setup <- gam(formula = update(form, dummy ~ .), 
                        data = cbind(dummy = 1, data), 
                        fit = FALSE)
       Xmat <- gam_setup$X
+      # Extract column names for design matrices
+      term_names <- gam_setup$term.names
     } else {
       # Get design matrix for new data set
       gam_setup <- gam(formula = update(form, dummy ~ .), 
                        data = cbind(dummy = 1, data))
       Xmat <- predict(gam_setup, newdata = new_data, type = "lpmatrix")
+      # Extract column names for design matrices
+      term_names <- names(gam_setup$coefficients)
     }
 
     # Fixed effects design matrix
-    X_list_fe[[k]] <- Xmat[, 1:gam_setup$nsdf, drop = FALSE]
+    X_list_fe[[i]] <- Xmat[, 1:gam_setup$nsdf, drop = FALSE]
+    subnames_fe <- paste0(name, ".", term_names[1:gam_setup$nsdf])
+    names_fe <- c(names_fe, subnames_fe)
     
     # Random effects design matrix
-    X_list_re[[k]] <- Xmat[, -(1:gam_setup$nsdf), drop = FALSE]
+    X_list_re[[i]] <- Xmat[, -(1:gam_setup$nsdf), drop = FALSE]
+    if(ncol(X_list_re[[i]]) > 0) {
+      subnames_re <- paste0(name, ".", term_names[-(1:gam_setup$nsdf)])
+      names_re <- c(names_re, subnames_re)                    
+    }
     
     # Smoothing matrix
-    S_list[[k]] <- bdiag_check(gam_setup$S)
+    S_list[[i]] <- bdiag_check(gam_setup$S)
     
     # Number of columns for fixed effects
     ncol_fe <- c(ncol_fe, gam_setup$nsdf)
     
-    # Number of columns for each random effect
-    if(length(gam_setup$S) > 0)
-      ncol_re <- c(ncol_re, sapply(gam_setup$S, ncol))
-    
-    k <- k + 1
+    if(length(gam_setup$S) > 0) {
+      # Number of columns for each random effect
+      sub_ncol_re <- sapply(gam_setup$S, ncol)
+      ncol_re <- c(ncol_re, sub_ncol_re)
+      # Hacky way to get the names of smooth terms 
+      # (one for each column of ncol_re)
+      # regex from datascience.stackexchange.com/questions/8922
+      s_terms_i1 <- cumsum(c(1, sub_ncol_re[-length(sub_ncol_re)]))
+      s_terms <- gsub("(.*)\\..*", "\\1", subnames_re[s_terms_i1])
+      names_ncol_re <- c(names_ncol_re, s_terms)
+    }
   }
   
   # Store as block diagonal matrices
   X_fe <- bdiag_check(X_list_fe)
+  colnames(X_fe) <- names_fe
   X_re <- bdiag_check(X_list_re)
+  colnames(X_re) <- names_re
   S <- bdiag_check(S_list)
+  
+  # Name elements of ncol_re
+  names(ncol_re) <- names_ncol_re
   
   return(list(X_fe = X_fe, X_re = X_re, S = S, 
               ncol_fe = ncol_fe, ncol_re = ncol_re))
