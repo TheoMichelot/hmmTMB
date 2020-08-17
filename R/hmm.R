@@ -74,6 +74,35 @@ Hmm <- R6Class(
       return(private$states_)
     },
     
+    #' @description Coefficients for fixed effect parameters
+    coeff_fe = function() {
+      return(list(obs = self$obs()$coeff_fe(),
+                  hidden = self$hidden()$coeff_fe()))
+    },
+    
+    #' @description Coefficients for random effect parameters
+    coeff_re = function() {
+      return(list(obs = self$obs()$coeff_re(),
+                  hidden = self$hidden()$coeff_re()))
+    },
+    
+    #' @description Smoothness parameters
+    lambda = function() {
+      return(list(obs = self$obs()$lambda(),
+                  hidden = self$hidden()$lambda()))
+    },
+    
+    #' @description Variance components of smooth terms
+    #' 
+    #' @details This function transforms the smoothness parameter of
+    #' each smooth term into a standard deviation, given by 
+    #' SD = 1/sqrt(lambda). It is particularly helpful to get the
+    #' standard deviations of independent normal random effects.
+    vcomp = function() {
+      return(list(obs = self$obs()$vcomp(),
+                  hidden = self$hidden()$vcomp()))
+    },
+    
     #' @description Model parameters
     #' 
     #' @return A list with elements:
