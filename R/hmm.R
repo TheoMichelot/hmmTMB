@@ -31,7 +31,7 @@ Hmm <- R6Class(
     hidden = function() {return(private$hidden_)},
     
     #' @description Output of optimiser after model fitting
-    res = function() {
+    out = function() {
       if (is.null(private$fit_)) {
         stop("Fit model first")
       }
@@ -207,7 +207,7 @@ Hmm <- R6Class(
     #' the random effects out of the likelihood.
     #' 
     #' After the model has been fitted, the output of \code{optim} can be
-    #' accessed using the method \code{res}.
+    #' accessed using the method \code{out}.
     #' 
     #' @param silent Logical. If TRUE, all tracing outputs are hidden (default).
     fit = function(silent = TRUE) {
