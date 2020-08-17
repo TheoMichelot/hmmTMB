@@ -132,6 +132,14 @@ MarkovChain <- R6Class(
     #' @description Smoothness parameters
     lambda = function() {return(private$lambda_)},
     
+    #' @description Variance components of smooth terms
+    #' 
+    #' @details This function transforms the smoothness parameter of
+    #' each smooth term into a standard deviation, given by 
+    #' SD = 1/sqrt(lambda). It is particularly helpful to get the
+    #' standard deviations of independent normal random effects.
+    vcomp = function() {return(1/sqrt(private$lambda_))},
+    
     #' @description Number of states
     nstates = function() {return(private$nstates_)},
     
