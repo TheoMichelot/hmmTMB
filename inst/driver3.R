@@ -62,8 +62,8 @@ simHMM <- function(nind, n, shape_par, scale_par, lambda_par, lambda_re, tpm, X)
 }
 
 # Simulation parameters
-nind <- 50
-n <- 200
+nind <- 30
+n <- 50
 shape_par <- matrix(c(log(0.5), log(6),
                       -0.1, -0.1,
                       0, -0.5),
@@ -120,9 +120,6 @@ coeff_fe <- obs$coeff_fe()
 shape_est <- matrix(coeff_fe[1:6], ncol = 2)
 scale_est <- matrix(coeff_fe[7:8], ncol = 2)
 lambda_est <- matrix(coeff_fe[9:10], ncol = 2)
-
-# Random effect parameter
-1/sqrt(exp(mod$res()$par["log_lambda_obs"]))
 
 s <- mod$viterbi()
 table(s == states)/length(s)
