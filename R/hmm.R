@@ -32,11 +32,11 @@ Hmm <- R6Class(
     
     #' @description Output of optimiser after model fitting
     out = function() {
-      if (is.null(private$fit_)) {
+      if (is.null(private$out_)) {
         stop("Fit model first")
       }
       
-      return(private$fit_)
+      return(private$out_)
     },
     
     #' @description Model object created by TMB. This is the output of 
@@ -220,7 +220,7 @@ Hmm <- R6Class(
       n_states <- self$hidden()$nstates()
       
       # Fit model
-      private$fit_ <- do.call(optim, private$tmb_obj_)
+      private$out_ <- do.call(optim, private$tmb_obj_)
       
       # Get estimates and precision matrix for all parameters
       private$tmb_rep_ <- sdreport(private$tmb_obj_, getJointPrecision = TRUE, 
@@ -604,7 +604,7 @@ Hmm <- R6Class(
   private = list(
     obs_ = NULL,
     hidden_ = NULL,
-    fit_ = NULL,
+    out_ = NULL,
     tmb_obj_ = NULL,
     tmb_rep_ = NULL,
     states_ = NULL
