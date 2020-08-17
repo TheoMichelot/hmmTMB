@@ -58,6 +58,7 @@ Observation <- R6Class(
       # Initialise parameters      
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
       self$update_coeff_re(rep(0, sum(ncol_re)))
+      self$update_lambda(rep(1, length(ncol_re)))
 
       # Fixed effect parameters     
       if(!is.null(par)) {
@@ -94,6 +95,9 @@ Observation <- R6Class(
     
     #' @description Random effect parameters
     coeff_re = function() {return(private$coeff_re_)},
+    
+    #' @description Smoothness parameters
+    lambda = function() {return(private$lambda_)},
     
     #' @description List of model formulas for observation model
     formulas = function() {return(private$formulas_)},
@@ -150,6 +154,14 @@ Observation <- R6Class(
     update_coeff_re = function(coeff_re) {
       names(coeff_re) <- self$terms()$names_re_all
       private$coeff_re_ <- coeff_re
+    },
+    
+    #' @description Update smoothness parameters
+    #' 
+    #' @param lambda New smoothness parameter vector
+    update_lambda = function(lambda) {
+      private$lambda_ <- lambda
+      names(private$lambda_) <- self$terms()$names_re
     },
     
     ###################
@@ -470,6 +482,7 @@ Observation <- R6Class(
     par_ = NULL,
     coeff_fe_ = NULL,
     coeff_re_ = NULL,
+    lambda_ = NULL,
     formulas_ = NULL,
     terms_ = NULL
   )

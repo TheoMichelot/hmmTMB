@@ -91,6 +91,7 @@ MarkovChain <- R6Class(
       # Initialise coeff_fe and coeff_re to 0
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
       self$update_coeff_re(rep(0, sum(ncol_re))) 
+      self$update_lambda(rep(1, length(ncol_re)))
       
       # Set fixed effect parameters, using either coeff_fe0 or tpm0
       if(!is.null(coeff_fe0)) {
@@ -127,6 +128,9 @@ MarkovChain <- R6Class(
     
     #' @description Current parameter estimates (random effects)
     coeff_re = function() {return(private$coeff_re_)},
+    
+    #' @description Smoothness parameters
+    lambda = function() {return(private$lambda_)},
     
     #' @description Number of states
     nstates = function() {return(private$nstates_)},
@@ -187,6 +191,14 @@ MarkovChain <- R6Class(
     update_coeff_re = function(coeff_re) {
       names(coeff_re) <- self$terms()$names_re_all
       private$coeff_re_ <- coeff_re
+    },
+    
+    #' @description Update smoothness parameters
+    #' 
+    #' @param lambda New smoothness parameter vector
+    update_lambda = function(lambda) {
+      private$lambda_ <- lambda
+      names(private$lambda_) <- self$terms()$names_re
     },
     
     ###################
@@ -356,6 +368,7 @@ MarkovChain <- R6Class(
     formulas_ = NULL,
     coeff_fe_ = NULL,
     coeff_re_ = NULL,
+    lambda_ = NULL,
     tpm_ = NULL,
     nstates_ = NULL,
     terms_ = NULL,

@@ -232,13 +232,15 @@ Hmm <- R6Class(
       mats_obs <- self$obs()$make_mat()
       if(!is.null(mats_obs$ncol_re)) { # Only update if there are random effects
         self$obs()$update_coeff_re(coeff = par_list$coeff_re_obs)
+        self$obs()$update_lambda(exp(par_list$log_lambda_obs))
       }
       
       # Transition probabilities
       self$hidden()$update_coeff_fe(coeff_fe = par_list$coeff_fe_hid)
       mats_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
       if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
-        self$hidden()$update_coeff_re(coeff_re = par_list$coeff_re_hid)        
+        self$hidden()$update_coeff_re(coeff_re = par_list$coeff_re_hid)
+        self$hidden()$update_lambda(exp(par_list$log_lambda_hid))
       }
     },
     
