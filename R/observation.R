@@ -44,7 +44,7 @@ Observation <- R6Class(
       } else {
         private$formulas_ <- make_formulas(formulas, n_states = n_states)        
       }
-
+      
       # Save terms of model formulas
       mats <- self$make_mat()
       ncol_fe <- mats$ncol_fe
@@ -54,12 +54,12 @@ Observation <- R6Class(
                              names_fe = colnames(mats$X_fe),
                              names_re_all = colnames(mats$X_re),
                              names_re = names(ncol_re))
-
+      
       # Initialise parameters      
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
       self$update_coeff_re(rep(0, sum(ncol_re)))
       self$update_lambda(rep(1, length(ncol_re)))
-
+      
       # Fixed effect parameters     
       if(!is.null(par)) {
         self$update_par(par)
@@ -68,7 +68,7 @@ Observation <- R6Class(
       } else {
         stop("Either 'par' or 'coeff_fe' must be provided")
       }
-
+      
       # Random effect parameters
       if(!is.null(coeff_re)) {
         self$update_re(coeff_re)
@@ -132,7 +132,7 @@ Observation <- R6Class(
     #' @param par New list of parameters
     update_par = function(par) {
       private$par_ <- par
-        
+      
       # Get index of first column of X_fe for each parameter
       ncol_fe <- self$terms()$ncol_fe
       n_par <- length(ncol_fe)
@@ -147,8 +147,8 @@ Observation <- R6Class(
     #' @param coeff_fe New vector of coefficients for fixed effect 
     #' parameters
     update_coeff_fe = function(coeff_fe) {
-      names(coeff_fe) <- self$terms()$names_fe
-      private$coeff_fe_ <- coeff_fe
+      private$coeff_fe_ <- matrix(coeff_fe)
+      rownames(private$coeff_fe_) <- self$terms()$names_fe
       if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {
         # Only update par if no covariates
         private$par_ <- self$w2n(coeff_fe)
@@ -160,16 +160,16 @@ Observation <- R6Class(
     #' @param coeff_re New vector of coefficients for random effect 
     #' parameters
     update_coeff_re = function(coeff_re) {
-      names(coeff_re) <- self$terms()$names_re_all
-      private$coeff_re_ <- coeff_re
+      private$coeff_re_ <- matrix(coeff_re)
+      rownames(private$coeff_re_) <- self$terms()$names_re_all
     },
     
     #' @description Update smoothness parameters
     #' 
     #' @param lambda New smoothness parameter vector
     update_lambda = function(lambda) {
-      private$lambda_ <- lambda
-      names(private$lambda_) <- self$terms()$names_re
+      private$lambda_ <- matrix(lambda)
+      rownames(private$lambda_) <- self$terms()$names_re
     },
     
     ###################
@@ -344,7 +344,7 @@ Observation <- R6Class(
     #' @return Vector of parameters on working scale
     n2w = function(par) {
       coeff_fe <- lapply(1:length(self$dists()), 
-                     function(i) dists[[i]]$n2w(par[[i]]))
+                         function(i) dists[[i]]$n2w(par[[i]]))
       names(coeff_fe) <- names(par)
       coeff_fe <- unlist(coeff_fe)
       return(coeff_fe)

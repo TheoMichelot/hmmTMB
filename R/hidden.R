@@ -185,8 +185,8 @@ MarkovChain <- R6Class(
         stop("'coeff_fe' should be of length ", ncol_total, " (one ",
              "parameter for each column of the design matrix)")
       }
-      names(coeff_fe) <- self$terms()$names_fe
-      private$coeff_fe_ <- coeff_fe
+      private$coeff_fe_ <- matrix(coeff_fe)
+      rownames(private$coeff_fe_) <- self$terms()$names_fe
       if(all(self$structure() %in% c(".", "~1"))) {
         # Only update tpm if no covariates
         private$tpm_ <- private$par2tpm(coeff_fe)        
@@ -197,16 +197,16 @@ MarkovChain <- R6Class(
     #' 
     #' @param coeff_re Vector of coefficients for random effect parameters
     update_coeff_re = function(coeff_re) {
-      names(coeff_re) <- self$terms()$names_re_all
-      private$coeff_re_ <- coeff_re
+      private$coeff_re_ <- matrix(coeff_re)
+      rownames(private$coeff_re_) <- self$terms()$names_re_all
     },
     
     #' @description Update smoothness parameters
     #' 
     #' @param lambda New smoothness parameter vector
     update_lambda = function(lambda) {
-      private$lambda_ <- lambda
-      names(private$lambda_) <- self$terms()$names_re
+      private$lambda_ <- matrix(lambda)
+      rownames(private$lambda_) <- self$terms()$names_re
     },
     
     ###################
