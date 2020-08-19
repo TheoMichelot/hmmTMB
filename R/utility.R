@@ -39,11 +39,12 @@ bdiag_check <- function(...) {
 #' not specified, the mean value is used for numeric variables, and the
 #' first level for factor variables.
 #' @param formulas List of formulas used in the model
+#' @param n_grid Grid size (number of points). Default: 1000.
 #' 
 #' @return Data frame of covariates, with 'var' defined over a grid,
 #' and other covariates fixed to their mean (numeric) or first level
 #' (factor).
-cov_grid <- function(var, data, covs = NULL, formulas) {
+cov_grid <- function(var, data, covs = NULL, formulas, n_grid = 1e3) {
   # Get covariate names
   var_names <- unique(rapply(formulas, all.vars))
   # If no covariates in the model, only take covariate 'var'
@@ -64,7 +65,6 @@ cov_grid <- function(var, data, covs = NULL, formulas) {
     n_grid <- length(unique(all_vars[, var]))
     grid <- unique(all_vars[, var])
   } else {
-    n_grid <- 1e3
     grid <- seq(min(all_vars[, var]), max(all_vars[, var]), length = n_grid)
   }
   

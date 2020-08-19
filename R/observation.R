@@ -201,13 +201,15 @@ Observation <- R6Class(
     #' for each covariate, giving the values that should be used. If this is
     #' not specified, the mean value is used for numeric variables, and the
     #' first level for factor variables.
+    #' @param n_grid Grid size (number of points). Default: 1000.
     #' 
     #' @return A list with the same elements as the output of make_mat, 
     #' plus a data frame of covariates values.
-    make_mat_grid = function(var, covs = NULL) {
+    make_mat_grid = function(var, covs = NULL, n_grid = 1e3) {
       # Data frame for covariate grid
       new_data <- cov_grid(var = var, data = self$data()$data(), 
-                           covs = covs, formulas = self$formulas())
+                           covs = covs, formulas = self$formulas(),
+                           n_grid = n_grid)
       
       # Create design matrices
       mats <- self$make_mat(new_data = new_data)
