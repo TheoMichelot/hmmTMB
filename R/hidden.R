@@ -238,12 +238,28 @@ MarkovChain <- R6Class(
     #' by \code{make_mat}
     #' @param X_re Design matrix for random effects, as returned
     #' by \code{make_mat}
+    #' @param coeff_fe Optional vector of coefficients for fixed effect
+    #' parameters. If this isn't provided, the model parameters
+    #' are used.
+    #' @param coeff_re Optional vector of coefficients for random 
+    #' effect parameters. If this isn't provided, the model parameters 
+    #' are used.
     #' 
     #' @return Array with one slice for each transition probability matrix
-    tpm_all = function(X_fe, X_re) {
+    tpm_all = function(X_fe, X_re, coeff_fe = NULL, coeff_re = NULL) {
       n_states <- self$nstates()
-      ltpm <- X_fe %*% self$coeff_fe() + X_re %*% self$coeff_re()
+      
+      # Define parameters
+      if(length(coeff_fe) == 0)
+        coeff_fe <- self$coeff_fe()
+      if(length(coeff_re) == 0)
+        coeff_re <- self$coeff_re()
+      
+      # Linear predictor
+      ltpm <- X_fe %*% coeff_fe() + X_re %*% coeff_re()
       ltpm_mat <- matrix(ltpm, ncol = n_states * (n_states - 1))
+      
+      # Transition probability matrices
       tpm <- apply(ltpm_mat, 1, private$par2tpm)
       tpm <- array(tpm, dim = c(n_states, n_states, nrow(ltpm_mat)))
       return(tpm)
