@@ -170,9 +170,9 @@ MarkovChain <- R6Class(
       i0 <- c(1, cumsum(ncol_fe)[-n_par] + 1)
       
       # Update coeff_fe and tpm attributes
-      private$coeff_fe_ <- rep(0, sum(self$terms()$ncol_fe))
+      private$coeff_fe_ <- matrix(rep(0, sum(self$terms()$ncol_fe)))
       private$coeff_fe_[i0] <- private$tpm2par(tpm)
-      names(private$coeff_fe_) <- self$terms()$names_fe
+      rownames(private$coeff_fe_) <- self$terms()$names_fe
       private$tpm_ <- tpm
     },
     
