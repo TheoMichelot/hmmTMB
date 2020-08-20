@@ -246,7 +246,7 @@ Observation <- R6Class(
       n_states <- self$nstates()
       
       # Number of parameters on natural scale (in each state)
-      n_par <- sum(sapply(obs$dists(), function(d) d$npar()))
+      n_par <- sum(sapply(self$dists(), function(d) d$npar()))
       
       # Define parameters
       if(length(coeff_fe) == 0)
