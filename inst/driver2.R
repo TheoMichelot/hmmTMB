@@ -61,24 +61,3 @@ mod2$hidden()$coeff_fe()
 # Compare estimated states and true states
 s <- mod2$viterbi()
 table(s == sim$state)/n_sim
-
-############################################
-## Experiment: uncertainty quantification ##
-############################################
-rep <- mod2$tmb_rep()
-
-par <- rep$par.fixed
-V <- rep$cov.fixed
-
-n_post <- 1e3
-post <- rmvn(n = n_post, mu = par, V = V)
-
-par_fe_obs <- post[, which(colnames(post) == "wpar_fe_obs")]
-par_re_obs <- post[, which(colnames(post) == "wpar_re_obs")]
-
-m <- obs$make_mat(new_data = data.frame(ID = 1))
-
-foo <- sapply(1:n_post, function(i) {
-  obs$par_all(X_fe = m$X_fe, X_re = m$X_re, 
-              par_fe = par_fe_obs[i,], par_re = par_re_obs[i,])
-})

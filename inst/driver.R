@@ -21,7 +21,7 @@ SimulatePoHmm <- function(n, lambda, tpm, n.states) {
   return(list(data = data, state = s))
 }
 
-n <- 10000
+n <- 1000
 lambda <- c(2, 20)
 tpm <- matrix(c(0.95, 0.1, 0.05, 0.9), nc = 2)
 n.states <- 2
