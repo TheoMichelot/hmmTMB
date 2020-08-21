@@ -373,6 +373,165 @@ Hmm <- R6Class(
                    upper = unlist(upper)))
     },
     
+    #' @description Confidence intervals for transition probabilities
+    #'
+    #' @param X_fe Design matrix for fixed effects, as returned
+    #' by \code{make_mat}
+    #' @param X_re Design matrix for random effects, as returned
+    #' by \code{make_mat}
+    #' @param level Confidence level (default: 0.95 for 95\% confidence 
+    #' intervals)
+    #' @param n_post Number of posterior samples from which the confidence
+    #' intervals are calculated. Larger values will reduce approximation
+    #' error, but increase computation time. Defaults to 1000.
+    #' 
+    #' @details This method generates confidence intervals by simulation.
+    #' That is, it generates \code{n_post} posterior samples of 
+    #' the estimated parameters from a multivariate normal distribution,
+    #' where the mean is the vector of estimates and the covariance matrix 
+    #' is provided by TMB. Then, transition probabilities are derived for 
+    #' each set of posterior parameter values, and confidence intervals
+    #' are obtained as quantiles of the posterior simulated transition
+    #' probabilities.
+    #' 
+    #' @return List with elements:
+    #' \itemize{
+    #'   \item{\code{low}}{Array of lower bounds of confidence intervals.
+    #'   Each slice of the array is a transiton probability matrix.}
+    #'   \item{\code{upp}}{Array of upper bounds of confidence intervals.
+    #'   Each slice of the array is a transiton probability matrix.}
+    #' }
+    CI_tpm = function(X_fe, X_re, level = 0.95, n_post = 1e3) {
+      # Number of states
+      n_states <- self$hidden()$nstates()
+      # Number of time steps
+      n_grid <- nrow(X_fe)/(n_states*(n_states-1))
+      
+      # Get parameter estimates and covariance matrix
+      rep <- self$tmb_rep()
+      if(is.null(rep$jointPrecision)) {
+        par <- rep$par.fixed
+        V <- rep$cov.fixed    
+      } else {
+        par <- c(rep$par.fixed, rep$par.random)
+        V <- ginv(rep$jointPrecision)
+      }
+      
+      # Generate samples from MVN estimator distribution
+      post <- rmvn(n = n_post, mu = par, V = V)
+      
+      # Extract coefficients for transition probabilities
+      post_coeff_fe <- post[, which(colnames(post) == "coeff_fe_hid")]
+      post_coeff_re <- post[, which(colnames(post) == "coeff_re_hid")]
+      
+      # Get transition probabilities over rows of X_fe and X_re, for each 
+      # posterior sample of coeff_fe and coeff_re
+      post_tpm <- sapply(1:n_post, function(i) {
+        hid$tpm_all(X_fe = X_fe, X_re = X_re, 
+                    coeff_fe = post_coeff_fe[i,], 
+                    coeff_re = post_coeff_re[i,])
+      })
+      
+      # Get confidence intervals as quantiles of posterior tpms
+      alpha <- (1 - level)/2
+      CI <- t(apply(post_tpm, 1, quantile, probs = c(alpha, 1 - alpha)))
+      
+      # Format arrays for lower and upper bounds, where each layer is
+      # a transition probability matrix
+      low <- array(CI[,1], dim = c(n_states, n_states, n_grid))
+      upp <- array(CI[,2], dim = c(n_states, n_states, n_grid))
+      
+      return(list(low = low, upp = upp))
+    },
+    
+    #' @description Confidence intervals for observation parameters
+    #'
+    #' @param X_fe Design matrix for fixed effects, as returned
+    #' by \code{make_mat}
+    #' @param X_re Design matrix for random effects, as returned
+    #' by \code{make_mat}
+    #' @param level Confidence level (default: 0.95 for 95\% confidence 
+    #' intervals)
+    #' @param n_post Number of posterior samples from which the confidence
+    #' intervals are calculated. Larger values will reduce approximation
+    #' error, but increase computation time. Defaults to 1000.
+    #' 
+    #' @details This method generates confidence intervals by simulation.
+    #' That is, it generates \code{n_post} posterior samples of 
+    #' the estimated parameters from a multivariate normal distribution,
+    #' where the mean is the vector of estimates and the covariance matrix 
+    #' is provided by TMB. Then, observation parameters are derived for 
+    #' each set of posterior parameter values, and confidence intervals
+    #' are obtained as quantiles of the posterior simulated observation
+    #' parameters.
+    #' 
+    #' @return List with elements:
+    #' \itemize{
+    #'   \item{\code{low}}{Array of lower bounds of confidence intervals,
+    #'   with one slice for each time step, one row for each observation 
+    #'   parameter, and one column for each state.}
+    #'   \item{\code{upp}}{Array of upper bounds of confidence intervals,
+    #'   with one slice for each time step, one row for each observation 
+    #'   parameter, and one column for each state.}
+    #' }
+    CI_obspar = function(X_fe, X_re, level = 0.95, n_post = 1e3) {
+      # Number of states
+      n_states <- self$hidden()$nstates()
+      # Number of observation parameters (in each state)
+      n_par <- sum(sapply(self$obs()$dists(), function(d) d$npar()))
+      # Number of time steps
+      n_grid <- nrow(X_fe)/(n_par * n_states)
+      
+      # Get parameter estimates and covariance matrix
+      rep <- self$tmb_rep()
+      if(is.null(rep$jointPrecision)) {
+        par <- rep$par.fixed
+        V <- rep$cov.fixed    
+      } else {
+        par <- c(rep$par.fixed, rep$par.random)
+        V <- ginv(rep$jointPrecision)
+      }
+      
+      # Generate samples from MVN estimator distribution
+      post <- rmvn(n = n_post, mu = par, V = V)
+      
+      # Extract coefficients for observation parameters
+      post_coeff_fe <- post[, which(colnames(post) == "coeff_fe_obs")]
+      post_coeff_re <- post[, which(colnames(post) == "coeff_re_obs")]
+      
+      # Get observation parameters over rows of X_fe and X_re, for each 
+      # posterior sample of coeff_fe and coeff_re
+      post_obspar <- sapply(1:n_post, function(i) {
+        obs$par_all(X_fe = X_fe, X_re = X_re, 
+                    coeff_fe = post_coeff_fe[i,], 
+                    coeff_re = post_coeff_re[i,])
+      })
+      
+      # Get confidence intervals as quantiles of posterior parameters
+      alpha <- (1 - level)/2
+      CI <- t(apply(post_obspar, 1, quantile, probs = c(alpha, 1 - alpha)))
+      
+      # Format arrays for lower and upper bounds, with one slice for each 
+      # time step, one row for each observation parameter, and one column 
+      # for each state.
+      low <- array(CI[,1], dim = c(n_states, n_par, n_grid))
+      upp <- array(CI[,2], dim = c(n_states, n_par, n_grid))
+      
+      # Hacky way to get parameter names
+      par_names <- names(unlist(rapply(
+        self$obs()$w2n(post_obspar[1,]), function(v) v[1])))
+      
+      # Set dimension names for rows and columns
+      dimnames(low) <- list(paste("state", 1:n_states), par_names, NULL)
+      dimnames(upp) <- list(paste("state", 1:n_states), par_names, NULL)
+      
+      # Transpose each slice
+      low <- aperm(low, perm = c(2, 1, 3))
+      upp <- aperm(upp, perm = c(2, 1, 3))
+      
+      return(list(low = low, upp = upp))
+    },
+    
     #' @description Simulate from hidden Markov model
     #' 
     #' @param n Number of time steps to simulate
@@ -389,7 +548,7 @@ Hmm <- R6Class(
       
       # Number of states
       n_states <- self$hidden()$nstates()
-
+      
       # Simulate state process      
       S <- self$hidden()$simulate(n = n, data = self$obs()$data()$data(), 
                                   new_data = data)
@@ -398,7 +557,7 @@ Hmm <- R6Class(
       mats_obs <- self$obs()$make_mat(new_data = data)
       par_obs <- self$obs()$par_all(X_fe = mats_obs$X_fe, X_re = mats_obs$X_re,
                                     full_names = FALSE)
-
+      
       # Simulate observation process
       obs_dists <- self$obs()$dists()
       obs_all <- data.frame(state = S)
@@ -553,14 +712,14 @@ Hmm <- R6Class(
       colnames(df) <- c("var", "state", "prob")
       levels(df$state) <- paste("State", 1:n_states)
       df$var <- rep(mats$new_data[, var], n_states)
-
+      
       # Create caption with values of other (fixed) covariates      
       plot_txt <- NULL
       if(ncol(mats$new_data) > 1) {
         other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var),
                                     drop = FALSE]
         plot_txt <- paste(colnames(other_covs), "=", round(other_covs, 2), 
-              collapse = ", ")
+                          collapse = ", ")
       }
       
       # Create plot
