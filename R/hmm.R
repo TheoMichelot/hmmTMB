@@ -444,6 +444,83 @@ Hmm <- R6Class(
       return(list(low = low, upp = upp))
     },
     
+    #' @description Confidence intervals for stationary distribution
+    #'
+    #' @param X_fe Design matrix for fixed effects, as returned
+    #' by \code{make_mat}
+    #' @param X_re Design matrix for random effects, as returned
+    #' by \code{make_mat}
+    #' @param level Confidence level (default: 0.95 for 95\% confidence 
+    #' intervals)
+    #' @param n_post Number of posterior samples from which the confidence
+    #' intervals are calculated. Larger values will reduce approximation
+    #' error, but increase computation time. Defaults to 1000.
+    #' 
+    #' @details This method generates confidence intervals by simulation.
+    #' That is, it generates \code{n_post} posterior samples of 
+    #' the estimated parameters from a multivariate normal distribution,
+    #' where the mean is the vector of estimates and the covariance matrix 
+    #' is provided by TMB. Then, stationary state probabilities are derived 
+    #' for each set of posterior parameter values, and confidence intervals
+    #' are obtained as quantiles of the posterior simulated stationary state
+    #' probabilities.
+    #' 
+    #' @return List with elements:
+    #' \itemize{
+    #'   \item{\code{low}}{Matrix of lower bounds of confidence intervals,
+    #'   with one row for each time step, and one column for each state.}
+    #'   \item{\code{upp}}{Matrix of upper bounds of confidence intervals,
+    #'   with one row for each time step, and one column for each state.}
+    #' }
+    CI_statdist = function(X_fe, X_re, level = 0.95, n_post = 1e3) {
+      # Number of states
+      n_states <- self$hidden()$nstates()
+      # Number of time steps
+      n_grid <- nrow(X_fe)/(n_states*(n_states-1))
+      
+      # Get parameter estimates and covariance matrix
+      rep <- self$tmb_rep()
+      if(is.null(rep$jointPrecision)) {
+        par <- rep$par.fixed
+        V <- rep$cov.fixed    
+      } else {
+        par <- c(rep$par.fixed, rep$par.random)
+        V <- ginv(rep$jointPrecision)
+      }
+      
+      # Generate samples from MVN estimator distribution
+      post <- rmvn(n = n_post, mu = par, V = V)
+      
+      # Extract coefficients for transition probabilities
+      post_coeff_fe <- post[, which(colnames(post) == "coeff_fe_hid")]
+      post_coeff_re <- post[, which(colnames(post) == "coeff_re_hid")]
+      
+      # Get stationary distributions over rows of X_fe and X_re, for each 
+      # posterior sample of coeff_fe and coeff_re
+      post_statdist <- sapply(1:n_post, function(i) {
+        tpms <- hid$tpm_all(X_fe = X_fe, X_re = X_re, 
+                            coeff_fe = post_coeff_fe[i,], 
+                            coeff_re = post_coeff_re[i,])
+        
+        # For each transition matrix, get corresponding stationary distribution
+        stat_dists <- apply(tpms, 3, function(tpm)
+          solve(t(diag(n_states) - tpm + 1), rep(1, n_states)))
+        stat_dists <- t(stat_dists)
+        return(stat_dists)
+      })
+      
+      # Get confidence intervals as quantiles of posterior tpms
+      alpha <- (1 - level)/2
+      CI <- t(apply(post_statdist, 1, quantile, probs = c(alpha, 1 - alpha)))
+      
+      # Format arrays for lower and upper bounds, where each layer is
+      # a transition probability matrix
+      low <- matrix(CI[,1], nrow = n_grid, ncol = n_states)
+      upp <- matrix(CI[,2], nrow = n_grid, ncol = n_states)
+      
+      return(list(low = low, upp = upp))
+    },
+    
     #' @description Confidence intervals for observation parameters
     #'
     #' @param X_fe Design matrix for fixed effects, as returned
@@ -524,7 +601,7 @@ Hmm <- R6Class(
       # Set dimension names for rows and columns
       dimnames(low) <- list(par_names, paste("state", 1:n_states), NULL)
       dimnames(upp) <- list(par_names, paste("state", 1:n_states), NULL)
-
+      
       return(list(low = low, upp = upp))
     },
     
@@ -756,7 +833,7 @@ Hmm <- R6Class(
       obs_par <- self$obs()$par_all(X_fe = mats$X_fe, X_re = mats$X_re)
       # Get confidence intervals over covariate grid
       CIs <- self$CI_obspar(X_fe = mats$X_fe, X_re = mats$X_re)
-
+      
       # Data frame for plot
       df <- as.data.frame.table(obs_par)
       colnames(df) <- c("par", "state", "var", "val")
