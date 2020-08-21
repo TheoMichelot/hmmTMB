@@ -414,7 +414,7 @@ Hmm <- R6Class(
         V <- rep$cov.fixed    
       } else {
         par <- c(rep$par.fixed, rep$par.random)
-        V <- ginv(rep$jointPrecision)
+        V <- solve(rep$jointPrecision)
       }
       
       # Generate samples from MVN estimator distribution
@@ -485,7 +485,7 @@ Hmm <- R6Class(
         V <- rep$cov.fixed    
       } else {
         par <- c(rep$par.fixed, rep$par.random)
-        V <- ginv(rep$jointPrecision)
+        V <- solve(rep$jointPrecision)
       }
       
       # Generate samples from MVN estimator distribution
@@ -566,7 +566,7 @@ Hmm <- R6Class(
         V <- rep$cov.fixed    
       } else {
         par <- c(rep$par.fixed, rep$par.random)
-        V <- ginv(rep$jointPrecision)
+        V <- solve(rep$jointPrecision)
       }
       
       # Generate samples from MVN estimator distribution
@@ -744,9 +744,17 @@ Hmm <- R6Class(
       # Create caption with values of other (fixed) covariates      
       plot_txt <- NULL
       if(ncol(mats$new_data) > 1) {
-        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var),
+        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var), 
                                     drop = FALSE]
-        plot_txt <- paste(colnames(other_covs), "=", round(other_covs, 2), 
+        
+        # Round numeric values, and transform factors to strings
+        num_ind <- sapply(other_covs, is.numeric)
+        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
+          round(cov, 2))
+        fac_ind <- sapply(other_covs, is.factor)
+        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
+        
+        plot_txt <- paste(colnames(other_covs), "=", other_covs, 
                           collapse = ", ")
       }
       
@@ -801,9 +809,17 @@ Hmm <- R6Class(
       # Create caption with values of other (fixed) covariates      
       plot_txt <- NULL
       if(ncol(mats$new_data) > 1) {
-        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var),
+        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var), 
                                     drop = FALSE]
-        plot_txt <- paste(colnames(other_covs), "=", round(other_covs, 2), 
+        
+        # Round numeric values, and transform factors to strings
+        num_ind <- sapply(other_covs, is.numeric)
+        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
+          round(cov, 2))
+        fac_ind <- sapply(other_covs, is.factor)
+        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
+        
+        plot_txt <- paste(colnames(other_covs), "=", other_covs, 
                           collapse = ", ")
       }
       
@@ -853,7 +869,15 @@ Hmm <- R6Class(
       if(ncol(mats$new_data) > 1) {
         other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var), 
                                     drop = FALSE]
-        plot_txt <- paste(colnames(other_covs), "=", round(other_covs, 2), 
+        
+        # Round numeric values, and transform factors to strings
+        num_ind <- sapply(other_covs, is.numeric)
+        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
+          round(cov, 2))
+        fac_ind <- sapply(other_covs, is.factor)
+        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
+        
+        plot_txt <- paste(colnames(other_covs), "=", other_covs, 
                           collapse = ", ")
       }
       
