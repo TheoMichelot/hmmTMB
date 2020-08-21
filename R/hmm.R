@@ -514,21 +514,17 @@ Hmm <- R6Class(
       # Format arrays for lower and upper bounds, with one slice for each 
       # time step, one row for each observation parameter, and one column 
       # for each state.
-      low <- array(CI[,1], dim = c(n_states, n_par, n_grid))
-      upp <- array(CI[,2], dim = c(n_states, n_par, n_grid))
+      low <- array(CI[,1], dim = c(n_par, n_states, n_grid))
+      upp <- array(CI[,2], dim = c(n_par, n_states, n_grid))
       
       # Hacky way to get parameter names
       par_names <- names(unlist(rapply(
         self$obs()$w2n(post_obspar[1,]), function(v) v[1])))
       
       # Set dimension names for rows and columns
-      dimnames(low) <- list(paste("state", 1:n_states), par_names, NULL)
-      dimnames(upp) <- list(paste("state", 1:n_states), par_names, NULL)
-      
-      # Transpose each slice
-      low <- aperm(low, perm = c(2, 1, 3))
-      upp <- aperm(upp, perm = c(2, 1, 3))
-      
+      dimnames(low) <- list(par_names, paste("state", 1:n_states), NULL)
+      dimnames(upp) <- list(par_names, paste("state", 1:n_states), NULL)
+
       return(list(low = low, upp = upp))
     },
     
@@ -650,11 +646,14 @@ Hmm <- R6Class(
       # Number of states
       n_states <- self$hidden()$nstates()
       
-      # Create design matrices
-      mats <- self$hidden()$make_mat_grid(var = var, 
-                                          data = self$obs()$data()$data(), 
-                                          covs = covs)
+      # Create design matrices for grid of "var" values
+      mats <- self$hidden()$make_mat_grid(
+        var = var, data = self$obs()$data()$data(), 
+        covs = covs, n_grid = 50)
+      # Get transition probability matrices
       tpms <- self$hidden()$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
+      # Get confidence intervals
+      CIs <- self$CI_tpm(X_fe = mats$X_fe, X_re = mats$X_re)
       
       # Data frame for plot
       df <- as.data.frame.table(tpms)
@@ -662,6 +661,8 @@ Hmm <- R6Class(
       levels(df$from) <- paste("State", 1:n_states)
       levels(df$to) <- paste("State", 1:n_states)
       df$var <- rep(mats$new_data[, var], each = n_states * n_states)
+      df$low <- as.vector(CIs$low)
+      df$upp <- as.vector(CIs$upp)
       
       # Create caption with values of other (fixed) covariates      
       plot_txt <- NULL
@@ -673,7 +674,9 @@ Hmm <- R6Class(
       }
       
       # Create plot using facets
-      p <- ggplot(df, aes(var, prob)) + geom_line() + 
+      p <- ggplot(df, aes(var, prob)) + 
+        geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
+        geom_line() + 
         facet_wrap(c("from", "to"), 
                    strip.position = "left",
                    labeller = label_bquote("Pr("*.(from)*" -> "*.(to)*")")) +
@@ -701,10 +704,11 @@ Hmm <- R6Class(
       # Number of states
       n_states <- self$hidden()$nstates()
       
-      # Create design matrices
-      mats <- self$hidden()$make_mat_grid(var = var, 
-                                          data = self$obs()$data()$data(), 
-                                          covs = covs)
+      # Create design matrices for grid of "var" values
+      mats <- self$hidden()$make_mat_grid(
+        var = var, data = self$obs()$data()$data(), 
+        covs = covs, n_grid = 50)
+      # Get stationary distributions
       stat_dists <- self$hidden()$stat_dists(X_fe = mats$X_fe, X_re = mats$X_re)
       
       # Data frame for plot
@@ -746,15 +750,20 @@ Hmm <- R6Class(
       # Number of states
       n_states <- self$hidden()$nstates()
       
-      # Create design matrices
-      mats <- self$obs()$make_mat_grid(var = var, covs = covs)
+      # Create design matrices for grid of "var" values
+      mats <- self$obs()$make_mat_grid(var = var, covs = covs, n_grid = 50)
+      # Get observation parameters over covariate grid
       obs_par <- self$obs()$par_all(X_fe = mats$X_fe, X_re = mats$X_re)
-      
+      # Get confidence intervals over covariate grid
+      CIs <- self$CI_obspar(X_fe = mats$X_fe, X_re = mats$X_re)
+
       # Data frame for plot
       df <- as.data.frame.table(obs_par)
       colnames(df) <- c("par", "state", "var", "val")
       levels(df$state) <- paste("State", 1:n_states)
       df$var <- rep(mats$new_data[, var], each = nrow(df)/nrow(mats$new_data))
+      df$low <- as.vector(CIs$low)
+      df$upp <- as.vector(CIs$upp)
       
       # Create caption with values of other (fixed) covariates      
       plot_txt <- NULL
@@ -767,6 +776,7 @@ Hmm <- R6Class(
       
       # Create plot
       p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
+        geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
         geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
         facet_wrap(c("par"), scales = "free_y",
                    strip.position = "left",
