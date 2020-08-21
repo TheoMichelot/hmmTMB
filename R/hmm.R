@@ -809,8 +809,9 @@ Hmm <- R6Class(
       
       # Create plot
       p <- ggplot(df, aes(var, prob, group = state, col = state)) +
-        geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
+        geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
         geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
+        scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
         xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
         theme_light() + 
         coord_cartesian(ylim = c(0, 1))
@@ -858,8 +859,9 @@ Hmm <- R6Class(
       
       # Create plot
       p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
-        geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
+        geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
         geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
+        scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
         facet_wrap(c("par"), scales = "free_y",
                    strip.position = "left",
                    labeller = label_bquote(.(as.character(par)))) +
