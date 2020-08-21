@@ -787,12 +787,16 @@ Hmm <- R6Class(
         covs = covs, n_grid = 50)
       # Get stationary distributions
       stat_dists <- self$hidden()$stat_dists(X_fe = mats$X_fe, X_re = mats$X_re)
+      # Get confidence intervals
+      CIs <- self$CI_statdist(X_fe = mats$X_fe, X_re = mats$X_re)
       
       # Data frame for plot
       df <- as.data.frame.table(stat_dists)
       colnames(df) <- c("var", "state", "prob")
       levels(df$state) <- paste("State", 1:n_states)
       df$var <- rep(mats$new_data[, var], n_states)
+      df$low <- as.vector(CIs$low)
+      df$upp <- as.vector(CIs$upp)
       
       # Create caption with values of other (fixed) covariates      
       plot_txt <- NULL
@@ -804,7 +808,8 @@ Hmm <- R6Class(
       }
       
       # Create plot
-      p <- ggplot(df, aes(var, prob, group = state, col = state)) + 
+      p <- ggplot(df, aes(var, prob, group = state, col = state)) +
+        geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
         geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
         xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
         theme_light() + 
