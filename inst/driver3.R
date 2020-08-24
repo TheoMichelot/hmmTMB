@@ -58,7 +58,7 @@ simHMM <- function(nind, n, shape_par, scale_par, lambda_par, lambda_re, tpm, X)
     states <- c(states, s)
   }
   
-  return(list(data = cbind(obs, X), states = states))
+  return(list(data = cbind(obs, X), states = states, lambda = lambda))
 }
 
 # Simulation parameters
@@ -113,6 +113,15 @@ mod <- Hmm$new(obs, hid)
 
 # Fit model
 mod$fit(silent = FALSE)
+
+
+var <- "x1"
+m <- obs$make_mat_grid(var = var, n_grid = 10)
+ci <- mod$CI_obspar(X_fe = m$X_fe, X_re = m$X_re)
+par <- obs$par_all(X_fe = m$X_fe, X_re = m$X_re)
+
+
+mod$plot_obspar(var = var)
 
 # Unpack parameters
 coeff_fe <- obs$coeff_fe()
