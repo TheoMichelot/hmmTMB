@@ -280,14 +280,6 @@ ggplot(sim_data, aes(x, y, col = factor(state), group = NA)) +
 
 ### Higher priority
 
- - simulation function, to simulate either from a fitted model or based
- on parameter values given as input. Method of Hmm class?
- 
- - confidence intervals
-    + on natural parameters
-    + on transformed quantities (e.g. covariate-dependent parameters)
-    + run simulation experiments to check coverage
-
  - state probabilities (local decoding)
 
 ### Lower priority (easy?)
