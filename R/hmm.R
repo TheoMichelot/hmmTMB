@@ -605,6 +605,121 @@ Hmm <- R6Class(
       return(list(low = low, upp = upp))
     },
     
+    #' @description Predict transition probabilities
+    #' 
+    #' @param new_data Data frame containing covariate values for which the
+    #' transition probabilities should be predicted.
+    #' @param CI Logical argument: should the function return confidence
+    #' intervals for the parameters? Default: FALSE.
+    #' @param level Confidence level (default: 0.95 for 95\% confidence 
+    #' intervals) if \code{CI = TRUE}.
+    #' @param n_post Number of posterior samples from which the confidence
+    #' intervals are calculated if \code{CI = TRUE}. Larger values will reduce 
+    #' approximation error, but increase computation time. Defaults to 1000.
+    #' 
+    #' @return If \code{CI = FALSE}, returns an array of point estimates, 
+    #' where each slice is a transition probability matrix corresponding 
+    #' to one row of \code{new_data}. If \code{CI = TRUE}, returns a list 
+    #' with elements:
+    #' \itemize{
+    #'   \item{\code{estimate}}{Array of point estimates, where each slice is
+    #'   a transition probability matrix corresponding to one row of \code{new_data}.}
+    #'   \item{\code{low}}{Array of lower bounds of confidence intervals,
+    #'   with same structure as \code{estimate}.}
+    #'   \item{\code{upp}}{Array of upper bounds of confidence intervals,
+    #'   with same structure as \code{estimate}.}
+    #' }
+    predict_tpm = function(new_data = NULL, CI = FALSE, level = 0.95, n_post = 1e3) {
+      # Are there covariates in the observation process model?
+      nocovs <- all(self$hidden()$formulas() == as.formula("~1"))
+      
+      # Check that new_data is provided if necessary, else create dummy dataframe
+      if(is.null(new_data)) {
+        if(nocovs) {
+          new_data <- data.frame(dummy = 1)
+        } else {
+          stop("'new_data' must be provided if there are covariates in the model")      
+        }
+      }
+      
+      # Model matrices for new_data  
+      mats <- self$hidden()$make_mat(data = dat$data(), new_data = new_data)
+      
+      # Transition probabilities
+      tpm <- self$hidden()$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
+      
+      if(CI) {
+        # Confidence intervals
+        CIs <- self$CI_tpm(X_fe = mats$X_fe, X_re = mats$X_re,
+                           level = level, n_post = n_post)
+        
+        # Return point estimates and confidence interval bounds  
+        preds <- list(estimate = tpm, low = CIs$low, upp = CIs$upp)
+      } else {
+        preds <- tpm
+      }
+      
+      return(preds)
+    },
+    
+    #' @description Predict observation parameters
+    #' 
+    #' @param new_data Data frame containing covariate values for which the
+    #' observation parameters should be predicted.
+    #' @param CI Logical argument: should the function return confidence
+    #' intervals for the parameters? Default: FALSE.
+    #' @param level Confidence level (default: 0.95 for 95\% confidence 
+    #' intervals) if \code{CI = TRUE}.
+    #' @param n_post Number of posterior samples from which the confidence
+    #' intervals are calculated if \code{CI = TRUE}. Larger values will reduce 
+    #' approximation error, but increase computation time. Defaults to 1000.
+    #' 
+    #' @return If \code{CI = FALSE}, returns an array of point estimates, 
+    #' with one slice for each row of \code{new_data}, one row for each 
+    #' observation parameter, and one column for each state. If 
+    #' \code{CI = TRUE}, returns a list with elements:
+    #' \itemize{
+    #'   \item{\code{estimate}}{Array of point estimates, with one slice for 
+    #'   each row of \code{new_data}, one row for each observation 
+    #'   parameter, and one column for each state.}
+    #'   \item{\code{low}}{Array of lower bounds of confidence intervals,
+    #'   with same structure as \code{estimate}.}
+    #'   \item{\code{upp}}{Array of upper bounds of confidence intervals,
+    #'   with same structure as \code{estimate}.}
+    #' }
+    predict_obspar = function(new_data = NULL, CI = FALSE, level = 0.95, n_post = 1e3) {
+      # Are there covariates in the observation process model?
+      nocovs <- all(unlist(self$obs()$formulas()) == as.formula("~1"))
+      
+      # Check that new_data is provided if necessary, else create dummy dataframe
+      if(is.null(new_data)) {
+        if(nocovs) {
+          new_data <- data.frame(dummy = 1)
+        } else {
+          stop("'new_data' must be provided if there are covariates in the model")      
+        }
+      }
+      
+      # Model matrices for new_data
+      mats <- self$obs()$make_mat(new_data = new_data)
+
+      # Observation parameters
+      par <- self$obs()$par_all(X_fe = mats$X_fe, X_re = mats$X_re)
+      
+      if(CI) {
+        # Confidence intervals
+        CIs <- self$CI_obspar(X_fe = mats$X_fe, X_re = mats$X_re, 
+                              level = level, n_post = n_post)
+
+        # Return point estimates and confidence interval bounds        
+        preds <- list(estimate = par, low = CIs$low, upp = CIs$upp)
+      } else {
+        preds <- par
+      }
+      
+      return(preds)
+    },
+    
     #' @description Simulate from hidden Markov model
     #' 
     #' @param n Number of time steps to simulate
