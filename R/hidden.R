@@ -422,8 +422,3 @@ MarkovChain <- R6Class(
     
   )
 )
-
-
-
-
-

@@ -11,6 +11,11 @@ R6 class for HMM observation model
 \details{
 Contains the data, distributions, parameters, and formulas for
 the observation model from a hidden Markov model.
+
+This function transforms the smoothness parameter of
+each smooth term into a standard deviation, given by 
+SD = 1/sqrt(lambda). It is particularly helpful to get the
+standard deviations of independent normal random effects.
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -20,13 +25,17 @@ the observation model from a hidden Markov model.
 \item \href{#method-dists}{\code{Observation$dists()}}
 \item \href{#method-nstates}{\code{Observation$nstates()}}
 \item \href{#method-par}{\code{Observation$par()}}
-\item \href{#method-wpar}{\code{Observation$wpar()}}
-\item \href{#method-wpar_re}{\code{Observation$wpar_re()}}
+\item \href{#method-coeff_fe}{\code{Observation$coeff_fe()}}
+\item \href{#method-coeff_re}{\code{Observation$coeff_re()}}
+\item \href{#method-lambda}{\code{Observation$lambda()}}
+\item \href{#method-vcomp}{\code{Observation$vcomp()}}
 \item \href{#method-formulas}{\code{Observation$formulas()}}
+\item \href{#method-terms}{\code{Observation$terms()}}
 \item \href{#method-obs_var}{\code{Observation$obs_var()}}
 \item \href{#method-update_par}{\code{Observation$update_par()}}
-\item \href{#method-update_wpar}{\code{Observation$update_wpar()}}
-\item \href{#method-update_wpar_re}{\code{Observation$update_wpar_re()}}
+\item \href{#method-update_coeff_fe}{\code{Observation$update_coeff_fe()}}
+\item \href{#method-update_coeff_re}{\code{Observation$update_coeff_re()}}
+\item \href{#method-update_lambda}{\code{Observation$update_lambda()}}
 \item \href{#method-make_mat}{\code{Observation$make_mat()}}
 \item \href{#method-make_mat_grid}{\code{Observation$make_mat_grid()}}
 \item \href{#method-par_all}{\code{Observation$par_all()}}
@@ -34,6 +43,7 @@ the observation model from a hidden Markov model.
 \item \href{#method-n2w}{\code{Observation$n2w()}}
 \item \href{#method-w2n}{\code{Observation$w2n()}}
 \item \href{#method-plot_dist}{\code{Observation$plot_dist()}}
+\item \href{#method-formulation}{\code{Observation$formulation()}}
 \item \href{#method-clone}{\code{Observation$clone()}}
 }
 }
@@ -48,8 +58,8 @@ Create new Observation object
   dists,
   n_states,
   par = NULL,
-  wpar = NULL,
-  wpar_re = NULL,
+  coeff_fe = NULL,
+  coeff_re = NULL,
   formulas = NULL
 )}\if{html}{\out{</div>}}
 }
@@ -65,9 +75,9 @@ Create new Observation object
 
 \item{\code{par}}{List of observation parameters (for covariate-free model)}
 
-\item{\code{wpar}}{Vector of fixed effect parameters on working scale}
+\item{\code{coeff_fe}}{Vector of fixed effect parameters on working scale}
 
-\item{\code{wpar_re}}{Vector of random effect parameters. Defaults to a
+\item{\code{coeff_re}}{Vector of random effect parameters. Defaults to a
 vector of zeros if not provided.}
 
 \item{\code{formulas}}{List of formulas for observation parameters}
@@ -119,22 +129,42 @@ Parameters on natural scale
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-wpar"></a>}}
-\if{latex}{\out{\hypertarget{method-wpar}{}}}
-\subsection{Method \code{wpar()}}{
+\if{html}{\out{<a id="method-coeff_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-coeff_fe}{}}}
+\subsection{Method \code{coeff_fe()}}{
 Fixed effect parameters on working scale
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$wpar()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$coeff_fe()}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-wpar_re"></a>}}
-\if{latex}{\out{\hypertarget{method-wpar_re}{}}}
-\subsection{Method \code{wpar_re()}}{
+\if{html}{\out{<a id="method-coeff_re"></a>}}
+\if{latex}{\out{\hypertarget{method-coeff_re}{}}}
+\subsection{Method \code{coeff_re()}}{
 Random effect parameters
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$wpar_re()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$coeff_re()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-lambda"></a>}}
+\if{latex}{\out{\hypertarget{method-lambda}{}}}
+\subsection{Method \code{lambda()}}{
+Smoothness parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$lambda()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-vcomp"></a>}}
+\if{latex}{\out{\hypertarget{method-vcomp}{}}}
+\subsection{Method \code{vcomp()}}{
+Variance components of smooth terms
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$vcomp()}\if{html}{\out{</div>}}
 }
 
 }
@@ -145,6 +175,16 @@ Random effect parameters
 List of model formulas for observation model
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$formulas()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-terms"></a>}}
+\if{latex}{\out{\hypertarget{method-terms}{}}}
+\subsection{Method \code{terms()}}{
+Terms of model formulas
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$terms()}\if{html}{\out{</div>}}
 }
 
 }
@@ -163,6 +203,10 @@ Data frame of response variables
 \if{latex}{\out{\hypertarget{method-update_par}{}}}
 \subsection{Method \code{update_par()}}{
 Update parameters
+
+Updates the 'par' attribute to the list passed as input,
+and updates the intercept elements of 'coeff_fe' using
+the list passed as input
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$update_par(par)}\if{html}{\out{</div>}}
 }
@@ -176,35 +220,54 @@ Update parameters
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_wpar"></a>}}
-\if{latex}{\out{\hypertarget{method-update_wpar}{}}}
-\subsection{Method \code{update_wpar()}}{
-Update fixed effect parameters on working scale
+\if{html}{\out{<a id="method-update_coeff_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-update_coeff_fe}{}}}
+\subsection{Method \code{update_coeff_fe()}}{
+Update coefficients for fixed effect parameters
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_wpar(wpar)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$update_coeff_fe(coeff_fe)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{wpar}}{New vector of fixed effect parameters on working scale}
+\item{\code{coeff_fe}}{New vector of coefficients for fixed effect 
+parameters}
 }
 \if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_wpar_re"></a>}}
-\if{latex}{\out{\hypertarget{method-update_wpar_re}{}}}
-\subsection{Method \code{update_wpar_re()}}{
+\if{html}{\out{<a id="method-update_coeff_re"></a>}}
+\if{latex}{\out{\hypertarget{method-update_coeff_re}{}}}
+\subsection{Method \code{update_coeff_re()}}{
 Update random effect parameters
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_wpar_re(wpar_re)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$update_coeff_re(coeff_re)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{wpar_re}}{New vector og random effect parameters}
+\item{\code{coeff_re}}{New vector of coefficients for random effect 
+parameters}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-update_lambda"></a>}}
+\if{latex}{\out{\hypertarget{method-update_lambda}{}}}
+\subsection{Method \code{update_lambda()}}{
+Update smoothness parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$update_lambda(lambda)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{lambda}}{New smoothness parameter vector}
 }
 \if{html}{\out{</div>}}
 }
@@ -243,7 +306,7 @@ Design matrices for grid of covariates
 \if{latex}{\out{\hypertarget{method-make_mat_grid}{}}}
 \subsection{Method \code{make_mat_grid()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$make_mat_grid(var, covs = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$make_mat_grid(var, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -255,6 +318,8 @@ Design matrices for grid of covariates
 for each covariate, giving the values that should be used. If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
+
+\item{\code{n_grid}}{Grid size (number of points). Default: 1000.}
 }
 \if{html}{\out{</div>}}
 }
@@ -269,7 +334,13 @@ plus a data frame of covariates values.
 \subsection{Method \code{par_all()}}{
 Get observation parameters from design matrices
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$par_all(X_fe, X_re, full_names = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$par_all(
+  X_fe,
+  X_re,
+  coeff_fe = NULL,
+  coeff_re = NULL,
+  full_names = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -280,6 +351,14 @@ by \code{make_mat}}
 
 \item{\code{X_re}}{Design matrix for random effects, as returned
 by \code{make_mat}}
+
+\item{\code{coeff_fe}}{Optional vector of coefficients for fixed effect
+parameters. If this isn't provided, the model parameters
+are used.}
+
+\item{\code{coeff_re}}{Optional vector of coefficients for random 
+effect parameters. If this isn't provided, the model parameters 
+are used.}
 
 \item{\code{full_names}}{Logical. If TRUE, the rows of the output
 are named in the format "variable.parameter" (default). If
@@ -343,13 +422,13 @@ Vector of parameters on working scale
 \subsection{Method \code{w2n()}}{
 Working to natural parameter transformation
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$w2n(wpar)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$w2n(coeff_fe)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{wpar}}{Vector of parameters on working scale}
+\item{\code{coeff_fe}}{Vector of parameters on working scale}
 }
 \if{html}{\out{</div>}}
 }
@@ -392,6 +471,16 @@ proportion of time spent in the different states.}
 \subsection{Returns}{
 A ggplot object
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-formulation"></a>}}
+\if{latex}{\out{\hypertarget{method-formulation}{}}}
+\subsection{Method \code{formulation()}}{
+Print model formulation
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$formulation()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
