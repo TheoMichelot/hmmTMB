@@ -126,9 +126,9 @@ Hmm <- R6Class(
       self$tmb_obj()$fn(par)
     },
     
-    #################################
-    ## Model fitting and inference ##
-    #################################
+    ###################
+    ## Model fitting ##
+    ###################
     #' @description TMB setup
     #' 
     #' This creates an attribute \code{tmb_obj}, which can be used to 
@@ -273,6 +273,9 @@ Hmm <- R6Class(
       }
     },
     
+    ######################
+    ## State estimation ##
+    ######################
     #' @description Viterbi algorithm
     #' 
     #' @return Most likely state sequence
@@ -344,6 +347,9 @@ Hmm <- R6Class(
       return(all_states)
     },
     
+    ################################
+    ## Uncertainty quantification ##
+    ################################
     #' @description Confidence intervals for model parameters on the working scale 
     #' 
     #' These are Wald confidence intervals, obtained from the standard errors 
@@ -605,6 +611,9 @@ Hmm <- R6Class(
       return(list(low = low, upp = upp))
     },
     
+    ##########################
+    ## Parameter prediction ##
+    ##########################
     #' @description Predict transition probabilities
     #' 
     #' @param new_data Data frame containing covariate values for which the
@@ -721,6 +730,9 @@ Hmm <- R6Class(
       return(preds)
     },
     
+    ################
+    ## Simulation ##
+    ################
     #' @description Simulate from hidden Markov model
     #' 
     #' @param n Number of time steps to simulate
