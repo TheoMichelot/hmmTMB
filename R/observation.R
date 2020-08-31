@@ -460,7 +460,9 @@ Observation <- R6Class(
     
     #' @description Print model formulation
     formulation = function() {
-      cat("## Observation model:\n")
+      cat("#######################\n")
+      cat("## Observation model ##\n")
+      cat("#######################\n")
       # List of distribution names
       d_list <- lapply(self$dists(), function(d) d$name())
       # List of parameter names
@@ -478,7 +480,7 @@ Observation <- R6Class(
       # Loop over observed variables
       for(i in seq_along(d_list)) {
         # Print variable distribution
-        cat(paste0("# ", names(d_list)[i], " ~ ", d_list[[i]], "(", 
+        cat(paste0("+ ", names(d_list)[i], " ~ ", d_list[[i]], "(", 
                    paste0(p_list[[i]], collapse = ", "), ")"), "\n")
         # Print parameter formulas
         cat(s_list[[i]], "\n")

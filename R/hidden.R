@@ -378,13 +378,16 @@ MarkovChain <- R6Class(
     
     #' @description Print model formulation
     formulation = function() {
-      cat("## State process model:\n")
+      cat("#########################\n")
+      cat("## State process model ##\n")
+      cat("#########################\n")
       # Data frame of formulas on transition probabilities
       hid_forms <- as.data.frame(self$structure())
       n_states <- self$nstates()
       rownames(hid_forms) <- paste0("state ", 1:n_states)
       colnames(hid_forms) <- paste0("state ", 1:n_states)
       print(hid_forms)
+      cat("\n")
     }
   ),
   

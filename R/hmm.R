@@ -240,6 +240,8 @@ Hmm <- R6Class(
     #' 
     #' @param silent Logical. If TRUE, all tracing outputs are hidden (default).
     fit = function(silent = TRUE) {
+      self$formulation()
+      
       # Setup if necessary
       if(is.null(private$tmb_obj_)) {
         self$setup(silent = silent)
