@@ -643,7 +643,8 @@ Hmm <- R6Class(
       }
       
       # Model matrices for new_data  
-      mats <- self$hidden()$make_mat(data = dat$data(), new_data = new_data)
+      mats <- self$hidden()$make_mat(data = self$obs()$data()$data(), 
+                                     new_data = new_data)
       
       # Transition probabilities
       tpm <- self$hidden()$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
