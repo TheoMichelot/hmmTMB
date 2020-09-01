@@ -86,10 +86,6 @@ HmmData <- R6Class(
       if(!is.data.frame(data)) {
         stop("'data' must be a data frame")
       }
-      
-      if(!is.numeric(interval) & !is.na(interval)) {
-        stop(paste("'interval' must be a numeric"))
-      }
     }
   )
 )
