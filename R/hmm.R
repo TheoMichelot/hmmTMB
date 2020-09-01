@@ -379,9 +379,18 @@ Hmm <- R6Class(
         par_list[[i]] + qnorm(1 - (1 - level)/2) * se_list[[i]]
       })
       
-      return(cbind(estimate = unlist(par_list),
-                   lower = unlist(lower),
-                   upper = unlist(upper)))
+      # Put estimates and CIs in matrix
+      CI_mat <- cbind(estimate = unlist(par_list), 
+                      lower = unlist(lower),
+                      upper = unlist(upper))
+      
+      # Remove parameters that were not estimated
+      na_ind <- which(is.na(CI_mat[,"lower"]))
+      if(length(na_ind) > 0) {
+        CI_mat <- CI_mat[-na_ind,]
+      }
+      
+      return(CI_mat)
     },
     
     #' @description Confidence intervals for transition probabilities
@@ -717,7 +726,7 @@ Hmm <- R6Class(
       
       # Model matrices for new_data
       mats <- self$obs()$make_mat(new_data = new_data)
-
+      
       # Observation parameters
       par <- self$obs()$par_all(X_fe = mats$X_fe, X_re = mats$X_re)
       
@@ -725,7 +734,7 @@ Hmm <- R6Class(
         # Confidence intervals
         CIs <- self$CI_obspar(X_fe = mats$X_fe, X_re = mats$X_re, 
                               level = level, n_post = n_post)
-
+        
         # Return point estimates and confidence interval bounds        
         preds <- list(estimate = par, low = CIs$low, upp = CIs$upp)
       } else {
