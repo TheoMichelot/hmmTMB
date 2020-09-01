@@ -1,0 +1,166 @@
+---
+title: "hmmTMB technical guide"
+author: "Théo Michelot, Richard Glennie"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_document
+vignette: >
+  %\VignetteIndexEntry{hmmTMB technical guide}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, error = FALSE, warning = FALSE,
+  comment = NA
+)
+```
+
+```{r load-package, echo = FALSE}
+library(hmmTMB)
+set.seed(342)
+```
+
+# Observation distribution
+
+Distributions for the observation process are created using the Dist class. To define a new distribution, we provide its name (as a string), its probability density/mass function (as a function), the random generator function, and the link functions for its parameters (as named lists of functions). For example, for the normal distribution, we have
+```{r dist-def}
+dist_norm <- Dist$new(
+  name = "norm", 
+  pdf = dnorm,
+  rng = rnorm,
+  link = list(mean = identity, sd = log),
+  invlink = list(mean = identity, sd = exp),
+  npar = 2
+)
+```
+
+The Poisson, gamma, normal, beta, and von Mises distributions are included in the package, and more will be implemented in the future.
+
+The functions n2w and w2n transform parameters of the observation distributions from the natural to the working scale and vice-versa. We can verify that applying the two functions successively returns the original parameter values:
+```{r norm-test}
+# List of parameters (on the natural scale)
+par1 <- list(mean = c(0, 5), sd = c(1, 10))
+
+# Transform to working scale
+wpar <- dist_norm$n2w(par1)
+wpar
+
+# Transform back to natural scale
+par2 <- dist_norm$w2n(wpar)
+par2
+```
+
+# HMM data
+
+Data objects are defined with the HmmData class. An object can be created from a data frame which includes one column for each observed variable and for each covariate. There are special column names: "ID" is used to identify the time series if several are provided, and "time" gives the times of observation. If the times of observations are provided, gaps are automatically filled with NAs to create a obtain a regular time grid.
+
+```{r create-data}
+# Create a dummy data set, with two time series
+times1 <- seq(as.POSIXct("2020/01/01 00:00:00"), by = "hour", length = 10)
+times2 <- seq(as.POSIXct("2020/02/01 00:00:00"), by = "hour", length = 10)
+data <- data.frame(ID = rep(c(1, 2), each = 10),
+                   x = rnorm(20), 
+                   time = c(times1, times2))
+
+# Remove a few rows to create gaps in the data
+data <- data[-c(2:3, 7, 15:18),]
+
+# Define HmmData object
+data_prep <- HmmData$new(data = data, interval = "hour")
+
+# The gaps have been filled
+data_prep$data()
+```
+
+# HMM observation model
+
+The class Observation encapsulates the model for the observed variables.
+
+```{r obs-create}
+# Create a dummy data set
+times <- seq(as.POSIXct("2020/01/01 00:00:00"), by = "hour", length = 100)
+data <- data.frame(ID = rep(1, 100),
+                   x = rnorm(100), 
+                   time = times)
+data_prep <- HmmData$new(data = data)
+
+# List of observation distributions
+dists <- list(x = dist_norm)
+
+# List of observation parameters
+par <- list(x = list(mean = c(0, 0), sd = c(1, 10)))
+
+# Number of states
+n_states <- 2
+
+# Create observation process object
+obs_process <- Observation$new(data = data_prep, dists = dists, 
+                               n_states = n_states, par = par)
+```
+
+The parameters on the working scale are calculated when the object is created:
+```{r obs-wpar}
+obs_process$coeff_fe()
+```
+
+The function plot_dist generates a histogram of the observations with the probability density (or mass) function of the specified distribution.
+```{r obs-plot}
+# Plot histogram and pdf for variable "x"
+obs_process$plot_dist(name = "x")
+```
+
+## User-specified observation distribution
+
+_Here we will need to explain how additional distributions can be added by users._
+
+## Future work
+
+### Higher priority
+
+ - prepare package for sharing:
+   + uniformize names/notation/..., e.g., captilization of class names
+   + improve class structure, e.g., groups of methods
+   + remove HmmData class if useless, or allow for data frame to be passed instead
+   + add comprehensive example(s) to vignette
+   + possibly split vignette into technical guide (for other devs) and vignette (for users)
+   + check that the code is commented well
+   + check that the documentation is adequate
+   + reduce code redundancy where possible (e.g., make_mat)
+
+ - additional observation distributions
+    + Weibull
+    + log-normal
+    + wrapped Cauchy
+    + Bernoulli...
+    
+### Lower priority (easy?)
+
+ - state probabilities (local decoding)
+
+ - pseudo-residuals
+
+ - allow for input of known states (semi-supervised learning)
+
+ - deal with NAs in covariates (linear interpolation? nearest value? error message?)
+
+ - stationary = TRUE/FALSE option in MarkovChain class
+ 
+### Lower priority (difficult?)
+
+ - AIC
+   
+ - zero inflation
+ 
+ - improve parametrisation of mean of circular distributions (avoid numerical issues around -pi and pi)
+ 
+ - allow for constraints on parameters
+    + inequalities, e.g. $\mu_1 < \mu_2$
+    + bounds, e.g. $-1 < \mu_1 < 1$ (using custom link function)
+    + fixed value, e.g. $\mu_1 = 0$ (using map)
+
+ - obtain starting values for complex models from simpler nested model (e.g. for smooth effects)
+
+ - method "update" similar to glmmTMB, to create a new model from an existing model?
