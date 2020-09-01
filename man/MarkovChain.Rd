@@ -75,7 +75,12 @@ and 0.1/(n_states - 1) for all other entries.) If the model has covariates,
 then \code{tpm0} is used to set the intercept parameters for the transition
 probabilities, and the other parameters are set to 0.}
 
-\item{\code{coeff_fe0}}{Initial parameters for fixed effects.}
+\item{\code{coeff_fe0}}{Initial coefficients for fixed effects parameters. If
+not provided, the intercepts are set using \code{tpm0}, and other 
+coefficients are set to 0.}
+
+\item{\code{coeff_re0}}{Initial coefficients for random effects parameters.
+Defaults to 0 if not provided.}
 
 \item{\code{data}}{HmmData object, needed if the model includes covariates}
 }

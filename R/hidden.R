@@ -22,7 +22,11 @@ MarkovChain <- R6Class(
     #' and 0.1/(n_states - 1) for all other entries.) If the model has covariates,
     #' then \code{tpm0} is used to set the intercept parameters for the transition
     #' probabilities, and the other parameters are set to 0.
-    #' @param coeff_fe0 Initial parameters for fixed effects. 
+    #' @param coeff_fe0 Initial coefficients for fixed effects parameters. If
+    #' not provided, the intercepts are set using \code{tpm0}, and other 
+    #' coefficients are set to 0.
+    #' @param coeff_re0 Initial coefficients for random effects parameters.
+    #' Defaults to 0 if not provided. 
     #' @param data HmmData object, needed if the model includes covariates
     #' 
     #' @return A new MarkovChain object
@@ -421,9 +425,8 @@ MarkovChain <- R6Class(
       return(tpm)
     },
     
-    #' @description Check arguments passed to constructor
-    #' 
-    #' For argument description, see constructor
+    # Check arguments passed to constructor
+    # (For argument description, see constructor)
     check_args = function(n_states, structure, tpm0, coeff_fe0, coeff_re0, data) {
       if(!is.null(n_states)) {
         if(!is.numeric(n_states) | n_states < 1) {

@@ -1048,9 +1048,8 @@ Hmm <- R6Class(
     tmb_rep_ = NULL,
     states_ = NULL,
     
-    #' @description Check arguments passed to constructor
-    #' 
-    #' For argument description, see constructor
+    # Check arguments passed to constructor
+    # (For argument description, see constructor)
     check_args = function(obs, hidden) {
       if(!inherits(obs, "Observation")) {
         stop("'obs' should be an Observation object")

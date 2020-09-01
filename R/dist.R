@@ -165,9 +165,8 @@ Dist <- R6Class(
     npar_ = NULL,
     code_ = NULL,
     
-    #' @description Check arguments passed to constructor
-    #' 
-    #' For argument description, see constructor
+    # Check arguments passed to constructor
+    # (For argument description, see constructor)
     check_args = function(name, pdf, rng, link, invlink, npar) {
       if(!is.character(name)) {
         stop("'name' must be a character string")

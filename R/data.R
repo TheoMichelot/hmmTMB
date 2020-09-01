@@ -80,9 +80,8 @@ HmmData <- R6Class(
   private = list(
     data_ = NULL,
     
-    #' @description Check arguments passed to constructor
-    #' 
-    #' For argument description, see constructor
+    # Check arguments passed to constructor
+    # (For argument description, see constructor)
     check_args = function(data, interval) {
       if(!is.data.frame(data)) {
         stop("'data' must be a data frame")

@@ -38,10 +38,10 @@ standard deviations of independent normal random effects.
 \item \href{#method-update_lambda}{\code{Observation$update_lambda()}}
 \item \href{#method-make_mat}{\code{Observation$make_mat()}}
 \item \href{#method-make_mat_grid}{\code{Observation$make_mat_grid()}}
-\item \href{#method-par_all}{\code{Observation$par_all()}}
-\item \href{#method-obs_probs}{\code{Observation$obs_probs()}}
 \item \href{#method-n2w}{\code{Observation$n2w()}}
 \item \href{#method-w2n}{\code{Observation$w2n()}}
+\item \href{#method-par_all}{\code{Observation$par_all()}}
+\item \href{#method-obs_probs}{\code{Observation$obs_probs()}}
 \item \href{#method-plot_dist}{\code{Observation$plot_dist()}}
 \item \href{#method-formulation}{\code{Observation$formulation()}}
 \item \href{#method-clone}{\code{Observation$clone()}}
@@ -329,6 +329,52 @@ plus a data frame of covariates values.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-n2w"></a>}}
+\if{latex}{\out{\hypertarget{method-n2w}{}}}
+\subsection{Method \code{n2w()}}{
+Natural to working parameter transformation
+
+This function applies the link functions of the distribution
+parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$n2w(par)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{par}}{List of parameters on natural scale}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Vector of parameters on working scale
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-w2n"></a>}}
+\if{latex}{\out{\hypertarget{method-w2n}{}}}
+\subsection{Method \code{w2n()}}{
+Working to natural parameter transformation
+
+This function applies the inverse link functions of the
+distribution parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$w2n(coeff_fe)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{coeff_fe}}{Vector of parameters on working scale}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+List of parameters on natural scale
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-par_all"></a>}}
 \if{latex}{\out{\hypertarget{method-par_all}{}}}
 \subsection{Method \code{par_all()}}{
@@ -394,46 +440,6 @@ Observation likelihoods
 \subsection{Returns}{
 Matrix of likelihoods of observations, with one row for each 
 time step, and one column for each state.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-n2w"></a>}}
-\if{latex}{\out{\hypertarget{method-n2w}{}}}
-\subsection{Method \code{n2w()}}{
-Natural to working parameter transformation
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$n2w(par)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{par}}{List of parameters on natural scale}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Vector of parameters on working scale
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-w2n"></a>}}
-\if{latex}{\out{\hypertarget{method-w2n}{}}}
-\subsection{Method \code{w2n()}}{
-Working to natural parameter transformation
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$w2n(coeff_fe)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{coeff_fe}}{Vector of parameters on working scale}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-List of parameters on natural scale
 }
 }
 \if{html}{\out{<hr>}}

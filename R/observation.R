@@ -516,9 +516,8 @@ Observation <- R6Class(
     formulas_ = NULL,
     terms_ = NULL,
     
-    #' @description Check arguments passed to constructor
-    #' 
-    #' For argument description, see constructor
+    # Check arguments passed to constructor
+    # (For argument description, see constructor)
     check_args = function(data, dists, n_states, par, coeff_fe, coeff_re, formulas) {
       if(!inherits(data, "HmmData")) {
         stop("'data' should be a HmmData object")
