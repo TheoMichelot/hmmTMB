@@ -28,8 +28,16 @@ Observation <- R6Class(
                          coeff_fe = coeff_fe, coeff_re = coeff_re, formulas = formulas)
       
       private$data_ <- data
-      private$dists_ <- dists
       private$nstates_ <- n_states
+      
+      # Define observation distributions
+      if(all(sapply(dists, is.character))) {
+        # If distributions passed as strings (i.e., names), get corresponding
+        # Dist objects
+        private$dists_ <- lapply(dists, function(name) dist_list[[name]])
+      } else {
+        private$dists_ <- dists        
+      }
       
       # Set formulas
       if(is.null(formulas)) {
@@ -349,8 +357,8 @@ Observation <- R6Class(
     #' 
     #' @return Vector of parameters on working scale
     n2w = function(par) {
-      coeff_fe <- lapply(1:length(self$dists()), 
-                         function(i) dists[[i]]$n2w(par[[i]]))
+      coeff_fe <- lapply(seq_along(self$dists()), 
+                         function(i) self$dists()[[i]]$n2w(par[[i]]))
       names(coeff_fe) <- names(par)
       coeff_fe <- unlist(coeff_fe)
       return(coeff_fe)
@@ -510,8 +518,13 @@ Observation <- R6Class(
         stop("'data' should be a HmmData object")
       }
       
-      if(!is.list(dists) | !all(sapply(dists, inherits, "Dist"))) {
-        stop("'dists' should be a list of Dist objects")
+      if(!is.list(dists)) {
+        stop("'dists' should be a list")
+      }
+      
+      if(!all(sapply(dists, inherits, "Dist")) & !all(sapply(dists, is.character))) {
+        stop(paste("Elements of 'dists' should all be either character strings",
+                   "(i.e., distribution names), or Dist objects"))
       }
       
       if(!all(names(dists) %in% colnames(data$data()))) {

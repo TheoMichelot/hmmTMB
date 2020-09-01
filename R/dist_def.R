@@ -63,3 +63,10 @@ dist_vm <- Dist$new(
                  kappa = exp),
   npar = 2
 )
+
+# List of distributions (used in Observation$new)
+dist_list <- list(pois = dist_pois,
+                  gamma = dist_gamma,
+                  norm = dist_norm,
+                  beta = dist_beta,
+                  vm = dist_vm)
