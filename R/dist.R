@@ -24,15 +24,29 @@ Dist <- R6Class(
     #' 
     #' @return A new Dist object
     initialize = function(name, pdf, rng, link, invlink, npar) {
+      # Check arguments
+      private$check_args(name = name, pdf = pdf, rng = rng, link = link, 
+                         invlink = invlink, npar = npar)
+      
+      # Define object attributes
       private$name_ <- name
       private$pdf_ <- pdf
       private$rng_ <- rng
       private$link_ <- link
       private$invlink_ <- invlink
       private$npar_ <- npar
+      
+      # List of distributions included in the package
       distnames <- c("pois", "norm", "gamma", "beta", "vm", "custom")
-      private$code_ <- which(distnames == name) - 1 # Starts at 0 for C++
+      if(!name %in% distnames) {
+        stop(paste0("'name' must be one of '", 
+                    paste(distnames, sep = "", collapse = "', '"), 
+                    "'"))
+      } else {
+        private$code_ <- which(distnames == name) - 1 # Starts at 0 for C++        
+      }
     },
+    
     
     ###############
     ## Accessors ##
@@ -149,6 +163,41 @@ Dist <- R6Class(
     link_ = NULL,
     invlink_ = NULL,
     npar_ = NULL,
-    code_ = NULL
+    code_ = NULL,
+    
+    #' @description Check arguments passed to constructor
+    #' 
+    #' For argument description, see constructor
+    check_args = function(name, pdf, rng, link, invlink, npar) {
+      if(!is.character(name)) {
+        stop("'name' must be a character string")
+      }
+      
+      if(!is.function(pdf)) {
+        stop(paste("'pdf' must be an R function for the probability density",
+                   "function of the distribution (and not the name of the function",
+                   "as a string)."))
+      }
+      
+      if(!is.function(rng)) {
+        stop(paste("'rng' must be an R function for the random number generator",
+                   "of the distribution (and not the name of the function",
+                   "as a string)."))
+      }
+      
+      if(length(link) != length(invlink) | !all(names(link) == names(invlink))) {
+        stop(paste("'link' and 'invlink' should be lists of the same length, and with", 
+                   "the same names (corresponding to the names of the distribution",
+                   "parameters"))
+      }
+      
+      if(!all(sapply(link, is.function)) | !all(sapply(invlink, is.function))) {
+        stop(paste("Elements of 'link' and 'invlink' should be R functions"))
+      }
+      
+      if(!is.numeric(npar) | npar < 1) {
+        stop("'npar' should be a numeric >= 1")
+      }
+    }
   )
 )

@@ -24,6 +24,9 @@ Observation <- R6Class(
     #' @return A new Observation object
     initialize = function(data, dists, n_states, par = NULL, coeff_fe = NULL, 
                           coeff_re = NULL, formulas = NULL) {
+      private$check_args(data = data, dists = dists, n_states = n_states, par = par,
+                         coeff_fe = coeff_fe, coeff_re = coeff_re, formulas = formulas)
+      
       private$data_ <- data
       private$dists_ <- dists
       private$nstates_ <- n_states
@@ -497,6 +500,64 @@ Observation <- R6Class(
     coeff_re_ = NULL,
     lambda_ = NULL,
     formulas_ = NULL,
-    terms_ = NULL
+    terms_ = NULL,
+    
+    #' @description Check arguments passed to constructor
+    #' 
+    #' For argument description, see constructor
+    check_args = function(data, dists, n_states, par, coeff_fe, coeff_re, formulas) {
+      if(!inherits(data, "HmmData")) {
+        stop("'data' should be a HmmData object")
+      }
+      
+      if(!is.list(dists) | !all(sapply(dists, inherits, "Dist"))) {
+        stop("'dists' should be a list of Dist objects")
+      }
+      
+      if(!all(names(dists) %in% colnames(data$data()))) {
+        stop("Variable name in 'dists' not found in data")
+      }
+      
+      if(!is.numeric(n_states) | n_states < 1) {
+        stop("'n_states' should be a numeric >= 1")
+      }
+      
+      if(!is.null(par)) {
+        if(!is.list(par) | length(par) != length(dists)) {
+          stop("'par' should be a list of same length as 'dists'")
+        }
+        
+        if(!all(rapply(par, length) == n_states) | !all(rapply(par, is.numeric))) {
+          stop("Elements of 'par' should be numeric vectors of length 'n_states'")
+        }
+        
+        if(!all(names(par) == names(dists))) {
+          stop("'par' should have the same names as 'dists'")
+        }
+      }
+      
+      if(!is.null(coeff_fe)) {
+        if(!is.numeric(coeff_fe) | !is.vector(coeff_fe)) {
+          stop("'coeff_fe' should be a numeric vector")
+        }
+      }
+      
+      if(!is.null(coeff_re)) {
+        if(!is.numeric(coeff_re) | !is.vector(coeff_re)) {
+          stop("'coeff_re' should be a numeric vector")
+        }
+      }
+      
+      if(!is.null(formulas)) {
+        if(!is.list(formulas) |
+           !all(rapply(obs$formulas(), function(x) inherits(x, "formula")))) {
+          stop("'formulas' should be a list of R formulas")
+        }
+        
+        if(!all(names(formulas) == names(dists))) {
+          stop("'formulas' should have the same names as 'dists'")
+        }
+      }
+    }
   )
 )

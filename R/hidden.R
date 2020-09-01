@@ -29,6 +29,11 @@ MarkovChain <- R6Class(
     initialize = function(n_states = NULL, structure = NULL, 
                           tpm0 = NULL, coeff_fe0 = NULL, 
                           coeff_re0 = NULL, data = NULL) {
+      # Check arguments
+      private$check_args(n_states = n_states, structure = structure,
+                         tpm0 = tpm0, coeff_fe0 = coeff_fe0, 
+                         coeff_re0 = coeff_re0, data = data)
+      
       if(is.null(structure)) {
         # No covariate effects
         structure <- matrix("~1", nrow = n_states, ncol = n_states)
@@ -401,13 +406,6 @@ MarkovChain <- R6Class(
     nstates_ = NULL,
     terms_ = NULL,
     
-    check_structure = function() {
-      if (!all(diag(self$structure()) == ".")) {
-        stop("Diagonal of structure should be '.'")
-      }
-      return(TRUE)
-    },
-    
     tpm2par = function(tpm) {
       ltpm <- log(tpm / diag(tpm))
       ltpm <- t(ltpm) # transpose to fill by rows (like in C++)
@@ -421,7 +419,68 @@ MarkovChain <- R6Class(
       tpm <- t(tpm) # transpose to fill by rows (like in C++)
       tpm <- tpm / rowSums(tpm)
       return(tpm)
-    }
+    },
     
+    #' @description Check arguments passed to constructor
+    #' 
+    #' For argument description, see constructor
+    check_args = function(n_states, structure, tpm0, coeff_fe0, coeff_re0, data) {
+      if(!is.null(n_states)) {
+        if(!is.numeric(n_states) | n_states < 1) {
+          stop("'n_states' should be a numeric >= 1")
+        }        
+      }
+      
+      if(!is.null(structure)) {
+        if(is.matrix(structure)) {
+          if(nrow(structure) != ncol(structure)) {
+            stop("'structure' should be a square matrix")
+          }
+          
+          if(!all(is.character(as.vector(struct)))) {
+            stop("'structure' should be a matrix of character strings")
+          }
+          
+          if (!all(diag(structure()) == ".")) {
+            stop("Diagonal of structure should be '.'")
+          }
+          
+        } else if(!inherits(structure, "formula")) {
+          stop("'structure' should be either a matrix or a formula")
+        }
+      }
+      
+      if(!is.null(tpm0)) {
+        if(!is.matrix(tpm0)) {
+          stop("'tpm0' should be a matrix")
+        }
+        
+        if(nrow(tpm0) != ncol(tpm0)) {
+          stop("'tpm0' should be a square matrix")
+        }
+        
+        if(any(rowSums(tpm0) != 1)) {
+          stop("The rows of 'tpm0' should sum to 1")
+        }
+      }
+      
+      if(!is.null(coeff_fe0)) {
+        if(!is.numeric(coeff_fe0) | !is.vector(coeff_fe0)) {
+          stop("'coeff_fe0' should be a numeric vector")
+        }
+      }
+      
+      if(!is.null(coeff_re0)) {
+        if(!is.numeric(coeff_re0) | !is.vector(coeff_re0)) {
+          stop("'coeff_re0' should be a numeric vector")
+        }
+      }
+      
+      if(!is.null(data)) {
+        if(!inherits(data, "HmmData")) {
+          stop("'data' should be a HmmData object")
+        }
+      }
+    }
   )
 )

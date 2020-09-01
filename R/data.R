@@ -21,6 +21,8 @@ HmmData <- R6Class(
     #' 
     #' @return A new HmmData object
     initialize = function(data, interval = NA) {
+      # Check arguments
+      private$check_args(data = data, interval = interval)
       
       # If time column and interval provided, insert NAs to obtain regular time grid
       if(!is.na(interval) & !is.null(data$time)) {
@@ -76,6 +78,19 @@ HmmData <- R6Class(
   ),
   
   private = list(
-    data_ = NULL
+    data_ = NULL,
+    
+    #' @description Check arguments passed to constructor
+    #' 
+    #' For argument description, see constructor
+    check_args = function(data, interval) {
+      if(!is.data.frame(data)) {
+        stop("'data' must be a data frame")
+      }
+      
+      if(!is.numeric(interval) & !is.na(interval)) {
+        stop(paste("'interval' must be a numeric"))
+      }
+    }
   )
 )
