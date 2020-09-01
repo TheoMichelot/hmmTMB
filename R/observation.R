@@ -231,6 +231,56 @@ Observation <- R6Class(
       return(mats)
     },
     
+    #' @description Natural to working parameter transformation
+    #' 
+    #' This function applies the link functions of the distribution
+    #' parameters
+    #' 
+    #' @param par List of parameters on natural scale
+    #' 
+    #' @return Vector of parameters on working scale
+    n2w = function(par) {
+      coeff_fe <- lapply(seq_along(self$dists()), 
+                         function(i) self$dists()[[i]]$n2w(par[[i]]))
+      names(coeff_fe) <- names(par)
+      coeff_fe <- unlist(coeff_fe)
+      return(coeff_fe)
+    },
+    
+    #' @description  Working to natural parameter transformation
+    #'
+    #' This function applies the inverse link functions of the
+    #' distribution parameters
+    #'
+    #' @param coeff_fe Vector of parameters on working scale
+    #' 
+    #' @return List of parameters on natural scale
+    w2n = function(coeff_fe) {
+      # Initialise list of natural parameters
+      par <- list()
+      
+      # Number of observed variables
+      nvar <- length(self$dists())
+      # Number of states
+      n_states <- self$nstates()
+      
+      # Counter to subset observation parameters
+      par_count <- 1
+      
+      # Loop over observed variables
+      for(var in 1:nvar) {
+        # Number of parameters for this distribution
+        npar <- length(self$dists()[[var]]$link())
+        # Subset and transform working parameters
+        sub_coeff_fe <- coeff_fe[par_count:(par_count + npar*n_states - 1)]
+        par_count <- par_count + npar*n_states
+        par[[var]] <- self$dists()[[var]]$w2n(sub_coeff_fe)
+      }
+      
+      names(par) <- names(self$dists())
+      return(par)
+    },
+    
     #' @description Get observation parameters from design matrices
     #' 
     #' @param X_fe Design matrix for fixed effects, as returned
@@ -349,50 +399,6 @@ Observation <- R6Class(
       }
       
       return(prob)
-    },
-    
-    #' @description Natural to working parameter transformation
-    #' 
-    #' @param par List of parameters on natural scale
-    #' 
-    #' @return Vector of parameters on working scale
-    n2w = function(par) {
-      coeff_fe <- lapply(seq_along(self$dists()), 
-                         function(i) self$dists()[[i]]$n2w(par[[i]]))
-      names(coeff_fe) <- names(par)
-      coeff_fe <- unlist(coeff_fe)
-      return(coeff_fe)
-    },
-    
-    #' @description  Working to natural parameter transformation
-    #'
-    #' @param coeff_fe Vector of parameters on working scale
-    #' 
-    #' @return List of parameters on natural scale
-    w2n = function(coeff_fe) {
-      # Initialise list of natural parameters
-      par <- list()
-      
-      # Number of observed variables
-      nvar <- length(self$dists())
-      # Number of states
-      n_states <- self$nstates()
-      
-      # Counter to subset observation parameters
-      par_count <- 1
-      
-      # Loop over observed variables
-      for(var in 1:nvar) {
-        # Number of parameters for this distribution
-        npar <- length(self$dists()[[var]]$link())
-        # Subset and transform working parameters
-        sub_coeff_fe <- coeff_fe[par_count:(par_count + npar*n_states - 1)]
-        par_count <- par_count + npar*n_states
-        par[[var]] <- self$dists()[[var]]$w2n(sub_coeff_fe)
-      }
-      
-      names(par) <- names(self$dists())
-      return(par)
     },
     
     #' @description Plot histogram of data and pdfs
