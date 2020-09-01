@@ -163,12 +163,12 @@ Hmm <- R6Class(
       
       # Setup TMB parameters
       tmb_par <- list(coeff_fe_obs = self$obs()$coeff_fe(),
-                      coeff_re_obs = 0,
                       log_lambda_obs = 0,
                       coeff_fe_hid = self$hidden()$coeff_fe(),
-                      coeff_re_hid = 0,
                       log_lambda_hid = 0,
-                      log_delta = rep(0, n_states - 1))
+                      log_delta = rep(0, n_states - 1),
+                      coeff_re_obs = 0,
+                      coeff_re_hid = 0)
       
       # Initialise vectors of fixed parameters and random effects
       map <- NULL

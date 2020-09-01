@@ -41,15 +41,15 @@ Type objective_function<Type>::operator() ()
   DATA_SPARSE_MATRIX(S_hid); // penalty matrix
   DATA_IVECTOR(ncol_re_hid); // number of columns of S and X_re for each random effect
   
-  // PARAMETERS
+  // PARAMETERS (fixed effects first, then random effects)
   PARAMETER_VECTOR(coeff_fe_obs); // observation parameters (fixed effects)
-  PARAMETER_VECTOR(coeff_re_obs); // observation parameters (random effects)
   PARAMETER_VECTOR(log_lambda_obs); // smoothness parameters
   PARAMETER_VECTOR(coeff_fe_hid); // state process parameters (fixed effects)
-  PARAMETER_VECTOR(coeff_re_hid); // state process parameters (random effects)
   PARAMETER_VECTOR(log_lambda_hid); // smoothness parameters
   PARAMETER_VECTOR(log_delta); // initial distribution
-  
+  PARAMETER_VECTOR(coeff_re_obs); // observation parameters (random effects)
+  PARAMETER_VECTOR(coeff_re_hid); // state process parameters (random effects)
+    
   // Number of observed variables
   int n_var = distcode.size();
   // Number of data rows
