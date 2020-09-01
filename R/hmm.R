@@ -1043,6 +1043,18 @@ Hmm <- R6Class(
     out_ = NULL,
     tmb_obj_ = NULL,
     tmb_rep_ = NULL,
-    states_ = NULL
+    states_ = NULL,
+    
+    #' @description Check arguments passed to constructor
+    #' 
+    #' For argument description, see constructor
+    check_args = function(obs, hidden) {
+      if(!inherits(obs, "Observation")) {
+        stop("'obs' should be an Observation object")
+      }
+      if(!inherits(hidden, "MarkovChain")) {
+        stop("'hidden' should be an MarkovChain object")
+      }
+    }
   )
 )
