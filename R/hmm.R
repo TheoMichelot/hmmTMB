@@ -17,6 +17,9 @@ Hmm <- R6Class(
     #' 
     #' @return A new Hmm object
     initialize = function(obs, hidden) {
+      # Check arguments
+      private$check_args(obs = obs, hidden = hidden)
+      
       private$obs_ <- obs
       private$hidden_ <- hidden
     },
