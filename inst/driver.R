@@ -21,7 +21,7 @@ SimulatePoHmm <- function(n, lambda, tpm, n.states) {
   return(list(data = data, state = s))
 }
 
-n <- 1000
+n <- 10000
 lambda <- c(2, 20)
 tpm <- matrix(c(0.95, 0.1, 0.05, 0.9), nc = 2)
 n.states <- 2
@@ -32,7 +32,7 @@ states <- simdat$state
 
 # create objects
 dat <- HmmData$new(data.frame(count = counts))
-dists <- list(count = dist_pois)
+dists <- list(count = "pois")
 par <- list(count = list(lambda = c(3, 6)))
 obs <- Observation$new(data = dat, dists = dists, n_states = 2, par = par)
 hid <- MarkovChain$new(n_states = 2)
