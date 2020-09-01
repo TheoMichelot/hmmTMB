@@ -280,19 +280,16 @@ ggplot(sim_data, aes(x, y, col = factor(state), group = NA)) +
 
 ### Higher priority
 
- - prepare data for sharing:
+ - prepare package for sharing:
    + uniformize names/notation/..., e.g., captilization of class names
    + improve class structure, e.g., groups of methods
    + remove HmmData class if useless, or allow for data frame to be passed instead
-   + improve syntax for distribution specification
    + add comprehensive example(s) to vignette
    + possibly split vignette into technical guide (for other devs) and vignette (for users)
    + check that the code is commented well
    + check that the documentation is adequate
    + reduce code redundancy where possible (e.g., make_mat)
-   
- - informative error messages in constructors
-   
+
  - additional observation distributions
     + Weibull
     + log-normal
