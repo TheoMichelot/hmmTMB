@@ -2,13 +2,17 @@
 title: "hmmTMB technical guide"
 author: "Théo Michelot, Richard Glennie"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_document
+output: 
+  html_document:
+    number_sections: true
+bibliography: refs.bib
 vignette: >
   %\VignetteIndexEntry{hmmTMB technical guide}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
   chunk_output_type: console
+  number_sections: true
 ---
 
 ```{r setup, include = FALSE}
@@ -23,7 +27,33 @@ library(hmmTMB)
 set.seed(342)
 ```
 
-# Observation distribution
+# Introduction
+
+Summary of what hmmTMB does, and of what this document presents.
+
+# Mathematical background
+
+  - HMM formulation and notation
+
+  - Basis-penalty smoothers
+  
+  - Marginal likelihood method
+
+# Implementation using TMB and mgcv
+
+  - Model specification using mgcv. Design matrices, smoothing matrix, formula syntax...
+
+  - Model fitting using Laplace approximation in TMB. List of parameters, list of data, specification of fixed and random parameters...
+
+# Package structure
+
+  - R6 classes
+  
+  - Code structure for each class
+  
+  - Implementation details: make_mat, par_all, obs_probs, coeff_fe, coeff_re, lambda...
+
+## Observation distribution
 
 Distributions for the observation process are created using the Dist class. To define a new distribution, we provide its name (as a string), its probability density/mass function (as a function), the random generator function, and the link functions for its parameters (as named lists of functions). For example, for the normal distribution, we have
 ```{r dist-def}
@@ -53,7 +83,7 @@ par2 <- dist_norm$w2n(wpar)
 par2
 ```
 
-# HMM data
+## HMM data
 
 Data objects are defined with the HmmData class. An object can be created from a data frame which includes one column for each observed variable and for each covariate. There are special column names: "ID" is used to identify the time series if several are provided, and "time" gives the times of observation. If the times of observations are provided, gaps are automatically filled with NAs to create a obtain a regular time grid.
 
@@ -75,7 +105,7 @@ data_prep <- HmmData$new(data = data, interval = "hour")
 data_prep$data()
 ```
 
-# HMM observation model
+## HMM observation model
 
 The class Observation encapsulates the model for the observed variables.
 
@@ -112,13 +142,13 @@ The function plot_dist generates a histogram of the observations with the probab
 obs_process$plot_dist(name = "x")
 ```
 
-## User-specified observation distribution
+# How to extend the package
 
-_Here we will need to explain how additional distributions can be added by users._
+  - How to add distributions
 
-## Future work
+# Future work
 
-### Higher priority
+## Higher priority
 
  - prepare package for sharing:
    + uniformize names/notation/..., e.g., captilization of class names
@@ -136,7 +166,7 @@ _Here we will need to explain how additional distributions can be added by users
     + wrapped Cauchy
     + Bernoulli...
     
-### Lower priority (easy?)
+## Lower priority (easy?)
 
  - state probabilities (local decoding)
 
@@ -148,7 +178,7 @@ _Here we will need to explain how additional distributions can be added by users
 
  - stationary = TRUE/FALSE option in MarkovChain class
  
-### Lower priority (difficult?)
+## Lower priority (difficult?)
 
  - AIC
    
@@ -164,3 +194,4 @@ _Here we will need to explain how additional distributions can be added by users
  - obtain starting values for complex models from simpler nested model (e.g. for smooth effects)
 
  - method "update" similar to glmmTMB, to create a new model from an existing model?
+ 

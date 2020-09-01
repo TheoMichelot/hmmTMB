@@ -2,7 +2,9 @@
 title: "hmmTMB user guide"
 author: "Théo Michelot, Richard Glennie"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_document
+output: 
+  html_document:
+    number_sections: true
 bibliography: refs.bib
 vignette: >
   %\VignetteIndexEntry{hmmTMB user guide}
