@@ -29,21 +29,75 @@ set.seed(342)
 
 # Introduction
 
-Summary of what hmmTMB does, and of what this document presents.
+The package hmmTMB implements hidden Markov models with flexible formulations for the parameters of the hidden state process and parameters of the observation distributions, including linear, smooth or random effects of covariates. This document provides some technical background on the implementation, and is only intended to users who would like to get an idea of the inner workings of the package. For a more accessible introduction to the package, including example analyses with detailed code, see the other vignette (`hmmTMB user guide').
 
 # Mathematical background
 
-  - HMM formulation and notation
+## Hidden Markov models
 
-  - Basis-penalty smoothers
+A hidden Markov model (HMM) is comprised of two random processes:
+
+  - the state process $(S_t)$, defined as a $J$-state Markov chain, such that $S_t \ in \{ 1, 2, \dots, J \}$ at any time $t = 1, 2, \dots$;
   
-  - Marginal likelihood method
+  - the (possibly multivariate) observation process $(Z_t)$. At each time $t$, the observation $Z_t$ arises from one of $J$ probability distributions, determined by the value $S_t$ of the state process.
+
+The state process is parameterised by an initial distribution $\pi^{(1)}= [\Pr(S_1 = 1), \dots, \Pr(S_1 = J)]$, and by a transition probability matrix
+$$
+\Gamma = 
+\begin{pmatrix}
+  \gamma_{11} & \gamma_{12} & \cdots & \gamma_{1J} \\
+  \gamma_{21} & \gamma_{22} & \cdots & \gamma_{2J} \\
+  \vdots & \vdots & \ddots & \vdots \\
+  \gamma_{J1} & \gamma_{J2} & \cdots & \gamma_{JJ} \\
+\end{pmatrix},
+$$
+where the $(i,j)$-th entry is the probability of a transition from state $i$ to state $j$, i.e.,
+$$
+\gamma_{ij} = \Pr(S_t = j \vert S_t = i).
+$$
+
+The observations are typically assumed to arise from some parametric distribution, with one set of parameters for each possible value of the state process, and we can write
+$$
+p(Z_t = z_t \vert S_t = j) = f_Z(z_t, \theta_j)
+$$
+where $f_Z$ is the assumed pdf for the observation, and $\theta_j$ is the vector of parameters for state $j$.
+
+The main goal of hmmTMB is to offer the possibility to specify flexible models for the transition probabilities or the state-dependent observation parameters, including fixed and random effects of covariates, and smooth relationships between parameters and covariates using smoothing splines. Here, we only provide a very succinct introduction to HMMs to explain how this is done in the package; for a comprehensive description, see for example @zucchini2016.
+
+## Basis-penaly smoothing splines
+
+Flexible relationships between the model parameters described in the previous section and covariates can be defined using basis-penalty smoothing splines, similarly to generalized additive models (GAMs; @wood2017). In this framework, a parameter $\theta$ (either a transition probability or a parameter of the observation distribution) can be specified at time $t$ by
+$$
+h(\theta_t) = \beta_0 + f_1(x_{1t}) + f_2(x_{2t}) + \dots,
+$$
+where $h$ is a link function, $\beta_0$ is an intercept parameter, and the functions $f_1, f_2, \dots$ define the smooth relationships between $\theta_t$ and the covariates $x_{1t}, x_{2t}, \dots$. The smooth functions are written as linear combinations of basis functions,
+$$
+f_{i} (x) = \sum_{k=1}^K \beta_{ik} \psi_{ik}(x),
+$$
+where various bases can be chosen (e.g., cubic splines, B-splines). Following standard GAM methodology, the roughness (`wiggliness') of these functions is then penalised in the likelihood of the model to ensure that they are smooth. The penalised log-likelihood is
+$$
+l_p = \log(L) - \sum_i \lambda_i \beta_i^T S_i \beta_i,
+$$
+where $L$ is the unpenalised HMM likelihood (e.g.\ computed using the forward algorithm), the $\lambda_i$ are smoothness parameters, and $S_i$ is a known penalty matrix determined by the choice of basis.
+
+The smoothness parameters $\lambda_i$ are not known, and need to be estimated jointly with other model parameters. In hmmTMB, we use the marginal likelihood method; i.e., we treat the basis coefficients as random effects, and we consider the marginal likelihood of the fixed effects $\alpha$ and smoothness parameters $\lambda$,
+$$
+L(\alpha, \lambda \vert z_1, \dots, z_n) = \int p(z_1, \dots, z_n \vert \alpha, \beta) p(\beta \vert \lambda) d\beta,
+$$
+where $p(z_1, \dots, z_n \ vert \theta, \beta)$ is the HMM likelihood, and $p(\beta \vert \lambda)$ is a multivariate normal pdf with mean zero and block-diagonal precision matrix with blocks $\lambda_i S_i$.
+
 
 # Implementation using TMB and mgcv
 
-  - Model specification using mgcv. Design matrices, smoothing matrix, formula syntax...
+## Model specification using mgcv
 
-  - Model fitting using Laplace approximation in TMB. List of parameters, list of data, specification of fixed and random parameters...
+Design matrices, smoothing matrix, formula syntax...
+
+## Model fitting using TMB
+
+Laplace approximation. List of parameters, list of data, specification of fixed and random parameters...
+
+Warning about Laplace approximation for multimodal distribution? Reference to Brett's preprint to justify that it's okay if the random effects are in the transition probabilities?
 
 # Package structure
 
@@ -195,3 +249,4 @@ obs_process$plot_dist(name = "x")
 
  - method "update" similar to glmmTMB, to create a new model from an existing model?
  
+# References
