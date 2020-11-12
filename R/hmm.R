@@ -447,7 +447,7 @@ Hmm <- R6Class(
       # Get transition probabilities over rows of X_fe and X_re, for each 
       # posterior sample of coeff_fe and coeff_re
       post_tpm <- sapply(1:n_post, function(i) {
-        hid$tpm_all(X_fe = X_fe, X_re = X_re, 
+        self$hidden()$tpm_all(X_fe = X_fe, X_re = X_re, 
                     coeff_fe = post_coeff_fe[i,], 
                     coeff_re = post_coeff_re[i,])
       })
