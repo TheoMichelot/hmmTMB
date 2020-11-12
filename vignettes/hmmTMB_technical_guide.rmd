@@ -2,17 +2,16 @@
 title: "hmmTMB technical guide"
 author: "Théo Michelot, Richard Glennie"
 date: "`r Sys.Date()`"
-output: 
+output:
+  pdf_document: default
   html_document:
-    number_sections: true
+    number_sections: yes
 bibliography: refs.bib
-vignette: >
-  %\VignetteIndexEntry{hmmTMB technical guide}
-  %\VignetteEncoding{UTF-8}
-  %\VignetteEngine{knitr::rmarkdown}
-editor_options: 
+vignette: |
+  %\VignetteIndexEntry{hmmTMB technical guide} %\VignetteEncoding{UTF-8} %\VignetteEngine{knitr::rmarkdown}
+editor_options:
   chunk_output_type: console
-  number_sections: true
+  number_sections: yes
 ---
 
 ```{r setup, include = FALSE}
@@ -90,7 +89,7 @@ where $p(z_1, \dots, z_n \ vert \theta, \beta)$ is the HMM likelihood, and $p(\b
 
 ## Model specification using mgcv
 
-We use the \texttt{gam} function from the package mgcv to create design matrices from the formulas specified for the HMM parameters (including linear effects, basis functions, and random effects), and the penalty matrices for smoothing splines (@wood2017). Users therefore need to use the mgcv syntax for smooth terms and random effects, as described in the [mgcv documentation](https://stat.ethz.ch/R-manual/R-patched/library/mgcv/html/smooth.terms.html). Here, we present a short example to illustrate how \texttt{gam} is used in hmmTMB. Consider the following data frame containing values for two covariates \texttt{x1} and \texttt{x2}, and a time series identifier \texttt{ID},
+We use the gam function from the package mgcv to create design matrices from the formulas specified for the HMM parameters (including linear effects, basis functions, and random effects), and the penalty matrices for smoothing splines (@wood2017). Users therefore need to use the mgcv syntax for smooth terms and random effects, as described in the [mgcv documentation](https://stat.ethz.ch/R-manual/R-patched/library/mgcv/html/smooth.terms.html). Here, we present a short example to illustrate how gam is used in hmmTMB. Consider the following data frame containing values for two covariates x1 and x2}, and a time series identifier ID},
 
 ```{r data, echo = FALSE, message = "hide"}
 n <- 100
@@ -105,7 +104,7 @@ Then, consider that we want to specify one of the HMM parameters with the follow
 ``` {r formula}
 form <- ~ x1 + s(x2, k = 5, bs = "cc") + s(ID, bs = "re")
 ```
-where \texttt{x1} has a linear effect, \texttt{x2} has a smooth effect modelled using cyclic cubic regression splines, and a random normal intercept is included for \texttt{ID}. We compute the model matrices as follows,
+where x1 has a linear effect, x2 has a smooth effect modelled using cyclic cubic regression splines, and a random normal intercept is included for ID}. We compute the model matrices as follows,
 ``` {r gam}
 # Create smooth object using mgcv
 smooth <- gam(formula = update(form, dummy ~ .), 
@@ -133,11 +132,11 @@ and the design matrix for the random effects is
 ```{r x-re}
 head(X_re)
 ```
-where the first four columns correspond to the four basis functions for \texttt{x2}, and the four last columns are dummy indicator variables for \texttt{ID}. Then, the linear predictor for the corresponding HMM parameter is
+where the first four columns correspond to the four basis functions for x2}, and the four last columns are dummy indicator variables for ID}. Then, the linear predictor for the corresponding HMM parameter is
 ``` {r lp, eval = FALSE}
 lp <- X_fe %*% coeff_fe + X_re %*% coeff_re
 ```
-where \texttt{coeff\_fe} and \texttt{coeff\_re} are the coefficients for the fixed effects and the random effects, respectively. The HMM parameter (for each data row) is then obtained by applying the inverse link function to this linear predictor.
+where coeff\_fe and coeff\_re are the coefficients for the fixed effects and the random effects, respectively. The HMM parameter (for each data row) is then obtained by applying the inverse link function to this linear predictor.
 
 Similarly, the penalty matrix for the smooth terms can be extracted from the GAM object,
 ``` {r s-mat}
@@ -154,16 +153,34 @@ The joint log-likelihood of the fixed and random effects must first be written i
 
   - the log-pdf of the basis coefficients (and other random effects) given the smoothness parameter, $\log p(\beta \vert \lambda)$, obtained as the log of a multivariate normal pdf with block-diagonal precision matrix, where the $i$-th block is $\lambda_i S_i$. The smoothness matrix $S_i$ is provided by mgcv, as described in the previous section.
 
-The negative log-likelihood function (and its gradient) can then be defined in R with the TMB function \texttt{MakeADFun}, using the argument `random' to specify that the basis coefficients \texttt{coeff\_re} should be treated as random effects. We then use the numerical optimiser \texttt{optim} to perform maximum likelihood estimation of the fixed effect parameters. After optimisation, we use the function \texttt{sdreport} to obtain estimates of the random effect parameters, as well as a joint precision matrix for the fixed and random effects. Posterior samples of all model parameters can be generated from a multivariate normal distribution, where the covariance matrix is the inverse of this precision matrix.
+The negative log-likelihood function (and its gradient) can then be defined in R with the TMB function MakeADFun}, using the argument `random' to specify that the basis coefficients coeff\_re should be treated as random effects. We then use the numerical optimiser optim to perform maximum likelihood estimation of the fixed effect parameters. After optimisation, we use the function sdreport to obtain estimates of the random effect parameters, as well as a joint precision matrix for the fixed and random effects. Posterior samples of all model parameters can be generated from a multivariate normal distribution, where the covariance matrix is the inverse of this precision matrix.
 
 Note that TMB relies on the Laplace approximation to integrate the likelihood over the random effects, i.e.\ the likelihood is approximated by a normal pdf to make the integration tractable. This may result in large errors in cases where the likelihood is very non-normal, e.g., if it is multimodal. HMM likelihoods are known to be multimodal, in particular along the parameters of the observation distributions, and it is not clear how this will affect estimation. Recently, @mcclintock2020random found that TMB performed well in various simulation scenarios, but further investigations will be required to understand this issue better.
 
 # Package structure
 
-  - R6 classes
-  
-  - Code structure for each class
-  
+We use the object-oriented programming framework of the package R6 (@chang2019) for all data and model objects. The main classes are shown in the table below.
+
+| Class name  | What it is                  | Main attributes           | Example                                       |
+|-------------|-----------------------------|---------------------------|-----------------------------------------------|
+| Dist        | Probability distribution    | name                      | normal distribution                           |
+|             |                             | pdf                       | dnorm                                         |
+|             |                             | rng                       | rnorm                                         |
+|             |                             | link functions            |                                               |
+|             |                             | inverse link functions    |                                               |
+| HmmData     | Data set                    | data                      | data frame of observations and covariates     |
+| MarkovChain | Markov chain model          | number of states          | 2-state Markov chain                          |
+|             |                             | formulas                  | no covariate dependence                       |
+|             |                             | Markov chain parameters   | transition probabilities                      |
+| Observation | Observation model           | HmmData object            | data frame of observations (z1, z2)           |
+|             |                             | list of Dist objects      | list(z1 = "norm", z2 = "gamma")               |
+|             |                             | formulas                  | no covariate dependence                       |
+|             |                             | observation parameters    | parameters of normal and gamma distributions  |
+| Hmm         | Hidden Markov model         | Markov chain object       |                                               |
+|             |                             | Observation object        |                                               |
+|             |                             | output of optimiser       |                                               |
+
+Each class is defined in a separate R file, which contains all its methods (i.e., the functions that can be applied to an object of that class).
   - Implementation details: make_mat, par_all, obs_probs, coeff_fe, coeff_re, lambda...
 
 ## Observation distribution
@@ -255,10 +272,6 @@ The function plot_dist generates a histogram of the observations with the probab
 obs_process$plot_dist(name = "x")
 ```
 
-# How to extend the package
-
-  - How to add distributions
-
 # Future work
 
 ## Higher priority
@@ -267,11 +280,10 @@ obs_process$plot_dist(name = "x")
    + uniformize names/notation/..., e.g., captilization of class names
    + improve class structure, e.g., groups of methods
    + remove HmmData class if useless, or allow for data frame to be passed instead
-   + add comprehensive example(s) to vignette
-   + possibly split vignette into technical guide (for other devs) and vignette (for users)
    + check that the code is commented well
    + check that the documentation is adequate
    + reduce code redundancy where possible (e.g., make_mat)
+   + add error messages (e.g., observations incompatible with distribution)
 
  - additional observation distributions
     + Weibull
