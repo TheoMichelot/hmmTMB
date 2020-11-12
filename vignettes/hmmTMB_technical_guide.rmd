@@ -86,18 +86,77 @@ L(\alpha, \lambda \vert z_1, \dots, z_n) = \int p(z_1, \dots, z_n \vert \alpha, 
 $$
 where $p(z_1, \dots, z_n \ vert \theta, \beta)$ is the HMM likelihood, and $p(\beta \vert \lambda)$ is a multivariate normal pdf with mean zero and block-diagonal precision matrix with blocks $\lambda_i S_i$.
 
-
 # Implementation using TMB and mgcv
 
 ## Model specification using mgcv
 
-Design matrices, smoothing matrix, formula syntax...
+We use the \texttt{gam} function from the package mgcv to create design matrices from the formulas specified for the HMM parameters (including linear effects, basis functions, and random effects), and the penalty matrices for smoothing splines (@wood2017). Users therefore need to use the mgcv syntax for smooth terms and random effects, as described in the [mgcv documentation](https://stat.ethz.ch/R-manual/R-patched/library/mgcv/html/smooth.terms.html). Here, we present a short example to illustrate how \texttt{gam} is used in hmmTMB. Consider the following data frame containing values for two covariates \texttt{x1} and \texttt{x2}, and a time series identifier \texttt{ID},
+
+```{r data, echo = FALSE, message = "hide"}
+n <- 100
+data <- data.frame(ID = factor(rep(1:4, each = n/4)),
+                   x1 = cumsum(rnorm(n, 0, 1)),
+                   x2 = cumsum(rnorm(n, 0, 1)))
+
+head(data)
+```
+
+Then, consider that we want to specify one of the HMM parameters with the following formula:
+``` {r formula}
+form <- ~ x1 + s(x2, k = 5, bs = "cc") + s(ID, bs = "re")
+```
+where \texttt{x1} has a linear effect, \texttt{x2} has a smooth effect modelled using cyclic cubic regression splines, and a random normal intercept is included for \texttt{ID}. We compute the model matrices as follows,
+``` {r gam}
+# Create smooth object using mgcv
+smooth <- gam(formula = update(form, dummy ~ .), 
+              data = cbind(dummy = 1, data), 
+              fit = FALSE)
+
+# Design matrix
+X <- smooth$X
+
+# Number of non-smooth model terms (i.e., fixed effects)
+nsdf <- smooth$nsdf
+
+# Design matrix for fixed effects
+X_fe <- X[, 1:nsdf, drop = FALSE]
+
+# Design matrix for random effects (including smooth model terms)
+X_re <- X[, -(1:nsdf), drop = FALSE]
+```
+
+The design matrix for the fixed effects is
+``` {r x-fe}
+head(X_fe)
+```
+and the design matrix for the random effects is
+```{r x-re}
+head(X_re)
+```
+where the first four columns correspond to the four basis functions for \texttt{x2}, and the four last columns are dummy indicator variables for \texttt{ID}. Then, the linear predictor for the corresponding HMM parameter is
+``` {r lp, eval = FALSE}
+lp <- X_fe %*% coeff_fe + X_re %*% coeff_re
+```
+where \texttt{coeff\_fe} and \texttt{coeff\_re} are the coefficients for the fixed effects and the random effects, respectively. The HMM parameter (for each data row) is then obtained by applying the inverse link function to this linear predictor.
+
+Similarly, the penalty matrix for the smooth terms can be extracted from the GAM object,
+``` {r s-mat}
+S <- smooth$S
+```
 
 ## Model fitting using TMB
 
-Laplace approximation. List of parameters, list of data, specification of fixed and random parameters...
+We use the R package Template Model Builder (TMB) to implement the marginal likelihood of the model, based on the Laplace approximation to integrate over the random effects (@kristensen2016). Here, we present the general idea for using TMB to evaluate the negative log-likelihood, and to obtain point and uncertainty estimates for the model parameters.
 
-Warning about Laplace approximation for multimodal distribution? Reference to Brett's preprint to justify that it's okay if the random effects are in the transition probabilities?
+The joint log-likelihood of the fixed and random effects must first be written in C++, following the TMB syntax (for examples, see [the TMB documentation](https://kaskr.github.io/adcomp/examples.html)). For our model, it has two main components:
+
+  - the forward algorithm is used to evaluate the HMM likelihood given all parameters. This part requires the HMM parameters on a time grid, which can be computed based on the model matrices provided by mgcv, as described in the previous section.
+
+  - the log-pdf of the basis coefficients (and other random effects) given the smoothness parameter, $\log p(\beta \vert \lambda)$, obtained as the log of a multivariate normal pdf with block-diagonal precision matrix, where the $i$-th block is $\lambda_i S_i$. The smoothness matrix $S_i$ is provided by mgcv, as described in the previous section.
+
+The negative log-likelihood function (and its gradient) can then be defined in R with the TMB function \texttt{MakeADFun}, using the argument `random' to specify that the basis coefficients \texttt{coeff\_re} should be treated as random effects. We then use the numerical optimiser \texttt{optim} to perform maximum likelihood estimation of the fixed effect parameters. After optimisation, we use the function \texttt{sdreport} to obtain estimates of the random effect parameters, as well as a joint precision matrix for the fixed and random effects. Posterior samples of all model parameters can be generated from a multivariate normal distribution, where the covariance matrix is the inverse of this precision matrix.
+
+Note that TMB relies on the Laplace approximation to integrate the likelihood over the random effects, i.e.\ the likelihood is approximated by a normal pdf to make the integration tractable. This may result in large errors in cases where the likelihood is very non-normal, e.g., if it is multimodal. HMM likelihoods are known to be multimodal, in particular along the parameters of the observation distributions, and it is not clear how this will affect estimation. Recently, @mcclintock2020random found that TMB performed well in various simulation scenarios, but further investigations will be required to understand this issue better.
 
 # Package structure
 

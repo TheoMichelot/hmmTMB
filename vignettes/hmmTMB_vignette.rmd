@@ -27,7 +27,7 @@ set.seed(905)
 
 # Introduction
 
-The package hmmTMB implements hidden Markov models (HMMs) with flexible covariate dependence in all model parameters. In this document, we briefly describe the structure of the package, and illustrate its use with several examples. For general background on HMMs, see @zucchini2016 and, for a presentation of HMMs in the context of ecological studies, see @mcclintock2020.
+The package hmmTMB implements hidden Markov models (HMMs) with flexible covariate dependence in all model parameters. In this document, we briefly describe the structure of the package, and illustrate its use with several examples. For general background on HMMs, see @zucchini2016 and, for a presentation of HMMs in the context of ecological studies, see @mcclintock2020review.
 
 HMMs are time series models involving two processes: an unobserved state process $(S_t)$ specified as a Markov chain, and an observation process $(Z_t)$. At each time $t = 1, 2, \dots$, the distribution of the observation $Z_t$ depends on the value $S_t$ of the state process. There are therefore two sets of parameters:
 
