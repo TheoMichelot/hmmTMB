@@ -84,7 +84,7 @@ coefficients are set to 0.}
 \item{\code{coeff_re0}}{Initial coefficients for random effects parameters.
 Defaults to 0 if not provided.}
 
-\item{\code{data}}{HMMData object, needed if the model includes covariates}
+\item{\code{data}}{Data frame, needed if the model includes covariates}
 }
 \if{html}{\out{</div>}}
 }
@@ -278,6 +278,7 @@ A list with elements:
   \item{X_fe}{Design matrix for fixed effects}
   \item{X_re}{Design matrix for random effects}
   \item{S}{Smoothness matrix for random effects}
+  \item{ncol_fe}{Number of columns of X_fe for each parameter}
   \item{ncol_re}{Number of columns of X_re and S for each random effect}
 }
 }

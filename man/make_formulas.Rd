@@ -20,3 +20,9 @@ parameter of the observation distribution, and state.
 \description{
 Process formulas and store in nested list
 }
+\details{
+Formulas for the observation parameters can be different for the
+different states, using special functions of the form "state1", "state2", etc.
+This method processes the list of formulas passed by the user to extract the 
+state-specific formulas.
+}

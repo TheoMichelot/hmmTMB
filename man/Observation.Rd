@@ -67,7 +67,7 @@ Create new Observation object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{HMMData object}
+\item{\code{data}}{Data frame containing response variables and covariates}
 
 \item{\code{dists}}{Named list of Distribution objects for each data stream}
 
@@ -92,7 +92,7 @@ A new Observation object
 \if{html}{\out{<a id="method-data"></a>}}
 \if{latex}{\out{\hypertarget{method-data}{}}}
 \subsection{Method \code{data()}}{
-HMMData object
+Data frame
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$data()}\if{html}{\out{</div>}}
 }
@@ -296,6 +296,7 @@ A list with elements:
   \item{X_fe}{Design matrix for fixed effects}
   \item{X_re}{Design matrix for random effects}
   \item{S}{Smoothness matrix for random effects}
+  \item{ncol_fe}{Number of columns of X_fe for each parameter}
   \item{ncol_re}{Number of columns of X_re and S for each random effect}
 }
 Design matrices for grid of covariates
