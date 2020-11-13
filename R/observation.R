@@ -575,7 +575,7 @@ Observation <- R6Class(
       
       if(!is.null(formulas)) {
         if(!is.list(formulas) |
-           !all(rapply(obs$formulas(), function(x) inherits(x, "formula")))) {
+           !all(rapply(formulas, function(x) inherits(x, "formula")))) {
           stop("'formulas' should be a list of R formulas")
         }
         
