@@ -235,10 +235,13 @@ MarkovChain <- R6Class(
     #'   \item{X_fe}{Design matrix for fixed effects}
     #'   \item{X_re}{Design matrix for random effects}
     #'   \item{S}{Smoothness matrix for random effects}
+    #'   \item{ncol_fe}{Number of columns of X_fe for each parameter}
     #'   \item{ncol_re}{Number of columns of X_re and S for each random effect}
     #' }
     make_mat = function(data, new_data = NULL) {
-      make_mat_hid(formulas = self$formulas(), data = data, new_data = new_data)
+      make_matrices(formulas = self$formulas(), 
+                    data = data, 
+                    new_data = new_data)
     },
     
     #' @description Design matrices for grid of covariates
