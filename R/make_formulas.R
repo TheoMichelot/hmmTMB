@@ -6,6 +6,11 @@
 #' state-specific terms, e.g. "~ state1(x1) + x2".
 #' @param n_states Number of states
 #' 
+#' @details Formulas for the observation parameters can be different for the
+#' different states, using special functions of the form "state1", "state2", etc.
+#' This method processes the list of formulas passed by the user to extract the 
+#' state-specific formulas.
+#' 
 #' @return Nested list of formulas, with three levels: observed variable,
 #' parameter of the observation distribution, and state.
 #' 
