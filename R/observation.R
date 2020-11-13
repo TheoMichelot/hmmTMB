@@ -234,7 +234,8 @@ Observation <- R6Class(
     #' @description Natural to working parameter transformation
     #' 
     #' This function applies the link functions of the distribution
-    #' parameters
+    #' parameters, to transform parameters from their natural scale
+    #' to the working scale (i.e., linear predictor scale)
     #' 
     #' @param par List of parameters on natural scale
     #' 
@@ -250,7 +251,8 @@ Observation <- R6Class(
     #' @description  Working to natural parameter transformation
     #'
     #' This function applies the inverse link functions of the
-    #' distribution parameters
+    #' distribution parameters, to transform parameters from the working
+    #' scale (i.e., linear predictor scale) to their natural scale.
     #'
     #' @param coeff_fe Vector of parameters on working scale
     #' 
@@ -506,6 +508,9 @@ Observation <- R6Class(
   ),
   
   private = list(
+    ################
+    ## Attributes ##
+    ################
     data_ = NULL,
     dists_ = NULL,
     nstates_ = NULL,
@@ -516,7 +521,9 @@ Observation <- R6Class(
     formulas_ = NULL,
     terms_ = NULL,
     
-    # Check arguments passed to constructor
+    #################################
+    ## Check constructor arguments ##
+    #################################
     # (For argument description, see constructor)
     check_args = function(data, dists, n_states, par, coeff_fe, coeff_re, formulas) {
       if(!inherits(data, "HMMData")) {

@@ -261,7 +261,7 @@ HMM <- R6Class(
                                    skip.delta.method = FALSE)
       par_list <- as.list(private$tmb_rep_, "Estimate")
       
-      # Observation parameters
+      # Update observation parameters
       self$obs()$update_coeff_fe(coeff_fe = par_list$coeff_fe_obs)
       mats_obs <- self$obs()$make_mat()
       if(!is.null(mats_obs$ncol_re)) { # Only update if there are random effects
@@ -269,7 +269,7 @@ HMM <- R6Class(
         self$obs()$update_lambda(exp(par_list$log_lambda_obs))
       }
       
-      # Transition probabilities
+      # Update transition probabilities
       self$hidden()$update_coeff_fe(coeff_fe = par_list$coeff_fe_hid)
       mats_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
       if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
@@ -1050,6 +1050,9 @@ HMM <- R6Class(
   ),
   
   private = list(
+    ################
+    ## Attributes ##
+    ################
     obs_ = NULL,
     hidden_ = NULL,
     out_ = NULL,
@@ -1057,7 +1060,9 @@ HMM <- R6Class(
     tmb_rep_ = NULL,
     states_ = NULL,
     
-    # Check arguments passed to constructor
+    #################################
+    ## Check constructor arguments ##
+    #################################
     # (For argument description, see constructor)
     check_args = function(obs, hidden) {
       if(!inherits(obs, "Observation")) {

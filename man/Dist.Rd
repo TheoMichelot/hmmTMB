@@ -140,7 +140,8 @@ Return code of Dist object
 \subsection{Method \code{pdf_apply()}}{
 Evaluate probability density/mass function
 
-(Used in Observation$obs_probs)
+This method is used in Observation$obs_probs. It is a wrapper around self\$pdf,
+which prepares the parameters and passes them to the function.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dist$pdf_apply(x, par, log = FALSE)}\if{html}{\out{</div>}}
 }
@@ -169,6 +170,9 @@ parameters par
 \if{latex}{\out{\hypertarget{method-rng_apply}{}}}
 \subsection{Method \code{rng_apply()}}{
 Random number generator
+
+This method is a wrapper around self\$rng, which prepares the parameters and
+passes them to the function.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dist$rng_apply(n, par)}\if{html}{\out{</div>}}
 }
@@ -193,6 +197,10 @@ Vector of \code{n} realisations of this distribution
 \if{latex}{\out{\hypertarget{method-n2w}{}}}
 \subsection{Method \code{n2w()}}{
 Natural to working parameter transformation
+
+This method transforms parameters from the natural scale (i.e., their domain
+of definition) to the "working" or "linear predictor" scale (i.e., the real
+line). It is a wrapper for self\$link.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dist$n2w(par)}\if{html}{\out{</div>}}
 }
@@ -213,6 +221,10 @@ Vector of parameters on the working scale
 \if{latex}{\out{\hypertarget{method-w2n}{}}}
 \subsection{Method \code{w2n()}}{
 Working to natural parameter transformation
+
+This method transforms parameters from the "working" or "linear predictor" 
+scale (i.e., the real line) to the natural scale (i.e., their domain
+of definition). It is a wrapper for self\$invlink.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dist$w2n(wpar, as_matrix = FALSE)}\if{html}{\out{</div>}}
 }

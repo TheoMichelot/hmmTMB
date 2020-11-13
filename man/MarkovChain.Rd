@@ -34,9 +34,11 @@ standard deviations of independent normal random effects.
 \item \href{#method-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
 \item \href{#method-update_lambda}{\code{MarkovChain$update_lambda()}}
 \item \href{#method-make_mat}{\code{MarkovChain$make_mat()}}
+\item \href{#method-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
+\item \href{#method-tpm2par}{\code{MarkovChain$tpm2par()}}
+\item \href{#method-par2tpm}{\code{MarkovChain$par2tpm()}}
 \item \href{#method-tpm_all}{\code{MarkovChain$tpm_all()}}
 \item \href{#method-stat_dists}{\code{MarkovChain$stat_dists()}}
-\item \href{#method-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
 \item \href{#method-simulate}{\code{MarkovChain$simulate()}}
 \item \href{#method-formulation}{\code{MarkovChain$formulation()}}
 \item \href{#method-clone}{\code{MarkovChain$clone()}}
@@ -281,6 +283,85 @@ A list with elements:
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-make_mat_grid"></a>}}
+\if{latex}{\out{\hypertarget{method-make_mat_grid}{}}}
+\subsection{Method \code{make_mat_grid()}}{
+Design matrices for grid of covariates
+
+Used in plotting functions such as HMM$plot_tpm and HMM$plot_stat_dist
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$make_mat_grid(var, data, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var}}{Name of variable}
+
+\item{\code{data}}{Data frame containing the covariates}
+
+\item{\code{covs}}{Optional data frame with a single row and one column
+for each covariate, giving the values that should be used. If this is
+not specified, the mean value is used for numeric variables, and the
+first level for factor variables.}
+
+\item{\code{n_grid}}{Grid size (number of points). Default: 1000.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A list with the same elements as the output of make_mat, 
+plus a data frame of covariates values.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-tpm2par"></a>}}
+\if{latex}{\out{\hypertarget{method-tpm2par}{}}}
+\subsection{Method \code{tpm2par()}}{
+Transform transition probabilities to working scale
+
+Apply the multinomial logit link function to get the corresponding parameters on the
+working scale (i.e., linear predictor scale).
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$tpm2par(tpm)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{tpm}}{Transition probability matrix}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Vector of parameters on linear predictor scale
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-par2tpm"></a>}}
+\if{latex}{\out{\hypertarget{method-par2tpm}{}}}
+\subsection{Method \code{par2tpm()}}{
+Transform working parameters to transition probabilities
+
+Apply the inverse multinomial logit link function to transform the parameters on
+the working scale (i.e., linear predictor scale) into the transition
+probabilities.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$par2tpm(par)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{par}}{Vector of parameters on working scale}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Transition probability matrix
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-tpm_all"></a>}}
 \if{latex}{\out{\hypertarget{method-tpm_all}{}}}
 \subsection{Method \code{tpm_all()}}{
@@ -335,38 +416,6 @@ by \code{make_mat}}
 \subsection{Returns}{
 Matrix of stationary distributions. Each row corresponds to
 a row of the design matrices, and each column corresponds to a state.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-make_mat_grid"></a>}}
-\if{latex}{\out{\hypertarget{method-make_mat_grid}{}}}
-\subsection{Method \code{make_mat_grid()}}{
-Design matrices for grid of covariates
-
-Used in plotting functions such as HMM$plot_tpm and HMM$plot_stat_dist
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$make_mat_grid(var, data, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of variable}
-
-\item{\code{data}}{Data frame containing the covariates}
-
-\item{\code{covs}}{Optional data frame with a single row and one column
-for each covariate, giving the values that should be used. If this is
-not specified, the mean value is used for numeric variables, and the
-first level for factor variables.}
-
-\item{\code{n_grid}}{Grid size (number of points). Default: 1000.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A list with the same elements as the output of make_mat, 
-plus a data frame of covariates values.
 }
 }
 \if{html}{\out{<hr>}}

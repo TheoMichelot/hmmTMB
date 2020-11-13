@@ -180,7 +180,7 @@ MarkovChain <- R6Class(
       
       # Update coeff_fe and tpm attributes
       private$coeff_fe_ <- matrix(rep(0, sum(self$terms()$ncol_fe)))
-      private$coeff_fe_[i0] <- private$tpm2par(tpm)
+      private$coeff_fe_[i0] <- self$tpm2par(tpm)
       rownames(private$coeff_fe_) <- self$terms()$names_fe
       private$tpm_ <- tpm
     },
@@ -198,7 +198,7 @@ MarkovChain <- R6Class(
       rownames(private$coeff_fe_) <- self$terms()$names_fe
       if(all(self$structure() %in% c(".", "~1"))) {
         # Only update tpm if no covariates
-        private$tpm_ <- private$par2tpm(coeff_fe)        
+        private$tpm_ <- self$par2tpm(coeff_fe)        
       }
     },
     
@@ -241,6 +241,66 @@ MarkovChain <- R6Class(
       make_mat_hid(formulas = self$formulas(), data = data, new_data = new_data)
     },
     
+    #' @description Design matrices for grid of covariates
+    #' 
+    #' Used in plotting functions such as HMM$plot_tpm and HMM$plot_stat_dist
+    #' 
+    #' @param var Name of variable
+    #' @param data Data frame containing the covariates
+    #' @param covs Optional data frame with a single row and one column
+    #' for each covariate, giving the values that should be used. If this is
+    #' not specified, the mean value is used for numeric variables, and the
+    #' first level for factor variables.
+    #' @param n_grid Grid size (number of points). Default: 1000.
+    #' 
+    #' @return A list with the same elements as the output of make_mat, 
+    #' plus a data frame of covariates values.
+    make_mat_grid = function(var, data, covs = NULL, n_grid = 1e3) {
+      # Data frame for covariate grid
+      new_data <- cov_grid(var = var, data = data, covs = covs, 
+                           formulas = self$formulas(), n_grid = n_grid)
+      
+      # Create design matrices
+      mats <- self$make_mat(data = data, new_data = new_data)
+      
+      # Save data frame of covariate values
+      mats$new_data <- new_data
+      
+      return(mats)
+    },
+    
+    #' @description Transform transition probabilities to working scale
+    #' 
+    #' Apply the multinomial logit link function to get the corresponding parameters on the
+    #' working scale (i.e., linear predictor scale).
+    #' 
+    #' @param tpm Transition probability matrix
+    #' 
+    #' @return Vector of parameters on linear predictor scale
+    tpm2par = function(tpm) {
+      ltpm <- log(tpm / diag(tpm))
+      ltpm <- t(ltpm) # transpose to fill by rows (like in C++)
+      par <- ltpm[!diag(self$nstates())]
+      return(par)
+    },
+    
+    #' @description Transform working parameters to transition probabilities
+    #' 
+    #' Apply the inverse multinomial logit link function to transform the parameters on
+    #' the working scale (i.e., linear predictor scale) into the transition
+    #' probabilities.
+    #' 
+    #' @param par Vector of parameters on working scale
+    #' 
+    #' @return Transition probability matrix
+    par2tpm = function(par) {
+      tpm <- diag(self$nstates())
+      tpm[!diag(self$nstates())] <- exp(par)
+      tpm <- t(tpm) # transpose to fill by rows (like in C++)
+      tpm <- tpm / rowSums(tpm)
+      return(tpm)
+    },
+    
     #' @description Get transition probability matrices from design matrices
     #' 
     #' @param X_fe Design matrix for fixed effects, as returned
@@ -269,7 +329,7 @@ MarkovChain <- R6Class(
       ltpm_mat <- matrix(ltpm, ncol = n_states * (n_states - 1))
       
       # Transition probability matrices
-      tpm <- apply(ltpm_mat, 1, private$par2tpm)
+      tpm <- apply(ltpm_mat, 1, self$par2tpm)
       tpm <- array(tpm, dim = c(n_states, n_states, nrow(ltpm_mat)))
       return(tpm)
     },
@@ -302,34 +362,6 @@ MarkovChain <- R6Class(
       })
       
       return(stat_dists)
-    },
-    
-    #' @description Design matrices for grid of covariates
-    #' 
-    #' Used in plotting functions such as HMM$plot_tpm and HMM$plot_stat_dist
-    #' 
-    #' @param var Name of variable
-    #' @param data Data frame containing the covariates
-    #' @param covs Optional data frame with a single row and one column
-    #' for each covariate, giving the values that should be used. If this is
-    #' not specified, the mean value is used for numeric variables, and the
-    #' first level for factor variables.
-    #' @param n_grid Grid size (number of points). Default: 1000.
-    #' 
-    #' @return A list with the same elements as the output of make_mat, 
-    #' plus a data frame of covariates values.
-    make_mat_grid = function(var, data, covs = NULL, n_grid = 1e3) {
-      # Data frame for covariate grid
-      new_data <- cov_grid(var = var, data = data, covs = covs, 
-                           formulas = self$formulas(), n_grid = n_grid)
-      
-      # Create design matrices
-      mats <- self$make_mat(data = data, new_data = new_data)
-      
-      # Save data frame of covariate values
-      mats$new_data <- new_data
-      
-      return(mats)
     },
     
     #' @description Simulate from Markov chain
@@ -401,6 +433,9 @@ MarkovChain <- R6Class(
   ),
   
   private = list(
+    ################
+    ## Attributes ##
+    ################
     structure_ = NULL,
     formulas_ = NULL,
     coeff_fe_ = NULL,
@@ -410,22 +445,9 @@ MarkovChain <- R6Class(
     nstates_ = NULL,
     terms_ = NULL,
     
-    tpm2par = function(tpm) {
-      ltpm <- log(tpm / diag(tpm))
-      ltpm <- t(ltpm) # transpose to fill by rows (like in C++)
-      par <- ltpm[!diag(self$nstates())]
-      return(par)
-    },
-    
-    par2tpm = function(par) {
-      tpm <- diag(self$nstates())
-      tpm[!diag(self$nstates())] <- exp(par)
-      tpm <- t(tpm) # transpose to fill by rows (like in C++)
-      tpm <- tpm / rowSums(tpm)
-      return(tpm)
-    },
-    
-    # Check arguments passed to constructor
+    #################################
+    ## Check constructor arguments ##
+    #################################
     # (For argument description, see constructor)
     check_args = function(n_states, structure, tpm0, coeff_fe0, coeff_re0, data) {
       if(!is.null(n_states)) {

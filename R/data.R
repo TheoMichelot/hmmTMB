@@ -78,9 +78,14 @@ HMMData <- R6Class(
   ),
   
   private = list(
+    ################
+    ## Attributes ##
+    ################
     data_ = NULL,
     
-    # Check arguments passed to constructor
+    #################################
+    ## Check constructor arguments ##
+    #################################
     # (For argument description, see constructor)
     check_args = function(data, interval) {
       if(!is.data.frame(data)) {

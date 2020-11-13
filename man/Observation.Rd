@@ -335,7 +335,8 @@ plus a data frame of covariates values.
 Natural to working parameter transformation
 
 This function applies the link functions of the distribution
-parameters
+parameters, to transform parameters from their natural scale
+to the working scale (i.e., linear predictor scale)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$n2w(par)}\if{html}{\out{</div>}}
 }
@@ -358,7 +359,8 @@ Vector of parameters on working scale
 Working to natural parameter transformation
 
 This function applies the inverse link functions of the
-distribution parameters
+distribution parameters, to transform parameters from the working
+scale (i.e., linear predictor scale) to their natural scale.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$w2n(coeff_fe)}\if{html}{\out{</div>}}
 }
