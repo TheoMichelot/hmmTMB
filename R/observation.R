@@ -27,6 +27,13 @@ Observation <- R6Class(
       private$check_args(data = data, dists = dists, n_states = n_states, par = par,
                          coeff_fe = coeff_fe, coeff_re = coeff_re, formulas = formulas)
       
+      # Make sure there is an ID column in the data and it's a factor
+      if(is.null(data$ID)) {
+        data$ID <- factor(1)
+      } else {
+        data$ID <- factor(data$ID)
+      }
+      
       private$data_ <- data
       private$nstates_ <- n_states
       
