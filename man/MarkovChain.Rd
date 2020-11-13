@@ -82,7 +82,7 @@ coefficients are set to 0.}
 \item{\code{coeff_re0}}{Initial coefficients for random effects parameters.
 Defaults to 0 if not provided.}
 
-\item{\code{data}}{HmmData object, needed if the model includes covariates}
+\item{\code{data}}{HMMData object, needed if the model includes covariates}
 }
 \if{html}{\out{</div>}}
 }
@@ -343,7 +343,7 @@ a row of the design matrices, and each column corresponds to a state.
 \subsection{Method \code{make_mat_grid()}}{
 Design matrices for grid of covariates
 
-Used in plotting functions such as Hmm$plot_tpm and Hmm$plot_stat_dist
+Used in plotting functions such as HMM$plot_tpm and HMM$plot_stat_dist
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$make_mat_grid(var, data, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
 }

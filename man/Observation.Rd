@@ -67,7 +67,7 @@ Create new Observation object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{HmmData object}
+\item{\code{data}}{HMMData object}
 
 \item{\code{dists}}{Named list of Distribution objects for each data stream}
 
@@ -92,7 +92,7 @@ A new Observation object
 \if{html}{\out{<a id="method-data"></a>}}
 \if{latex}{\out{\hypertarget{method-data}{}}}
 \subsection{Method \code{data()}}{
-HmmData object
+HMMData object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$data()}\if{html}{\out{</div>}}
 }
