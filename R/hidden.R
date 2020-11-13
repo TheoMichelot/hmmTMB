@@ -383,7 +383,7 @@ MarkovChain <- R6Class(
       n_states <- self$nstates()
       
       # Time series ID
-      if(is.null(new_data)) {
+      if(is.null(new_data$ID)) {
         ID <- rep(1, n)
       } else {
         ID <- new_data$ID
