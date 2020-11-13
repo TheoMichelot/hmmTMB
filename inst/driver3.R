@@ -105,8 +105,7 @@ formulas <- list(step = list(shape = ~ x1 + x2, scale = ~ 1),
                  count = list(lambda = ~ s(ID, bs = "re")))
 
 # Create objects
-dat <- HMMData$new(data)
-obs <- Observation$new(dat, dists = dists, n_states = 2, coeff_fe = coeff_fe, 
+obs <- Observation$new(data = data, dists = dists, n_states = 2, coeff_fe = coeff_fe, 
                        formulas = formulas)
 hid <- MarkovChain$new(n_states = 2)
 mod <- HMM$new(obs, hid)

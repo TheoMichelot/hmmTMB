@@ -155,7 +155,7 @@ HMM <- R6Class(
       
       # Create model matrices of hidden state process
       # (Design matrices for fixed and random effects, and smoothing matrix)
-      mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
+      mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data())
       X_fe_hid <- mod_mat_hid$X_fe
       X_re_hid <- mod_mat_hid$X_re
       S_hid <- mod_mat_hid$S
@@ -209,7 +209,7 @@ HMM <- R6Class(
       }
       
       # Data for TMB
-      tmb_dat <- list(ID = self$obs()$data()$ID(),
+      tmb_dat <- list(ID = self$obs()$data()$ID,
                       data = as.matrix(self$obs()$obs_var()),
                       n_states = n_states,
                       distcode = distcode,
@@ -271,7 +271,7 @@ HMM <- R6Class(
       
       # Update transition probabilities
       self$hidden()$update_coeff_fe(coeff_fe = par_list$coeff_fe_hid)
-      mats_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
+      mats_hid <- self$hidden()$make_mat(data = self$obs()$data())
       if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
         self$hidden()$update_coeff_re(coeff_re = par_list$coeff_re_hid)
         self$hidden()$update_lambda(exp(par_list$log_lambda_hid))
@@ -285,8 +285,8 @@ HMM <- R6Class(
     #' 
     #' @return Most likely state sequence
     viterbi = function() {
-      data <- self$obs()$data()$data()
-      ID <- self$obs()$data()$ID()
+      data <- self$obs()$data()
+      ID <- data$ID
       
       # Number of observations
       n <- nrow(data)
@@ -301,7 +301,7 @@ HMM <- R6Class(
                                         X_re = mod_mat_obs$X_re)
       
       # Transition probability matrices      
-      mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data()$data())
+      mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data())
       tpm_all <- self$hidden()$tpm_all(X_fe = mod_mat_hid$X_fe, 
                                        X_re = mod_mat_hid$X_re)
       
@@ -666,7 +666,7 @@ HMM <- R6Class(
       }
       
       # Model matrices for new_data  
-      mats <- self$hidden()$make_mat(data = self$obs()$data()$data(), 
+      mats <- self$hidden()$make_mat(data = self$obs()$data(), 
                                      new_data = new_data)
       
       # Transition probabilities
@@ -765,7 +765,7 @@ HMM <- R6Class(
       n_states <- self$hidden()$nstates()
       
       # Simulate state process      
-      S <- self$hidden()$simulate(n = n, data = self$obs()$data()$data(), 
+      S <- self$hidden()$simulate(n = n, data = self$obs()$data(), 
                                   new_data = data)
       
       # Create observation parameters
@@ -822,11 +822,11 @@ HMM <- R6Class(
     #' @return A ggplot object
     plot_ts = function(var1, var2 = NULL) {
       # Data frame for plot
-      data <- self$obs()$data()$data()
+      data <- self$obs()$data()
       # State sequence as factor
       state <- as.factor(self$states())
       # Time series ID
-      ID <- self$obs()$data()$ID()
+      ID <- self$obs()$data()$ID
       
       if(is.null(var2)) {
         # 1d time series plot
@@ -867,7 +867,7 @@ HMM <- R6Class(
       
       # Create design matrices for grid of "var" values
       mats <- self$hidden()$make_mat_grid(
-        var = var, data = self$obs()$data()$data(), 
+        var = var, data = self$obs()$data(), 
         covs = covs, n_grid = 50)
       # Get transition probability matrices
       tpms <- self$hidden()$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
@@ -933,7 +933,7 @@ HMM <- R6Class(
       
       # Create design matrices for grid of "var" values
       mats <- self$hidden()$make_mat_grid(
-        var = var, data = self$obs()$data()$data(), 
+        var = var, data = self$obs()$data(), 
         covs = covs, n_grid = 50)
       # Get stationary distributions
       stat_dists <- self$hidden()$stat_dists(X_fe = mats$X_fe, X_re = mats$X_re)

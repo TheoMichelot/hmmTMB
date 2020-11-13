@@ -81,10 +81,7 @@ indz <- which(tracks$step == 0)
 tracks$step[indz] <- runif(length(indz), 0, 1)
 ```
 
-We create an HMMData object from the data frame. It should include columns for ID if necessary, as well as for any response variables and covariates included in the model.
-```{r hmmdata-new}
-data <- HMMData$new(data = tracks)
-```
+The data frame passed to hmmTMB should include a column for ID if necessary, as well as for any response variables and covariates included in the model.
 
 The class Observation encapsulates the observation process model of the hidden Markov model. To create an object of that class, we need to specify distributions for the response variables, as well as initial parameter values. We could also include covariate dependence in the parameters of the observation distributions. We use gamma distributions for the step lengths, and von Mises distributions for the turning angles.
 
@@ -105,7 +102,7 @@ par0_obs <- list(step = list(shape = mean0^2/sd0^2,
                               kappa = c(0.2, 1)))
 
 # Create Observation object
-obs <- Observation$new(data = data, dists = dists, 
+obs <- Observation$new(data = tracks, dists = dists, 
                        n_states = n_states, par = par0_obs)
 ```
 
@@ -118,7 +115,7 @@ formula <- ~ s(dist_water, k = 5, bs = "ts")
 # Create MarkovChain object
 hid <- MarkovChain$new(n_states = n_states, 
                        structure = formula,
-                       data = data)
+                       data = tracks)
 ```
 
 Combining the MarkovChain and Observation object, we create an object of the HMM class.

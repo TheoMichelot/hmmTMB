@@ -169,11 +169,10 @@ We use the object-oriented programming framework of the package R6 (@chang2019) 
 |             |                             | rng                       | rnorm                                         |
 |             |                             | link functions            |                                               |
 |             |                             | inverse link functions    |                                               |
-| HMMData     | Data set                    | data                      | data frame of observations and covariates     |
 | MarkovChain | Markov chain model          | number of states          | 2-state Markov chain                          |
 |             |                             | formulas                  | no covariate dependence                       |
 |             |                             | Markov chain parameters   | transition probabilities                      |
-| Observation | Observation model           | HMMData object            | data frame of observations (z1, z2)           |
+| Observation | Observation model           | data frame                | data frame of observations (z1, z2)           |
 |             |                             | list of Dist objects      | list(z1 = "norm", z2 = "gamma")               |
 |             |                             | formulas                  | no covariate dependence                       |
 |             |                             | observation parameters    | parameters of normal and gamma distributions  |
@@ -213,28 +212,6 @@ par2 <- dist_norm$w2n(wpar)
 par2
 ```
 
-## HMM data
-
-Data objects are defined with the HMMData class. An object can be created from a data frame which includes one column for each observed variable and for each covariate. There are special column names: "ID" is used to identify the time series if several are provided, and "time" gives the times of observation. If the times of observations are provided, gaps are automatically filled with NAs to create a obtain a regular time grid.
-
-```{r create-data}
-# Create a dummy data set, with two time series
-times1 <- seq(as.POSIXct("2020/01/01 00:00:00"), by = "hour", length = 10)
-times2 <- seq(as.POSIXct("2020/02/01 00:00:00"), by = "hour", length = 10)
-data <- data.frame(ID = rep(c(1, 2), each = 10),
-                   x = rnorm(20), 
-                   time = c(times1, times2))
-
-# Remove a few rows to create gaps in the data
-data <- data[-c(2:3, 7, 15:18),]
-
-# Define HMMData object
-data_prep <- HMMData$new(data = data, interval = "hour")
-
-# The gaps have been filled
-data_prep$data()
-```
-
 ## HMM observation model
 
 The class Observation encapsulates the model for the observed variables.
@@ -246,7 +223,6 @@ data <- data.frame(ID = rep(1, 100),
                    y = rnorm(100), 
                    time = times,
                    x = cumsum(runif(100)))
-data_prep <- HMMData$new(data = data)
 
 # List of observation distributions
 dists <- list(y = "norm")
@@ -258,7 +234,7 @@ par <- list(y = list(mean = c(0, 0), sd = c(1, 10)))
 n_states <- 2
 
 # Create observation process object
-obs_process <- Observation$new(data = data_prep, dists = dists, 
+obs_process <- Observation$new(data = data, dists = dists, 
                                n_states = n_states, par = par)
 ```
 
@@ -281,7 +257,7 @@ The state process model is defined with the MarkovChain class, which includes th
 structure <- matrix(c(".", "~x",
                       "~s(x, k=5, bs=\"cr\")", "."),
                     nrow = 2, byrow = TRUE)
-hid_process <- MarkovChain$new(n_states = 2, structure = structure, data = data_prep)
+hid_process <- MarkovChain$new(n_states = 2, structure = structure, data = data)
 ```
 
 If they are not specified, the parameters of the Markov Chain are initialised such that all effects are zero and the diagonal elements of the transition probability matrix are 0.9.
@@ -328,11 +304,6 @@ coeff_fe, coeff_re, lambda
 ## Higher priority
 
  - prepare package for sharing:
-   + improve class structure, e.g., groups of methods
-   + remove HMMData class if useless, or allow for data frame to be passed instead
-   + check that the code is commented well
-   + check that the documentation is adequate
-   + reduce code redundancy where possible (e.g., make_mat)
    + add error messages (e.g., observations incompatible with distribution)
 
  - additional observation distributions

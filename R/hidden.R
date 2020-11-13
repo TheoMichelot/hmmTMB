@@ -27,7 +27,7 @@ MarkovChain <- R6Class(
     #' coefficients are set to 0.
     #' @param coeff_re0 Initial coefficients for random effects parameters.
     #' Defaults to 0 if not provided. 
-    #' @param data HMMData object, needed if the model includes covariates
+    #' @param data Data frame, needed if the model includes covariates
     #' 
     #' @return A new MarkovChain object
     initialize = function(n_states = NULL, structure = NULL, 
@@ -38,6 +38,7 @@ MarkovChain <- R6Class(
                          tpm0 = tpm0, coeff_fe0 = coeff_fe0, 
                          coeff_re0 = coeff_re0, data = data)
       
+      # Define 'structure' as matrix
       if(is.null(structure)) {
         # No covariate effects
         structure <- matrix("~1", nrow = n_states, ncol = n_states)
@@ -85,9 +86,8 @@ MarkovChain <- R6Class(
         data <- data.frame(dummy = rep(1, 2))
       } else if(is.null(data)) {
         stop("'data' must be provided if the model includes covariates")
-      } else {
-        data <- data$data()
       }
+      
       mats <- self$make_mat(data = data)
       ncol_fe <- mats$ncol_fe
       ncol_re <- mats$ncol_re       
@@ -505,8 +505,8 @@ MarkovChain <- R6Class(
       }
       
       if(!is.null(data)) {
-        if(!inherits(data, "HMMData")) {
-          stop("'data' should be a HMMData object")
+        if(!inherits(data, "data.frame")) {
+          stop("'data' should be a data.frame")
         }
       }
     }

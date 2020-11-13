@@ -12,7 +12,7 @@ Observation <- R6Class(
     #################
     #' @description Create new Observation object
     #' 
-    #' @param data HMMData object
+    #' @param data Data frame containing response variables and covariates
     #' @param dists Named list of Distribution objects for each data stream
     #' @param n_states Number of states (needed to construct model formulas)
     #' @param par List of observation parameters (for covariate-free model)
@@ -89,7 +89,7 @@ Observation <- R6Class(
     ###############
     ## Accessors ##
     ###############
-    #' @description HMMData object
+    #' @description Data frame
     data = function() {return(private$data_)},
     
     #' @description List of distributions
@@ -127,7 +127,7 @@ Observation <- R6Class(
     #' @description  Data frame of response variables
     obs_var = function() {
       obs_names <- names(self$dists())
-      obs_var <- self$data()$data()[, obs_names, drop = FALSE]
+      obs_var <- self$data()[, obs_names, drop = FALSE]
       return(obs_var)
     },
     
@@ -202,7 +202,7 @@ Observation <- R6Class(
     #' }
     make_mat = function(new_data = NULL) {
       make_matrices(formulas = self$formulas(),
-                    data = self$data()$data(),
+                    data = self$data(),
                     new_data = new_data)
     },
     
@@ -219,7 +219,7 @@ Observation <- R6Class(
     #' plus a data frame of covariates values.
     make_mat_grid = function(var, covs = NULL, n_grid = 1e3) {
       # Data frame for covariate grid
-      new_data <- cov_grid(var = var, data = self$data()$data(), 
+      new_data <- cov_grid(var = var, data = self$data(), 
                            covs = covs, formulas = self$formulas(),
                            n_grid = n_grid)
       
@@ -425,7 +425,7 @@ Observation <- R6Class(
     #' @return A ggplot object
     plot_dist = function(name, par = NULL, weights = NULL) {
       # Extract observed values for relevant variable
-      obs <- data.frame(val = self$data()$data()[[name]])
+      obs <- data.frame(val = self$data()[[name]])
       
       # Matrix of parameters
       if(is.null(par)) {
@@ -527,8 +527,8 @@ Observation <- R6Class(
     #################################
     # (For argument description, see constructor)
     check_args = function(data, dists, n_states, par, coeff_fe, coeff_re, formulas) {
-      if(!inherits(data, "HMMData")) {
-        stop("'data' should be a HMMData object")
+      if(!inherits(data, "data.frame")) {
+        stop("'data' should be a data.frame")
       }
       
       if(!is.list(dists)) {
@@ -540,7 +540,7 @@ Observation <- R6Class(
                    "(i.e., distribution names), or Dist objects"))
       }
       
-      if(!all(names(dists) %in% colnames(data$data()))) {
+      if(!all(names(dists) %in% colnames(data))) {
         stop("Variable name in 'dists' not found in data")
       }
       

@@ -31,7 +31,8 @@ counts <- simdat$data
 states <- simdat$state
 
 # create objects
-dat <- HMMData$new(data.frame(count = counts))
+dat <- data.frame(ID = 1,
+                  count = counts)
 dists <- list(count = "pois")
 par <- list(count = list(lambda = c(3, 6)))
 obs <- Observation$new(data = dat, dists = dists, n_states = 2, par = par)
