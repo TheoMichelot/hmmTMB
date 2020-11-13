@@ -45,7 +45,7 @@ The package hmmTMB uses the R6 framework for object-oriented programming (@chang
   
   - Observation: model for observation process, including state-dependent distributions, and formulas for the state-dependent observation parameters
   
-  - Hmm: contains a state process model (i.e., a MarkovChain object) and an observation model (i.e., an Observation object).
+  - HMM: contains a state process model (i.e., a MarkovChain object) and an observation model (i.e., an Observation object).
   
 Model specification, model fitting and model visualisation can all be performed by manipulating objects from those three classes. Following the R6 syntax, an object is created with something like
 ```{r r6-new}
@@ -81,9 +81,9 @@ indz <- which(tracks$step == 0)
 tracks$step[indz] <- runif(length(indz), 0, 1)
 ```
 
-We create an HmmData object from the data frame. It should include columns for ID if necessary, as well as for any response variables and covariates included in the model.
+We create an HMMData object from the data frame. It should include columns for ID if necessary, as well as for any response variables and covariates included in the model.
 ```{r hmmdata-new}
-data <- HmmData$new(data = tracks)
+data <- HMMData$new(data = tracks)
 ```
 
 The class Observation encapsulates the observation process model of the hidden Markov model. To create an object of that class, we need to specify distributions for the response variables, as well as initial parameter values. We could also include covariate dependence in the parameters of the observation distributions. We use gamma distributions for the step lengths, and von Mises distributions for the turning angles.
@@ -121,10 +121,10 @@ hid <- MarkovChain$new(n_states = n_states,
                        data = data)
 ```
 
-Combining the MarkovChain and Observation object, we create an object of the Hmm class.
+Combining the MarkovChain and Observation object, we create an object of the HMM class.
 
 ```{r hmm-new}
-hmm <- Hmm$new(obs = obs, hidden = hid)
+hmm <- HMM$new(obs = obs, hidden = hid)
 ```
 
 We fit the model with the method fit, and print the output of the optimiser with res. It contains the parameters estimates (fixed effects), the value of the objective function at the optimum, and diagnostics from the optimiser.

@@ -27,7 +27,7 @@ MarkovChain <- R6Class(
     #' coefficients are set to 0.
     #' @param coeff_re0 Initial coefficients for random effects parameters.
     #' Defaults to 0 if not provided. 
-    #' @param data HmmData object, needed if the model includes covariates
+    #' @param data HMMData object, needed if the model includes covariates
     #' 
     #' @return A new MarkovChain object
     initialize = function(n_states = NULL, structure = NULL, 
@@ -306,7 +306,7 @@ MarkovChain <- R6Class(
     
     #' @description Design matrices for grid of covariates
     #' 
-    #' Used in plotting functions such as Hmm$plot_tpm and Hmm$plot_stat_dist
+    #' Used in plotting functions such as HMM$plot_tpm and HMM$plot_stat_dist
     #' 
     #' @param var Name of variable
     #' @param data Data frame containing the covariates
@@ -440,11 +440,11 @@ MarkovChain <- R6Class(
             stop("'structure' should be a square matrix")
           }
           
-          if(!all(is.character(as.vector(struct)))) {
+          if(!all(is.character(as.vector(structure)))) {
             stop("'structure' should be a matrix of character strings")
           }
           
-          if (!all(diag(structure()) == ".")) {
+          if (!all(diag(structure) == ".")) {
             stop("Diagonal of structure should be '.'")
           }
           
@@ -480,8 +480,8 @@ MarkovChain <- R6Class(
       }
       
       if(!is.null(data)) {
-        if(!inherits(data, "HmmData")) {
-          stop("'data' should be a HmmData object")
+        if(!inherits(data, "HMMData")) {
+          stop("'data' should be a HMMData object")
         }
       }
     }

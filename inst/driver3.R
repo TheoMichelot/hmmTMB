@@ -105,11 +105,11 @@ formulas <- list(step = list(shape = ~ x1 + x2, scale = ~ 1),
                  count = list(lambda = ~ s(ID, bs = "re")))
 
 # Create objects
-dat <- HmmData$new(data)
+dat <- HMMData$new(data)
 obs <- Observation$new(dat, dists = dists, n_states = 2, coeff_fe = coeff_fe, 
                        formulas = formulas)
 hid <- MarkovChain$new(n_states = 2)
-mod <- Hmm$new(obs, hid)
+mod <- HMM$new(obs, hid)
 
 # Fit model
 mod$fit(silent = FALSE)

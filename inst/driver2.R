@@ -10,7 +10,7 @@ n_sim <- 1e4
 covs <- data.frame(ID = 1, 
                    x1 = cumsum(rnorm(n_sim, 0, 0.1)),
                    x2 = cumsum(rnorm(n_sim, 0, 0.1)))
-hmm_data <- HmmData$new(data = covs)
+hmm_data <- HMMData$new(data = covs)
 
 # Create observation model
 n_states <- 2
@@ -31,13 +31,13 @@ hid <- MarkovChain$new(n_states = 2, structure = struct,
                        coeff_fe0 = par_hid0, data = hmm_data)
 
 # Create HMM object and simulate data
-mod <- Hmm$new(obs = obs, hidden = hid)
+mod <- HMM$new(obs = obs, hidden = hid)
 sim <- mod$simulate(n = n_sim, data = covs)
 
 ###############
 ## Fit model ##
 ###############
-hmm_data2 <- HmmData$new(data = sim)
+hmm_data2 <- HMMData$new(data = sim)
 
 # Initial parameters for estimation
 par0 <- list(step = list(shape = c(0.5, 2),
@@ -48,7 +48,7 @@ obs2 <- Observation$new(data = hmm_data2, dists = dists,
 
 hid2 <- MarkovChain$new(n_states = 2, structure = struct, data = hmm_data)
 
-mod2 <- Hmm$new(obs = obs2, hidden = hid2)
+mod2 <- HMM$new(obs = obs2, hidden = hid2)
 
 mod2$fit(silent = FALSE)
 

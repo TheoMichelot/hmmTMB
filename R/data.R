@@ -3,14 +3,14 @@
 #'
 #' Contains a data frame containing observations for the response variables,
 #' as well as the covariates.
-HmmData <- R6Class(
-  classname = "HmmData",
+HMMData <- R6Class(
+  classname = "HMMData",
   
   public = list(
     #################
     ## Constructor ##
     #################
-    #' @description Create new HmmData object
+    #' @description Create new HMMData object
     #' 
     #' @param data A data frame with at least one column of observations. A column
     #' called "time" can be given for the time of each observation, otherwise
@@ -19,7 +19,7 @@ HmmData <- R6Class(
     #' the model.
     #' @param interval Time interval of observation. Optional.
     #' 
-    #' @return A new HmmData object
+    #' @return A new HMMData object
     initialize = function(data, interval = NA) {
       # Check arguments
       private$check_args(data = data, interval = interval)

@@ -12,7 +12,7 @@ Observation <- R6Class(
     #################
     #' @description Create new Observation object
     #' 
-    #' @param data HmmData object
+    #' @param data HMMData object
     #' @param dists Named list of Distribution objects for each data stream
     #' @param n_states Number of states (needed to construct model formulas)
     #' @param par List of observation parameters (for covariate-free model)
@@ -89,7 +89,7 @@ Observation <- R6Class(
     ###############
     ## Accessors ##
     ###############
-    #' @description HmmData object
+    #' @description HMMData object
     data = function() {return(private$data_)},
     
     #' @description List of distributions
@@ -519,8 +519,8 @@ Observation <- R6Class(
     # Check arguments passed to constructor
     # (For argument description, see constructor)
     check_args = function(data, dists, n_states, par, coeff_fe, coeff_re, formulas) {
-      if(!inherits(data, "HmmData")) {
-        stop("'data' should be a HmmData object")
+      if(!inherits(data, "HMMData")) {
+        stop("'data' should be a HMMData object")
       }
       
       if(!is.list(dists)) {

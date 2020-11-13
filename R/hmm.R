@@ -3,19 +3,19 @@
 #'
 #' Encapsulates the observation and hidden state models for a hidden
 #' Markov model.
-Hmm <- R6Class(
-  classname = "Hmm",
+HMM <- R6Class(
+  classname = "HMM",
   
   public = list(
     #################
     ## Constructor ##
     #################
-    #' @description Create new Hmm object
+    #' @description Create new HMM object
     #' 
     #' @param obs Observation object
     #' @param hidden MarkovChain object
     #' 
-    #' @return A new Hmm object
+    #' @return A new HMM object
     initialize = function(obs, hidden) {
       # Check arguments
       private$check_args(obs = obs, hidden = hidden)
