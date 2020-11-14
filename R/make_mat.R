@@ -94,7 +94,6 @@ make_matrices = function(formulas, data, new_data = NULL) {
   # Name elements of ncol_re
   names(ncol_re) <- names_ncol_re
   
-  
   return(list(X_fe = X_fe, X_re = X_re, S = S, 
               ncol_fe = ncol_fe, ncol_re = ncol_re))
 }

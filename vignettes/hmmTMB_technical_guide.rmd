@@ -291,20 +291,31 @@ hmm <- HMM$new(obs = obs_process, hidden = hid_process)
 
 # Some implementation details
 
-## Creation of model matrices (make_mat)
+## Creation of model matrices (make_matrices)
+
+The function make_matrices, used inside the classes MarkovChain and Observation, creates design matrices (of fixed and random effects) and smoothing matrices (smooths and random effects) from model formulas. Formulas must be specified using the mgcv syntax, and the heavy lifting is done by the function gam. 
+
+More specifically, when a formula and a data frame are passed as input, the function gam can return the design matrix X and the number of columns of fixed effects (which we use to split X into a design matrix of fixed effects and a design matrix of random effects). It also returns the smoothing matrix S if there are smooth terms or random effects. The function make_matrices loops over a list of formulas (e.g., formulas for MarkovChain model), and creates three block-diagonal matrices: the design matrix of fixed effects X_fe, the design matrix of random effects X_re, and the smoothing matrix S.
 
 ## Model parameters
 
-coeff_fe, coeff_re, lambda
+The parameters for each model component (i.e., hidden state process and observation process) are stored in three vectors:
+
+ - coeff_fe: Vector of parameters for the fixed effects. If there are no covariates, this is just the HMM parameters transformed by the link functions (i.e., intercepts of linear predictor). If there are fixed effects of covariates, this is a vector of regression coefficients.
+ 
+ - coeff_re: Vector of parameters for the random effects. If there are no smooth/random effects, this is empty. If there are smooth effects, these are the coefficients for the corresponding basis functions.
+ 
+ - lambda: Vector of smoothness parameters. If there are no smooth/random effects, this is empty. If there are smooth effects, this coefficient measures the smoothness of the corresponding spline. If there are iid normal random effect, lambda can be linked to the variance (see vcomp method).
 
 ## Uncertainty estimates using CI and predict functions
+
+TMB returns standard errors for the estimated fixed effect parameters, and the method HMM\$CI_coeff uses these to derive confidence intervals. Obtaining confidence intervals for the HMM parameters (transition probabilities and parameters of the observation distributions), which is typically what we want, is a little harder because those parameters can depend on covariates. 
+
+We create confidence intervals for the HMM parameters using simulations. The function sdreport in TMB can return a joint precision matrix for all model parameters if the option getJointPrecision = TRUE is specified. Based on the asymptotic normality of the maximum likelihood estimates (MLEs), we generate a large number of parameter sets from a multivariate normal distribution with mean the MLEs and covariance matrix given by the inverse of the precision matrix provided by TMB. For each simulated set of parameters, we derive the corresponding HMM parameters, and we obtain approximate pointwise confidence intervals by extracting the appropriate quantiles.
 
 # Future work
 
 ## Higher priority
-
- - prepare package for sharing:
-   + add error messages (e.g., observations incompatible with distribution)
 
  - additional observation distributions
     + Weibull
