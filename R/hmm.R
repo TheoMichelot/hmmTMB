@@ -228,6 +228,13 @@ HMM <- R6Class(
                        map = map, 
                        silent = silent)
       
+      nllk0 <- obj$fn(obj$par)
+      if(is.nan(nllk0) | is.infinite(nllk0)) {
+        stop(paste("Log-likelihood is NaN or infinite at starting parameters.",
+                   "Check that the data are within the domain of definition of the",
+                   "observation distributions, and/or try other starting parameters."))
+      }
+      
       # Negative log-likelihood function
       private$tmb_obj_ <- obj
     },
