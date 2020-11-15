@@ -835,14 +835,16 @@ HMM <- R6Class(
       
       if(is.null(var2)) {
         # 1d time series plot
-        df <- data.frame(index = 1:nrow(data),
+        df <- data.frame(ID = ID,
+                         index = 1:nrow(data),
                          x = data[[var1]])
         
         p <- ggplot(data = df, mapping = aes(index, x, col = state, group = ID)) +
           geom_line() + xlab("time") + ylab(var1)
       } else {
         # 2d plot
-        df <- data.frame(x = data[[var1]],
+        df <- data.frame(ID = ID,
+                         x = data[[var1]],
                          y = data[[var2]])
         
         p <- ggplot(data = df, mapping = aes(x, y, col = state, group = ID)) +
