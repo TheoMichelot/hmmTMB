@@ -20,6 +20,17 @@ HMM <- R6Class(
       # Check arguments
       private$check_args(obs = obs, hidden = hidden)
       
+      # Get names of all covariates (in MarkovChain and Observation models)
+      var_names <- unique(rapply(hidden$formulas(), all.vars), 
+                          rapply(obs$formulas(), all.vars))
+      if(length(var_names) > 0) {
+        data <- obs$data()
+        # Remove NAs in covariates (replace by last non-NA value)
+        data[,var_names] <- lapply(data[,var_names], function(col) na_fill(col))          
+        # Update data frame in obs
+        obs$update_data(data)
+      }
+      
       private$obs_ <- obs
       private$hidden_ <- hidden
     },
@@ -455,8 +466,8 @@ HMM <- R6Class(
       # posterior sample of coeff_fe and coeff_re
       post_tpm <- sapply(1:n_post, function(i) {
         self$hidden()$tpm_all(X_fe = X_fe, X_re = X_re, 
-                    coeff_fe = post_coeff_fe[i,], 
-                    coeff_re = post_coeff_re[i,])
+                              coeff_fe = post_coeff_fe[i,], 
+                              coeff_re = post_coeff_re[i,])
       })
       
       # Get confidence intervals as quantiles of posterior tpms
@@ -807,7 +818,7 @@ HMM <- R6Class(
         par_count <- par_count + obsdist$npar()
         cat("\n")
       }
-
+      
       return(obs_all)
     },
     

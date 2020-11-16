@@ -33,7 +33,8 @@ Observation <- R6Class(
       } else {
         data$ID <- factor(data$ID)
       }
-      
+
+      # Set data and nstates attributes
       private$data_ <- data
       private$nstates_ <- n_states
       
@@ -188,6 +189,13 @@ Observation <- R6Class(
     update_lambda = function(lambda) {
       private$lambda_ <- matrix(lambda)
       rownames(private$lambda_) <- self$terms()$names_re
+    },
+    
+    #' @description Update data
+    #' 
+    #' @param data New data frame
+    update_data = function(data) {
+      private$data_ <- data
     },
     
     ###################
