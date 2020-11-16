@@ -866,9 +866,10 @@ HMM <- R6Class(
     #' for each covariate, giving the values that should be used. If this is
     #' not specified, the mean value is used for numeric variables, and the
     #' first level for factor variables.
+    #' @param level Confidence level for confidence intervals (default: 0.95)
     #' 
     #' @return A ggplot object
-    plot_tpm = function(var, covs = NULL) {
+    plot_tpm = function(var, covs = NULL, level = 0.95) {
       # Number of states
       n_states <- self$hidden()$nstates()
       
@@ -879,7 +880,7 @@ HMM <- R6Class(
       # Get transition probability matrices
       tpms <- self$hidden()$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
       # Get confidence intervals
-      CIs <- self$CI_tpm(X_fe = mats$X_fe, X_re = mats$X_re)
+      CIs <- self$CI_tpm(X_fe = mats$X_fe, X_re = mats$X_re, level = level)
       
       # Data frame for plot
       df <- as.data.frame.table(tpms)
@@ -932,9 +933,10 @@ HMM <- R6Class(
     #' for each covariate, giving the values that should be used. If this is
     #' not specified, the mean value is used for numeric variables, and the
     #' first level for factor variables.
+    #' @param level Confidence level for confidence intervals (default: 0.95)
     #' 
     #' @return A ggplot object
-    plot_stat_dist = function(var, covs = NULL) {
+    plot_stat_dist = function(var, covs = NULL, level = 0.95) {
       # Number of states
       n_states <- self$hidden()$nstates()
       
@@ -945,7 +947,7 @@ HMM <- R6Class(
       # Get stationary distributions
       stat_dists <- self$hidden()$stat_dists(X_fe = mats$X_fe, X_re = mats$X_re)
       # Get confidence intervals
-      CIs <- self$CI_statdist(X_fe = mats$X_fe, X_re = mats$X_re)
+      CIs <- self$CI_statdist(X_fe = mats$X_fe, X_re = mats$X_re, level = level)
       
       # Data frame for plot
       df <- as.data.frame.table(stat_dists)
@@ -992,9 +994,10 @@ HMM <- R6Class(
     #' for each covariate, giving the values that should be used. If this is
     #' not specified, the mean value is used for numeric variables, and the
     #' first level for factor variables.
+    #' @param level Confidence level for confidence intervals (default: 0.95)
     #' 
     #' @return A ggplot object
-    plot_obspar = function(var, covs = NULL) {
+    plot_obspar = function(var, covs = NULL, level = 0.95) {
       # Number of states
       n_states <- self$hidden()$nstates()
       
@@ -1003,7 +1006,7 @@ HMM <- R6Class(
       # Get observation parameters over covariate grid
       obs_par <- self$obs()$par_all(X_fe = mats$X_fe, X_re = mats$X_re)
       # Get confidence intervals over covariate grid
-      CIs <- self$CI_obspar(X_fe = mats$X_fe, X_re = mats$X_re)
+      CIs <- self$CI_obspar(X_fe = mats$X_fe, X_re = mats$X_re, level = level)
       
       # Data frame for plot
       df <- as.data.frame.table(obs_par)

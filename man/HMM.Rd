@@ -582,7 +582,7 @@ A ggplot object
 \subsection{Method \code{plot_tpm()}}{
 Plot transition probability matrix
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_tpm(var, covs = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_tpm(var, covs = NULL, level = 0.95)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -595,6 +595,8 @@ probabilities should be plotted}
 for each covariate, giving the values that should be used. If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
+
+\item{\code{level}}{Confidence level for confidence intervals (default: 0.95)}
 }
 \if{html}{\out{</div>}}
 }
@@ -608,7 +610,7 @@ A ggplot object
 \subsection{Method \code{plot_stat_dist()}}{
 Plot stationary state probabilities
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_stat_dist(var, covs = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_stat_dist(var, covs = NULL, level = 0.95)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -621,6 +623,8 @@ probabilities should be plotted}
 for each covariate, giving the values that should be used. If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
+
+\item{\code{level}}{Confidence level for confidence intervals (default: 0.95)}
 }
 \if{html}{\out{</div>}}
 }
@@ -634,7 +638,7 @@ A ggplot object
 \subsection{Method \code{plot_obspar()}}{
 Plot observation parameters
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_obspar(var, covs = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_obspar(var, covs = NULL, level = 0.95)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -647,6 +651,8 @@ should be plotted}
 for each covariate, giving the values that should be used. If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
+
+\item{\code{level}}{Confidence level for confidence intervals (default: 0.95)}
 }
 \if{html}{\out{</div>}}
 }
