@@ -82,9 +82,12 @@ where $L$ is the unpenalised HMM likelihood (e.g.\ computed using the forward al
 
 The smoothness parameters $\lambda_i$ are not known, and need to be estimated jointly with other model parameters. In hmmTMB, we use the marginal likelihood method; i.e., we treat the basis coefficients as random effects, and we consider the marginal likelihood of the fixed effects $\alpha$ and smoothness parameters $\lambda$,
 $$
-L(\alpha, \lambda \vert z_1, \dots, z_n) = \int p(z_1, \dots, z_n \vert \alpha, \beta) p(\beta \vert \lambda) d\beta,
+\begin{aligned}
+L(\alpha, \lambda \vert z_1, \dots, z_n) & = \int \exp(l_p) d\beta \\
+                                         & = \int [z_1, \dots, z_n \vert \alpha, \beta] [\beta \vert \lambda] d\beta
+\end{aligned}
 $$
-where $p(z_1, \dots, z_n \ vert \theta, \beta)$ is the HMM likelihood, and $p(\beta \vert \lambda)$ is a multivariate normal pdf with mean zero and block-diagonal precision matrix with blocks $\lambda_i S_i$.
+where $[z_1, \dots, z_n \ vert \theta, \beta]$ is the HMM likelihood, and $[\beta \vert \lambda]$ is a multivariate normal pdf with mean zero and block-diagonal precision matrix with blocks $\lambda_i S_i$.
 
 # Implementation using TMB and mgcv
 
@@ -330,8 +333,6 @@ We create confidence intervals for the HMM parameters using simulations. The fun
  - pseudo-residuals
 
  - allow for input of known states (semi-supervised learning)
-
- - deal with NAs in covariates (linear interpolation? nearest value? error message?)
 
  - stationary = TRUE/FALSE option in MarkovChain class
  
