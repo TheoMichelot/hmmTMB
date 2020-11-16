@@ -11,40 +11,6 @@ R6 class for hidden Markov model
 \details{
 Encapsulates the observation and hidden state models for a hidden
 Markov model.
-
-This function transforms the smoothness parameter of
-each smooth term into a standard deviation, given by 
-SD = 1/sqrt(lambda). It is particularly helpful to get the
-standard deviations of independent normal random effects.
-
-This method generates confidence intervals by simulation.
-That is, it generates \code{n_post} posterior samples of 
-the estimated parameters from a multivariate normal distribution,
-where the mean is the vector of estimates and the covariance matrix 
-is provided by TMB. Then, transition probabilities are derived for 
-each set of posterior parameter values, and confidence intervals
-are obtained as quantiles of the posterior simulated transition
-probabilities.
-
-
-This method generates confidence intervals by simulation.
-That is, it generates \code{n_post} posterior samples of 
-the estimated parameters from a multivariate normal distribution,
-where the mean is the vector of estimates and the covariance matrix 
-is provided by TMB. Then, stationary state probabilities are derived 
-for each set of posterior parameter values, and confidence intervals
-are obtained as quantiles of the posterior simulated stationary state
-probabilities.
-
-
-This method generates confidence intervals by simulation.
-That is, it generates \code{n_post} posterior samples of 
-the estimated parameters from a multivariate normal distribution,
-where the mean is the vector of estimates and the covariance matrix 
-is provided by TMB. Then, observation parameters are derived for 
-each set of posterior parameter values, and confidence intervals
-are obtained as quantiles of the posterior simulated observation
-parameters.
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -205,6 +171,11 @@ Smoothness parameters
 \if{latex}{\out{\hypertarget{method-vcomp}{}}}
 \subsection{Method \code{vcomp()}}{
 Variance components of smooth terms
+
+This function transforms the smoothness parameter of
+each smooth term into a standard deviation, given by 
+SD = 1/sqrt(lambda). It is particularly helpful to get the
+standard deviations of independent normal random effects.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$vcomp()}\if{html}{\out{</div>}}
 }
@@ -353,7 +324,16 @@ intervals)}
 
 \item{\code{n_post}}{Number of posterior samples from which the confidence
 intervals are calculated. Larger values will reduce approximation
-error, but increase computation time. Defaults to 1000.}
+error, but increase computation time. Defaults to 1000.
+
+This method generates confidence intervals by simulation.
+That is, it generates \code{n_post} posterior samples of 
+the estimated parameters from a multivariate normal distribution,
+where the mean is the vector of estimates and the covariance matrix 
+is provided by TMB. Then, transition probabilities are derived for 
+each set of posterior parameter values, and confidence intervals
+are obtained as quantiles of the posterior simulated transition
+probabilities.}
 }
 \if{html}{\out{</div>}}
 }
@@ -390,7 +370,16 @@ intervals)}
 
 \item{\code{n_post}}{Number of posterior samples from which the confidence
 intervals are calculated. Larger values will reduce approximation
-error, but increase computation time. Defaults to 1000.}
+error, but increase computation time. Defaults to 1000.
+
+This method generates confidence intervals by simulation.
+That is, it generates \code{n_post} posterior samples of 
+the estimated parameters from a multivariate normal distribution,
+where the mean is the vector of estimates and the covariance matrix 
+is provided by TMB. Then, stationary state probabilities are derived 
+for each set of posterior parameter values, and confidence intervals
+are obtained as quantiles of the posterior simulated stationary state
+probabilities.}
 }
 \if{html}{\out{</div>}}
 }
@@ -427,7 +416,16 @@ intervals)}
 
 \item{\code{n_post}}{Number of posterior samples from which the confidence
 intervals are calculated. Larger values will reduce approximation
-error, but increase computation time. Defaults to 1000.}
+error, but increase computation time. Defaults to 1000.
+
+This method generates confidence intervals by simulation.
+That is, it generates \code{n_post} posterior samples of 
+the estimated parameters from a multivariate normal distribution,
+where the mean is the vector of estimates and the covariance matrix 
+is provided by TMB. Then, observation parameters are derived for 
+each set of posterior parameter values, and confidence intervals
+are obtained as quantiles of the posterior simulated observation
+parameters.}
 }
 \if{html}{\out{</div>}}
 }

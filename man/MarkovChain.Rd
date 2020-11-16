@@ -10,11 +10,6 @@ R6 class for HMM hidden process model
 }
 \details{
 Contains the parameters and model formulas for the hidden process model.
-
-This function transforms the smoothness parameter of
-each smooth term into a standard deviation, given by 
-SD = 1/sqrt(lambda). It is particularly helpful to get the
-standard deviations of independent normal random effects.
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -157,6 +152,11 @@ Smoothness parameters
 \if{latex}{\out{\hypertarget{method-vcomp}{}}}
 \subsection{Method \code{vcomp()}}{
 Variance components of smooth terms
+
+This function transforms the smoothness parameter of
+each smooth term into a standard deviation, given by 
+SD = 1/sqrt(lambda). It is particularly helpful to get the
+standard deviations of independent normal random effects.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$vcomp()}\if{html}{\out{</div>}}
 }

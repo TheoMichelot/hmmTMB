@@ -97,7 +97,7 @@ HMM <- R6Class(
     
     #' @description Variance components of smooth terms
     #' 
-    #' @details This function transforms the smoothness parameter of
+    #' This function transforms the smoothness parameter of
     #' each smooth term into a standard deviation, given by 
     #' SD = 1/sqrt(lambda). It is particularly helpful to get the
     #' standard deviations of independent normal random effects.
@@ -412,7 +412,7 @@ HMM <- R6Class(
     #' intervals are calculated. Larger values will reduce approximation
     #' error, but increase computation time. Defaults to 1000.
     #' 
-    #' @details This method generates confidence intervals by simulation.
+    #' This method generates confidence intervals by simulation.
     #' That is, it generates \code{n_post} posterior samples of 
     #' the estimated parameters from a multivariate normal distribution,
     #' where the mean is the vector of estimates and the covariance matrix 
@@ -483,7 +483,7 @@ HMM <- R6Class(
     #' intervals are calculated. Larger values will reduce approximation
     #' error, but increase computation time. Defaults to 1000.
     #' 
-    #' @details This method generates confidence intervals by simulation.
+    #' This method generates confidence intervals by simulation.
     #' That is, it generates \code{n_post} posterior samples of 
     #' the estimated parameters from a multivariate normal distribution,
     #' where the mean is the vector of estimates and the covariance matrix 
@@ -560,7 +560,7 @@ HMM <- R6Class(
     #' intervals are calculated. Larger values will reduce approximation
     #' error, but increase computation time. Defaults to 1000.
     #' 
-    #' @details This method generates confidence intervals by simulation.
+    #' This method generates confidence intervals by simulation.
     #' That is, it generates \code{n_post} posterior samples of 
     #' the estimated parameters from a multivariate normal distribution,
     #' where the mean is the vector of estimates and the covariance matrix 
