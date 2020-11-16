@@ -6,7 +6,7 @@ Fit hidden Markov models using Template Model Builder (TMB): flexible state-depe
 
 Install the package from Github using devtools,
 ```
-install_github("r-glennie/hmmTMB")
+install_github("r-glennie/HmmTmb")
 ```
 
 ## Package documentation
@@ -20,6 +20,7 @@ To find help files for the methods implemented in the package, search for help u
 
 We describe functionalities of the package in two vignettes:
 
- - 'hmmTMB user guide': Overview of package functionalities using detailed examples based on animal movement data.
+ - ['hmmTMB user guide'](https://github.com/r-glennie/HmmTmb/raw/master/vignettes/hmmTMB_vignette.pdf): Overview of package functionalities using detailed examples based on animal movement data.
  
- - 'hmmTMB technical guide': Description of models and implementation.
+ - ['hmmTMB technical guide'](https://github.com/r-glennie/HmmTmb/raw/master/vignettes/hmmTMB_technical_guide.pdf): Description of models and implementation.
+ 
