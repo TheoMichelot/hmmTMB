@@ -3,7 +3,8 @@ title: "hmmTMB user guide"
 author: "Théo Michelot, Richard Glennie"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
+  pdf_document:
+    number_sections: yes
   html_document:
     number_sections: yes
 bibliography: refs.bib
@@ -16,7 +17,7 @@ editor_options:
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
 message = FALSE, error = FALSE, warning = FALSE,
-comment = NA
+comment = NA, cache = TRUE
 )
 ```
 
@@ -154,7 +155,7 @@ head(states)
 
 Various plotting functions are provided to visualise a fitted model. Using the method Observation\$plot_dist, we can plot histograms of the observed data, overlaid with the estimated state-dependent probability density functions.
 
-```{r plot-dist}
+```{r plot-dist, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
 # Proportion of states in Viterbi sequence, to weigh pdfs
 w <- table(states)/length(states)
 obs$plot_dist("step", weights = w)
@@ -163,21 +164,22 @@ obs$plot_dist("angle", weights = w)
 
 We can plot the data coloured by the Viterbi-decoded states. All plotting functions return ggplot objects, and can easily be edited using ggplot commands, e.g.\ to change axis labels or colours.
 
-```{r plot-ts}
+```{r plot-ts, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
 hmm$plot_ts("step")
 hmm$plot_ts("x", "y") + coord_equal() + geom_point(size = 0.5)
 ```
 
 The function plot_tpm creates graphs of the transition probabilities as functions of a covariate, here distance to water.
 
-```{r plot-tpm}
+```{r plot-tpm, fig.width = 6, fig.height = 4, out.width="70%", fig.align="center"}
 hmm$plot_tpm("dist_water") + xlab("Distance to water (m)")
 ```
 
 With the function plot_stat_dist, we can visualise the stationary state probabilities as functions of the distance to water.
 
-```{r plot-stat}
-hmm$plot_stat_dist("dist_water") + xlab("Distance to water (m)")
+```{r plot-stat, fig.width = 7, fig.height = 4, out.width="90%", fig.align="center"}
+hmm$plot_stat_dist("dist_water") + 
+  xlab("Distance to water (m)")
 ```
 
 We can simulate from the fitted model with the method simulate, for example to check how well the model captures features of the real data. Here, we simulate step lengths and turning angles from the model.
@@ -202,7 +204,7 @@ head(sim_data)
 
 We then derive the corresponding locations to visualise the simulated movement trajectory.
 
-```{r hmm-sim-3, results = 'hide'}
+```{r hmm-sim-3, results = 'hide', fig.width = 5, fig.height = 4, out.width="60%", fig.align="center"}
 # Get locations from simulated step lengths and turning angles
 bearings <- cumsum(sim_data$angle)
 sim_dxy <- sim_data$step * cbind(cos(bearings), sin(bearings))
@@ -272,7 +274,7 @@ data$state <- hmm$viterbi()
 ```
 
 We can plot the time series of step lengths, or the tracks, coloured by the estimated state sequence,
-```{r haggis-plot_ts}
+```{r haggis-plot_ts, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
 hmm$plot_ts("step")
 
 hmm$plot_ts("x", "y") + 
@@ -281,12 +283,12 @@ hmm$plot_ts("x", "y") +
 ```
 
 These plots suggest that state 1 captured fast movement behaviour (long step lengths) and state 2 captured slow movement (short step lengths). This can also be seen from the estimated state-dependent distributions of step lengths,
-```{r haggis-plot_dist}
+```{r haggis-plot_dist, fig.width = 7, fig.height = 4, out.width="90%", fig.align="center"}
 obs$plot_dist("step", w = table(data$state)/nrow(data))
 ```
 
 To visualise the effect of slope on the behaviour of wild haggises, we plot the stationary state probabilities as functions of the slope,
-```{r haggis-plot_stat}
+```{r haggis-plot_stat, fig.width = 7, fig.height = 4, out.width="90%", fig.align="center"}
 hmm$plot_stat_dist("slope")
 ```
 
