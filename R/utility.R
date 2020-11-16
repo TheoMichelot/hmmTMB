@@ -30,6 +30,37 @@ bdiag_check <- function(...) {
     return(bdiag(args[check]))
 }
 
+#' Fill in NAs
+#' 
+#' Replace NA entries in a vector by the last non-NA value. If the first
+#' entry of the vector is NA, it is replaced by the first non-NA value. If the
+#' vector passed as input doesn't contain NAs, it is returned as is.
+#' 
+#' @param x Vector in which NAs should be removed
+#' 
+#' @return Copy of x in which NAs have been replaced by nearest available value.
+na_fill <- function(x) {
+  # If no missing value, return x as is
+  if(!any(is.na(x))) {
+    return(x)
+  }
+  
+  message("Replacing NAs in covariates by last non-NA values.")
+  
+  # Copy x
+  y <- x
+  # Replace first value by first non-NA value, just in case is.na(y[1])
+  y[1] <- x[which(!is.na(x))[1]]
+  
+  # Loop over NA entries, and replace by previous entry
+  na_ind <- which(is.na(y))
+  for(i in na_ind) {
+    y[i] <- y[i-1]
+  }
+  
+  return(y)
+}
+
 #' Grid of covariates
 #' 
 #' @param var Name of variable
