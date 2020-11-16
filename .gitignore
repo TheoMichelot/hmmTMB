@@ -42,3 +42,6 @@ src/*.o
 .Rbuildignore
 *.Rproj
 .Rproj.user
+
+# cache files for vignettes
+vignettes/hmmTMB_vignette_cache/*
