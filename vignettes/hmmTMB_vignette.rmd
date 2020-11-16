@@ -2,14 +2,14 @@
 title: "hmmTMB user guide"
 author: "Théo Michelot, Richard Glennie"
 date: "`r Sys.Date()`"
-output: 
+output:
+  pdf_document: default
   html_document:
-    number_sections: true
+    number_sections: yes
 bibliography: refs.bib
-vignette: >
-  %\VignetteIndexEntry{hmmTMB user guide}
-  %\VignetteEngine{knitr::rmarkdown}
-editor_options: 
+vignette: |
+  %\VignetteIndexEntry{hmmTMB user guide} %\VignetteEngine{knitr::rmarkdown}
+editor_options:
   chunk_output_type: inline
 ---
 
@@ -215,6 +215,88 @@ ggplot(sim_data, aes(x, y, col = factor(state), group = NA)) +
   geom_point(size = 0.7) + 
   geom_path() +
   coord_equal()
+```
+
+# Example 2: wild haggis movement
+
+We further illustrate the functionalities of hmmTMB with the analysis of the wild haggis tracking data set from @michelot2016. The objective of the study is to investigate the effect of terrain slope on the behaviour of wild haggises, accounting for inter-individual differences.
+
+We load the data from @michelot2016, which contains locations for 15 haggis tracks, as well as slope and temperature measurements,
+```{r haggis-read}
+URL <- paste0("https://besjournals.onlinelibrary.wiley.com/action/downloadSupplement?",
+              "doi=10.1111%2F2041-210X.13066&file=mee313066-sup-0001-rawhaggises.csv")
+raw <- read.csv(url(URL))
+
+head(raw)
+```
+
+We use the prepData function from moveHMM to calculate step lengths, and we transform ID into a factor variable,
+```{r haggis-prep}
+data <- prepData(raw, type = "UTM")
+data$ID <- factor(data$ID)
+
+head(data)
+```
+
+We define the hidden state process as a 2-state Markov chain, with a smooth effect of "slope" (using thin-plate regression splines), and a normal random intercept for "ID" to allow for differences between haggises. We don't include the effect of temperature because @michelot2016 found no clear effect.
+```{r haggis-hid}
+n_states <- 2
+hid <- MarkovChain$new(n_states = n_states,
+                       structure = ~s(ID, bs = "re") + s(slope, k = 5, bs = "ts"),
+                       data = data)
+```
+
+To define the observation model, we specify that the step lengths should be modelled with gamma distributions. We choose initial parameter values for the mean and standard deviation based on data visualisations, and derive initial values for the shape and scale based on that,
+```{r haggis-obs}
+# Observation distributions
+dists <- list(step = "gamma")
+
+# Initial parameter values
+mean0 <- c(1, 5)
+sd0 <- c(0.5, 3)
+par0 <- list(step = list(shape = mean0^2/sd0^2,
+                         scale = sd0/mean0^2))
+
+# Define observation model
+obs <- Observation$new(data = data, 
+                       n_states = n_states,
+                       dists = dists, 
+                       par = par0)
+```
+
+We create the HMM object from the MarkovChain and Observation components, fit it using the fit method, and compute the most likely state sequence using the viterbi method,
+```{r haggis-fit}
+hmm <- HMM$new(hidden = hid, obs = obs)
+hmm$fit()
+data$state <- hmm$viterbi()
+```
+
+We can plot the time series of step lengths, or the tracks, coloured by the estimated state sequence,
+```{r haggis-plot_ts}
+hmm$plot_ts("step")
+
+hmm$plot_ts("x", "y") + 
+    geom_point(size = 0.5) + 
+    coord_equal()
+```
+
+These plots suggest that state 1 captured fast movement behaviour (long step lengths) and state 2 captured slow movement (short step lengths). This can also be seen from the estimated state-dependent distributions of step lengths,
+```{r haggis-plot_dist}
+obs$plot_dist("step", w = table(data$state)/nrow(data))
+```
+
+To visualise the effect of slope on the behaviour of wild haggises, we plot the stationary state probabilities as functions of the slope,
+```{r haggis-plot_stat}
+hmm$plot_stat_dist("slope")
+```
+
+When there are several covariates, the plotting functions fix the other covariates to their mean value (for continuous covariates) or to their first level (for factor covariates), as shown at the top of the plot. This can be changed by specifying the argument "covs", a data frame with a single row and one named column for each covariate.
+
+We observe the same pattern found by @michelot2016: wild haggises tended to adopt the fast movement state at intermediate slopes (between 5 and 30 degrees), and the slow movement state on very flat or very steep terrains. @michelot2016 compared a linear and a quadratic effect of slope; the smoothing splines used here are more flexible, and the implementation automatically estimates the smoothness of the relationship during model fitting.
+
+A measure of inter-individual heterogeneity is given by the standard deviation of the distribution of random intercepts, and can be obtained using the vcomp method,
+```{r haggis-vcomp}
+hid$vcomp()
 ```
 
 # References

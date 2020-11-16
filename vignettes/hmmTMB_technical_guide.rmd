@@ -3,9 +3,9 @@ title: "hmmTMB technical guide"
 author: "Théo Michelot, Richard Glennie"
 date: "`r Sys.Date()`"
 output:
-  pdf_document:
-    number_sections: yes
   html_document:
+    number_sections: yes
+  pdf_document:
     number_sections: yes
 bibliography: refs.bib
 vignette: |
