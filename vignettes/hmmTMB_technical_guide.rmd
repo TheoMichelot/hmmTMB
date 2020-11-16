@@ -74,20 +74,22 @@ where $h$ is a link function, $\beta_0$ is an intercept parameter, and the funct
 $$
 f_{i} (x) = \sum_{k=1}^K \beta_{ik} \psi_{ik}(x),
 $$
-where various bases can be chosen (e.g., cubic splines, B-splines). Following standard GAM methodology, the roughness (`wiggliness') of these functions is then penalised in the likelihood of the model to ensure that they are smooth. The penalised log-likelihood is
+where various bases can be chosen (e.g., cubic splines, B-splines). Following standard GAM methodology, the roughness (`wiggliness') of these functions is then penalised in the likelihood of the model to ensure that they are smooth. 
+
+Consider that we have $n$ observations $z_1, \dots, z_n$ from this model. The penalised log-likelihood is
 $$
-l_p = \log(L) - \sum_i \lambda_i \beta_i^T S_i \beta_i,
+l_p(\alpha, \beta, \lambda \vert z_1, \dots, z_n) = \log\{L(\alpha, \beta \vert z_1, \dots, z_n)\} - \sum_i \lambda_i \beta_i^T S_i \beta_i,
 $$
-where $L$ is the unpenalised HMM likelihood (e.g.\ computed using the forward algorithm), the $\lambda_i$ are smoothness parameters, and $S_i$ is a known penalty matrix determined by the choice of basis.
+where $L(\alpha, \beta \vert z_1, \dots, z_n)$ is the unpenalised HMM likelihood of parameters $\alpha$ and $\beta$ (e.g.\ computed using the forward algorithm), $\lambda$ is a vector of smoothness parameters, and $S_i$ is a known penalty matrix determined by the choice of basis.
 
 The smoothness parameters $\lambda_i$ are not known, and need to be estimated jointly with other model parameters. In hmmTMB, we use the marginal likelihood method; i.e., we treat the basis coefficients as random effects, and we consider the marginal likelihood of the fixed effects $\alpha$ and smoothness parameters $\lambda$,
 $$
 \begin{aligned}
-L(\alpha, \lambda \vert z_1, \dots, z_n) & = \int \exp(l_p) d\beta \\
+L(\alpha, \lambda \vert z_1, \dots, z_n) & = \int \exp\{l_p(\alpha, \beta, \lambda \vert z_1, \dots, z_n)\} d\beta \\
                                          & = \int [z_1, \dots, z_n \vert \alpha, \beta] [\beta \vert \lambda] d\beta
 \end{aligned}
 $$
-where $[z_1, \dots, z_n \ vert \theta, \beta]$ is the HMM likelihood, and $[\beta \vert \lambda]$ is a multivariate normal pdf with mean zero and block-diagonal precision matrix with blocks $\lambda_i S_i$.
+where $[z_1, \dots, z_n \vert \alpha, \beta] = L(\alpha, \beta \vert z_1, \dots, z_n)$ is the HMM likelihood, and $[\beta \vert \lambda]$ is a multivariate normal pdf with mean zero and block-diagonal precision matrix with blocks $\lambda_i S_i$. TMB uses the Laplace approximation on the integrand to evaluate this expression. We can then perform maximum likelihood estimation on the marginal likelihood to obtain estimates of $\alpha$ and $\lambda$.
 
 # Implementation using TMB and mgcv
 
