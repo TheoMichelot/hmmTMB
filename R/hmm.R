@@ -26,7 +26,7 @@ HMM <- R6Class(
       if(length(var_names) > 0) {
         data <- obs$data()
         # Remove NAs in covariates (replace by last non-NA value)
-        data[,var_names] <- lapply(data[,var_names], function(col) na_fill(col))          
+        data[,var_names] <- lapply(data[,var_names, drop=FALSE], function(col) na_fill(col))
         # Update data frame in obs
         obs$update_data(data)
       }
