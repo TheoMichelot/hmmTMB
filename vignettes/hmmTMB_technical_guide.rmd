@@ -334,8 +334,8 @@ We create confidence intervals for the HMM parameters using simulations. The fun
 ## Lower priority (easy?)
 
  - state probabilities (local decoding)
-
- - pseudo-residuals
+ 
+ - goodness-of-fit: pseudo-residuals, posterior simulation tests 
 
  - allow for input of known states (semi-supervised learning)
 
@@ -344,6 +344,8 @@ We create confidence intervals for the HMM parameters using simulations. The fun
 ## Lower priority (difficult?)
 
  - AIC
+ 
+ - multivariate distributions 
    
  - zero inflation
  
