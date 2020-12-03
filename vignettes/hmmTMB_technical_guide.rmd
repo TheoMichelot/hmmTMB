@@ -1,5 +1,5 @@
 ---
-title: "hmmTMB technical guide"
+title: "**hmmTMB technical guide**"
 author: "Théo Michelot, Richard Glennie"
 date: "`r Sys.Date()`"
 output:
@@ -37,7 +37,7 @@ The package hmmTMB implements hidden Markov models with flexible formulations fo
 
 A hidden Markov model (HMM) is comprised of two random processes:
 
-  - the state process $(S_t)$, defined as a $J$-state Markov chain, such that $S_t \ in \{ 1, 2, \dots, J \}$ at any time $t = 1, 2, \dots$;
+  - the state process $(S_t)$, defined as a $J$-state Markov chain, such that $S_t \in \{ 1, 2, \dots, J \}$ at any time $t = 1, 2, \dots$;
   
   - the (possibly multivariate) observation process $(Z_t)$. At each time $t$, the observation $Z_t$ arises from one of $J$ probability distributions, determined by the value $S_t$ of the state process.
 
@@ -95,7 +95,7 @@ where $[z_1, \dots, z_n \vert \alpha, \beta] = L(\alpha, \beta \vert z_1, \dots,
 
 ## Model specification using mgcv
 
-We use the gam function from the package mgcv to create design matrices from the formulas specified for the HMM parameters (including linear effects, basis functions, and random effects), and the penalty matrices for smoothing splines (@wood2017). Users therefore need to use the mgcv syntax for smooth terms and random effects, as described in the [mgcv documentation](https://stat.ethz.ch/R-manual/R-patched/library/mgcv/html/smooth.terms.html). Here, we present a short example to illustrate how gam is used in hmmTMB. Consider the following data frame containing values for two covariates x1 and x2}, and a time series identifier ID,
+We use the `gam` function from the package mgcv to create design matrices from the formulas specified for the HMM parameters (including linear effects, basis functions, and random effects), and the penalty matrices for smoothing splines (@wood2017). Users therefore need to use the mgcv syntax for smooth terms and random effects, as described in the [mgcv documentation](https://stat.ethz.ch/R-manual/R-patched/library/mgcv/html/smooth.terms.html). Here, we present a short example to illustrate how `gam` is used in hmmTMB. Consider the following data frame containing values for two covariates `x1` and `x2`}, and a time series identifier 1ID1,
 
 ```{r data, echo = FALSE, message = "hide"}
 n <- 100
@@ -110,7 +110,7 @@ Then, consider that we want to specify one of the HMM parameters with the follow
 ``` {r formula}
 form <- ~ x1 + s(x2, k = 5, bs = "cc") + s(ID, bs = "re")
 ```
-where x1 has a linear effect, x2 has a smooth effect modelled using cyclic cubic regression splines, and a random normal intercept is included for ID. We compute the model matrices as follows,
+where `x1` has a linear effect, `x2` has a smooth effect modelled using cyclic cubic regression splines, and a random normal intercept is included for `ID`. We compute the model matrices as follows,
 ``` {r gam}
 # Create smooth object using mgcv
 smooth <- gam(formula = update(form, dummy ~ .), 
@@ -138,11 +138,11 @@ and the design matrix for the random effects is
 ```{r x-re}
 head(X_re)
 ```
-where the first three columns correspond to the four basis functions for x2, and the four last columns are dummy indicator variables for ID. Then, the linear predictor for the corresponding HMM parameter is
+where the first three columns correspond to the four basis functions for `x2`, and the four last columns are dummy indicator variables for `ID`. Then, the linear predictor for the corresponding HMM parameter is
 ``` {r lp, eval = FALSE}
 lp <- X_fe %*% coeff_fe + X_re %*% coeff_re
 ```
-where coeff\_fe and coeff\_re are the coefficients for the fixed effects and the random effects, respectively. The HMM parameter (for each data row) is then obtained by applying the inverse link function to this linear predictor.
+where `coeff_fe` and `coeff_re` are the coefficients for the fixed effects and the random effects, respectively. The HMM parameter (for each data row) is then obtained by applying the inverse link function to this linear predictor.
 
 Similarly, the penalty matrix for the smooth terms can be extracted from the GAM object,
 ``` {r s-mat}
@@ -159,7 +159,7 @@ The penalised log-likelihood of the fixed and random effects must first be writt
 
   - the log-pdf of the basis coefficients (and other random effects) given the smoothness parameter, $\log [\beta \vert \lambda]$, obtained as the log of a multivariate normal pdf with block-diagonal precision matrix, where the $i$-th block is $\lambda_i S_i$. The smoothness matrix $S_i$ is provided by mgcv, as described in the previous section.
 
-The negative penalised log-likelihood function (and its gradient) can then be defined in R with the TMB function MakeADFun, using the argument `random' to specify that the basis coefficients coeff\_re should be treated as random effects. We then use the numerical optimiser optim to perform maximum likelihood estimation of the fixed effect parameters $\alpha$ and $\lambda$. After optimisation, we use the function sdreport to obtain estimates of the random effect parameters $\beta$, as well as a joint precision matrix for the fixed and random effects. Posterior samples of all model parameters can be generated from a multivariate normal distribution, where the covariance matrix is the inverse of this precision matrix.
+The negative penalised log-likelihood function (and its gradient) can then be defined in R with the TMB function MakeADFun, using the argument `random` to specify that the basis coefficients `coeff_re` should be treated as random effects. We then use the numerical optimiser `optim` to perform maximum likelihood estimation of the fixed effect parameters $\alpha$ and $\lambda$. After optimisation, we use the function `sdreport` to obtain estimates of the random effect parameters $\beta$, as well as a joint precision matrix for the fixed and random effects. Posterior samples of all model parameters can be generated from a multivariate normal distribution, where the covariance matrix is the inverse of this precision matrix.
 
 Note that TMB relies on the Laplace approximation to integrate the likelihood over the random effects, i.e.\ the likelihood is approximated by a normal pdf to make the integration tractable. This may result in large errors in cases where the likelihood is very non-normal, e.g., if it is multimodal. HMM likelihoods are known to be multimodal, in particular along the parameters of the observation distributions, and it is not clear how this will affect estimation. Recently, @mcclintock2020random found that TMB performed well in various simulation scenarios for HMMs with random effects, but further investigations will be required to understand this issue better.
 
@@ -169,20 +169,23 @@ We use the object-oriented programming framework of the package R6 (@chang2019) 
 
 | Class name  | What it is                  | Main attributes           | Example                                       |
 |-------------|-----------------------------|---------------------------|-----------------------------------------------|
-| Dist        | Probability distribution    | name                      | normal distribution                           |
-|             |                             | pdf                       | dnorm                                         |
-|             |                             | rng                       | rnorm                                         |
+| `Dist`        | Probability distribution    | name                      | normal distribution                           |
+|             |                             | pdf                       | `dnorm`                                         |
+|             |                             | rng                       | `rnorm`                                         |
 |             |                             | link functions            |                                               |
 |             |                             | inverse link functions    |                                               |
-| MarkovChain | Markov chain model          | number of states          | 2-state Markov chain                          |
+|-------------|-----------------------------|---------------------------|-----------------------------------------------|
+| `MarkovChain` | Markov chain model          | number of states          | 2-state Markov chain                          |
 |             |                             | formulas                  | no covariate dependence                       |
 |             |                             | Markov chain parameters   | transition probabilities                      |
-| Observation | Observation model           | data frame                | data frame of observations (z1, z2)           |
-|             |                             | list of Dist objects      | list(z1 = "norm", z2 = "gamma")               |
+|-------------|-----------------------------|---------------------------|-----------------------------------------------|
+| `Observation` | Observation model           | data frame                | data frame of observations (z1, z2)           |
+|             |                             | list of `Dist` objects      | `list(z1 = "norm", z2 = "gamma")`               |
 |             |                             | formulas                  | no covariate dependence                       |
 |             |                             | observation parameters    | parameters of normal and gamma distributions  |
-| HMM         | Hidden Markov model         | Markov chain object       |                                               |
-|             |                             | Observation object        |                                               |
+|-------------|-----------------------------|---------------------------|-----------------------------------------------|
+| `HMM`         | Hidden Markov model         | Markov chain object       |                                               |
+|             |                             | `Observation` object        |                                               |
 |             |                             | output of optimiser       |                                               |
 
 Each class is defined in a separate R file, which contains all its methods (i.e., the functions that can be applied to an object of that class).
@@ -203,7 +206,7 @@ dist_norm <- Dist$new(
 
 The Poisson, gamma, normal, beta, and von Mises distributions are included in the package, and more will be implemented in the future.
 
-The functions n2w and w2n transform parameters of the observation distributions from the natural to the working scale and vice-versa. We can verify that applying the two functions successively returns the original parameter values:
+The functions `n2w` and `w2n` transform parameters of the observation distributions from the natural to the working scale and vice-versa. We can verify that applying the two functions successively returns the original parameter values:
 ```{r norm-test}
 # List of parameters (on the natural scale)
 par1 <- list(mean = c(0, 5), sd = c(1, 10))
@@ -219,7 +222,7 @@ par2
 
 ## HMM observation model
 
-The class Observation encapsulates the model for the observed variables.
+The class `Observation` encapsulates the model for the observed variables.
 
 ```{r obs-create}
 # Create a dummy data set
@@ -248,15 +251,15 @@ The parameters on the working scale are calculated when the object is created:
 obs_process$coeff_fe()
 ```
 
-The function plot_dist generates a histogram of the observations with the probability density (or mass) function of the specified distribution.
-```{r obs-plot}
+The function `plot_dist` generates a histogram of the observations with the probability density (or mass) function of the specified distribution.
+```{r obs-plot, fig.width = 6, fig.height = 3, out.width="80%", fig.align = "center"}
 # Plot histogram and pdf for variable "x"
 obs_process$plot_dist(name = "y")
 ```
 
 ## Hidden state process model
 
-The state process model is defined with the MarkovChain class, which includes the number of states and covariate formulas for the transition probabilities. In the following example, we create a 2-state Markov chain with a linear relationship between $\gamma_{12}$ and the covariate $x$, and a smooth relationships between $\gamma_{21}$ and $x$ (using a cubic spline with 5 basis functions).
+The state process model is defined with the `MarkovChain` class, which includes the number of states and covariate formulas for the transition probabilities. In the following example, we create a 2-state Markov chain with a linear relationship between $\gamma_{12}$ and the covariate $x$, and a smooth relationships between $\gamma_{21}$ and $x$ (using a cubic spline with 5 basis functions).
 
 ```{r hid-create}
 structure <- matrix(c(".", "~x",
@@ -265,7 +268,7 @@ structure <- matrix(c(".", "~x",
 hid_process <- MarkovChain$new(n_states = 2, structure = structure, data = data)
 ```
 
-If they are not specified, the parameters of the Markov Chain are initialised such that all effects are zero and the diagonal elements of the transition probability matrix are 0.9.
+If they are not specified, the parameters of the Markov chain are initialised such that all effects are zero and the diagonal elements of the transition probability matrix are 0.9.
 ```{r hid-coeff}
 # Fixed effect parameters
 hid_process$coeff_fe()
@@ -288,7 +291,7 @@ hid_process$simulate(n = n_sim, data = data, new_data = new_data)
 
 ## Hidden Markov model class
 
-The HMM class encapsulates a MarkovChain and an Observation object, the two components of an HMM. It include methods to fit the model and visualise the results.
+The `HMM` class encapsulates a `MarkovChain` and an `Observation` object, the two components of an HMM. It include methods to fit the model and visualise the results.
 
 ```{r hmm-create}
 hmm <- HMM$new(obs = obs_process, hidden = hid_process)
@@ -296,27 +299,27 @@ hmm <- HMM$new(obs = obs_process, hidden = hid_process)
 
 # Some implementation details
 
-## Creation of model matrices (make_matrices)
+## Creation of model matrices (`make_matrices`)
 
-The function make_matrices, used inside the classes MarkovChain and Observation, creates design matrices (of fixed and random effects) and smoothing matrices (smooths and random effects) from model formulas. Formulas must be specified using the mgcv syntax, and the heavy lifting is done by the function gam. 
+The function `make_matrices`, used inside the classes `MarkovChain` and `Observation`, creates design matrices (of fixed and random effects) and smoothing matrices (smooths and random effects) from model formulas. Formulas must be specified using the mgcv syntax, and the heavy lifting is done by the function `gam`. 
 
-More specifically, when a formula and a data frame are passed as input, the function gam can return the design matrix X and the number of columns of fixed effects (which we use to split X into a design matrix of fixed effects and a design matrix of random effects). It also returns the smoothing matrix S if there are smooth terms or random effects. The function make_matrices loops over a list of formulas (e.g., formulas for MarkovChain model), and creates three block-diagonal matrices: the design matrix of fixed effects X_fe, the design matrix of random effects X_re, and the smoothing matrix S.
+More specifically, when a formula and a data frame are passed as input, the function `gam` can return the design matrix `X` and the number of columns `nsdf` of fixed effects (which we use to split `X` into a design matrix of fixed effects and a design matrix of random effects). It also returns the smoothing matrix `S` if there are smooth terms or random effects. The function `make_matrices` loops over a list of formulas (e.g., formulas for `MarkovChain` model), and creates three block-diagonal matrices: the design matrix of fixed effects `X_fe`, the design matrix of random effects `X_re`, and the smoothing matrix `S`. Each block on the diagonal corresponds to one formula (i.e., to one HMM parameter).
 
 ## Model parameters
 
 The parameters for each model component (i.e., hidden state process and observation process) are stored in three vectors:
 
- - coeff_fe: Vector of parameters for the fixed effects. If there are no covariates, this is just the HMM parameters transformed by the link functions (i.e., intercepts of linear predictor). If there are fixed effects of covariates, this is a vector of regression coefficients.
+ - `coeff_fe`: Vector of parameters for the fixed effects. If there are no covariates, this is just the HMM parameters transformed by the link functions (i.e., intercepts of linear predictor). If there are fixed effects of covariates, this is a vector of regression coefficients.
  
- - coeff_re: Vector of parameters for the random effects. If there are no smooth/random effects, this is empty. If there are smooth effects, these are the coefficients for the corresponding basis functions.
+ - `coeff_re`: Vector of parameters for the random effects. If there are no smooth/random effects, this is empty. If there are smooth effects, these are the coefficients for the corresponding basis functions.
  
- - lambda: Vector of smoothness parameters. If there are no smooth/random effects, this is empty. If there are smooth effects, this coefficient measures the smoothness of the corresponding spline. If there are iid normal random effect, lambda can be linked to the variance (see vcomp method).
+ - `lambda`: Vector of smoothness parameters. If there are no smooth/random effects, this is empty. If there are smooth effects, this coefficient measures the smoothness of the corresponding spline. If there are iid normal random effect, lambda can be linked to the variance (see `vcomp` method).
 
 ## Uncertainty estimates using CI and predict functions
 
-TMB returns standard errors for the estimated fixed effect parameters, and the method HMM\$CI_coeff uses these to derive confidence intervals. Obtaining confidence intervals for the HMM parameters (transition probabilities and parameters of the observation distributions), which is typically what we want, is a little harder because those parameters can depend on covariates. 
+TMB returns standard errors for the estimated fixed effect parameters, and the method `HMM$CI_coeff` uses these to derive confidence intervals. Obtaining confidence intervals for the HMM parameters (transition probabilities and parameters of the observation distributions), which is typically what we want, is a little harder because those parameters can depend on covariates. 
 
-We create confidence intervals for the HMM parameters using simulations. The function sdreport in TMB can return a joint precision matrix for all model parameters if the option getJointPrecision = TRUE is specified. Based on the asymptotic normality of the maximum likelihood estimates (MLEs), we generate a large number of parameter sets from a multivariate normal distribution with mean the MLEs and covariance matrix given by the inverse of the precision matrix provided by TMB. For each simulated set of parameters, we derive the corresponding HMM parameters, and we obtain approximate pointwise confidence intervals by extracting the appropriate quantiles.
+We create confidence intervals for the HMM parameters using simulations. The function `sdreport` in TMB returns a joint precision matrix for all model parameters if the option `getJointPrecision = TRUE` is specified. Based on the asymptotic normality of the maximum likelihood estimates (MLEs), we generate a large number of parameter sets from a multivariate normal distribution with mean the MLEs and covariance matrix given by the inverse of the precision matrix provided by TMB. For each simulated set of parameters, we derive the corresponding HMM parameters, and we obtain approximate pointwise confidence intervals by extracting the appropriate quantiles.
 
 # Future work
 
@@ -336,7 +339,7 @@ We create confidence intervals for the HMM parameters using simulations. The fun
 
  - allow for input of known states (semi-supervised learning)
 
- - stationary = TRUE/FALSE option in MarkovChain class
+ - `stationary = TRUE/FALSE` option in `MarkovChain` class
  
 ## Lower priority (difficult?)
 
