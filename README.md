@@ -6,7 +6,7 @@ Fit hidden Markov models using Template Model Builder (TMB): flexible state-depe
 
 Install the package from Github using devtools,
 ```
-devtools::install_github("r-glennie/HmmTmb")
+devtools::install_github("r-glennie/hmmTMB")
 ```
 
 ## Package documentation
