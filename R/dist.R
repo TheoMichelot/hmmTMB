@@ -21,9 +21,11 @@ Dist <- R6Class(
     #' @param invlink Named list of inverse link functions for distribution
     #' parameters
     #' @param npar Number of parameters of the distribution
+    #' @param cpp location of C++ TMB definition of distribution
+    #' @param compile_cpp if FALSE then distribution code in cpp is added but not compiled into package
     #' 
     #' @return A new Dist object
-    initialize = function(name, pdf, rng, link, invlink, npar) {
+    initialize = function(name, pdf, rng, link, invlink, npar, cpp = NULL, compile_cpp = TRUE) {
       # Check arguments
       private$check_args(name = name, pdf = pdf, rng = rng, link = link, 
                          invlink = invlink, npar = npar)
@@ -36,14 +38,66 @@ Dist <- R6Class(
       private$invlink_ <- invlink
       private$npar_ <- npar
       
-      # List of distributions included in the package
-      distnames <- c("pois", "norm", "gamma", "beta", "vm", "custom")
-      if(!name %in% distnames) {
-        stop(paste0("'name' must be one of '", 
-                    paste(distnames, sep = "", collapse = "', '"), 
-                    "'"))
+      # Load list of distributions included in the package and check against 
+      # specified distribution name 
+      load(paste0(find.package("hmmTMB"), "/distnames.RData"))
+      if(!name %in% distnames$name) {
+        if (is.null(cpp)) {
+          stop(paste0("must provide 'cpp' argument for new distributions or use one of the
+                      existing distributions:'", 
+                      paste(distnames$name, sep = "", collapse = "', '"), 
+                      "'"))
+        } else { 
+          # add distribution to package 
+          warning("Adding new distribution to package. If you want to delete this 
+                  distribution later, use the function remove_dist().")
+          # get package root 
+          root <- find.package("hmmTMB")
+          # copy C++ TMB definition to package root 
+          file.copy(from = cpp, to = paste0(root, "/include/dist__", name, ".hpp"))
+          # include in added_dists file 
+          added_dist_file <- scan(paste0(root, "/include/added_dists.hpp"), character(), sep = "\n")
+          new_dist_file <- c(added_dist_file[-length(added_dist_file)],
+                             paste0("#include \"dist__", name, ".hpp\""), 
+                             added_dist_file[length(added_dist_file)])
+          cat(new_dist_file, file = paste0(root, "/include/added_dists.hpp"), sep = "\n")
+          # add to list of available TMB distributions 
+          dist_file <- scan(paste0(root, "/include/dist.hpp"), character(), sep = "\n")
+          len <- length(dist_file)
+          code <- max(distnames$code) + 1 
+          new_dist_file <- c(dist_file[-((len - 4):len)], 
+                             paste0("  case ", code, ":"), 
+                             paste0("    return(std::unique_ptr<Dist<Type>>(new ", name, "<Type>));"), 
+                             dist_file[(len - 4):len])
+          cat(new_dist_file, file = paste0(root, "/include/dist.hpp"), sep = "\n")
+          
+          # recompile TMB library 
+          if (compile_cpp) {
+            # create a dummy compilation file 
+            cat('#include "hmm_tmb.hpp"\n', file = paste0(root, "/include/hmm_tmb.cpp"))
+            # compile using dummy file 
+            comp <- tryCatch(TMB::compile(paste0(root, "/include/hmm_tmb.cpp")))
+            if ("try-error" %in% class(comp)) {
+              cat(new_dist_file, file = paste0(root, "/include/added_dists.hpp"), sep = "\n")
+              cat(new_dist_file, file = paste0(root, "/include/dist.hpp"), sep = "\n")
+            }
+            # copy compiled library to lib folder
+            file.copy(from = paste0(root, "/include/hmm_tmb.so"), to = paste0(root, "/libs/"), overwrite = TRUE)
+            # restart R 
+            if (exists(".rs.restartR")){
+              .rs.restartR() 
+            } else {
+              warning("You must restart the R session for the new distribution to be available.")
+            }
+            # add to distnames data 
+            distnames <- rbind(distnames, c(name, code))
+            distnames$code <- as.numeric(distnames$code)
+            save(distnames, file = paste0(root, "/distnames.RData"))
+          }
+        }
+        
       } else {
-        private$code_ <- which(distnames == name) - 1 # Starts at 0 for C++        
+        private$code_ <- distnames$code[which(distnames$name == name)] # Starts at 0 for C++        
       }
     },
     

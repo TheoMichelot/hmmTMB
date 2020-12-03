@@ -153,6 +153,12 @@ HMM <- R6Class(
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
       
+      # check distcodes exist
+      if (any(is.null(distcode))) {
+        stop("Not all observation distributions are properly created. If you added any custom distributions
+             recently, make sure you re-create them using Dist$new after you have recompiled the package.")
+      }
+      
       # Number of states
       n_states <- self$hidden()$nstates()
       
