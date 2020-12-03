@@ -14,9 +14,10 @@ HMM <- R6Class(
     #' 
     #' @param obs Observation object
     #' @param hidden MarkovChain object
+    #' @param init HMM object to initialize parameters with 
     #' 
     #' @return A new HMM object
-    initialize = function(obs, hidden) {
+    initialize = function(obs, hidden, init = NULL) {
       # Check arguments
       private$check_args(obs = obs, hidden = hidden)
       
@@ -31,8 +32,22 @@ HMM <- R6Class(
         obs$update_data(data)
       }
       
+      # store sub-model components 
       private$obs_ <- obs
       private$hidden_ <- hidden
+      
+      # initialize model parameters if init provided 
+      if (!is.null(init)) {
+        if (!("HMM" %in% class(init))) stop("init must be a HMM object.")
+        private$obs_$update_coeff_fe(private$initialize_submodel(private$obs_$coeff_fe(), 
+                                                         init$obs()$coeff_fe()))
+        private$obs_$update_coeff_re(private$initialize_submodel(private$obs_$coeff_re(), 
+                                                         init$obs()$coeff_re()))
+        private$hidden_$update_coeff_fe(private$initialize_submodel(private$hidden_$coeff_fe(), 
+                                                         init$hidden()$coeff_fe()))
+        private$hidden_$update_coeff_re(private$initialize_submodel(private$hidden_$coeff_re(), 
+                                                            init$hidden()$coeff_re()))
+      }
     },
     
     ###############
@@ -332,6 +347,7 @@ HMM <- R6Class(
         self$hidden()$update_coeff_re(coeff_re = par_list$coeff_re_hid)
         self$hidden()$update_lambda(exp(par_list$log_lambda_hid))
       }
+
     },
     
     ######################
@@ -1150,6 +1166,15 @@ HMM <- R6Class(
       
       # return the trace
       return(sum(diag(F)))
+    }, 
+    
+    initialize_submodel = function(par, initpar) {
+      wh <- match(rownames(initpar), rownames(par))
+      wh <- wh[!is.na(wh)]
+      if (length(wh) > 0) {
+        par[wh, 1] <- initpar[wh, 1]
+      }
+      return(par)
     }
   )
 )
