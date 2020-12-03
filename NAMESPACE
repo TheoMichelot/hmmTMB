@@ -1,2 +1,3 @@
-useDynLib(hmm_tmb)
+useDynLib(hmm_tmb, .registration = TRUE)
 exportPattern("^[[:alpha:]]+")
+S3method(logLik, HMM)

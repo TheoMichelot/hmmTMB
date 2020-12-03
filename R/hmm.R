@@ -140,6 +140,38 @@ HMM <- R6Class(
       self$tmb_obj()$fn(par)
     },
     
+    #' @description Compute effective degrees of freedom 
+    edf = function() {
+      # DF for fixed effects 
+      df <- nrow(self$obs()$coeff_fe()) + nrow(self$hidden()$coeff_fe())
+      # EDF for hidden sub-model 
+      mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data())
+      S_hid_list <- mod_mat_hid$S_list
+      X_hid_list <- mod_mat_hid$X_list_re
+      smoopar_hid <- self$lambda()$hidden[,1]
+      edf <- 0 
+      k <- 1
+      for (i in seq_along(S_hid_list)) {
+        if(!is.null(S_hid_list[[i]])) {
+          edf <- edf + private$comp_edf(X_hid_list[[i]], S_hid_list[[i]], smoopar_hid[k])
+          k <- k + 1 
+        }
+      }
+      # EDF for observation sub-model 
+      mod_mat_obs <- self$obs()$make_mat()
+      S_obs_list <- mod_mat_obs$S_list
+      X_obs_list <- mod_mat_obs$X_list_re
+      smoopar_obs <- self$lambda()$obs[,1]
+      k <- 1 
+      for (i in seq_along(S_obs_list)) {
+        if(!is.null(S_obs_list[[i]])) {
+          edf <- edf + private$comp_edf(X_obs_list[[i]], S_obs_list[[i]], smoopar_obs[k])
+          k <- k + 1 
+        }
+      }
+      return(df + edf)
+    }, 
+    
     ###################
     ## Model fitting ##
     ###################
@@ -1098,6 +1130,26 @@ HMM <- R6Class(
       if(!inherits(hidden, "MarkovChain")) {
         stop("'hidden' should be an MarkovChain object")
       }
+    }, 
+    
+    #' Compute effective degrees of freedom for a GAM 
+    comp_edf = function(X, S, lambda){
+      
+      if(length(lambda)==0){
+        return(0)
+      }
+      # duplicate lambda enough times
+      lambda <- rep(lambda, nrow(S))
+      # calculate lambda*S
+      Sbig <- S * lambda
+      
+      # calculate the hat matrix
+      XtX <- t(X) %*% X
+      Fi <- solve(XtX + Sbig)
+      F <- Fi %*% XtX
+      
+      # return the trace
+      return(sum(diag(F)))
     }
   )
 )
