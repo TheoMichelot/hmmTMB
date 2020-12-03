@@ -16,16 +16,11 @@ Observation <- R6Class(
     #' @param dists Named list of Distribution objects for each data stream
     #' @param n_states Number of states (needed to construct model formulas)
     #' @param par List of observation parameters (for covariate-free model)
-    #' @param coeff_fe Vector of fixed effect parameters on working scale
-    #' @param coeff_re Vector of random effect parameters. Defaults to a
-    #' vector of zeros if not provided.
     #' @param formulas List of formulas for observation parameters
     #' 
     #' @return A new Observation object
-    initialize = function(data, dists, n_states, par = NULL, coeff_fe = NULL, 
-                          coeff_re = NULL, formulas = NULL) {
-      private$check_args(data = data, dists = dists, n_states = n_states, par = par,
-                         coeff_fe = coeff_fe, coeff_re = coeff_re, formulas = formulas)
+    initialize = function(data, dists, n_states, par = NULL, formulas = NULL) {
+      private$check_args(data = data, dists = dists, n_states = n_states, par = par, formulas = formulas)
       
       # Make sure there is an ID column in the data and it's a factor
       if(is.null(data$ID)) {
@@ -61,6 +56,7 @@ Observation <- R6Class(
           return(f)
         })
       } else {
+        private$raw_formulas_ <- formulas 
         private$formulas_ <- make_formulas(formulas, n_states = n_states)        
       }
       
@@ -82,15 +78,8 @@ Observation <- R6Class(
       # Fixed effect parameters     
       if(!is.null(par)) {
         self$update_par(par)
-      } else if(!is.null(coeff_fe)) {
-        self$update_coeff_fe(coeff_fe)
       } else {
-        stop("Either 'par' or 'coeff_fe' must be provided")
-      }
-      
-      # Random effect parameters
-      if(!is.null(coeff_re)) {
-        self$update_re(coeff_re)
+        stop("'par' must be provided")
       }
     },
     
@@ -127,7 +116,13 @@ Observation <- R6Class(
     vcomp = function() {return(1/sqrt(private$lambda_))},
     
     #' @description List of model formulas for observation model
-    formulas = function() {return(private$formulas_)},
+    formulas = function(raw = FALSE) {
+      if (raw) {
+        return(private$raw_formulas_)   
+      } else {
+        return(private$formulas_)
+      }
+    },
     
     #' @description Terms of model formulas
     terms = function() {return(private$terms_)},
@@ -508,7 +503,7 @@ Observation <- R6Class(
         ff <- unlist(f)
         s <- NULL
         for(i in seq_along(ff))
-          s <- paste0(s, "  * ", names(ff)[i], " ~ ", as.character(ff[[i]])[2], "\n")
+          s <- paste0(s, "  * ", names(ff)[i], " ~ ", as.character.default(ff[[i]])[2], "\n")
         return(s)
       })
       
@@ -521,6 +516,7 @@ Observation <- R6Class(
         cat(s_list[[i]], "\n")
       }
     }
+    
   ),
   
   private = list(
@@ -535,13 +531,14 @@ Observation <- R6Class(
     coeff_re_ = NULL,
     lambda_ = NULL,
     formulas_ = NULL,
+    raw_formulas_ = NULL, 
     terms_ = NULL,
     
     #################################
     ## Check constructor arguments ##
     #################################
     # (For argument description, see constructor)
-    check_args = function(data, dists, n_states, par, coeff_fe, coeff_re, formulas) {
+    check_args = function(data, dists, n_states, par, formulas) {
       if(!inherits(data, "data.frame")) {
         stop("'data' should be a data.frame")
       }
@@ -601,18 +598,6 @@ Observation <- R6Class(
         
         if(!all(names(par) == names(dists))) {
           stop("'par' should have the same names as 'dists'")
-        }
-      }
-      
-      if(!is.null(coeff_fe)) {
-        if(!is.numeric(coeff_fe) | !is.vector(coeff_fe)) {
-          stop("'coeff_fe' should be a numeric vector")
-        }
-      }
-      
-      if(!is.null(coeff_re)) {
-        if(!is.numeric(coeff_re) | !is.vector(coeff_re)) {
-          stop("'coeff_re' should be a numeric vector")
         }
       }
       

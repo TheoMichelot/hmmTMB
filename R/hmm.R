@@ -1168,11 +1168,17 @@ HMM <- R6Class(
       return(sum(diag(F)))
     }, 
     
+    #' initialize submodel component 
     initialize_submodel = function(par, initpar) {
+      # find which parts of initializing model occur in current model
       wh <- match(rownames(initpar), rownames(par))
+      # find which parts of initializing model do not occur in current model
+      wh2 <- 1:nrow(initpar)
+      wh2 <- wh2[!is.na(wh)]
       wh <- wh[!is.na(wh)]
+      # copy over communal part 
       if (length(wh) > 0) {
-        par[wh, 1] <- initpar[wh, 1]
+        par[wh, 1] <- initpar[wh2, 1]
       }
       return(par)
     }

@@ -8,7 +8,7 @@ Description: Fitting hidden Markov models with template model builder allows
   for models to be fitted using automatic differentiation and Laplace approximation: 
   faster inference and more flexible random effect / smoothing spline structures. 
 License: MIT + License
-Depends: R6, mgcv, TMB, RcppEigen, Matrix, ggplot2
+Depends: R6, mgcv, TMB, RcppEigen, Matrix, ggplot2, stringr, formula.tools
 LinkingTo: TMB, RcppEigen
 Encoding: UTF-8
 LazyData: true
