@@ -325,38 +325,39 @@ We create confidence intervals for the HMM parameters using simulations. The fun
 
 ## Higher priority
 
- - additional observation distributions
+ - additional observation distributions (RG)
     + Weibull
     + log-normal
     + wrapped Cauchy
     + Bernoulli...
+    + zero inflation
     
 ## Lower priority (easy?)
 
- - state probabilities (local decoding)
+- Setting your own starting values (TM)
+
+- User vignette: MS-GAM (financial), capture-recapture, bioinformatics, Bayesian example(?)
+
+ - state probabilities (local decoding) / forward-filtering backward-sampling (RG)
  
- - goodness-of-fit: pseudo-residuals, posterior simulation tests 
+ - goodness-of-fit: pseudo-residuals, posterior simulation tests (RG)
 
- - allow for input of known states (semi-supervised learning)
+ - allow for input of known states (semi-supervised learning) (TM)
 
- - `stationary = TRUE/FALSE` option in `MarkovChain` class
+ - `stationary = TRUE/FALSE` option in `MarkovChain` class (TM)
  
 ## Lower priority (difficult?)
 
- - AIC
- 
- - multivariate distributions 
+ - multivariate distributions (?RG)
    
- - zero inflation
+ - improve parametrisation of mean of circular distributions (avoid numerical issues around -pi and pi) (?TM)
  
- - improve parametrisation of mean of circular distributions (avoid numerical issues around -pi and pi)
- 
- - allow for constraints on parameters
-    + inequalities, e.g. $\mu_1 < \mu_2$
-    + bounds, e.g. $-1 < \mu_1 < 1$ (using custom link function)
-    + fixed value, e.g. $\mu_1 = 0$ (using map)
+ - allow for constraints on parameters (RG)
+    + inequalities, e.g. $\mu_1 < \mu_2$ (RG add in cpp under subpar or affect formulae)
+    + bounds, e.g. $-1 < \mu_1 < 1$ (using custom link function) - add to custom dist section
+    + fixed value, e.g. $\mu_1 = 0$ (using map) (RG)
 
- - obtain starting values for complex models from simpler nested model (e.g. for smooth effects)
+ - obtain starting values for complex models from simpler nested model (e.g. for smooth effects) (RG)
 
  - method "update" similar to glmmTMB, to create a new model from an existing model?
  
