@@ -15,9 +15,11 @@ HMM <- R6Class(
     #' @param obs Observation object
     #' @param hidden MarkovChain object
     #' @param init HMM object to initialize parameters with 
+    #' @param fixpar a named list of parameters in coeff_fe that you want fixed (set to NA)
+    #'               or pool into common values (using factor levels)
     #' 
     #' @return A new HMM object
-    initialize = function(obs, hidden, init = NULL) {
+    initialize = function(obs, hidden, init = NULL, fixpar = NULL) {
       # Check arguments
       private$check_args(obs = obs, hidden = hidden)
       
@@ -35,6 +37,9 @@ HMM <- R6Class(
       # store sub-model components 
       private$obs_ <- obs
       private$hidden_ <- hidden
+      
+      # store fixed parameter 
+      private$fixpar_ <- fixpar 
       
       # initialize model parameters if init provided 
       if (!is.null(init)) {
@@ -225,12 +230,16 @@ HMM <- R6Class(
       S_hid <- mod_mat_hid$S
       ncol_re_hid <- mod_mat_hid$ncol_re
       
+      # Prepare delta initial parameter
+      delta <- self$hidden()$delta() 
+      ldelta <- log(delta[-length(delta)] / delta[length(delta)])
+      
       # Setup TMB parameters
       tmb_par <- list(coeff_fe_obs = self$obs()$coeff_fe(),
                       log_lambda_obs = 0,
                       coeff_fe_hid = self$hidden()$coeff_fe(),
                       log_lambda_hid = 0,
-                      log_delta = rep(0, n_states - 1),
+                      log_delta = ldelta,
                       coeff_re_obs = 0,
                       coeff_re_hid = 0)
       
@@ -255,6 +264,27 @@ HMM <- R6Class(
         tmb_par$log_lambda_obs <- rep(0, length(ncol_re_obs))
       }
       
+      # add custom mapping effects
+      usernms <- c("obs", "hid", "lambda", "delta")
+      comps <- c("coeff_fe_obs", "coeff_fe_hid", "log_lambda", "log_delta")
+      for (i in seq_along(usernms)) {
+        if (!is.null(private$fixpar_[[usernms[i]]])) {
+          v <- tmb_par[[comps[i]]]
+          tmp <- 1:length(v)
+          if (is.matrix(v)) {
+            nms <- rownames(v)
+          } else {
+            nms <- names(v)
+          }
+          tmp[nms %in% names(private$fixpar_[[usernms[i]]])] <- 
+            as.numeric(private$fixpar_[[usernms[i]]])
+          tmp <- factor(as.vector(tmp))
+          ls <- list(tmp)
+          names(ls) <- comps[i]
+          map <- c(map, ls)
+        }
+      }
+
       # Setup random effects in hidden state model
       if(is.null(S_hid)) {
         # If there are no random effects, 
@@ -348,6 +378,12 @@ HMM <- R6Class(
         self$hidden()$update_lambda(exp(par_list$log_lambda_hid))
       }
 
+      # Update delta parameters 
+      ldelta <- par_list$log_delta 
+      delta <- c(exp(ldelta), 1)
+      delta <- delta / sum(delta)
+      self$hidden()$update_delta(delta)
+      
     },
     
     ######################
@@ -1133,6 +1169,7 @@ HMM <- R6Class(
     out_ = NULL,
     tmb_obj_ = NULL,
     tmb_rep_ = NULL,
+    fixpar_ = NULL, 
     states_ = NULL,
     
     #################################
