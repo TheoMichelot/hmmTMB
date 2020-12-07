@@ -20,6 +20,8 @@ std::unique_ptr<Dist<Type>> dist_generator(const int& code) {
     return(std::unique_ptr<Dist<Type>>(new Beta<Type>)); 
   case 4:
     return(std::unique_ptr<Dist<Type>>(new VonMises<Type>));
+  case 5: 
+    return(std::unique_ptr<Dist<Type>>(new PoissonCon<Type>)); 
   default: 
     return(std::unique_ptr<Dist<Type>>(new Poisson<Type>)); 
   }

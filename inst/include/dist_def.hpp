@@ -54,6 +54,31 @@ public:
 };
 
 template<class Type> 
+class PoissonCon : public Poisson<Type> {
+public: 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size());
+    wpar(0) = log(par(0)); 
+    for (int i = 0; i < n_states - 1; ++i) {
+      wpar(i + 1) = log(par(i + 1) - par(i)); 
+    }
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    Type cumsum = 0; 
+    for(int i = 0; i < n_states; ++i) {
+      cumsum += exp(wpar(i)); 
+      par(i, 0) = cumsum; 
+    }
+    return(par); 
+  }
+};
+
+template<class Type> 
 class Normal : public Dist<Type> {
 public:
   // Constructor

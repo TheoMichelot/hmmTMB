@@ -12,6 +12,22 @@ dist_pois <- Dist$new(
   npar = 1
 )
 
+# Poisson with increasing constraint 
+log_con <- function(x) {
+  return(c(log(x[1]), log(diff(x))))
+}
+exp_con <- function(x) {
+  return(exp(x[1]) + cumsum(c(0, exp(x[-1]))))
+}
+dist_pois_con = Dist$new(
+  name = "pois_con", 
+  pdf = dpois,
+  rng = rpois, 
+  link = list(lambda = log_con), 
+  invlink = list(lambda = exp_con), 
+  npar = 1
+)
+
 # gamma
 dist_gamma <- Dist$new(
   name = "gamma", 
@@ -66,6 +82,7 @@ dist_vm <- Dist$new(
 
 # List of distributions (used in Observation$new)
 dist_list <- list(pois = dist_pois,
+                  pois_con = dist_pois_con,
                   gamma = dist_gamma,
                   norm = dist_norm,
                   beta = dist_beta,
