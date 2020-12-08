@@ -859,10 +859,11 @@ HMM <- R6Class(
     #' 
     #' @param n Number of time steps to simulate
     #' @param data Optional data frame including covariates
+    #' @param silent if TRUE then no messages are printed
     #' 
     #' @return Data frame including columns of data (if provided), and simulated
     #' data variables
-    simulate = function(n, data = NULL) {
+    simulate = function(n, data = NULL, silent = FALSE) {
       if(is.null(data)) {
         data <- data.frame(ID = rep(factor(1), n))
       } else if(is.null(data$ID)) {
@@ -874,7 +875,8 @@ HMM <- R6Class(
       
       # Simulate state process      
       S <- self$hidden()$simulate(n = n, data = self$obs()$data(), 
-                                  new_data = data)
+                                  new_data = data, 
+                                  silent = silent)
       
       # Create observation parameters
       mats_obs <- self$obs()$make_mat(new_data = data)
@@ -896,7 +898,7 @@ HMM <- R6Class(
         obs <- rep(NA, n)
         for(i in 1:n) {
           if(round(i/n*100)%%10 == 0) {
-            cat("\rSimulating ", var_name, "... ", round(i/n*100), "%", sep = "")        
+            if(!silent) cat("\rSimulating ", var_name, "... ", round(i/n*100), "%", sep = "")        
           }
           
           # Generate realisation
@@ -906,11 +908,54 @@ HMM <- R6Class(
         # Add variable to data frame
         obs_all[[var_name]] <- obs
         par_count <- par_count + obsdist$npar()
-        cat("\n")
+        if(!silent) cat("\n")
       }
       
       return(obs_all)
     },
+    
+    #' @description Compute goodness-of-fit statistics using simulation
+    #' 
+    #' @param gof_fn goodness-of-fit function which accepts "data" as input
+    #'               and returns a statistic: either a vector or a single number. 
+    #' @param nsims number of simulations to perform 
+    #' 
+    #' @return the observed value of the goodness-of-fit statistic for the data
+    #'         and the statistic computed for each simulated dataset. 
+    gof = function(gof_fn, nsims = 100) {
+      obs_stat <- gof_fn(self$obs()$data())
+      vec <- length(obs_stat) > 1 
+      if (vec) {
+        stats <- matrix(0, nc = nsims, nr = length(obs_stat))
+      } else {
+        stats <- rep(0, nsims)
+      }
+      for (sim in 1:nsims) {
+        if (!silent) cat("Simulating", sim, " / ", nsims, "\r")
+        # simulate new data
+        newdat <- self$simulate(n = nrow(self$obs()$data()), silent = TRUE) 
+        # compute statistics
+        if (vec) {
+          stats[,sim] <- gof_fn(newdat)
+        } else {
+          stats[sim] <- gof_fn(newdat)
+        }
+      }
+      ymin <- min(c(obs_stat, stats))
+      ymax <- max(c(obs_stat, stats))
+      if (vec) {
+        plot(obs_stat, 
+             xlab = "Index", 
+             ylab = "Goodness-of-fit", 
+             ylim = c(ymin, ymax), 
+             pch = 20)
+        matlines(stats, col = "grey60", lty = "solid")
+      } else {
+        hist(stats, col = "steelblue", main = "Vertical line is observed value", xlab = "Goodness-of-fit")
+        abline(v = obs_stat, col = "firebrick", lwd = 2)
+      }
+      return(list(obs_stat = obs_stat, stats = stats))
+    }, 
     
     ######################
     ## Plotting methods ##

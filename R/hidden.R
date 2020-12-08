@@ -386,9 +386,10 @@ MarkovChain <- R6Class(
     #' to the argument '\code{data}', for cases where smooth terms or factor
     #' covariates are included, and the original data set is needed to determine
     #' the full range of covariate values.
+    #' @param silent if TRUE then no messages are printed 
     #' 
     #' @return Sequence of states of simulated chain
-    simulate = function(n, data = NULL, new_data = NULL) {
+    simulate = function(n, data = NULL, new_data = NULL, silent = FALSE) {
       # Number of states
       n_states <- self$nstates()
       
@@ -415,7 +416,7 @@ MarkovChain <- R6Class(
       S <- rep(NA, n)
       S[1] <- sample(1:n_states, size = 1, prob = delta)
       for(i in 2:n) {
-        if(round(i/n*100)%%10 == 0) {
+        if(!silent & round(i/n*100)%%10 == 0) {
           cat("\rSimulating states... ", round(i/n*100), "%", sep = "")        
         }
         
@@ -425,7 +426,7 @@ MarkovChain <- R6Class(
           S[i] <- sample(1:n_states, size = 1, prob = tpms[S[i-1], , i-1])          
         }
       }
-      cat("\n")
+      if(!silent) cat("\n")
       
       return(S)
     },
