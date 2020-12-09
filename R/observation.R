@@ -458,6 +458,11 @@ Observation <- R6Class(
       n_grid <- 1e3
       grid <- seq(min(obs, na.rm = TRUE), max(obs, na.rm = TRUE), length = n_grid)
       
+      # Check if variable is integer 
+      if (is_whole_number(obs)) {
+        grid <- unique(floor(grid))
+      }
+      
       # Loop over states
       vals <- matrix(NA, nrow = n_grid, ncol = self$nstates() + 1)
       for(state in 1:self$nstates()) {
