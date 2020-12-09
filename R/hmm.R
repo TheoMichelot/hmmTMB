@@ -429,6 +429,7 @@ HMM <- R6Class(
       }
       return(list(logforward = lforw, logbackward = lback))
     }, 
+  
     
     ###############################
     ## Conditional distributions ##
@@ -599,6 +600,55 @@ HMM <- R6Class(
       
       return(all_states)
     },
+    
+    #' @description Sample posterior state sequences using forward-filtering
+    #' backward-sampling 
+    #' 
+    #' @return matrix where each column is a different sample of state sequences 
+    sample_states = function(nsamp = 1) {
+      # get forward-backward probabilities 
+      fb <- self$forward_backward()
+      n <- nrow(self$obs()$data())
+      nstates <- self$hidden()$nstates()
+      states <- matrix(0, nr = n, nc = nsamp)
+      # sample last states
+      L <- log(sum(exp(fb$logforward[,n] - max(fb$logforward[,n])))) + max(fb$logforward[,n])
+      prob <- exp(fb$logforward[,n] - L)
+      prob <- prob / sum(prob)
+      states[n,] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
+      # get tpms 
+      hidmats <- self$hidden()$make_mat(self$obs()$data())
+      tpms <- self$hidden()$tpm_all(hidmats$X_fe, hidmats$X_re)
+      # get observation probabilties
+      obsmats <- self$obs()$make_mat()
+      obsprobs <- self$obs()$obs_probs(obsmats$X_fe, obsmats$X_re)
+      # sample backward
+      for (s in 1:nsamp) {
+        for (i in (n - 1):1) {
+          prob <- exp(fb$logforward[, i] + log(tpms[, states[i + 1, s], i + 1]) + 
+            log(obsprobs[i + 1, states[i + 1, s]]) + fb$logbackward[states[i + 1, s], i + 1] - L) 
+          prob <- prob / sum(prob)
+          states[i, s] <- sample(1:nstates, prob = prob, size = 1)
+        }
+      }
+      return(states)
+    }, 
+    
+    #' @description Compute posterior probability of being in each state 
+    #' 
+    #' @return matrix with a row for each observation and a column for each state 
+    state_probs = function() {
+      delta <- self$hidden()$delta
+      n <- nrow(self$obs()$data())
+      nstates <- self$hidden()$nstates()
+      fb <- self$forward_backward()
+      llk <- log(sum(exp(fb$logforward[,n] - max(fb$logforward[,n])))) + max(fb$logforward[,n])
+      pr_state <- matrix(0, nr = n, nc = nstates)
+      for (i in 1:n) {
+        pr_state[i,] <- exp(fb$logforward[,i] + fb$logbackward[,i] - llk)
+      }
+      return(pr_state)
+    }, 
     
     ################################
     ## Uncertainty quantification ##
