@@ -1313,20 +1313,21 @@ HMM <- R6Class(
         other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
           round(cov, 2))
         fac_ind <- sapply(other_covs, is.factor)
-        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
+        other_covs[fac_ind] <- lapply(other_covs[fac_ind], base::as.character)
         
         plot_txt <- paste(colnames(other_covs), "=", other_covs, 
                           collapse = ", ")
       }
       
       # Create plot
+      par_name <- base::as.character(par)
       p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
         geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
         geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
         scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
         facet_wrap(c("par"), scales = "free_y",
                    strip.position = "left",
-                   labeller = label_bquote(.(as.character(par)))) +
+                   labeller = label_bquote(par_name)) +
         xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
         theme(strip.background = element_blank(),
               strip.placement = "outside", 
