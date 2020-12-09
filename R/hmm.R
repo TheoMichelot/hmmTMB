@@ -386,6 +386,146 @@ HMM <- R6Class(
       
     },
     
+    ####################################
+    ## Forward-Backward Probabilities ##
+    ####################################
+    
+    #' @description Foward-backward algorithm 
+    #' 
+    #' @return logforward and logbackward probabilities 
+    forward_backward = function() {
+      delta <- self$hidden()$delta() 
+      n <- nrow(self$obs()$data())
+      lforw <- lback <- matrix(0, nr = self$hidden()$nstates(), nc = n)
+      # get observation probabilities 
+      obsmats <- self$obs()$make_mat()
+      obsprobs <- self$obs()$obs_probs(obsmats$X_fe, obsmats$X_re)
+      # get tpms 
+      hidmats <- self$hidden()$make_mat(self$obs()$data())
+      tpms <- self$hidden()$tpm_all(hidmats$X_fe, hidmats$X_re)
+      # forward algorithm 
+      p <- delta * obsprobs[1,]
+      psum <- sum(p)
+      llk <- log(psum)
+      p <- p / psum
+      lforw[, 1] <- log(p) + llk
+      for (i in 2:n) {
+        p <- p %*% tpms[, , i] * obsprobs[i, ]
+        psum <- sum(p)
+        llk <- llk + log(psum)
+        p <- p / psum
+        lforw[, i] <- log(p) + llk 
+      }
+      # backward algorithm
+      lback[, n] <- rep(0, self$hidden()$nstates())
+      p <- rep(1 / self$hidden()$nstates(), self$hidden()$nstates())
+      llk <- log(self$hidden()$nstates())
+      for (i in (n - 1):1) {
+        p <- tpms[, , i] %*% (obsprobs[i + 1, ] * p)
+        lback[, i] <- log(p) + llk
+        psum <- sum(p)
+        p <- p / psum
+        llk <- llk + log(psum)
+      }
+      return(list(logforward = lforw, logbackward = lback))
+    }, 
+    
+    ###############################
+    ## Conditional distributions ##
+    ###############################
+    
+    
+    #' @description Compute conditional cumulative distribtion functions 
+    #' @param ngrid how many cells on the grid that CDF is computed on 
+    #' @param silent if TRUE then no messages are printed 
+    #' 
+    #' @return cdfs on grid for each variable 
+    cond = function(ngrid = 100, silent = FALSE) {
+      delta <- self$hidden()$delta() 
+      vars <- self$obs()$obs_var()
+      nvars <- ncol(vars)
+      n <- nrow(self$obs()$data())
+      range <- matrix(0, nr = 2, nc = nvars)
+      range[1,] <- sapply(vars, min)  
+      range[2,] <- sapply(vars, max)
+      # get forward-backward probabilities
+      fb <- self$forward_backward() 
+      lforw <- fb$logforward
+      lback <- fb$logbackward
+      lforw <- cbind(log(delta), lforw)
+      # get transition matrices
+      hidmats <- self$hidden()$make_mat(self$obs()$data())
+      tpms <- self$hidden()$tpm_all(hidmats$X_fe, hidmats$X_re)
+      # scaling 
+      forwscale <- apply(lforw, 2, max)
+      backscale <- apply(lback, 2, max)
+      # compute conditional state probabilities
+      if (!silent) cat("Computing conditional state probabilities...")
+      cond <- matrix(0, nr = n, nc = self$hidden()$nstates()) 
+      for (i in 1:n) {
+        p <- (exp(lforw[,i] - forwscale[i]) %*% tpms[, , i]) * exp(lback[, i] - backscale[i])
+        cond[i, ] <- p / sum(p)
+      }
+      if(!silent) cat("done\n")
+      # list to store cdfs 
+      pdfs <- array(0, dim = c(nvars, n, ngrid))
+      grids <- vector(mode = "list", length = nvars)
+      # compute cdf for each variable 
+      obsmats <- self$obs()$make_mat()
+      varnms <- names(vars)
+      for (i in 1:nvars) {
+        if (!silent) cat("Computing CDF for", varnms[i], "...")
+        grid <- seq(range[1, i], range[2, i], length = ngrid)
+        if (is_whole_number(vars[,i])) {
+          grid <- unique(floor(grid))
+        }
+        grids[[i]] <- grid 
+        for (g in 1:length(grid)) {
+          tmp <- data.frame(var = rep(grid[g], n))
+          colnames(tmp) <- varnms[i]
+          probs <- self$obs()$obs_probs(obsmats$X_fe, obsmats$X_re, data = tmp)
+          pdfs[i, , g] <- rowSums(probs * cond)
+        }
+        if (!silent) cat("done\n")
+      }
+      return(list(grids = grids, pdfs = pdfs))
+    }, 
+    
+    ###############################
+    ## Pseudo-residuals          ##
+    ###############################
+    
+    pseudores = function() {
+      delta <- self$hidden()$delta()
+      n <- nrow(self$obs()$data())  
+      cond <- self$cond(silent = TRUE)
+      pdfs <- cond$pdfs
+      grids <- cond$grids
+      vars <- self$obs()$obs_var()
+      nvars <- ncol(vars)
+      varnms <- names(vars)
+      # sum CDFs cumulatively 
+      cdfs <- array(0, dim = dim(pdfs))
+      for (v in 1:nvars) {
+        cdfs[v,,] <- t(apply(pdfs[v,,], 1, cumsum))
+        # if continuous then approximate the integral using Riemann sum
+        if (!is_whole_number(vars[,v])) {
+          dgrid <- diff(grid[[v]])[1]
+          cdfs[v,,] <- cdfs[v,,] * dgrid 
+        }
+      }
+      # do residuals for each variable 
+      r <- matrix(0, nr = nvars, nc = n)
+      for (v in 1:nvars) {
+        for (i in 1:length(vars[,v])) {
+          wh <- which.min(abs(vars[i, v] - grids[[v]]))
+          r[v, i] <- qnorm(cdfs[v, i, wh])
+        }
+        rownames(r)[v] <- varnms[v]
+      }
+      return(r)
+    }, 
+    
     ######################
     ## State estimation ##
     ######################

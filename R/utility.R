@@ -126,3 +126,15 @@ cov_grid <- function(var, data, covs = NULL, formulas, n_grid = 1e3) {
   
   return(new_data)
 }
+
+#' Check if number of whole number 
+#'
+#' @param x number to check or vector of numbers 
+#' @param tol how far away from whole number is ok? 
+#'
+#' @return TRUE if it is a whole number within tolerance 
+#' @export
+is_whole_number <- function(x, tol = 1e-10) {
+  y <- floor(x)
+  return(all(abs(x - y) < tol))
+}

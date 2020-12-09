@@ -368,12 +368,13 @@ Observation <- R6Class(
     #' 
     #' @param X_fe Design matrix for fixed effects
     #' @param X_re Design matrix for random effects
+    #' @param data optional dataframe to include in form of obs_var() output 
     #' 
     #' @return Matrix of likelihoods of observations, with one row for each 
     #' time step, and one column for each state.
-    obs_probs = function(X_fe, X_re) {
+    obs_probs = function(X_fe, X_re, data = NULL) {
       # Data frame of observations
-      data <- self$obs_var()
+      if (is.null(data)) data <- self$obs_var()
       
       # Number of observations
       n <- nrow(data)
@@ -391,20 +392,26 @@ Observation <- R6Class(
       # Counter to subset parameter vector
       par_count <- 1
       
+      # Get variable names 
+      givenvarnms <- colnames(data)
+      varnms <- names(self$obs_var())
+      
       # Loop over observed variables
       for(var in 1:n_var) {
         obsdist <- self$dists()[[var]]
         par_ind <- par_count:(par_count + obsdist$npar() - 1)
         
-        # Loop over observations (rows of prob)
-        for (i in 1:n) {
-          # Don't update likelihood is observation is missing
-          if(!is.na(data[i, var])) {
-            # Loop over states (columns of prob)
-            for (s in 1:n_states) {
-              prob[i, s] <- prob[i, s] * 
-                obsdist$pdf_apply(x = data[i, var], par = par[par_ind, s, i])
-            }            
+        if (varnms[var] %in% givenvarnms) {
+          # Loop over observations (rows of prob)
+          for (i in 1:n) {
+            # Don't update likelihood is observation is missing
+            if(!is.na(data[i, var])) {
+              # Loop over states (columns of prob)
+              for (s in 1:n_states) {
+                prob[i, s] <- prob[i, s] * 
+                  obsdist$pdf_apply(x = data[i, var], par = par[par_ind, s, i])
+              }            
+            }
           }
         }
         
