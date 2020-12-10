@@ -370,7 +370,7 @@ HMM <- R6Class(
       
       # Data for TMB
       tmb_dat <- list(ID = self$obs()$data()$ID,
-                      data = as.matrix(self$obs()$obs_var(expand = TRUE)),
+                      data = as.matrix(self$obs()$obs_var()),
                       n_states = n_states,
                       distcode = distcode,
                       X_fe_obs = X_fe_obs,
