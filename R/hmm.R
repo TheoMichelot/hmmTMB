@@ -370,7 +370,7 @@ HMM <- R6Class(
       
       # Data for TMB
       tmb_dat <- list(ID = self$obs()$data()$ID,
-                      data = as.matrix(self$obs()$obs_var()),
+                      data = as.matrix(self$obs()$obs_var(expand = TRUE)),
                       n_states = n_states,
                       distcode = distcode,
                       X_fe_obs = X_fe_obs,
@@ -402,6 +402,14 @@ HMM <- R6Class(
     
     mcmc = function(...) {
       self$formulation()
+      
+      if (!requireNamespace("rstan", quietly = TRUE)) {
+        stop("you need to install the package rstan to do this")
+      }
+      
+      if (!requireNamespace("tmbstan", quietly = TRUE)) {
+        stop("you need to install the package tmbstan to do this")
+      }
       
       # Setup if necessary
       if(is.null(private$tmb_obj_)) {
