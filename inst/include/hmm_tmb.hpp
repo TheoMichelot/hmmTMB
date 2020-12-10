@@ -1,5 +1,7 @@
 #include<memory>
+#include<iostream>
 #include "dist.hpp"
+
 
 #ifndef _HMMTMB_
 #define _HMMTMB_
@@ -28,6 +30,7 @@ Type objective_function<Type>::operator() ()
   // DATA
   DATA_VECTOR(ID); // vector of time series IDs
   DATA_MATRIX(data); // data stream
+  DATA_VECTOR(known_states); // known states 
   DATA_INTEGER(n_states); // number of states
   DATA_IVECTOR(distcode); // codes of observation distributions
   // model matrices for observation process
@@ -112,8 +115,14 @@ Type objective_function<Type>::operator() ()
   // Initialise matrix of probabilities to 1
   matrix<Type> prob(n, n_states);
   for(int i = 0; i < n; i++) {
-    for(int s = 0; s < n_states; s++) {
-      prob(i, s) = 1;
+    if (!R_IsNA(asDouble(known_states(i)))) {
+      for (int s = 0; s < n_states; ++s) {
+        prob(i, s) = (s == known_states(i)) ? 1 : 0; 
+      }
+    } else {
+      for(int s = 0; s < n_states; s++) {
+        prob(i, s) = 1;
+      }
     }
   }
   

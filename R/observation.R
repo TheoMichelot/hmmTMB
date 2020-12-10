@@ -28,10 +28,19 @@ Observation <- R6Class(
       } else {
         data$ID <- factor(data$ID)
       }
-
+      
       # Set data and nstates attributes
       private$data_ <- data
       private$nstates_ <- n_states
+      
+      # Check for observed states 
+      if ("state" %in% colnames(data)) {
+        private$known_states_ <- data$state
+        wh <- which(colnames(data) == "state")
+        private$data_ <- data[,-wh]
+      } else {
+        private$known_states_ <- rep(NA, nrow(data))
+      }
       
       # Define observation distributions
       if(all(sapply(dists, is.character))) {
@@ -133,6 +142,11 @@ Observation <- R6Class(
       obs_var <- self$data()[, obs_names, drop = FALSE]
       return(obs_var)
     },
+    
+    #' @description Vector of known states 
+    known_states = function() {
+      return(private$known_states_)
+    }, 
     
     ##############
     ## Mutators ##
@@ -536,6 +550,7 @@ Observation <- R6Class(
     ## Attributes ##
     ################
     data_ = NULL,
+    known_states_ = NULL, 
     dists_ = NULL,
     nstates_ = NULL,
     par_ = NULL,
