@@ -40,6 +40,11 @@ Type objective_function<Type>::operator() ()
   DATA_SPARSE_MATRIX(X_re_hid); // design matrix for random effects
   DATA_SPARSE_MATRIX(S_hid); // penalty matrix
   DATA_IVECTOR(ncol_re_hid); // number of columns of S and X_re for each random effect
+  // prior information 
+  DATA_MATRIX(coeff_fe_obs_prior); // means, sds for prior on fixed effects for obs 
+  DATA_MATRIX(coeff_fe_hid_prior); // means, sds for prior on fixed effects for hidden 
+  DATA_MATRIX(log_lambda_obs_prior); // means, sds for prior on smoothing parameters for obs 
+  DATA_MATRIX(log_lambda_hid_prior); // means, sds for prior on smoothing parameters for hidden 
   
   // PARAMETERS (fixed effects first, then random effects)
   PARAMETER_VECTOR(coeff_fe_obs); // observation parameters (fixed effects)
@@ -49,7 +54,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(log_delta); // initial distribution
   PARAMETER_VECTOR(coeff_re_obs); // observation parameters (random effects)
   PARAMETER_VECTOR(coeff_re_hid); // state process parameters (random effects)
-    
+
   // Number of observed variables
   int n_var = distcode.size();
   // Number of data rows
@@ -142,11 +147,43 @@ Type objective_function<Type>::operator() ()
     par_count = par_count + obsdist->npar() * n_states;
   }
   
+  //======================//
+  // Priors               //
+  //======================//
+  Type llk = 0; 
+  // fixed effects for observation 
+  for (int i = 0; i < coeff_fe_obs.size(); ++i) {
+    if (!R_IsNA(asDouble(coeff_fe_obs_prior(i, 0)))) {
+      llk += dnorm(coeff_fe_obs(i), coeff_fe_obs_prior(i, 0), coeff_fe_obs_prior(i, 1), 1.0); 
+    }
+  }
+  // fixed effects for hidden  
+  for (int i = 0; i < coeff_fe_hid.size(); ++i) {
+    if (!R_IsNA(asDouble(coeff_fe_hid_prior(i, 0)))) {
+      llk += dnorm(coeff_fe_hid(i), coeff_fe_hid_prior(i, 0), coeff_fe_hid_prior(i, 1), 1.0); 
+    }
+  }
+  // smoothing parameters for observation
+  if (ncol_re_obs(0) > 0) {
+    for (int i = 0; i < log_lambda_obs.size(); ++i) {
+      if (!R_IsNA(asDouble(log_lambda_obs_prior(i, 0)))) {
+        llk += dnorm(log_lambda_obs(i), log_lambda_obs_prior(i, 0), log_lambda_obs_prior(i, 1), 1.0); 
+      }
+    }
+  }
+  // smoothing parameters for hidden 
+  if (ncol_re_hid(0) > 0) {
+    for (int i = 0; i < log_lambda_hid.size(); ++i) {
+      if (!R_IsNA(asDouble(log_lambda_hid_prior(i, 0)))) {
+        llk += dnorm(log_lambda_hid(i), log_lambda_hid_prior(i, 0), log_lambda_hid_prior(i, 1), 1.0); 
+      }
+    }
+  }
+  
   //========================//
   // Compute log-likelihood //
   //========================//
   // Initialise log-likelihood
-  Type llk = 0;
   matrix<Type> phi(delta);
   Type sumphi = 0;
   

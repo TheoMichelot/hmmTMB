@@ -53,6 +53,9 @@ HMM <- R6Class(
         private$hidden_$update_coeff_re(private$initialize_submodel(private$hidden_$coeff_re(), 
                                                             init$hidden()$coeff_re()))
       }
+      
+      # initialize priors 
+      self$set_priors()
     },
     
     ###############
@@ -135,7 +138,7 @@ HMM <- R6Class(
       if (!is.null(iter)) {
         if (is.null(private$iters_)) stop("Must run mcmc() before using iterations")
         if (is.numeric(iter)) {
-          if (iter > dim(iters)[1]) stop("iter exceeds number of mcmc iterations available")
+          if (iter > dim(private$iters_)[1]) stop("iter exceeds number of mcmc iterations available")
           samp <- private$iters_[iter,]
         } else if (iter == "mean") {
           samp <- colMeans(private$iters_)
@@ -193,6 +196,44 @@ HMM <- R6Class(
       tpm <- self$hidden()$tpm()
       return(list(obspar = obspar, tpm = tpm))
     },
+    
+    set_priors = function(new_priors = NULL) {
+      fe <- self$coeff_fe()
+      if (!is.null(new_priors$coeff_fe_obs)) {
+        coeff_fe_obs_prior <- new_priors$coeff_fe_obs 
+      } else {
+        coeff_fe_obs_prior <- matrix(NA, nr = length(fe$obs), nc = 2)
+      }
+      if (!is.null(new_priors$coeff_fe_hid)) {
+        coeff_fe_hid_prior <- new_priors$coeff_fe_hid 
+      } else {
+        coeff_fe_hid_prior <- matrix(NA, nr = length(fe$hidden), nc = 2)
+      }
+      lam <- self$lambda()
+      if (!is.null(new_priors$log_lambda_obs)) {
+        log_lambda_obs_prior <- new_priors$log_lambda_obs 
+      } else {
+        log_lambda_obs_prior <- matrix(NA, nr = length(lam$obs), nc = 2)
+      }
+      if (!is.null(new_priors$log_lambda_hid)) {
+        log_lambda_hid_prior <- new_priors$log_lambda_hid
+      } else {
+        log_lambda_hid_prior <- matrix(NA, nr = length(lam$hidden), nc = 2)
+      }
+      private$priors_ <- list(coeff_fe_obs = coeff_fe_obs_prior, 
+                     coeff_fe_hid = coeff_fe_hid_prior, 
+                     log_lambda_obs = log_lambda_obs_prior, 
+                     log_lambda_hid = log_lambda_hid_prior)
+      # Setup if necessary
+      if(!is.null(private$tmb_obj_)) {
+        self$setup(silent = TRUE)
+      }
+    }, 
+    
+    #' @description Extract stored priors 
+    priors = function() {
+      return(private$priors_)
+    }, 
     
     #' @description Iterations from stan MCMC fit 
     #' 
@@ -368,6 +409,9 @@ HMM <- R6Class(
         tmb_par$log_lambda_hid <- rep(0, length(ncol_re_hid))
       }
       
+      # Get stored priors 
+      priors <- self$priors() 
+      
       # Data for TMB
       tmb_dat <- list(ID = self$obs()$data()$ID,
                       data = as.matrix(self$obs()$obs_var()),
@@ -380,7 +424,11 @@ HMM <- R6Class(
                       X_fe_hid = X_fe_hid,
                       X_re_hid = X_re_hid,
                       S_hid = S_hid,
-                      ncol_re_hid = ncol_re_hid)
+                      ncol_re_hid = ncol_re_hid, 
+                      coeff_fe_obs_prior = priors$coeff_fe_obs, 
+                      coeff_fe_hid_prior = priors$coeff_fe_hid, 
+                      log_lambda_obs_prior = priors$log_lambda_obs, 
+                      log_lambda_hid_prior = priors$log_lambda_hid)
       
       # Create TMB model
       obj <- MakeADFun(tmb_dat, tmb_par, dll = "hmmTMB", 
@@ -417,7 +465,7 @@ HMM <- R6Class(
       }
       
       # do stan MCMC 
-      private$mcmc_ <- tmbstan(private$tmb_obj_, ...)
+      private$mcmc_ <- tmbstan::tmbstan(private$tmb_obj_, ...)
       
       # store iterations 
       private$iters_ <- as.matrix(private$mcmc_)
@@ -1491,6 +1539,7 @@ HMM <- R6Class(
     out_ = NULL,
     tmb_obj_ = NULL,
     tmb_rep_ = NULL,
+    priors_ = NULL, 
     mcmc_ = NULL, 
     iters_= NULL,
     par_iters_ = NULL, 
