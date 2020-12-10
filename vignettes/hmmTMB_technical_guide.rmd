@@ -337,28 +337,21 @@ We create confidence intervals for the HMM parameters using simulations. The fun
 - Setting your own starting values (TM)
 
 - User vignette: MS-GAM (financial), capture-recapture, bioinformatics, Bayesian example(?)
-
- - state probabilities (local decoding) / forward-filtering backward-sampling (RG)
- 
- - goodness-of-fit: pseudo-residuals, posterior simulation tests (RG)
-
- - allow for input of known states (semi-supervised learning) (TM)
-
- - `stationary = TRUE/FALSE` option in `MarkovChain` class (TM)
  
 ## Lower priority (difficult?)
 
- - multivariate distributions (?RG)
+ - multivariate distributions (RG: This is something for a future major update.)
    
  - improve parametrisation of mean of circular distributions (avoid numerical issues around -pi and pi) (?TM)
  
- - allow for constraints on parameters (RG)
+ - allow for constraints on parameters (RG: Decided that priors and custom mapping on TMB are enough
+ flexibility. The inequality constraint is too cumbersome to code in and not general enough to be 
+ worth it, e.g. what should the inequality be if you have multiple different covariate effects 
+ on different parameters that you want to satisfy an inequality? Set some priors (soft constraints)
+ or go through the pain of defining a customised distribution.)
     + inequalities, e.g. $\mu_1 < \mu_2$ (RG add in cpp under subpar or affect formulae)
     + bounds, e.g. $-1 < \mu_1 < 1$ (using custom link function) - add to custom dist section
-    + fixed value, e.g. $\mu_1 = 0$ (using map) (RG)
+    + fixed value, e.g. $\mu_1 = 0$ (using map) (DONE RG)
 
- - obtain starting values for complex models from simpler nested model (e.g. for smooth effects) (RG)
-
- - method "update" similar to glmmTMB, to create a new model from an existing model?
  
 # References
