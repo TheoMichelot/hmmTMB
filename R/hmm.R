@@ -167,10 +167,17 @@ HMM <- R6Class(
       }
       
       # Update delta parameters 
-      ldelta <- par_list$log_delta 
-      delta <- c(exp(ldelta), 1)
-      delta <- delta / sum(delta)
-      self$hidden()$update_delta(delta)
+      if (self$hidden()$stationary()) {
+        tpms <- self$hidden()$tpm_all(mats_hid$X_fe, mats_hid$X_re)
+        nstates <- self$hidden()$nstates()
+        delta <- solve(t(diag(nstates) - tpms[,,1] + 1), rep(1, nstates))
+        self$hidden()$update_delta(delta)
+      } else {
+        ldelta <- par_list$log_delta 
+        delta <- c(exp(ldelta), 1)
+        delta <- delta / sum(delta)
+        self$hidden()$update_delta(delta)
+      }
     }, 
     
     #' @description Variance components of smooth terms
@@ -371,6 +378,13 @@ HMM <- R6Class(
         tmb_par$log_lambda_obs <- rep(0, length(ncol_re_obs))
       }
       
+      # check if delta to be stationary (overrides custom map specified)
+      statdist <- 0 
+      if (self$hidden()$stationary()) {
+        private$fixpar_$log_delta <- rep(NA, self$hidden()$nstates())
+        statdist <- 1 
+      }
+      
       # add custom mapping effects
       usernms <- c("obs", "hid", "lambda", "delta")
       comps <- c("coeff_fe_obs", "coeff_fe_hid", "log_lambda", "log_delta")
@@ -417,6 +431,7 @@ HMM <- R6Class(
                       data = as.matrix(self$obs()$obs_var()),
                       known_states = as.vector(self$obs()$known_states()) - 1, 
                       n_states = n_states,
+                      statdist = statdist, 
                       distcode = distcode,
                       X_fe_obs = X_fe_obs,
                       X_re_obs = X_re_obs,

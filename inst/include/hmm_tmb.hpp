@@ -32,6 +32,7 @@ Type objective_function<Type>::operator() ()
   DATA_MATRIX(data); // data stream
   DATA_VECTOR(known_states); // known states 
   DATA_INTEGER(n_states); // number of states
+  DATA_INTEGER(statdist); // use stationary distribution with respect to first tpm 
   DATA_IVECTOR(distcode); // codes of observation distributions
   // model matrices for observation process
   DATA_SPARSE_MATRIX(X_fe_obs); // design matrix for fixed effects
@@ -103,12 +104,27 @@ Type objective_function<Type>::operator() ()
   }
   
   // Initial distribution
-  matrix<Type> delta(1, n_states);
-  delta.setOnes();
-  for(int i = 0; i < n_states - 1; i++)
-    delta(0, i) = exp(log_delta(i));
-  delta = delta/delta.sum();
-  
+  matrix<Type> delta(1, n_states); 
+  if (statdist == 1) {
+    matrix<Type> I = matrix<Type>::Identity(n_states, n_states);
+    matrix<Type> tpminv = I; 
+    tpminv -= tpm_array(0); 
+    tpminv = (tpminv.array() + 1).matrix(); 
+    matrix<Type> ivec(1, n_states); for (int i = 0; i < n_states; ++i) ivec(0, i) = 1;
+    // if tpm is ill-conditioned then just use uniform initial distribution 
+    try {
+      tpminv = tpminv.inverse();
+      delta = ivec * tpminv;
+    } catch(...) {
+      for (int i = 0; i < n_states; ++i) delta(0, i) = 1.0 / n_states; 
+    }
+  } else {
+    delta.setOnes();
+    for(int i = 0; i < n_states - 1; i++)
+      delta(0, i) = exp(log_delta(i));
+    delta = delta/delta.sum();
+  }
+
   //===================================//  
   // Compute observation probabilities //
   //===================================//

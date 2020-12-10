@@ -18,25 +18,17 @@ MarkovChain <- R6Class(
     #' for covariates affecting transitions that are to be estimated, or (2) single
     #' formula, assumed for all transition probabilities. (Default: no covariate
     #' dependence.)
-    #' @param tpm0 Initial transition probability matrix. (Default: 0.9 on diagonal,
-    #' and 0.1/(n_states - 1) for all other entries.) If the model has covariates,
-    #' then \code{tpm0} is used to set the intercept parameters for the transition
-    #' probabilities, and the other parameters are set to 0.
-    #' @param coeff_fe0 Initial coefficients for fixed effects parameters. If
-    #' not provided, the intercepts are set using \code{tpm0}, and other 
-    #' coefficients are set to 0.
-    #' @param coeff_re0 Initial coefficients for random effects parameters.
-    #' Defaults to 0 if not provided. 
+    #' @param stationary if TRUE then stationary distribution with respect to tpm for 
+    #' first time point is used as initial distribution, if FALSE then initial distribution
+    #' is estimated 
     #' @param data Data frame, needed if the model includes covariates
     #' 
     #' @return A new MarkovChain object
     initialize = function(n_states = NULL, structure = NULL, 
-                          tpm0 = NULL, coeff_fe0 = NULL, 
-                          coeff_re0 = NULL, data = NULL) {
+                          stationary = FALSE, data = NULL) {
       # Check arguments
-      private$check_args(n_states = n_states, structure = structure,
-                         tpm0 = tpm0, coeff_fe0 = coeff_fe0, 
-                         coeff_re0 = coeff_re0, data = data)
+      private$check_args(n_states = n_states, structure = structure, 
+                         stationary = stationary, data = data)
       
       # Define 'structure' as matrix
       if(is.null(structure)) {
@@ -58,6 +50,9 @@ MarkovChain <- R6Class(
         
         private$nstates_ <- n_states
       }
+      
+      # set whether delta to be stationary or not
+      private$stationary_ <- stationary 
       
       # Create list of formulas  ('structure' is transposed to get 
       # the formulas in the order 1>2, 1>3, ..., 2>1, 2>3, ...)
@@ -102,23 +97,6 @@ MarkovChain <- R6Class(
       self$update_coeff_re(rep(0, sum(ncol_re))) 
       self$update_lambda(rep(1, length(ncol_re)))
       self$update_delta(rep(1 / n_states, n_states))
-      
-      # Set fixed effect parameters, using either coeff_fe0 or tpm0
-      if(!is.null(coeff_fe0)) {
-        self$update_coeff_fe(coeff_fe0)
-      } else {
-        if(is.null(tpm0)) {
-          # Defaults to diagonal of 0.9 if no initial tpm provided
-          tpm0 <- matrix(0.1/(n_states-1), nrow = n_states, ncol = n_states)
-          diag(tpm0) <- 0.9
-        }
-        self$update_tpm(tpm0)
-      }
-      
-      # Set random effect parameters
-      if(!is.null(coeff_re0)) {
-        self$update_coeff_re(coeff_re0)
-      }
     },
     
     ###############
@@ -138,6 +116,9 @@ MarkovChain <- R6Class(
     
     #' @description Current delta parameter estimates 
     delta = function() {return(private$delta_)}, 
+    
+    #' @description Use stationary distribution as initial distribution? 
+    stationary = function() {return(private$stationary_)}, 
     
     #' @description Current parameter estimates (random effects)
     coeff_re = function() {return(private$coeff_re_)},
@@ -451,6 +432,7 @@ MarkovChain <- R6Class(
     ## Attributes ##
     ################
     structure_ = NULL,
+    stationary_ = NULL, 
     formulas_ = NULL,
     coeff_fe_ = NULL,
     coeff_re_ = NULL,
@@ -464,7 +446,7 @@ MarkovChain <- R6Class(
     ## Check constructor arguments ##
     #################################
     # (For argument description, see constructor)
-    check_args = function(n_states, structure, tpm0, coeff_fe0, coeff_re0, data) {
+    check_args = function(n_states, structure, stationary, data) {
       if(!is.null(n_states)) {
         if(!is.numeric(n_states) | n_states < 1) {
           stop("'n_states' should be a numeric >= 1")
@@ -489,33 +471,7 @@ MarkovChain <- R6Class(
           stop("'structure' should be either a matrix or a formula")
         }
       }
-      
-      if(!is.null(tpm0)) {
-        if(!is.matrix(tpm0)) {
-          stop("'tpm0' should be a matrix")
-        }
-        
-        if(nrow(tpm0) != ncol(tpm0)) {
-          stop("'tpm0' should be a square matrix")
-        }
-        
-        if(any(rowSums(tpm0) != 1)) {
-          stop("The rows of 'tpm0' should sum to 1")
-        }
-      }
-      
-      if(!is.null(coeff_fe0)) {
-        if(!is.numeric(coeff_fe0) | !is.vector(coeff_fe0)) {
-          stop("'coeff_fe0' should be a numeric vector")
-        }
-      }
-      
-      if(!is.null(coeff_re0)) {
-        if(!is.numeric(coeff_re0) | !is.vector(coeff_re0)) {
-          stop("'coeff_re0' should be a numeric vector")
-        }
-      }
-      
+
       if(!is.null(data)) {
         if(!inherits(data, "data.frame")) {
           stop("'data' should be a data.frame")
