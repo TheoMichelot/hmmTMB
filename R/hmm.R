@@ -126,6 +126,50 @@ HMM <- R6Class(
                   hidden = self$hidden()$lambda()))
     },
     
+    #' @description Update parameters stored inside model object
+    #' @param par_list a list for coeff_f(r)e_obs, coeff_f(r)e_hid, log_delta, 
+    #'                   log_lambda_hid log_lambda_obs
+    update_par = function(par_list = NULL, iter = NULL) {
+      if (is.null(par_list) & is.null(iter)) stop("No new paramter values to update to")
+      if (!is.null(iter) & !is.null(par_list)) stop("Either specify iter or par_list in update_par, not both")
+      if (!is.null(iter)) {
+        if (is.null(private$iters_)) stop("Must run mcmc() before using iterations")
+        if (is.numeric(iter)) {
+          if (iter > dim(iters)[1]) stop("iter exceeds number of mcmc iterations available")
+          samp <- private$iters_[iter,]
+        } else if (iter == "mean") {
+          samp <- colMeans(private$iters_)
+        } else {
+          stop("invalid iter to update_par()")
+        }
+        nms <- names(samp)
+        nms <- gsub("\\[[^][]*\\]", "", nms)
+        names(samp) <- NULL
+        par_list <- split(samp,nms)
+      }
+      # Update observation parameters
+      self$obs()$update_coeff_fe(coeff_fe = par_list$coeff_fe_obs)
+      mats_obs <- self$obs()$make_mat()
+      if(!is.null(mats_obs$ncol_re)) { # Only update if there are random effects
+        self$obs()$update_coeff_re(coeff = par_list$coeff_re_obs)
+        self$obs()$update_lambda(exp(par_list$log_lambda_obs))
+      }
+      
+      # Update transition probabilities
+      self$hidden()$update_coeff_fe(coeff_fe = par_list$coeff_fe_hid)
+      mats_hid <- self$hidden()$make_mat(data = self$obs()$data())
+      if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
+        self$hidden()$update_coeff_re(coeff_re = par_list$coeff_re_hid)
+        self$hidden()$update_lambda(exp(par_list$log_lambda_hid))
+      }
+      
+      # Update delta parameters 
+      ldelta <- par_list$log_delta 
+      delta <- c(exp(ldelta), 1)
+      delta <- delta / sum(delta)
+      self$hidden()$update_delta(delta)
+    }, 
+    
     #' @description Variance components of smooth terms
     #' 
     #' This function transforms the smoothness parameter of
@@ -149,6 +193,28 @@ HMM <- R6Class(
       tpm <- self$hidden()$tpm()
       return(list(obspar = obspar, tpm = tpm))
     },
+    
+    #' @description Iterations from stan MCMC fit 
+    #' 
+    #' @return see output of as.matrix in stan 
+    iters = function(type = "response") {
+      if (is.null(private$iters_)) stop("must run mcmc before extracting iterations")
+      if (type == "response") {
+        return(private$par_iters_)
+      } else if (type == "raw") {
+        return(private$iters_)
+      } else {
+        stop("unknown type argument given to iters()")
+      }
+    }, 
+    
+    #' @description fitted stan object from MCMC fit 
+    #' 
+    #' @return the stanfit object 
+    stan = function() {
+      if (is.null(private$iters_)) stop("must run mcmc before extracting stan fitted object")
+      return(private$mcmc_)
+    }, 
     
     #' @description Objective function
     #' 
@@ -333,6 +399,37 @@ HMM <- R6Class(
       private$tmb_obj_ <- obj
     },
     
+    
+    mcmc = function(...) {
+      self$formulation()
+      
+      # Setup if necessary
+      if(is.null(private$tmb_obj_)) {
+        self$setup(silent = silent)
+      }
+      
+      # do stan MCMC 
+      private$mcmc_ <- tmbstan(private$tmb_obj_, ...)
+      
+      # store iterations 
+      private$iters_ <- as.matrix(private$mcmc_)
+      
+      # store iterations on response scale 
+      npar <- length(unlist(self$par()))
+      niter <- nrow(private$iters_)
+      par_iters <- matrix(0, nr = niter, nc = npar)
+      for (i in 1:niter) {
+        self$update_par(iter = i)
+        par_iters[i,] <- unlist(self$par())
+      }
+      colnames(par_iters) <- names(unlist(self$par()))
+      private$par_iters_ <- par_iters 
+      
+      # set coefficients to posterior means 
+      self$update_par(iter = "mean")
+      
+    }, 
+    
     #' @description Model fitting
     #' 
     #' The negative log-likelihood of the model is minimised using the
@@ -362,27 +459,8 @@ HMM <- R6Class(
                                    skip.delta.method = FALSE)
       par_list <- as.list(private$tmb_rep_, "Estimate")
       
-      # Update observation parameters
-      self$obs()$update_coeff_fe(coeff_fe = par_list$coeff_fe_obs)
-      mats_obs <- self$obs()$make_mat()
-      if(!is.null(mats_obs$ncol_re)) { # Only update if there are random effects
-        self$obs()$update_coeff_re(coeff = par_list$coeff_re_obs)
-        self$obs()$update_lambda(exp(par_list$log_lambda_obs))
-      }
-      
-      # Update transition probabilities
-      self$hidden()$update_coeff_fe(coeff_fe = par_list$coeff_fe_hid)
-      mats_hid <- self$hidden()$make_mat(data = self$obs()$data())
-      if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
-        self$hidden()$update_coeff_re(coeff_re = par_list$coeff_re_hid)
-        self$hidden()$update_lambda(exp(par_list$log_lambda_hid))
-      }
-
-      # Update delta parameters 
-      ldelta <- par_list$log_delta 
-      delta <- c(exp(ldelta), 1)
-      delta <- delta / sum(delta)
-      self$hidden()$update_delta(delta)
+      # update parameters 
+      self$update_par(par_list)
       
     },
     
@@ -1405,6 +1483,9 @@ HMM <- R6Class(
     out_ = NULL,
     tmb_obj_ = NULL,
     tmb_rep_ = NULL,
+    mcmc_ = NULL, 
+    iters_= NULL,
+    par_iters_ = NULL, 
     fixpar_ = NULL, 
     states_ = NULL,
     
