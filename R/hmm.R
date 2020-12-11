@@ -223,6 +223,11 @@ HMM <- R6Class(
       return(list(obspar = obspar, tpm = tpm))
     },
     
+    #' Set priors for coefficients 
+    #' @param new_priors is a list of matrices for optionally 
+    #' coeff_fe_obs, coeff_fe_hid, log_lambda_obs log_lambda_hid 
+    #' each matrix has two rows (first row = mean, second row = sd) 
+    #' specifying parameters for Normal priors 
     set_priors = function(new_priors = NULL) {
       fe <- self$coeff_fe()
       if (!is.null(new_priors$coeff_fe_obs)) {
