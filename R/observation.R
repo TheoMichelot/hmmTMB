@@ -73,11 +73,9 @@ Observation <- R6Class(
       mats <- self$make_mat()
       ncol_fe <- mats$ncol_fe
       ncol_re <- mats$ncol_re
-      private$terms_ <- list(ncol_fe = ncol_fe,
-                             ncol_re = ncol_re,
-                             names_fe = colnames(mats$X_fe),
+      private$terms_ <- c(mats, list(names_fe = colnames(mats$X_fe),
                              names_re_all = colnames(mats$X_re),
-                             names_re = names(ncol_re))
+                             names_re = names(ncol_re)))
       
       # Initialise parameters      
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
@@ -90,6 +88,7 @@ Observation <- R6Class(
       } else {
         stop("'par' must be provided")
       }
+    
     },
     
     ###############
@@ -112,6 +111,12 @@ Observation <- R6Class(
     
     #' @description Random effect parameters
     coeff_re = function() {return(private$coeff_re_)},
+    
+    #' @description Fixed effect design matrix 
+    X_fe = function() {return(private$terms_$X_fe)}, 
+    
+    #' @description Random effect design matrix 
+    X_re = function() {return(private$terms_$X_re)}, 
     
     #' @description Smoothness parameters
     lambda = function() {return(private$lambda_)},
@@ -328,7 +333,7 @@ Observation <- R6Class(
     #' 
     #' @return Array with one slice for each time step, one row 
     #' for each observation parameter, and one column for each state.
-    par_all = function(X_fe, X_re, coeff_fe = NULL, coeff_re = NULL, 
+    par_all = function(X_fe = NULL, X_re = NULL, coeff_fe = NULL, coeff_re = NULL, 
                        full_names = TRUE) {
       # Number of states
       n_states <- self$nstates()
@@ -337,6 +342,8 @@ Observation <- R6Class(
       n_par <- sum(sapply(self$dists(), function(d) d$npar()))
       
       # Define parameters
+      if (is.null(X_fe)) X_fe <- self$X_fe() 
+      if (is.null(X_re)) X_re <- self$X_re() 
       if(length(coeff_fe) == 0)
         coeff_fe <- self$coeff_fe()
       if(length(coeff_re) == 0)
@@ -386,8 +393,10 @@ Observation <- R6Class(
     #' 
     #' @return Matrix of likelihoods of observations, with one row for each 
     #' time step, and one column for each state.
-    obs_probs = function(X_fe, X_re, data = NULL) {
+    obs_probs = function(X_fe = NULL, X_re = NULL, data = NULL) {
       # Data frame of observations
+      if (is.null(X_fe)) X_fe <- self$X_fe() 
+      if (is.null(X_re)) X_re <- self$X_re() 
       if (is.null(data)) data <- self$obs_var()
       
       # Number of observations
@@ -560,6 +569,7 @@ Observation <- R6Class(
     formulas_ = NULL,
     raw_formulas_ = NULL, 
     terms_ = NULL,
+    mats_ = NULL, 
     
     #################################
     ## Check constructor arguments ##

@@ -76,21 +76,22 @@ MarkovChain <- R6Class(
       no_covs <- all(structure %in% c(".", "~1"))
       
       # Get structure of design matrices
-      if(no_covs) {
-        # Create temporary dummy data set to pass to make_mat
-        data <- data.frame(dummy = rep(1, 2))
-      } else if(is.null(data)) {
-        stop("'data' must be provided if the model includes covariates")
+      if (is.null(data)) {
+        if (no_covs) {
+          # Create temporary dummy data set to pass to make_mat
+          data <- data.frame(dummy = rep(1, 2))
+        } else {
+          stop("'data' must be provided if the model includes covariates")
+        }
       }
-      
+     
+      # Create terms and necessary matrices 
       mats <- self$make_mat(data = data)
       ncol_fe <- mats$ncol_fe
       ncol_re <- mats$ncol_re       
-      private$terms_ <- list(ncol_fe = ncol_fe,
-                             ncol_re = ncol_re,
-                             names_fe = colnames(mats$X_fe),
+      private$terms_ <- c(mats, list(names_fe = colnames(mats$X_fe),
                              names_re_all = colnames(mats$X_re),
-                             names_re = names(ncol_re))
+                             names_re = names(ncol_re)))
       
       # Initialise coeff_fe and coeff_re to 0
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
@@ -122,6 +123,12 @@ MarkovChain <- R6Class(
     
     #' @description Current parameter estimates (random effects)
     coeff_re = function() {return(private$coeff_re_)},
+    
+    #' @description Fixed effect design matrix 
+    X_fe = function() {return(private$terms_$X_fe)}, 
+    
+    #' @description Random effect design matrix 
+    X_re = function() {return(private$terms_$X_re)}, 
     
     #' @description Smoothness parameters
     lambda = function() {return(private$lambda_)},
@@ -309,10 +316,16 @@ MarkovChain <- R6Class(
     #' are used.
     #' 
     #' @return Array with one slice for each transition probability matrix
-    tpm_all = function(X_fe, X_re, coeff_fe = NULL, coeff_re = NULL) {
+    tpm_all = function(X_fe = NULL, X_re = NULL, coeff_fe = NULL, coeff_re = NULL) {
       n_states <- self$nstates()
       
       # Define parameters
+      if (is.null(X_fe)) {
+        X_fe <- self$X_fe() 
+      }
+      if (is.null(X_re)) {
+        X_re <- self$X_re() 
+      }
       if(length(coeff_fe) == 0)
         coeff_fe <- self$coeff_fe()
       if(length(coeff_re) == 0)
@@ -337,7 +350,11 @@ MarkovChain <- R6Class(
     #'
     #' @return Matrix of stationary distributions. Each row corresponds to
     #' a row of the design matrices, and each column corresponds to a state.
-    stat_dists = function(X_fe, X_re) {
+    stat_dists = function(X_fe = NULL, X_re = NULL) {
+      # Check inputs
+      if (is.null(X_fe)) X_fe <- self$X_fe() 
+      if (is.null(X_re)) X_re <- self$X_re() 
+      
       # Number of states
       n_states <- self$nstates()
       

@@ -75,6 +75,7 @@ HMM <- R6Class(
       
       # initialize priors 
       self$set_priors()
+      
     },
     
     ###############
@@ -171,23 +172,21 @@ HMM <- R6Class(
       }
       # Update observation parameters
       self$obs()$update_coeff_fe(coeff_fe = par_list$coeff_fe_obs)
-      mats_obs <- self$obs()$make_mat()
-      if(!is.null(mats_obs$ncol_re)) { # Only update if there are random effects
+      if(!is.null(self$obs()$terms()$ncol_re)) { # Only update if there are random effects
         self$obs()$update_coeff_re(coeff = par_list$coeff_re_obs)
         self$obs()$update_lambda(exp(par_list$log_lambda_obs))
       }
       
       # Update transition probabilities
       self$hidden()$update_coeff_fe(coeff_fe = par_list$coeff_fe_hid)
-      mats_hid <- self$hidden()$make_mat(data = self$obs()$data())
-      if(!is.null(mats_hid$ncol_re)) { # Only update if there are random effects
+      if(!is.null(self$hidden()$terms()$ncol_re)) { # Only update if there are random effects
         self$hidden()$update_coeff_re(coeff_re = par_list$coeff_re_hid)
         self$hidden()$update_lambda(exp(par_list$log_lambda_hid))
       }
       
       # Update delta parameters 
       if (self$hidden()$stationary()) {
-        tpms <- self$hidden()$tpm_all(mats_hid$X_fe, mats_hid$X_re)
+        tpms <- self$hidden()$tpm_all()
         nstates <- self$hidden()$nstates()
         delta <- solve(t(diag(nstates) - tpms[,,1] + 1), rep(1, nstates))
         self$hidden()$update_delta(delta)
@@ -303,7 +302,7 @@ HMM <- R6Class(
       # DF for fixed effects 
       df <- nrow(self$obs()$coeff_fe()) + nrow(self$hidden()$coeff_fe())
       # EDF for hidden sub-model 
-      mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data())
+      mod_mat_hid <- self$hidden()$terms() 
       S_hid_list <- mod_mat_hid$S_list
       X_hid_list <- mod_mat_hid$X_list_re
       smoopar_hid <- self$lambda()$hidden[,1]
@@ -316,7 +315,7 @@ HMM <- R6Class(
         }
       }
       # EDF for observation sub-model 
-      mod_mat_obs <- self$obs()$make_mat()
+      mod_mat_obs <- self$obs()$terms()
       S_obs_list <- mod_mat_obs$S_list
       X_obs_list <- mod_mat_obs$X_list_re
       smoopar_obs <- self$lambda()$obs[,1]
@@ -354,7 +353,7 @@ HMM <- R6Class(
       
       # Create model matrices of observation process
       # (Design matrices for fixed and random effects, and smoothing matrix)
-      mod_mat_obs <- self$obs()$make_mat()
+      mod_mat_obs <- self$obs()$terms()
       X_fe_obs <- mod_mat_obs$X_fe
       X_re_obs <- mod_mat_obs$X_re
       S_obs <- mod_mat_obs$S
@@ -362,7 +361,7 @@ HMM <- R6Class(
       
       # Create model matrices of hidden state process
       # (Design matrices for fixed and random effects, and smoothing matrix)
-      mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data())
+      mod_mat_hid <- self$hidden()$terms()
       X_fe_hid <- mod_mat_hid$X_fe
       X_re_hid <- mod_mat_hid$X_re
       S_hid <- mod_mat_hid$S
@@ -572,11 +571,9 @@ HMM <- R6Class(
       n <- nrow(self$obs()$data())
       lforw <- lback <- matrix(0, nr = self$hidden()$nstates(), nc = n)
       # get observation probabilities 
-      obsmats <- self$obs()$make_mat()
-      obsprobs <- self$obs()$obs_probs(obsmats$X_fe, obsmats$X_re)
+      obsprobs <- self$obs()$obs_probs()
       # get tpms 
-      hidmats <- self$hidden()$make_mat(self$obs()$data())
-      tpms <- self$hidden()$tpm_all(hidmats$X_fe, hidmats$X_re)
+      tpms <- self$hidden()$tpm_all()
       # forward algorithm 
       p <- delta * obsprobs[1,]
       psum <- sum(p)
@@ -629,8 +626,7 @@ HMM <- R6Class(
       lback <- fb$logbackward
       lforw <- cbind(log(delta), lforw)
       # get transition matrices
-      hidmats <- self$hidden()$make_mat(self$obs()$data())
-      tpms <- self$hidden()$tpm_all(hidmats$X_fe, hidmats$X_re)
+      tpms <- self$hidden()$tpm_all()
       # scaling 
       forwscale <- apply(lforw, 2, max)
       backscale <- apply(lback, 2, max)
@@ -646,7 +642,7 @@ HMM <- R6Class(
       pdfs <- array(0, dim = c(nvars, n, ngrid))
       grids <- vector(mode = "list", length = nvars)
       # compute cdf for each variable 
-      obsmats <- self$obs()$make_mat()
+      obsmats <- self$obs()$terms()
       varnms <- names(vars)
       for (i in 1:nvars) {
         if (!silent) cat("Computing CDF for", varnms[i], "...")
@@ -719,14 +715,10 @@ HMM <- R6Class(
       n_var <- length(self$obs()$dists())
       
       # Observation probabilities
-      mod_mat_obs <-  self$obs()$make_mat()
-      obs_probs <- self$obs()$obs_probs(X_fe = mod_mat_obs$X_fe, 
-                                        X_re = mod_mat_obs$X_re)
+      obs_probs <- self$obs()$obs_probs()
       
       # Transition probability matrices      
-      mod_mat_hid <- self$hidden()$make_mat(data = self$obs()$data())
-      tpm_all <- self$hidden()$tpm_all(X_fe = mod_mat_hid$X_fe, 
-                                       X_re = mod_mat_hid$X_re)
+      tpm_all <- self$hidden()$tpm_all()
       
       # Number of unique IDs
       n_id <- length(unique(ID))
@@ -791,11 +783,9 @@ HMM <- R6Class(
       prob <- prob / sum(prob)
       states[n,] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
       # get tpms 
-      hidmats <- self$hidden()$make_mat(self$obs()$data())
-      tpms <- self$hidden()$tpm_all(hidmats$X_fe, hidmats$X_re)
+      tpms <- self$hidden()$tpm_all()
       # get observation probabilties
-      obsmats <- self$obs()$make_mat()
-      obsprobs <- self$obs()$obs_probs(obsmats$X_fe, obsmats$X_re)
+      obsprobs <- self$obs()$obs_probs()
       # sample backward
       for (s in 1:nsamp) {
         for (i in (n - 1):1) {
@@ -893,7 +883,10 @@ HMM <- R6Class(
     #'   \item{\code{upp}}{Array of upper bounds of confidence intervals.
     #'   Each slice of the array is a transiton probability matrix.}
     #' }
-    CI_tpm = function(X_fe, X_re, level = 0.95, n_post = 1e3) {
+    CI_tpm = function(X_fe = NULL, X_re = NULL, level = 0.95, n_post = 1e3) {
+      # Design matrices 
+      if (is.null(X_fe)) X_fe <- self$hidden()$X_fe() 
+      if (is.null(X_re)) X_re <- self$hidden()$X_re() 
       # Number of states
       n_states <- self$hidden()$nstates()
       # Number of time steps
@@ -964,7 +957,10 @@ HMM <- R6Class(
     #'   \item{\code{upp}}{Matrix of upper bounds of confidence intervals,
     #'   with one row for each time step, and one column for each state.}
     #' }
-    CI_statdist = function(X_fe, X_re, level = 0.95, n_post = 1e3) {
+    CI_statdist = function(X_fe = NULL, X_re = NULL, level = 0.95, n_post = 1e3) {
+      # Design matrices 
+      if (is.null(X_fe)) X_fe <- self$hidden()$X_fe() 
+      if (is.null(X_re)) X_re <- self$hidden()$X_re() 
       # Number of states
       n_states <- self$hidden()$nstates()
       # Number of time steps
@@ -1044,6 +1040,9 @@ HMM <- R6Class(
     #'   parameter, and one column for each state.}
     #' }
     CI_obspar = function(X_fe, X_re, level = 0.95, n_post = 1e3) {
+      # Design matrices 
+      if (is.null(X_fe)) X_fe <- self$obs()$X_fe() 
+      if (is.null(X_re)) X_re <- self$obs()$X_re() 
       # Number of states
       n_states <- self$hidden()$nstates()
       # Number of observation parameters (in each state)
