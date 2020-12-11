@@ -1245,7 +1245,7 @@ HMM <- R6Class(
       # Simulate observation process
       obs_dists <- self$obs()$dists()
       obs_all <- data
-      obs_all$state <- S
+      attributes(obs_all)$state <- S
       par_count <- 1
       for(var in seq_along(obs_dists)) {
         # Distribution, name, and parameter indices for this variable
