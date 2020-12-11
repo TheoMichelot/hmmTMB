@@ -22,6 +22,8 @@ std::unique_ptr<Dist<Type>> dist_generator(const int& code) {
     return(std::unique_ptr<Dist<Type>>(new VonMises<Type>));
   case 5: 
     return(std::unique_ptr<Dist<Type>>(new PoissonCon<Type>)); 
+  case 6: 
+    return(std::unique_ptr<Dist<Type>>(new Binomial<Type>));
   default: 
     return(std::unique_ptr<Dist<Type>>(new Poisson<Type>)); 
   }

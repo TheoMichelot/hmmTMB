@@ -158,7 +158,6 @@ Type objective_function<Type>::operator() ()
         vector<Type> sub_wpar = 
           par_mat.row(i).segment(par_count, obsdist->npar() * n_states);
         matrix<Type> par = obsdist->invlink(sub_wpar, n_states);
-        
         // Loop over states (columns)
         for (int s = 0; s < n_states; ++s) {
           // Vector of parameters for state s

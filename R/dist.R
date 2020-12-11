@@ -21,11 +21,12 @@ Dist <- R6Class(
     #' @param invlink Named list of inverse link functions for distribution
     #' parameters
     #' @param npar Number of parameters of the distribution
+    #' @param fixed vector with element for each parameter which is TRUE if parameter is fixed
     #' @param cpp location of C++ TMB definition of distribution
     #' @param compile_cpp if FALSE then distribution code in cpp is added but not compiled into package
     #' 
     #' @return A new Dist object
-    initialize = function(name, pdf, rng, link, invlink, npar, cpp = NULL, compile_cpp = TRUE) {
+    initialize = function(name, pdf, rng, link, invlink, npar, fixed = NULL, cpp = NULL, compile_cpp = TRUE) {
       # Check arguments
       private$check_args(name = name, pdf = pdf, rng = rng, link = link, 
                          invlink = invlink, npar = npar)
@@ -37,6 +38,10 @@ Dist <- R6Class(
       private$link_ <- link
       private$invlink_ <- invlink
       private$npar_ <- npar
+      private$fixed_ <- fixed 
+      
+      # all parameters are unfixed by default
+      if (is.null(fixed)) private$fixed_ <- rep(FALSE, npar)
       
       # Load list of distributions included in the package and check against 
       # specified distribution name 
@@ -122,6 +127,9 @@ Dist <- R6Class(
     
     #' @description Return number of parameters of Dist object
     npar = function() {return(private$npar_)},
+    
+    #' @description Return which parameters are fixed 
+    fixed = function() {return(private$fixed_)}, 
     
     #' @description Return code of Dist object
     code = function() {return(private$code_)},
@@ -231,6 +239,7 @@ Dist <- R6Class(
     link_ = NULL,
     invlink_ = NULL,
     npar_ = NULL,
+    fixed_ = NULL, 
     code_ = NULL,
     
     #################################

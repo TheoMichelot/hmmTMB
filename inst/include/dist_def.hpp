@@ -79,6 +79,35 @@ public:
 };
 
 template<class Type> 
+class Binomial : public Dist<Type> {
+public:
+  // Constructor
+  Binomial() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size());
+    for (int i = 0; i < n_states; ++i) wpar(i) = par(i); 
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for(int i = 0; i < n_states; ++i) par(i, 0) = wpar(i);
+    for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states)));
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dbinom(x, par(0), par(1), logpdf);
+    return(val); 
+  }
+  // Number of parameters 
+  int npar() { return 2; }
+};
+
+template<class Type> 
 class Normal : public Dist<Type> {
 public:
   // Constructor

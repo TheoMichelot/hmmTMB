@@ -2,6 +2,21 @@
 # This file contains the distributions currently included in hmmTMB, but
 # user-specified distributions can be added with the name "custom"
 
+# Custom link functions ---------------------------------------------------
+
+#' cumulatively increasing link function
+#' @export 
+log_con <- function(x) {
+  return(c(log(x[1]), log(diff(x))))
+}
+#' cumulatively increasing inverse link function
+#' @export 
+exp_con <- function(x) {
+  return(exp(x[1]) + cumsum(c(0, exp(x[-1]))))
+}
+
+# Discrete distributions --------------------------------------------------
+
 # Poisson
 dist_pois <- Dist$new(
   name = "pois", 
@@ -13,12 +28,6 @@ dist_pois <- Dist$new(
 )
 
 # Poisson with increasing constraint 
-log_con <- function(x) {
-  return(c(log(x[1]), log(diff(x))))
-}
-exp_con <- function(x) {
-  return(exp(x[1]) + cumsum(c(0, exp(x[-1]))))
-}
 dist_pois_con = Dist$new(
   name = "pois_con", 
   pdf = dpois,
@@ -27,6 +36,20 @@ dist_pois_con = Dist$new(
   invlink = list(lambda = exp_con), 
   npar = 1
 )
+
+# Binomial 
+dist_binom <- Dist$new(
+  name = "binom", 
+  pdf = dbinom, 
+  rng = rbinom, 
+  link = list(size = identity, prob = qlogis), 
+  invlink = list(size = identity, prob = plogis),
+  npar = 2, 
+  fixed = c(size = TRUE, prob = FALSE)
+)
+
+
+# Continuous distributions ------------------------------------------------
 
 # gamma
 dist_gamma <- Dist$new(
@@ -80,9 +103,12 @@ dist_vm <- Dist$new(
   npar = 2
 )
 
-# List of distributions (used in Observation$new)
+
+# List of all distributions -----------------------------------------------
+
 dist_list <- list(pois = dist_pois,
                   pois_con = dist_pois_con,
+                  binom = dist_binom, 
                   gamma = dist_gamma,
                   norm = dist_norm,
                   beta = dist_beta,

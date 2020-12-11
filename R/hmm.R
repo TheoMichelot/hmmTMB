@@ -408,6 +408,19 @@ HMM <- R6Class(
         statdist <- 1 
       }
       
+      # check for parameters that must always be fixed (identified by having
+      # a fixed = TRUE in dist)
+      fixed <- unlist(lapply(self$obs()$dists(), function(d) d$fixed()))
+      if (any(fixed)) {
+        nms <- names(fixed)[fixed == TRUE]
+        obsnms <- rownames(self$obs()$coeff_fe())
+        for (i in 1:length(nms)) {
+          getnms <- obsnms[grep(nms[i], obsnms)]
+          private$fixpar_$obs <- c(private$fixpar_$obs, rep(NA, length(getnms)))
+          names(private$fixpar_$obs) <- c(names(private$fixpar_$obs), getnms)
+        }
+      }
+      
       # add custom mapping effects
       usernms <- c("obs", "hid", "lambda", "delta")
       comps <- c("coeff_fe_obs", "coeff_fe_hid", "log_lambda", "log_delta")
@@ -1641,7 +1654,7 @@ HMM <- R6Class(
       # INITIAL
       if ("INITIAL" %in% read_nms) {
         ini_block <- private$read_block("INITIAL", wh_blocks, spec)
-        par <- private$read_forms(ini_block, ini = TRUE)
+        par <- private$read_forms(ini_block, ini = TRUE, nstates = nstates)
       } else {
         stop("INITIAL block is missing from model specification")
       }
@@ -1683,7 +1696,7 @@ HMM <- R6Class(
     #' @param forms character vector of block to read
     #' @param ini if TRUE then read as if it is initial block otherwise assume it
     #' is the formula block 
-    read_forms = function(forms, ini = FALSE) {
+    read_forms = function(forms, ini = FALSE, nstates = NULL) {
       # find variables 
       wh_vars <- grep(":", forms)
       vars <- gsub(":", "", forms[wh_vars])
@@ -1708,6 +1721,7 @@ HMM <- R6Class(
           # get rhs of formula or initial values 
           if (ini){
             par_ini <- as.numeric(str_split(sub(".*\\=", "", subforms[j]), ",")[[1]])
+            if (length(par_ini) == 1) par_ini <- rep(par_ini, nstates)
           } else {
             par_ini <- as.formula(paste0("~", gsub(".*\\~", "", subforms[j])))
           }

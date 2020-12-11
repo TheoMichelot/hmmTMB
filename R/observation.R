@@ -532,6 +532,8 @@ Observation <- R6Class(
       d_list <- lapply(self$dists(), function(d) d$name())
       # List of parameter names
       p_list <- lapply(self$dists(), function(d) names(d$link()))
+      # List of fixed parameters
+      fix_list <- lapply(self$dists(), function(d) d$fixed())
       
       # List of parameter formulas
       s_list <- lapply(self$formulas(), function(f) {
@@ -541,6 +543,17 @@ Observation <- R6Class(
           s <- paste0(s, "  * ", names(ff)[i], " ~ ", as.character.default(ff[[i]])[2], "\n")
         return(s)
       })
+      
+      # Remove formulas for fixed parameters
+      nms <- names(s_list)
+      for (i in 1:length(fix_list)) {
+        wh <- which(nms == names(fix_list)[i])
+        fix <- names(fix_list[[i]])[fix_list[[i]] == TRUE]
+        for (j in 1:length(fix)) {
+          del <- paste0(".*?", fix[j], ".*?\n")
+          s_list[[wh]] <- gsub(del, "", s_list[[wh]])
+        }
+      }
       
       # Loop over observed variables
       for(i in seq_along(d_list)) {
