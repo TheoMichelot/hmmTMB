@@ -43,8 +43,8 @@ HMM <- R6Class(
       private$check_args(obs = obs, hidden = hidden)
       
       # Get names of all covariates (in MarkovChain and Observation models)
-      var_names <- unique(rapply(hidden$formulas(), all.vars), 
-                          rapply(obs$formulas(), all.vars))
+      var_names <- unique(c(rapply(hidden$formulas(), all.vars), 
+                          rapply(obs$formulas(), all.vars)))
       if(length(var_names) > 0) {
         data <- obs$data()
         # Remove NAs in covariates (replace by last non-NA value)
@@ -1629,7 +1629,7 @@ HMM <- R6Class(
       # TPM
       if ("TPM" %in% read_nms) {
         tpm_block <- private$read_block("TPM", wh_blocks, spec)
-        tpm <- matrix(unlist(str_split(tpm_block, ",")), nr = nstates, nc = nstates, byrow = TRUE)
+        tpm <- matrix(str_trim(unlist(str_split(tpm_block, ":"))), nr = nstates, nc = nstates, byrow = TRUE)
       } else {
         tpm <- NULL
       }
