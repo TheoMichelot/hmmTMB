@@ -45,3 +45,12 @@ mod$par()
 
 s <- mod$viterbi()
 table(s == states)/length(s)
+
+#### ALTERNATIVE 
+
+other_mod <- HMM$new("inst/mod.hmm")
+other_mod$fit() 
+other_mod$par() 
+
+
+

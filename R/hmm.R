@@ -19,7 +19,26 @@ HMM <- R6Class(
     #'               or pool into common values (using factor levels)
     #' 
     #' @return A new HMM object
-    initialize = function(obs, hidden, init = NULL, fixpar = NULL) {
+    initialize = function(obs, hidden = NULL, init = NULL, fixpar = NULL) {
+      # Decide how model has been specified 
+      if (!is.character(obs) & is.null(hidden)) {
+        stop("either 'obs' must a file name for a file specifying the model or 
+            both obs/hidden model objects should be supplied.")
+      }
+      if (is.character(obs)) {
+        cat("Reading model specified at", obs, "\n")
+        spec <- private$read_file(obs)
+        # create obs
+        obs <- Observation$new(data = spec$data, 
+                               dists = spec$dists,
+                               n_states = spec$nstates, 
+                               par = spec$par, 
+                               formulas = spec$forms)
+        hidden <- MarkovChain$new(n_states = spec$nstates, 
+                                  structure = spec$tpm, 
+                                  data = spec$data)
+      }
+      
       # Check arguments
       private$check_args(obs = obs, hidden = hidden)
       
@@ -1565,6 +1584,139 @@ HMM <- R6Class(
     #################################
     ## Check constructor arguments ##
     #################################
+    
+    #' For reading model specification files
+    #' @param file file location 
+    read_file = function(file) {
+      if (!file.exists(file)) stop("model specification file does not exist in this location:", file)
+      spec <- scan(file = file, character(), sep = "\n", strip.white = TRUE, quiet = TRUE)
+      # remove comments
+      spec <- strip_comments(spec)
+      # block names 
+      blocknms <- c("DATA", "DISTRIBUTION", "FORMULA", "TPM", "INITIAL")
+      # find blocks
+      wh_blocks <- sapply(blocknms, FUN = function(b) {grep(b, spec)})
+      wh_blocks <- unlist(wh_blocks[sapply(wh_blocks, length) > 0])
+      wh_blocks <- sort(wh_blocks)
+      read_nms <- names(wh_blocks)
+      
+      # DATA
+      if ("DATA" %in% read_nms) {
+        data_block <- private$read_block("DATA", wh_blocks, spec)
+        read_data_block <- private$read_equals(data_block)
+        dataset <- get(read_data_block$rhs[which(read_data_block$lhs == "dataset")])
+        nstates <- as.numeric(read_data_block$rhs[which(read_data_block$lhs == "nstates")])
+      } else {
+        stop("DATA block is missing from model specification")
+      }
+        
+      # DISTS 
+      if ("DISTRIBUTION" %in% read_nms) {
+        dist_block <- private$read_block("DISTRIBUTION", wh_blocks, spec)
+        dists <- private$read_dists(dist_block)
+      } else {
+        dists <- NULL
+      }
+      
+      # FORMULA
+      if ("FORMULA" %in% read_nms) {
+        form_block <- private$read_block("FORMULA", wh_blocks, spec)
+        forms <- private$read_forms(form_block)
+      } else {
+        forms <- NULL
+      }
+      
+      # TPM
+      if ("TPM" %in% read_nms) {
+        tpm_block <- private$read_block("TPM", wh_blocks, spec)
+        tpm <- matrix(unlist(str_split(tpm_block, ",")), nr = nstates, nc = nstates, byrow = TRUE)
+      } else {
+        tpm <- NULL
+      }
+        
+      # INITIAL
+      if ("INITIAL" %in% read_nms) {
+        ini_block <- private$read_block("INITIAL", wh_blocks, spec)
+        par <- private$read_forms(ini_block, ini = TRUE)
+      } else {
+        stop("INITIAL block is missing from model specification")
+      }
+      
+      return(list(data = dataset, nstates = nstates, dists = dists, forms = forms, tpm = tpm, par = par))
+      
+    }, 
+    
+    #' Read a specified block in a model specification file 
+    read_block = function(name, wh_blocks, spec) {
+      find <- which(names(wh_blocks) == name)
+      start_block <- wh_blocks[find] + 1 
+      end_block <- ifelse(start_block > max(wh_blocks), length(spec), wh_blocks[find + 1] - 1)
+      block <- spec[start_block:end_block]
+      return(block)
+    }, 
+    
+    #' Separate left hand side and right hand side variables from a equation 
+    #' @param x character vector of equations 
+    #' @return list of left hand sides (lhs) and right hand sides (rhs)
+    read_equals = function(x) {
+      rhs <- str_trim(gsub(".*=", "", x))
+      lhs <- str_trim(gsub("=.*", "", x))
+      return(list(lhs = lhs, rhs = rhs))
+    }, 
+    
+    #' Read distribution block 
+    #' @param dist character vector of distribtion block 
+    #' @return list of distributions 
+    read_dists = function(dists) {
+      ds <- strsplit(dists, "\n")
+      terms <- sapply(ds, FUN = function(x) {all.vars(as.formula(x))})
+      ls <- as.list(terms[2,])
+      names(ls) <- terms[1,]
+      return(ls)
+    }, 
+    
+    #' Read both formula and initial blocks 
+    #' @param forms character vector of block to read
+    #' @param ini if TRUE then read as if it is initial block otherwise assume it
+    #' is the formula block 
+    read_forms = function(forms, ini = FALSE) {
+      # find variables 
+      wh_vars <- grep(":", forms)
+      vars <- gsub(":", "", forms[wh_vars])
+      par <- NULL
+      for (i in 1:length(vars)){
+        # find sub-block of formula/initial values for that variable 
+        if (i < length(vars)) {
+          end <- wh_vars[i + 1] - 1
+        } else {
+          end <- length(forms)
+        }
+        subforms <- forms[(wh_vars[i] + 1):end]
+        subpar <- NULL
+        subparnms <- NULL
+        for (j in 1:length(subforms)) {
+          # get parameter name 
+          if (ini) {
+            par_name <- str_trim(gsub("\\=.*", "", subforms[j]))
+          } else{
+            par_name <- str_trim(gsub("\\~.*", "", subforms[j]))
+          }
+          # get rhs of formula or initial values 
+          if (ini){
+            par_ini <- as.numeric(str_split(sub(".*\\=", "", subforms[j]), ",")[[1]])
+          } else {
+            par_ini <- as.formula(paste0("~", gsub(".*\\~", "", subforms[j])))
+          }
+          subparnms <- c(subparnms, par_name)
+          subpar <- c(subpar, list(par_ini))
+        }
+        names(subpar) <- subparnms
+        par <- c(par, list(subpar))
+      }
+      names(par) <- vars
+      return(par)
+    },
+    
     # (For argument description, see constructor)
     check_args = function(obs, hidden) {
       if(!inherits(obs, "Observation")) {

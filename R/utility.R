@@ -138,3 +138,14 @@ is_whole_number <- function(x, tol = 1e-10) {
   y <- floor(x)
   return(all(abs(x - y) < tol))
 }
+#' Strip comments marked with a hash from a character vector 
+#' @param str the character vector 
+#' 
+#' @return character vector with comments removed (and lines with only comments
+#' completely removed) 
+#' @export 
+strip_comments <- function(str) {
+  res <- str_trim(str_split_fixed(str, "#|;", 2)[, 1])
+  res <- res[res != ""]
+  return(res)
+}
