@@ -37,6 +37,7 @@ HMM <- R6Class(
         hidden <- MarkovChain$new(n_states = spec$nstates, 
                                   structure = spec$tpm, 
                                   data = spec$data)
+        if (!is.null(spec$tpm0)) hidden$update_tpm(spec$tpm0)
       }
       
       # Check arguments
@@ -1654,12 +1655,12 @@ HMM <- R6Class(
       # INITIAL
       if ("INITIAL" %in% read_nms) {
         ini_block <- private$read_block("INITIAL", wh_blocks, spec)
-        par <- private$read_forms(ini_block, ini = TRUE, nstates = nstates)
+        ini <- private$read_forms(ini_block, ini = TRUE, nstates = nstates)
       } else {
         stop("INITIAL block is missing from model specification")
       }
       
-      return(list(data = dataset, nstates = nstates, dists = dists, forms = forms, tpm = tpm, par = par))
+      return(list(data = dataset, nstates = nstates, dists = dists, forms = forms, tpm = tpm, par = ini$par, tpm0 = ini$tpm0))
       
     }, 
     
@@ -1699,8 +1700,9 @@ HMM <- R6Class(
     read_forms = function(forms, ini = FALSE, nstates = NULL) {
       # find variables 
       wh_vars <- grep(":", forms)
-      vars <- gsub(":", "", forms[wh_vars])
+      vars <- str_trim(gsub(":", "", forms[wh_vars]))
       par <- NULL
+      tpm0 <- NULL
       for (i in 1:length(vars)){
         # find sub-block of formula/initial values for that variable 
         if (i < length(vars)) {
@@ -1709,30 +1711,43 @@ HMM <- R6Class(
           end <- length(forms)
         }
         subforms <- forms[(wh_vars[i] + 1):end]
-        subpar <- NULL
-        subparnms <- NULL
-        for (j in 1:length(subforms)) {
-          # get parameter name 
-          if (ini) {
-            par_name <- str_trim(gsub("\\=.*", "", subforms[j]))
-          } else{
-            par_name <- str_trim(gsub("\\~.*", "", subforms[j]))
+        if (str_trim(vars[i]) == "tpm") {
+          nstates <- length(subforms)
+          tpm0 <- matrix(0, nr = nstates, nstates)
+          for (s in 1:nstates) {
+            tpm0[s,] <- as.numeric(strsplit(subforms[s], ",")[[1]])
           }
-          # get rhs of formula or initial values 
-          if (ini){
-            par_ini <- as.numeric(str_split(sub(".*\\=", "", subforms[j]), ",")[[1]])
-            if (length(par_ini) == 1) par_ini <- rep(par_ini, nstates)
-          } else {
-            par_ini <- as.formula(paste0("~", gsub(".*\\~", "", subforms[j])))
+        } else {
+          subpar <- NULL
+          subparnms <- NULL
+          for (j in 1:length(subforms)) {
+            # get parameter name 
+            if (ini) {
+              par_name <- str_trim(gsub("\\=.*", "", subforms[j]))
+            } else{
+              par_name <- str_trim(gsub("\\~.*", "", subforms[j]))
+            }
+            # get rhs of formula or initial values 
+            if (ini){
+              par_ini <- as.numeric(str_split(sub(".*\\=", "", subforms[j]), ",")[[1]])
+              if (length(par_ini) == 1) par_ini <- rep(par_ini, nstates)
+            } else {
+              par_ini <- as.formula(paste0("~", gsub(".*\\~", "", subforms[j])))
+            }
+            subparnms <- c(subparnms, par_name)
+            subpar <- c(subpar, list(par_ini))
           }
-          subparnms <- c(subparnms, par_name)
-          subpar <- c(subpar, list(par_ini))
+          names(subpar) <- subparnms
+          par <- c(par, list(subpar))
         }
-        names(subpar) <- subparnms
-        par <- c(par, list(subpar))
       }
-      names(par) <- vars
-      return(par)
+      names(par) <- vars[vars != "tpm"]
+      if (ini) {
+        res <- list(par = par, tpm0 = tpm0)
+      } else {
+        res <- par 
+      }
+      return(res)
     },
     
     # (For argument description, see constructor)
