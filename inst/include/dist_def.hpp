@@ -54,28 +54,60 @@ public:
 };
 
 template<class Type> 
-class PoissonCon : public Poisson<Type> {
-public: 
+class ZeroInflatedPoisson : public Dist<Type> {
+public:
+  // Constructor
+  ZeroInflatedPoisson() {}; 
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
-    vector<Type> wpar(par.size());
-    wpar(0) = log(par(0)); 
-    for (int i = 0; i < n_states - 1; ++i) {
-      wpar(i + 1) = log(par(i + 1) - par(i)); 
-    }
+    vector<Type> wpar(par.size()); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(wpar(i)); 
     return(wpar); 
   } 
   // Inverse link function 
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    Type cumsum = 0; 
-    for(int i = 0; i < n_states; ++i) {
-      cumsum += exp(wpar(i)); 
-      par(i, 0) = cumsum; 
-    }
+    for(int i = 0; i < n_states; ++i) par(i, 0) = 1.0 / (1.0 + exp(-wpar(i)));
+    for(int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); 
     return(par); 
   }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dzipois(x, par(1), par(0), logpdf);
+    return(val); 
+  }
+  // Number of parameters 
+  int npar() { return 2; }
+};
+
+template<class Type> 
+class ZeroTruncatedPoisson : public Dist<Type> {
+public:
+  // Constructor
+  ZeroTruncatedPoisson() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    wpar = log(par); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dpois(x, par(0)) / (1 - dpois(Type(0), par(0)));
+    if (logpdf) val = log(val); 
+    return(val); 
+  }
+  // Number of parameters 
+  int npar() { return 1; }
 };
 
 template<class Type> 
@@ -101,6 +133,134 @@ public:
   // Probability density/mass function
   Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
     Type val = dbinom(x, par(0), par(1), logpdf);
+    return(val); 
+  }
+  // Number of parameters 
+  int npar() { return 2; }
+};
+
+
+template<class Type> 
+class ZeroInflatedBinomial : public Dist<Type> {
+public:
+  // Constructor
+  ZeroInflatedBinomial() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = par(i); 
+    for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for(int i = 0; i < n_states; ++i) par(i, 0) = 1.0 / (1.0 + exp(-wpar(i)));
+    for(int i = 0; i < n_states; ++i) par(i, 1) = wpar(i + n_states); 
+    for(int i = 0; i < n_states; ++i) par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2 * n_states))); 
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val;
+    if (x == Type(0)) val = par(0) + (1 - par(0)) * dbinom(x, par(1), par(2)); 
+    else val = (1 - par(0)) * dbinom(x, par(1), par(2)); 
+    if (logpdf) val = log(val); 
+    return(val); 
+  }
+  // Number of parameters 
+  int npar() { return 3; }
+};
+
+template<class Type> 
+class ZeroInflatedNegativeBinomial : public Dist<Type> {
+public:
+  // Constructor
+  ZeroInflatedNegativeBinomial() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+    for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for(int i = 0; i < n_states; ++i) par(i, 0) = 1.0 / (1.0 + exp(-wpar(i)));
+    for(int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); 
+    for(int i = 0; i < n_states; ++i) par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2 * n_states))); 
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val;
+    if (x == Type(0)) val = par(0) + (1 - par(0)) * dnbinom(x, par(1), par(2)); 
+    else val = (1 - par(0)) * dnbinom(x, par(1), par(2)); 
+    if (logpdf) val = log(val); 
+    return(val); 
+  }
+  // Number of parameters 
+  int npar() { return 3; }
+};
+
+template<class Type> 
+class ZeroTruncatedNegativeBinomial : public Dist<Type> {
+public:
+  // Constructor
+  ZeroTruncatedNegativeBinomial() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size());
+    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i)); 
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states)));
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dnbinom(x, par(0), par(1)) / (1.0 - dnbinom(Type(0.0), par(0), par(1)));
+    if (logpdf) val = log(val); 
+    return(val); 
+  }
+  // Number of parameters 
+  int npar() { return 2; }
+};
+
+template<class Type> 
+class NegativeBinomial : public Dist<Type> {
+public:
+  // Constructor
+  NegativeBinomial() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size());
+    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i)); 
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states)));
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dnbinom(x, par(0), par(1), logpdf);
     return(val); 
   }
   // Number of parameters 

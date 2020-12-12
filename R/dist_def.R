@@ -2,22 +2,9 @@
 # This file contains the distributions currently included in hmmTMB, but
 # user-specified distributions can be added with the name "custom"
 
-# Custom link functions ---------------------------------------------------
-
-#' cumulatively increasing link function
-#' @export 
-log_con <- function(x) {
-  return(c(log(x[1]), log(diff(x))))
-}
-#' cumulatively increasing inverse link function
-#' @export 
-exp_con <- function(x) {
-  return(exp(x[1]) + cumsum(c(0, exp(x[-1]))))
-}
-
 # Discrete distributions --------------------------------------------------
 
-# Poisson
+# Poisson ======================================
 dist_pois <- Dist$new(
   name = "pois", 
   pdf = dpois,
@@ -27,17 +14,53 @@ dist_pois <- Dist$new(
   npar = 1
 )
 
-# Poisson with increasing constraint 
-dist_pois_con = Dist$new(
-  name = "pois_con", 
-  pdf = dpois,
-  rng = rpois, 
-  link = list(lambda = log_con), 
-  invlink = list(lambda = exp_con), 
+# Zero-Inflated Poisson ========================
+dzip <- function(x, z, lambda, log = FALSE) {
+  zero <- x < 1e-10 
+  l <- z * zero + (1 - z) * dpois(x, lambda)
+  if (log) l <- log(l)
+  return(l)
+}
+rzip <- function(n, z, lambda) {
+  zero <- rbinom(n, 1, z)
+  y <- rpois(n, lambda)
+  y[zero == 1] <- 0
+  return(y)
+}
+dist_zip <- Dist$new(
+  name = "zip", 
+  pdf = dzip, 
+  rng = rzip, 
+  link = list(z = qlogis, lambda = log), 
+  invlink = list(z = plogis, lambda = exp), 
+  npar = 2
+)
+
+# Zero-Truncated Poisson ========================
+dztp <- function(x, lambda, log = FALSE) {
+  l <- dpois(x, lambda) / (1 - dpois(0, lambda))
+  if (log) l <- log(l)
+  return(l)
+}
+rztp <- function(n, lambda) {
+  y <- NULL 
+  while (length(y) < n) {
+    z <- rpois(n, lambda)
+    y <- c(y, z[z > 1e-10])
+  }
+  return(y)
+}
+dist_ztp <- Dist$new(
+  name = "ztp", 
+  pdf = dztp, 
+  rng = rztp, 
+  link = list(lambda = log), 
+  invlink = list(lambda = exp), 
   npar = 1
 )
 
-# Binomial 
+
+# Binomial ===================================== 
 dist_binom <- Dist$new(
   name = "binom", 
   pdf = dbinom, 
@@ -48,6 +71,83 @@ dist_binom <- Dist$new(
   fixed = c(size = TRUE, prob = FALSE)
 )
 
+# Zero-inflated Binomial =======================
+dzib <- function(x, z, size, p, log = FALSE) {
+  zero <- x < 1e-10 
+  l <- z * zero + (1 - z) * dbinom(x, size, p)
+  if (log) l <- log(l)
+  return(l)
+}
+rzib <- function(n, z, size, p) {
+  zero <- rbinom(n, 1, z)
+  y <- rbinom(n, size, p)
+  y[zero == 1] <- 0
+  return(y)
+}
+dist_zib <- Dist$new(
+  name = "zib", 
+  pdf = dzib, 
+  rng = rzib, 
+  link = list(z = qlogis, size = identity, p = qlogis), 
+  invlink = list(z = plogis, size = identity, p = plogis), 
+  npar = 3, 
+  fixed = c(z = FALSE, size = TRUE, p = FALSE) 
+)
+
+# Negative-binomial ============================
+dist_nbinom <- Dist$new(
+  name = "nbinom", 
+  pdf = dnbinom, 
+  rng = rnbinom, 
+  link = list(size = log, prob = qlogis), 
+  invlink = list(size = exp, prob = plogis), 
+  npar = 2, 
+)
+
+# Zero-inflated Negative-Binomial ==============
+dzinb <- function(x, z, size, p, log = FALSE) {
+  zero <- x < 1e-10 
+  l <- z * zero + (1 - z) * dnbinom(x, size, p)
+  if (log) l <- log(l)
+  return(l)
+}
+rzinb <- function(n, z, size, p) {
+  zero <- rbinom(n, 1, z)
+  y <- rnbinom(n, size, p)
+  y[zero == 1] <- 0
+  return(y)
+}
+dist_zinb <- Dist$new(
+  name = "zinb", 
+  pdf = dzinb, 
+  rng = rzinb, 
+  link = list(z = qlogis, size = log, p = qlogis), 
+  invlink = list(z = plogis, size = exp, p = plogis), 
+  npar = 3, 
+)
+
+# Zero-Truncated Negative-Binomial ========================
+dztnb <- function(x, size, p, log = FALSE) {
+  l <- dnbinom(x, size, p) / (1 - dnbinom(0, size, p))
+  if (log) l <- log(l)
+  return(l)
+}
+rztnb <- function(n, size, p) {
+  y <- NULL 
+  while (length(y) < n) {
+    z <- rnbinom(n, size, p)
+    y <- c(y, z[z > 1e-10])
+  }
+  return(y)
+}
+dist_ztnb <- Dist$new(
+  name = "ztnb", 
+  pdf = dztnb, 
+  rng = rztnb, 
+  link = list(size = log, p = qlogis), 
+  invlink = list(size = exp, p = plogis), 
+  npar = 2, 
+)
 
 # Continuous distributions ------------------------------------------------
 
@@ -107,9 +207,15 @@ dist_vm <- Dist$new(
 # List of all distributions -----------------------------------------------
 
 dist_list <- list(pois = dist_pois,
-                  pois_con = dist_pois_con,
-                  binom = dist_binom, 
+                  binom = dist_binom,
+                  nbinom = dist_nbinom, 
                   gamma = dist_gamma,
                   norm = dist_norm,
                   beta = dist_beta,
-                  vm = dist_vm)
+                  vm = dist_vm, 
+                  zip = dist_zip, 
+                  zib = dist_zib, 
+                  zinb = dist_zinb,
+                  ztp = dist_ztp, 
+                  ztnb = dist_ztnb)
+
