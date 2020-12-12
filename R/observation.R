@@ -549,6 +549,7 @@ Observation <- R6Class(
       for (i in 1:length(fix_list)) {
         wh <- which(nms == names(fix_list)[i])
         fix <- names(fix_list[[i]])[fix_list[[i]] == TRUE]
+        if (length(fix) == 0) next 
         for (j in 1:length(fix)) {
           del <- paste0(".*?", fix[j], ".*?\n")
           s_list[[wh]] <- gsub(del, "", s_list[[wh]])
