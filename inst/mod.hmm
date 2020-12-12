@@ -1,20 +1,16 @@
-# Hidden Markov Model specification 
-# Comments begin with a hash symbol, as in R 
-
 DATA 
-# specify dataset and number of states 
 dataset = dat
 nstates = 2 
 
 DISTRIBUTION
-# specify distribution of each observation variable 
-count ~ pois # tilde is needed 
+count ~ pois
 
 INITIAL 
-# specify initial values for each parameter, for each state, over the observation
-# distributions
-count:  # colon is needed 
-  lambda = 2, 10 # equals sign and commas are required 
-  
+count:  
+  lambda = 2, 6
+tpm: 
+  0.9, 0.1,
+  0.2, 0.8
+
  
-  
+
