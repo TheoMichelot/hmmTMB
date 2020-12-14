@@ -1599,12 +1599,23 @@ HMM <- R6Class(
     fixpar_ = NULL, 
     states_ = NULL,
     
-    #################################
-    ## Check constructor arguments ##
-    #################################
-    
-    #' For reading model specification files
+    #######################################
+    ## Functions to read model from file ##
+    #######################################
+    #' @description Read model specification files
+    #' 
     #' @param file file location 
+    #' 
+    #' @return List with elements:
+    #' \itemize{
+    #'   \item{\code{data}}{Data frame}
+    #'   \item{\code{nstates}}{Number of states}
+    #'   \item{\code{dists}}{List of observation distributions}
+    #'   \item{\code{forms}}{Formulas for observation model}
+    #'   \item{\code{tpm}}{Structure of hidden state model}
+    #'   \item{\code{par}}{Initial parameters for observation model}
+    #'   \item{\code{tpm0}}{Initial transition probability matrix}
+    #' }
     read_file = function(file) {
       if (!file.exists(file)) stop("model specification file does not exist in this location:", file)
       spec <- scan(file = file, character(), sep = "\n", strip.white = TRUE, quiet = TRUE)
@@ -1664,7 +1675,7 @@ HMM <- R6Class(
       
     }, 
     
-    #' Read a specified block in a model specification file 
+    #' @description Read a specified block in a model specification file 
     read_block = function(name, wh_blocks, spec) {
       find <- which(names(wh_blocks) == name)
       start_block <- wh_blocks[find] + 1 
@@ -1673,7 +1684,7 @@ HMM <- R6Class(
       return(block)
     }, 
     
-    #' Separate left hand side and right hand side variables from a equation 
+    #' @description Separate left hand side and right hand side variables from a equation 
     #' @param x character vector of equations 
     #' @return list of left hand sides (lhs) and right hand sides (rhs)
     read_equals = function(x) {
@@ -1682,7 +1693,7 @@ HMM <- R6Class(
       return(list(lhs = lhs, rhs = rhs))
     }, 
     
-    #' Read distribution block 
+    #' @description Read distribution block 
     #' @param dist character vector of distribtion block 
     #' @return list of distributions 
     read_dists = function(dists) {
@@ -1693,7 +1704,7 @@ HMM <- R6Class(
       return(ls)
     }, 
     
-    #' Read both formula and initial blocks 
+    #' @description Read both formula and initial blocks 
     #' @param forms character vector of block to read
     #' @param ini if TRUE then read as if it is initial block otherwise assume it
     #' is the formula block 
@@ -1750,16 +1761,9 @@ HMM <- R6Class(
       return(res)
     },
     
-    # (For argument description, see constructor)
-    check_args = function(obs, hidden) {
-      if(!inherits(obs, "Observation")) {
-        stop("'obs' should be an Observation object")
-      }
-      if(!inherits(hidden, "MarkovChain")) {
-        stop("'hidden' should be an MarkovChain object")
-      }
-    }, 
-    
+    ###########################
+    ## Other private methods ##
+    ###########################
     #' Compute effective degrees of freedom for a GAM 
     comp_edf = function(X, S, lambda){
       
@@ -1793,6 +1797,19 @@ HMM <- R6Class(
         par[wh, 1] <- initpar[wh2, 1]
       }
       return(par)
+    },
+    
+    #################################
+    ## Check constructor arguments ##
+    #################################
+    # (For argument description, see constructor)
+    check_args = function(obs, hidden) {
+      if(!inherits(obs, "Observation")) {
+        stop("'obs' should be an Observation object")
+      }
+      if(!inherits(hidden, "MarkovChain")) {
+        stop("'hidden' should be an MarkovChain object")
+      }
     }
   )
 )
