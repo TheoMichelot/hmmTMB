@@ -21,11 +21,11 @@ MarkovChain <- R6Class(
     #' @param stationary if TRUE then stationary distribution with respect to tpm for 
     #' first time point is used as initial distribution, if FALSE then initial distribution
     #' is estimated 
-    #' @param data Data frame, needed if the model includes covariates
+    #' @param data Data frame, needed to create model matrices
     #' 
     #' @return A new MarkovChain object
     initialize = function(n_states = NULL, structure = NULL, 
-                          stationary = FALSE, data = NULL) {
+                          stationary = FALSE, data) {
       # Check arguments
       private$check_args(n_states = n_states, structure = structure, 
                          stationary = stationary, data = data)
@@ -72,26 +72,13 @@ MarkovChain <- R6Class(
       private$structure_ <- structure
       private$formulas_ <- ls_form
       
-      # Does the hidden state model include covariates?
-      no_covs <- all(structure %in% c(".", "~1"))
-      
-      # Get structure of design matrices
-      if (is.null(data)) {
-        if (no_covs) {
-          # Create temporary dummy data set to pass to make_mat
-          data <- data.frame(dummy = rep(1, 2))
-        } else {
-          stop("'data' must be provided if the model includes covariates")
-        }
-      }
-     
       # Create terms and necessary matrices 
       mats <- self$make_mat(data = data)
       ncol_fe <- mats$ncol_fe
       ncol_re <- mats$ncol_re       
       private$terms_ <- c(mats, list(names_fe = colnames(mats$X_fe),
-                             names_re_all = colnames(mats$X_re),
-                             names_re = names(ncol_re)))
+                                     names_re_all = colnames(mats$X_re),
+                                     names_re = names(ncol_re)))
       
       # Initialise coeff_fe and coeff_re to 0
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
@@ -488,7 +475,7 @@ MarkovChain <- R6Class(
           stop("'structure' should be either a matrix or a formula")
         }
       }
-
+      
       if(!is.null(data)) {
         if(!inherits(data, "data.frame")) {
           stop("'data' should be a data.frame")
