@@ -748,8 +748,8 @@ HMM <- R6Class(
       # Initialise state sequence
       all_states <- NULL
       
-      # For now, uniform initial distribution
-      delta <- rep(1/n_states, n_states)
+      # Initial distribution
+      delta <- self$hidden()$delta() 
       
       # Loop over IDs
       for(id in 1:n_id) {
