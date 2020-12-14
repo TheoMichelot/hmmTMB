@@ -632,8 +632,8 @@ HMM <- R6Class(
       nvars <- ncol(vars)
       n <- nrow(self$obs()$data())
       range <- matrix(0, nr = 2, nc = nvars)
-      range[1,] <- sapply(vars, min)  
-      range[2,] <- sapply(vars, max)
+      range[1,] <- sapply(vars, min, na.rm = TRUE)  
+      range[2,] <- sapply(vars, max, na.rm = TRUE)
       # get forward-backward probabilities
       fb <- self$forward_backward() 
       lforw <- fb$logforward
@@ -702,7 +702,7 @@ HMM <- R6Class(
         cdfs[v,,] <- t(apply(pdfs[v,,], 1, cumsum))
         # if continuous then approximate the integral using Riemann sum
         if (!is_whole_number(vars[,v])) {
-          dgrid <- diff(grid[[v]])[1]
+          dgrid <- diff(grids[[v]])[1]
           cdfs[v,,] <- cdfs[v,,] * dgrid 
         }
       }
