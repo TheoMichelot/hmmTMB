@@ -409,8 +409,12 @@ Observation <- R6Class(
       # State-dependent parameters
       par <- self$par_all(X_fe = X_fe, X_re = X_re, full_names = FALSE)
       
-      # Initialise matrix of probabilities to 1
+      # Initialise matrix of probabilities
       prob <- matrix(1, nrow = n, ncol = n_states)
+      for(i in which(!is.na(self$known_states()))) {
+        # Set other probabilities to zero if state is known
+        prob[i,-self$known_states()[i]] <- 0
+      }
       
       # Counter to subset parameter vector
       par_count <- 1
