@@ -1296,10 +1296,12 @@ HMM <- R6Class(
     #' @param gof_fn goodness-of-fit function which accepts "data" as input
     #'               and returns a statistic: either a vector or a single number. 
     #' @param nsims number of simulations to perform 
+    #' @param silent Logical. If FALSE, simulation progress is shown. 
+    #' (Default: TRUE)
     #' 
     #' @return the observed value of the goodness-of-fit statistic for the data
     #'         and the statistic computed for each simulated dataset. 
-    gof = function(gof_fn, nsims = 100) {
+    gof = function(gof_fn, nsims = 100, silent = TRUE) {
       obs_stat <- gof_fn(self$obs()$data())
       vec <- length(obs_stat) > 1 
       if (vec) {
@@ -1310,7 +1312,9 @@ HMM <- R6Class(
       for (sim in 1:nsims) {
         if (!silent) cat("Simulating", sim, " / ", nsims, "\r")
         # simulate new data
-        newdat <- self$simulate(n = nrow(self$obs()$data()), silent = TRUE) 
+        newdat <- self$simulate(n = nrow(self$obs()$data()), 
+                                data = self$obs()$data(),
+                                silent = TRUE) 
         # compute statistics
         if (vec) {
           stats[,sim] <- gof_fn(newdat)
