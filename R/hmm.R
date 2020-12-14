@@ -688,7 +688,6 @@ HMM <- R6Class(
     #' @return Matrix of pseudo-residuals, with one row for each response variable
     #' and one column for each observation
     pseudores = function() {
-      delta <- self$hidden()$delta()
       n <- nrow(self$obs()$data())  
       cond <- self$cond(silent = TRUE)
       pdfs <- cond$pdfs
