@@ -1308,40 +1308,50 @@ HMM <- R6Class(
     #' @return the observed value of the goodness-of-fit statistic for the data
     #'         and the statistic computed for each simulated dataset. 
     gof = function(gof_fn, nsims = 100, silent = TRUE) {
+      # Evaluate statistics for observed data
       obs_stat <- gof_fn(self$obs()$data())
-      vec <- length(obs_stat) > 1 
-      if (vec) {
-        stats <- matrix(0, nc = nsims, nr = length(obs_stat))
-      } else {
-        stats <- rep(0, nsims)
-      }
+      
+      # Simulate from model and evaluate statistics for simulated data
+      stats <- matrix(0, nc = nsims, nr = length(obs_stat))
       for (sim in 1:nsims) {
         if (!silent) cat("Simulating", sim, " / ", nsims, "\r")
+        
         # simulate new data
         newdat <- self$simulate(n = nrow(self$obs()$data()), 
                                 data = self$obs()$data(),
                                 silent = TRUE) 
         # compute statistics
-        if (vec) {
-          stats[,sim] <- gof_fn(newdat)
-        } else {
-          stats[sim] <- gof_fn(newdat)
-        }
+        stats[,sim] <- gof_fn(newdat)
       }
-      ymin <- min(c(obs_stat, stats))
-      ymax <- max(c(obs_stat, stats))
-      if (vec) {
-        plot(obs_stat, 
-             xlab = "Index", 
-             ylab = "Goodness-of-fit", 
-             ylim = c(ymin, ymax), 
-             pch = 20)
-        matlines(stats, col = "grey60", lty = "solid")
+      
+      # Get names of statistics
+      if(is.null(names(obs_stat))) {
+        stat_names <- paste("statistic", 1:length(obs_stat))
+        names(obs_stat) <- stat_names
       } else {
-        hist(stats, col = "steelblue", main = "Vertical line is observed value", xlab = "Goodness-of-fit")
-        abline(v = obs_stat, col = "firebrick", lwd = 2)
+        stat_names <- names(obs_stat)
       }
-      return(list(obs_stat = obs_stat, stats = stats))
+      rownames(stats) <- stat_names
+      
+      # Data frames for ggplot (observed and simulated values)
+      df_obs <- as.data.frame.table(as.matrix(obs_stat))
+      colnames(df_obs) <- c("stat", "sim", "val")
+      df <- as.data.frame.table(stats)
+      colnames(df) <- c("stat", "sim", "val")
+      
+      # Create plot
+      p <- ggplot(df, aes(val)) + 
+        geom_histogram(bins = 20, aes(y=..density..), col = "white", 
+                       bg = "lightgrey", na.rm = TRUE) +
+        facet_wrap("stat", scales = "free") + 
+        geom_vline(aes(xintercept = val), data = df_obs) +
+        xlab("statistic") + ggtitle("Vertical line is observed value") +
+        theme_light() +
+        theme(strip.background = element_blank(),
+              strip.text = element_text(colour = "black"))
+      plot(p)
+      
+      return(list(obs_stat = obs_stat, stats = stats, plot = p))
     }, 
     
     ######################
