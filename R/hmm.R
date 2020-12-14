@@ -1305,8 +1305,15 @@ HMM <- R6Class(
     #' @param silent Logical. If FALSE, simulation progress is shown. 
     #' (Default: TRUE)
     #' 
-    #' @return the observed value of the goodness-of-fit statistic for the data
-    #'         and the statistic computed for each simulated dataset. 
+    #' @return List with elements:
+    #' \begin{itemize}
+    #' \item{obs_stat} Vector of values of goodness-of-fit statistics for the
+    #' observed data
+    #' \item{stats} Matrix of values of goodness-of-fit statistics for the
+    #' simulated data sets (one row for each statistic, and one column for each
+    #' simulation)
+    #' \item{plot} ggplot object
+    #' \end{itemize}
     gof = function(gof_fn, nsims = 100, silent = TRUE) {
       # Evaluate statistics for observed data
       obs_stat <- gof_fn(self$obs()$data())
