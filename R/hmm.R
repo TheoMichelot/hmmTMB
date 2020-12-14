@@ -500,7 +500,7 @@ HMM <- R6Class(
       private$tmb_obj_ <- obj
     },
     
-    
+    #' @description Fit model using tmbstan
     mcmc = function(...) {
       self$formulation()
       
@@ -621,7 +621,7 @@ HMM <- R6Class(
     ###############################
     
     
-    #' @description Compute conditional cumulative distribtion functions 
+    #' @description Compute conditional cumulative distribution functions 
     #' @param ngrid how many cells on the grid that CDF is computed on 
     #' @param silent if TRUE then no messages are printed 
     #' 
@@ -679,7 +679,14 @@ HMM <- R6Class(
     ###############################
     ## Pseudo-residuals          ##
     ###############################
-    
+    #' @description Pseudo-residuals
+    #' 
+    #' @details Compute pseudo-residuals for the fitted model. If the fitted model
+    #' is the "true" model, the pseudo-residuals follow a standard normal distribution.
+    #' Deviations from normality suggest lack of fit.
+    #' 
+    #' @return Matrix of pseudo-residuals, with one row for each response variable
+    #' and one column for each observation
     pseudores = function() {
       delta <- self$hidden()$delta()
       n <- nrow(self$obs()$data())  
