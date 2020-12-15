@@ -69,7 +69,7 @@ library(moveHMM)
 
 In analyses of animal movement, the step lengths and turning angles are modelled to capture features of the speed and directionality of the movement. We derive those variables from the location using the function prepData in moveHMM.
 
-```{r prep-data}
+```{r elk-prepdata}
 tracks <- prepData(elk_data, type = "UTM", coordNames = c("Easting", "Northing"))
 
 head(tracks)
@@ -77,7 +77,7 @@ head(tracks)
 
 The data set now has columns for the coordinates (x and y), the step lengths and turning angles, the ID (track identifier), and a covariate (distance to water). hmmTMB doesn't allow for zero inflation for observation distributions with positive support (e.g. gamma), so we jitter step lengths with value zero.
 
-```{r jitter}
+```{r elk-jitter}
 indz <- which(tracks$step == 0)
 tracks$step[indz] <- runif(length(indz), 0, 1)
 ```
@@ -86,7 +86,7 @@ The data frame passed to hmmTMB should include a column for ID if necessary, as 
 
 The class Observation encapsulates the observation process model of the hidden Markov model. To create an object of that class, we need to specify distributions for the response variables, as well as initial parameter values. We could also include covariate dependence in the parameters of the observation distributions. We use gamma distributions for the step lengths, and von Mises distributions for the turning angles.
 
-```{r obs-new}
+```{r elk-obs-new}
 # Number of states of the HMM 
 n_states <- 2
 
@@ -109,7 +109,7 @@ obs <- Observation$new(data = tracks, dists = dists,
 
 Similarly, we need to create an object of the class MarkovChain for the hidden process model, encapsulating the formulas and parameter values. Here, we formulate the transition probabilities as functions of the distance to water covariate, with smoothing splines specified using the syntax from the package mgcv (@wood2017).
 
-```{r hid-new}
+```{r elk-hid-new}
 # Formula for transition probabilities
 formula <- ~ s(dist_water, k = 5, bs = "ts")
 
@@ -121,13 +121,13 @@ hid <- MarkovChain$new(n_states = n_states,
 
 Combining the MarkovChain and Observation object, we create an object of the HMM class.
 
-```{r hmm-new}
+```{r elk-hmm-new}
 hmm <- HMM$new(obs = obs, hidden = hid)
 ```
 
 We fit the model with the method fit, and print the output of the optimiser with res. It contains the parameters estimates (fixed effects), the value of the objective function at the optimum, and diagnostics from the optimiser.
 
-```{r hmm-fit}
+```{r elk-fit}
 hmm$fit()
 
 hmm$out()
@@ -135,19 +135,19 @@ hmm$out()
 
 We can get confidence intervals for the estimated (working) parameters with the method CI_coeff By default, it returns 95\% confidence intervals, but the argument level can be specified for different confidence levels.
 
-```{r hmm-ci}
+```{r elk-ci}
 hmm$CI_coeff()
 ```
 
 The methods predict_obspar and predict_tpm can also be used to obtain estimates and confidence intervals of the model parameters directly. For example, say that we want to predict the model parameters for `dist_water = 1000`,
-```{r hmm-ci-2}
+```{r elk-ci-2}
 new_data <- data.frame(dist_water = 1000)
 hmm$predict_obspar(new_data = new_data, CI = TRUE)
 hmm$predict_tpm(new_data = new_data, CI = TRUE)
 ```
 
 The method viterbi implements the Viterbi algorithm, to estimate the most likely state sequence.
-```{r hmm-viterbi}
+```{r elk-viterbi}
 states <- hmm$viterbi()
 
 head(states)
@@ -155,7 +155,7 @@ head(states)
 
 Various plotting functions are provided to visualise a fitted model. Using the method Observation\$plot_dist, we can plot histograms of the observed data, overlaid with the estimated state-dependent probability density functions.
 
-```{r plot-dist, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
+```{r elk-plot-dist, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
 # Proportion of states in Viterbi sequence, to weigh pdfs
 w <- table(states)/length(states)
 obs$plot_dist("step", weights = w)
@@ -164,27 +164,27 @@ obs$plot_dist("angle", weights = w)
 
 We can plot the data coloured by the Viterbi-decoded states. All plotting functions return ggplot objects, and can easily be edited using ggplot commands, e.g.\ to change axis labels or colours.
 
-```{r plot-ts, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
+```{r elk-plot-ts, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
 hmm$plot_ts("step")
 hmm$plot_ts("x", "y") + coord_equal() + geom_point(size = 0.5)
 ```
 
 The function plot_tpm creates graphs of the transition probabilities as functions of a covariate, here distance to water.
 
-```{r plot-tpm, fig.width = 6, fig.height = 4, out.width="70%", fig.align="center"}
+```{r elk-plot-tpm, fig.width = 6, fig.height = 4, out.width="70%", fig.align="center"}
 hmm$plot_tpm("dist_water") + xlab("Distance to water (m)")
 ```
 
 With the function plot_stat_dist, we can visualise the stationary state probabilities as functions of the distance to water.
 
-```{r plot-stat, fig.width = 7, fig.height = 4, out.width="90%", fig.align="center"}
+```{r elk-plot-stat, fig.width = 7, fig.height = 4, out.width="90%", fig.align="center"}
 hmm$plot_stat_dist("dist_water") + 
   xlab("Distance to water (m)")
 ```
 
 We can simulate from the fitted model with the method simulate, for example to check how well the model captures features of the real data. Here, we simulate step lengths and turning angles from the model.
 
-```{r hmm-sim, results = 'hide'}
+```{r elk-sim, results = 'hide'}
 # Number of simulated realisations
 n_sim <- 500
 # Data frame of covariate values for simulation
@@ -198,13 +198,13 @@ sim_data <- hmm$simulate(n = n_sim, data = new_covs)
 
 The output is a data frame with the same columns as the input, plus columns for the simulated variables, and a column for the simulated states.
 
-```{r hmm-sim-2}
+```{r elk-sim-2}
 head(sim_data)
 ```
 
 We then derive the corresponding locations to visualise the simulated movement trajectory, and extract the states used in the simulation (stored as an attribute of the output of the `simulate` method).
 
-```{r hmm-sim-3, results = 'hide', fig.width = 5, fig.height = 4, out.width="60%", fig.align="center"}
+```{r elk-sim-3, results = 'hide', fig.width = 5, fig.height = 4, out.width="60%", fig.align="center"}
 # Get locations from simulated step lengths and turning angles
 bearings <- cumsum(sim_data$angle)
 sim_dxy <- sim_data$step * cbind(cos(bearings), sin(bearings))
@@ -224,7 +224,7 @@ ggplot(sim_data, aes(x, y, col = factor(state), group = NA)) +
 
 The HMM class has a dedicated method for simulation-based model checking, called `gof` (for "goodness-of-fit"). It takes a function as an argument, which returns some statistic of interest from the data set (e.g., some quantile of the observed variable). The method evaluates that function for the observed data set and for a large number of data sets simulated from the fitted model. If the observed value of the statistic is an unusual value for the distribution of simulated statistics, it suggests that that feature of the data was not captured well by the model. Here, we apply the `gof` method for quantiles of the step length distribution:
 
-``` {r hmm-gof, fig.width = 9, fig.height = 3, out.width="100%"}
+``` {r elk-gof, fig.width = 9, fig.height = 3, out.width="100%"}
 # Function that takes 'data' as input and return the statistic(s) of interest
 gof_fn <- function(data) {
     quantile(data$step, c(0.1, 0.5, 0.9), na.rm = TRUE)
