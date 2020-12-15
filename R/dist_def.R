@@ -194,7 +194,8 @@ dist_vm <- Dist$new(
   },
   rng = function(n, mu, kappa) {
     # rvm and dvm use different parameter names
-    rvm(n = n, mean = mu, k = kappa)
+    # (also, translate rvm output from [0, 2pi] to [-pi, pi])
+    rvm(n = n, mean = mu, k = kappa) - pi
   },
   link = list(mu = function(x) qlogis((x + pi) / (2 * pi)), 
               kappa = log),
