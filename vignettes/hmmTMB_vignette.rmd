@@ -50,7 +50,7 @@ The package hmmTMB uses the R6 framework for object-oriented programming (@chang
   
 Model specification, model fitting and model visualisation can all be performed by manipulating objects from those three classes. Following the R6 syntax, an object is created with something like
 ```{r r6-new}
-hidden <- MarkovChain$new(n_states = 2)
+hidden <- MarkovChain$new(n_states = 2, data = data.frame(z = rnorm(100)))
 ```
 This line of code defines a hidden state model with 2 states and no covariate dependence. Once an object is created, various methods (i.e., functions) can be called to manipulate it, using the following syntax:
 ```{r r6-method}
@@ -202,7 +202,7 @@ The output is a data frame with the same columns as the input, plus columns for 
 head(sim_data)
 ```
 
-We then derive the corresponding locations to visualise the simulated movement trajectory.
+We then derive the corresponding locations to visualise the simulated movement trajectory, and extract the states used in the simulation (stored as an attribute of the output of the `simulate` method).
 
 ```{r hmm-sim-3, results = 'hide', fig.width = 5, fig.height = 4, out.width="60%", fig.align="center"}
 # Get locations from simulated step lengths and turning angles
@@ -211,12 +211,27 @@ sim_dxy <- sim_data$step * cbind(cos(bearings), sin(bearings))
 sim_data$x <- cumsum(c(0, sim_dxy[-n_sim, 1]))
 sim_data$y <- cumsum(c(0, sim_dxy[-n_sim, 2]))
 
+# Add state to simulated data frame
+sim_data$state <- attr(sim_data, "state")
+
 # Plot simulated trajectory
 ggplot(sim_data, aes(x, y, col = factor(state), group = NA)) + 
   scale_color_manual("State", values = hmmTMB_cols) +
   geom_point(size = 0.7) + 
   geom_path() +
   coord_equal()
+```
+
+The HMM class has a dedicated method for simulation-based model checking, called `gof` (for "goodness-of-fit"). It takes a function as an argument, which returns some statistic of interest from the data set (e.g., some quantile of the observed variable). The method evaluates that function for the observed data set and for a large number of data sets simulated from the fitted model. If the observed value of the statistic is an unusual value for the distribution of simulated statistics, it suggests that that feature of the data was not captured well by the model. Here, we apply the `gof` method for quantiles of the step length distribution:
+
+``` {r hmm-gof, fig.width = 9, fig.height = 3, out.width="100%"}
+# Function that takes 'data' as input and return the statistic(s) of interest
+gof_fn <- function(data) {
+    quantile(data$step, c(0.1, 0.5, 0.9), na.rm = TRUE)
+}
+
+# Run test
+gof_out <- hmm$gof(gof_fn)
 ```
 
 # Example 2: wild haggis movement
