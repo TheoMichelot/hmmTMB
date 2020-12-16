@@ -419,10 +419,14 @@ HMM <- R6Class(
         obsnms <- rownames(self$obs()$coeff_fe())
         for (i in 1:length(nms)) {
           getnms <- obsnms[grep(nms[i], obsnms)]
+          oldnms <- names(private$fixpar_$obs)
           private$fixpar_$obs <- c(private$fixpar_$obs, rep(NA, length(getnms)))
-          names(private$fixpar_$obs) <- c(names(private$fixpar_$obs), getnms)
+          names(private$fixpar_$obs) <- c(oldnms, getnms)
         }
       }
+      
+      private <- mod$.__enclos_env__$private
+      private$fixpar_
       
       # add custom mapping effects
       usernms <- c("obs", "hid", "lambda", "delta")
