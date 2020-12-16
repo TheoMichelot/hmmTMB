@@ -330,6 +330,125 @@ public:
 };
 
 template<class Type> 
+class TruncatedNormal : public Dist<Type> {
+public:
+  // Constructor
+  TruncatedNormal() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+    for (int i = n_states * 2; i < 3 * n_states; ++i) wpar(i) = par(i);
+    for (int i = n_states * 3; i < 4 * n_states; ++i) wpar(i) = par(i);
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // sd
+    for (int i = 0; i < n_states; ++i) par(i, 2) = wpar(i + 2 * n_states); // min
+    for (int i = 0; i < n_states; ++i) par(i, 3) = wpar(i + 3 * n_states); // max
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type left = pnorm(par(2), par(0), par(1)); 
+    Type right = pnorm(par(3), par(0), par(1)); 
+    Type val = dnorm(x, par(0), par(1)) / (right - left);
+    if (logpdf) val = log(val); 
+    return(val); 
+  }
+};
+
+template<class Type> 
+class FoldedNormal : public Dist<Type> {
+public:
+  // Constructor
+  FoldedNormal() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // sd
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dnorm(x, par(0), par(1)) + dnorm(-x, par(0), par(1));
+    if (logpdf) val = log(val); 
+    return(val); 
+  }
+};
+
+template<class Type> 
+class Studentst : public Dist<Type> {
+public:
+  // Constructor
+  Studentst() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+    for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i)); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // scale
+    for (int i = 0; i < n_states; ++i) par(i, 2) = exp(wpar(i + 2 * n_states)); // df
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dt((x - par(0)) / par(1), par(2), 0) / par(1); 
+    if (logpdf) val = log(val); 
+    return(val); 
+  }
+};
+
+template<class Type> 
+class LogNormal : public Dist<Type> {
+public:
+  // Constructor
+  LogNormal() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // lmean 
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // lsd
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dnorm(log(x), par(0), par(1), logpdf) / x;
+    return(val); 
+  }
+};
+
+template<class Type> 
 class Gamma : public Dist<Type> {
 public:
   // Constructor
@@ -351,6 +470,57 @@ public:
   // Probability density/mass function
   Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
     Type val = dgamma(x, par(0), par(1), logpdf);
+    return(val); 
+  }
+};
+
+template<class Type> 
+class Weibull : public Dist<Type> {
+public:
+  // Constructor
+  Weibull() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    wpar = log(par); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); // shape 
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // scale 
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dweibull(x, par(0), par(1), logpdf);
+    return(val); 
+  }
+};
+
+template<class Type> 
+class Exponential : public Dist<Type> {
+public:
+  // Constructor
+  Exponential() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    wpar = log(par); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); // rate 
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dexp(x, par(0), logpdf);
     return(val); 
   }
 };
@@ -380,6 +550,36 @@ public:
     return(val); 
   }
 };
+
+template<class Type> 
+class Tweedie : public Dist<Type> {
+public:
+  // Constructor
+  Tweedie() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1 - par(i))); 
+    for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i)); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
+    for (int i = 0; i < n_states; ++i) par(i, 1) = 1 / (1 + exp(-wpar(i + n_states))); // power
+    for (int i = 0; i < n_states; ++i) par(i, 2) = exp(wpar(i + 2 * n_states)); // dispersion 
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dtweedie(x, par(0), par(2), par(1) + 1.0, logpdf);
+    return(val); 
+  }
+};
+
 
 template<class Type> 
 class VonMises : public Dist<Type> {

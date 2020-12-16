@@ -35,7 +35,21 @@ std::unique_ptr<Dist<Type>> dist_generator(const int& code) {
   case 11: 
     return(std::unique_ptr<Dist<Type>>(new ZeroTruncatedNegativeBinomial<Type>));
   case 12: 
-    return(std::unique_ptr<Dist<Type>>(new Categorical<Type>));  
+    return(std::unique_ptr<Dist<Type>>(new Categorical<Type>)); 
+  case 13: 
+    return(std::unique_ptr<Dist<Type>>(new Exponential<Type>)); 
+  case 14: 
+    return(std::unique_ptr<Dist<Type>>(new LogNormal<Type>)); 
+  case 15: 
+    return(std::unique_ptr<Dist<Type>>(new Weibull<Type>)); 
+  case 16: 
+    return(std::unique_ptr<Dist<Type>>(new TruncatedNormal<Type>)); 
+  case 17: 
+    return(std::unique_ptr<Dist<Type>>(new FoldedNormal<Type>)); 
+  case 18: 
+    return(std::unique_ptr<Dist<Type>>(new Studentst<Type>)); 
+  case 19: 
+    return(std::unique_ptr<Dist<Type>>(new Tweedie<Type>)); 
   default: 
     return(std::unique_ptr<Dist<Type>>(new Poisson<Type>)); 
   }
