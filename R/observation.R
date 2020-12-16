@@ -46,7 +46,7 @@ Observation <- R6Class(
       if(all(sapply(dists, is.character))) {
         # If distributions passed as strings (i.e., names), get corresponding
         # Dist objects
-        private$dists_ <- lapply(dists, function(name) dist_list[[name]])
+        private$dists_ <- lapply(dists, function(name) private$dist_maker(name))
       } else {
         private$dists_ <- dists        
       }
@@ -302,7 +302,7 @@ Observation <- R6Class(
       # Loop over observed variables
       for(var in 1:nvar) {
         # Number of parameters for this distribution
-        npar <- length(self$dists()[[var]]$link())
+        npar <- self$dists()[[var]]$npar()
         # Subset and transform working parameters
         sub_coeff_fe <- coeff_fe[par_count:(par_count + npar*n_states - 1)]
         par_count <- par_count + npar*n_states
@@ -665,6 +665,21 @@ Observation <- R6Class(
         if(!all(names(formulas) == names(dists))) {
           stop("'formulas' should have the same names as 'dists'")
         }
+      }
+    }, 
+    
+    dist_maker = function(name) {
+      if (name %in% names(dist_list)) {
+        # distribution with fixed parameter dimension
+        return(dist_list[[name]]$clone())
+      } else {
+        # distribution with a variable parameter dimension
+        subname <- gsub("[0-9]+", "", name)
+        if (!(subname %in% names(dist_list))) stop("distribution unknown")
+        tmp <- dist_list[[subname]]$clone()
+        getdim <-as.numeric(gsub("[^0-9.]", "", name))
+        tmp$set_npar(getdim)
+        return(tmp)
       }
     }
   )

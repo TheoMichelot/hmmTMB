@@ -134,6 +134,12 @@ Dist <- R6Class(
     #' @description Return code of Dist object
     code = function() {return(private$code_)},
     
+    ###############
+    ## Mutators  ##
+    ###############
+    
+    set_npar = function(new_npar) {private$npar_ <- new_npar}, 
+    
     ###################
     ## Other methods ##
     ###################
@@ -184,9 +190,16 @@ Dist <- R6Class(
     #' 
     #' @return Vector of parameters on the working scale
     n2w = function(par) {
-      # Apply link functions to natural parameters
-      wpar_list <- Map(function(fn, arg) {fn(arg)}, self$link(), par)
-      wpar <- unlist(wpar_list)
+      # Apply list of link functions or an all-in-one link? 
+      if (!is.list(self$link())) {
+        # Number of states
+        n_states <- length(par[[1]])
+        wpar <- self$link()(par, n_states)
+      } else {
+        # Apply link functions to natural parameters
+        wpar_list <- Map(function(fn, arg) {fn(arg)}, self$link(), par)
+        wpar <- unlist(wpar_list)
+      }
       return(wpar)
     },
     
@@ -206,15 +219,21 @@ Dist <- R6Class(
     w2n = function(wpar, as_matrix = FALSE) {
       invlink <- self$invlink()
       # Number of parameters for this distribution
-      n_par <- length(invlink)
+      n_par <- self$npar()
       # Number of states
       n_states <- length(wpar)/n_par
-      
-      # Apply inverse link functions
-      par_list <- lapply(seq_along(invlink), function(i) {
-        ind <- ((i-1) * n_states + 1) : (i * n_states)
-        invlink[[i]](wpar[ind])
-      })
+      # Apply list of invlink functions or an all-in-one invlink? 
+      if (!is.list(invlink)) {
+        par_list <- invlink(wpar, n_states)
+        nms <- names(par_list)
+      } else {
+        # Apply inverse link functions
+        par_list <- lapply(seq_along(invlink), function(i) {
+          ind <- ((i-1) * n_states + 1) : (i * n_states)
+          invlink[[i]](wpar[ind])
+        })
+        nms <- names(invlink)
+      }
       
       # Format into matrix or list
       if(as_matrix) {
@@ -222,7 +241,7 @@ Dist <- R6Class(
         colnames(par) <- names(invlink)        
       } else {
         par <- par_list
-        names(par) <- names(invlink)        
+        names(par) <- nms        
       }
       
       return(par)
@@ -269,9 +288,9 @@ Dist <- R6Class(
                    "parameters"))
       }
       
-      if(!all(sapply(link, is.function)) | !all(sapply(invlink, is.function))) {
-        stop(paste("Elements of 'link' and 'invlink' should be R functions"))
-      }
+      #if(!all(sapply(link, is.function)) | !all(sapply(invlink, is.function))) {
+      #  stop(paste("Elements of 'link' and 'invlink' should be R functions"))
+      #}
       
       if(!is.numeric(npar) | npar < 1) {
         stop("'npar' should be a numeric >= 1")

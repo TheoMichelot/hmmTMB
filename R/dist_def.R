@@ -104,6 +104,57 @@ dist_nbinom <- Dist$new(
   npar = 2, 
 )
 
+# Categorical ============================
+dcat <- function(x, ..., log = TRUE) {
+  # get class probabilities
+  p <- c(...) 
+  p <- c(1 - sum(p), p)
+  if (abs(sum(p) - 1) > 1e-8) stop("class probabilities must sum to one")
+  n <- round(x)
+  if (n < 0 | n > length(p)) stop("invalid input")
+  val <- p[n + 1]
+  if (log) val <- log(val)
+  return(val)
+}
+rcat <- function(n, ...) {
+  # get class probabilities
+  p <- c(...) 
+  p <- c(1 - sum(p), p)
+  if (abs(sum(p) - 1) > 1e-8) stop("class probabilities must sum to one")
+  # sample classes
+  samp <- sample(1:length(p), size = n, prob = p, replace = TRUE) - 1
+  return(samp)
+}
+mlogit <- function(x) {
+  s <- 1 - sum(x)
+  return(log(x / s))
+}
+invmlogit <- function(x) {
+  y <- exp(x)
+  s <- 1/(1 + sum(y))
+  y <- y * s
+  return(y)
+}
+mlogit_bystates <- function(x, n_states) {
+  xmat <- unlist(x)
+  xmat <- matrix(xmat, nr = n_states, nc = length(xmat) / n_states)
+  ymat <- t(apply(xmat, 1, mlogit))
+  return(as.vector(ymat))
+}
+invmlogit_bystates <- function(x, n_states) {
+  xmat <- matrix(x, nr = n_states, nc = length(x) / n_states)
+  ymat <- t(apply(xmat, 1, invmlogit))
+  return(as.vector(ymat))
+}
+dist_cat <- Dist$new(
+  name = "cat", 
+  pdf = dcat, 
+  rng = rcat, 
+  link = mlogit_bystates, 
+  invlink = invmlogit_bystates, 
+  npar = 1, 
+)
+
 # Zero-inflated Negative-Binomial ==============
 dzinb <- function(x, z, size, p, log = FALSE) {
   zero <- x < 1e-10 
@@ -217,5 +268,6 @@ dist_list <- list(pois = dist_pois,
                   zib = dist_zib, 
                   zinb = dist_zinb,
                   ztp = dist_ztp, 
-                  ztnb = dist_ztnb)
+                  ztnb = dist_ztnb, 
+                  cat = dist_cat)
 

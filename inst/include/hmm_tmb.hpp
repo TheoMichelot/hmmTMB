@@ -34,6 +34,7 @@ Type objective_function<Type>::operator() ()
   DATA_INTEGER(n_states); // number of states
   DATA_INTEGER(statdist); // use stationary distribution with respect to first tpm 
   DATA_IVECTOR(distcode); // codes of observation distributions
+  DATA_IVECTOR(distpar); // number of parameters for observation distributions
   // model matrices for observation process
   DATA_SPARSE_MATRIX(X_fe_obs); // design matrix for fixed effects
   DATA_SPARSE_MATRIX(X_re_obs); // design matrix for random effects
@@ -156,7 +157,7 @@ Type objective_function<Type>::operator() ()
       if(!R_IsNA(asDouble(data(i, var)))) {
         // Subset and transform observation parameters
         vector<Type> sub_wpar = 
-          par_mat.row(i).segment(par_count, obsdist->npar() * n_states);
+          par_mat.row(i).segment(par_count, distpar(var) * n_states);
         matrix<Type> par = obsdist->invlink(sub_wpar, n_states);
         // Loop over states (columns)
         for (int s = 0; s < n_states; ++s) {
@@ -168,7 +169,7 @@ Type objective_function<Type>::operator() ()
       }
     }
 
-    par_count = par_count + obsdist->npar() * n_states;
+    par_count = par_count + distpar(var) * n_states;
   }
   
   //======================//

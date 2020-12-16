@@ -22,8 +22,6 @@ public:
   virtual matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) = 0; 
   // Probability density/mass function
   virtual Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) = 0; 
-  // Number of parameters
-  virtual int npar() = 0; 
 };
 
 template<class Type> 
@@ -49,8 +47,6 @@ public:
     Type val = dpois(x, par(0), logpdf);
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 1; }
 };
 
 template<class Type> 
@@ -78,8 +74,6 @@ public:
     Type val = dzipois(x, par(1), par(0), logpdf);
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 2; }
 };
 
 template<class Type> 
@@ -106,8 +100,6 @@ public:
     if (logpdf) val = log(val); 
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 1; }
 };
 
 template<class Type> 
@@ -135,8 +127,6 @@ public:
     Type val = dbinom(x, par(0), par(1), logpdf);
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 2; }
 };
 
 
@@ -170,8 +160,6 @@ public:
     if (logpdf) val = log(val); 
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 3; }
 };
 
 template<class Type> 
@@ -204,8 +192,6 @@ public:
     if (logpdf) val = log(val); 
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 3; }
 };
 
 template<class Type> 
@@ -234,8 +220,6 @@ public:
     if (logpdf) val = log(val); 
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 2; }
 };
 
 template<class Type> 
@@ -263,8 +247,59 @@ public:
     Type val = dnbinom(x, par(0), par(1), logpdf);
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 2; }
+};
+
+template<class Type> 
+class Categorical : public Dist<Type> {
+public:
+  // Constructor
+  Categorical() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    int n_par = par.size() / n_states; 
+    matrix<Type> wparmat(n_states, n_par);
+    for (int i = 0; i < n_par; ++i) {
+      wparmat.col(i) = par.segment(n_states * i, n_states * i + n_par); 
+    }
+    vector<Type> rowsums = wparmat.rowwise().sum(); 
+    vector<Type> wpar(n_states * n_par); 
+    for (int j = 1;  j < n_par; ++j) {
+      for (int i = 0; i < n_states; ++i) {
+        wpar(i + j * n_states) = log(wparmat(i, j) / (1 - rowsums(i))); 
+      }
+    }
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size() / n_states;
+    matrix<Type> par(n_states, n_par);
+    vector<Type> ewpar = exp(wpar);
+    matrix<Type> wparmat(n_states, n_par);
+    for (int i = 0; i < n_par; ++i) {
+      wparmat.col(i) = ewpar.segment(n_states * i, n_states * i + n_par); 
+    }
+    vector<Type> etmp = wparmat.rowwise().sum(); 
+    for (int i = 0; i < n_states; ++i) {
+      Type s = 1.0 / (1.0 + etmp(i)); 
+      for (int j = 0; j < n_par; ++j) {
+        par(i, j) = exp(wpar(i + n_states * j)) * s;  
+      }
+    }
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    int obs = int(asDouble(x)); 
+    Type val; 
+    if (obs == 0) {
+      val = 1.0 - par.sum(); 
+    } else {
+      val = par(obs - 1);
+    }
+    if (logpdf) val = log(val); 
+    return(val); 
+  }
 };
 
 template<class Type> 
@@ -292,8 +327,6 @@ public:
     Type val = dnorm(x, par(0), par(1), logpdf);
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 2; }
 };
 
 template<class Type> 
@@ -320,8 +353,6 @@ public:
     Type val = dgamma(x, par(0), par(1), logpdf);
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 2; }
 };
 
 template<class Type> 
@@ -348,8 +379,6 @@ public:
     Type val = dbeta(x, par(0), par(1), logpdf);
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 2; }
 };
 
 template<class Type> 
@@ -390,8 +419,6 @@ public:
       val = - log(2 * M_PI * b) + par(1) * cos(x - par(0));
     return(val); 
   }
-  // Number of parameters 
-  int npar() { return 2; }
 };
 
 #endif

@@ -342,6 +342,8 @@ HMM <- R6Class(
     setup = function(silent = TRUE) {
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
+      # Vector of number of parameters for observation distributions
+      distpar <- as.vector(sapply(self$obs()$dists(), function(d) d$npar()))
       
       # check distcodes exist
       if (any(is.null(distcode))) {
@@ -470,6 +472,7 @@ HMM <- R6Class(
                       n_states = n_states,
                       statdist = statdist, 
                       distcode = distcode,
+                      distpar = distpar, 
                       X_fe_obs = X_fe_obs,
                       X_re_obs = X_re_obs,
                       S_obs = S_obs,
