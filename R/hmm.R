@@ -567,8 +567,9 @@ HMM <- R6Class(
     #' After the model has been fitted, the output of \code{optim} can be
     #' accessed using the method \code{out}.
     #' 
-    #' @param silent Logical. If TRUE, all tracing outputs are hidden (default).
-    fit = function(silent = FALSE) {
+    #' @param silent Logical. If FALSE, all tracing outputs are hidden (default).
+    #' @param ... other arguments to optimx which is used to optimise likelihood, see ?optimx
+    fit = function(silent = FALSE, ...) {
       self$formulation()
       
       # Setup if necessary
@@ -580,10 +581,42 @@ HMM <- R6Class(
       n_states <- self$hidden()$nstates()
       
       # Fit model
-      private$out_ <- do.call(optim, private$tmb_obj_)
+      args <- list(...)
+      if (any(c("par", "fn", "gr", "he", "hessian") %in% names(args))) {
+        stop("cannot supply arguments to fit of name par, fn, gr, he, or hessian. These
+             are handled by TMB")
+      }
+      if (any(c("lower", "upper") %in% names(args))) {
+        warning("lower and upper arguments to optimx are ignored in hmmTMB")
+      }
+      # change default method to nlminb
+      private$tmb_obj_$method <- "nlminb"
+      if ("method" %in% names(args)) {
+        private$tmb_obj_$method <- args$method 
+        args <- args[which(names(args) != "method")]
+      }
+      args <- c(private$tmb_obj_, args)
+      private$out_ <- optimx(par = args$par, 
+                             fn = args$fn, 
+                             gr = args$gr, 
+                             method = args$method,
+                             itnmax = args$itnmax, 
+                             hessian = args$hessian, 
+                             control = args$control)
+      best <- which.min(private$out_$value)
+      if (private$out_$convcode[best] != 0) {
+        warning("Convergence code was not zero, indicating that the optimizer may
+                not have converged to the correct estimates. Please check by consulting
+                the out() function which shows what optimx returned.")
+      }
       
       # Get estimates and precision matrix for all parameters
-      private$tmb_rep_ <- sdreport(private$tmb_obj_, getJointPrecision = TRUE, 
+      best_par <- as.vector(private$out_[best, 1:length(private$tmb_obj_$par)])
+      rownames(best_par) <- NULL
+      names(best_par) <- names(private$tmb_obj_$par)
+      private$tmb_obj_$par <- best_par
+      private$tmb_rep_ <- sdreport(private$tmb_obj_,
+                                   getJointPrecision = TRUE, 
                                    skip.delta.method = FALSE)
       par_list <- as.list(private$tmb_rep_, "Estimate")
       
