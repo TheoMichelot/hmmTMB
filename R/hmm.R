@@ -568,7 +568,7 @@ HMM <- R6Class(
     #' accessed using the method \code{out}.
     #' 
     #' @param silent Logical. If TRUE, all tracing outputs are hidden (default).
-    fit = function(silent = TRUE) {
+    fit = function(silent = FALSE) {
       self$formulation()
       
       # Setup if necessary
