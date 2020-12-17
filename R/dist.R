@@ -127,7 +127,7 @@ Dist <- R6Class(
     
     #' @description Return number of parameters of Dist object
     npar = function() {return(private$npar_)},
-    
+  
     #' @description Return which parameters are fixed 
     fixed = function() {return(private$fixed_)}, 
     
@@ -138,8 +138,9 @@ Dist <- R6Class(
     ## Mutators  ##
     ###############
     
+    #' @description Set number of parameters this distribution has 
     set_npar = function(new_npar) {private$npar_ <- new_npar}, 
-    
+
     ###################
     ## Other methods ##
     ###################
