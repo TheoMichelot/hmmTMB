@@ -709,6 +709,8 @@ Observation <- R6Class(
           tmp$set_npar(getdim)
         } else if (subname == "mvnorm") {
           tmp$set_npar(2 * getdim + (getdim^2 - getdim) / 2)
+        } else if (subname == "dir") {
+          tmp$set_npar(getdim)
         }
         return(tmp)
       }

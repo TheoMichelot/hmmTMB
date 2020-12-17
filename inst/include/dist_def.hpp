@@ -740,4 +740,44 @@ public:
   }
 };
 
+template<class Type> 
+class Dirichlet : public Dist<Type> {
+public:
+  // Constructor
+  Dirichlet() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size());
+    wpar = log(par); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for (int i = 0; i < n_par; ++i) {
+      for (int j = 0; j < n_states; ++j) {
+        par(j, i) = exp(wpar(i * n_states + j)); 
+      }
+    }
+    return(par); 
+  }
+
+    // Multivariate Probability density function 
+  Type pdf(const vector<Type>& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = 0; 
+    for (int i = 0; i < x.size(); ++i) {
+      val += (par(i) - 1) * log(x(i)); 
+      val -= lgamma(par(i)); 
+    }
+    val += lgamma(par.sum()); 
+    if (!logpdf) val = exp(val); 
+    return(val); 
+  }
+
+};
+
+
+
+
 #endif

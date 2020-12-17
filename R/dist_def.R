@@ -354,28 +354,7 @@ dist_vm <- Dist$new(
 
 # Multivariate distributions ----------------------------------------------
 
-mlogit <- function(x) {
-  s <- 1 - sum(x)
-  return(log(x / s))
-}
-invmlogit <- function(x) {
-  y <- exp(x)
-  s <- 1/(1 + sum(y))
-  y <- y * s
-  return(y)
-}
-mlogit_bystates <- function(x, n_states) {
-  xmat <- unlist(x)
-  xmat <- matrix(xmat, nr = n_states, nc = length(xmat) / n_states)
-  ymat <- t(apply(xmat, 1, mlogit))
-  return(as.vector(ymat))
-}
-invmlogit_bystates <- function(x, n_states) {
-  xmat <- matrix(x, nr = n_states, nc = length(x) / n_states)
-  ymat <- t(apply(xmat, 1, invmlogit))
-  return(as.vector(ymat))
-}
-
+# Multivariate Normal ========================== 
 mvnorm_link <- function(x) {
   # get dimension 
   m <- quad_pos_solve(1, 3, - 2 * length(x))
@@ -427,7 +406,7 @@ dist_mvnorm <- Dist$new(
     if (!log) p <- exp(p)
     return(p)
   }, 
-  rng = function(n, ..., dim = 1) {
+  rng = function(n, ...) {
     par <- c(...)
     m <- quad_pos_solve(1, 3, - 2 * length(par))
     mu <- par[1:m]
@@ -447,6 +426,29 @@ dist_mvnorm <- Dist$new(
   link = mvnorm_link_bystates, 
   invlink = mvnorm_invlink_bystates, 
   npar = 3
+)
+
+# Dirichlet Distribution =======================
+dist_dir <- Dist$new(
+  name = "dir", 
+  pdf = function(x, ...,  log = FALSE) {
+    alpha <- c(...)
+    y <- as.matrix(x[[1]])
+    p <- gamma(sum(alpha)) * prod(y ^ (alpha - 1)) /  prod(gamma(alpha))
+    if (log) p <- log(p)
+    return(p)
+  }, 
+  rng = function(n, ...) {
+    alpha <- c(...)
+    y <- rgamma(n * length(alpha), shape = alpha, scale = 1)
+    x <- matrix(y, nr = length(alpha), nc = n)
+    x <- apply(x, 2, FUN = function(r) {r / sum(r)})
+    x <- split(x, rep(1:ncol(x), each = nrow(x)))
+    return(x)
+  }, 
+  link = function(x, n_states) {log(unlist(x))}, 
+  invlink = function(x, n_states) {exp(x)}, 
+  npar = 2
 )
 
 # List of all distributions -----------------------------------------------
@@ -471,6 +473,7 @@ dist_list <- list(pois = dist_pois,
                   foldednorm = dist_foldednorm, 
                   t = dist_t, 
                   tweedie = dist_tweedie, 
-                  mvnorm = dist_mvnorm
+                  mvnorm = dist_mvnorm, 
+                  dir = dist_dir 
                   )
 
