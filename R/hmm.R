@@ -889,6 +889,29 @@ HMM <- R6Class(
     ################################
     ## Uncertainty quantification ##
     ################################
+    #' @description Posterior sampling for model coefficients
+    #' 
+    #' @param n_post Number of posterior samples
+    #' 
+    #' @return Matrix with one column for each coefficient and one row
+    #' for each posterior draw
+    post_coeff = function(n_post) {
+      # Get parameter estimates and covariance matrix
+      rep <- self$tmb_rep()
+      if(is.null(rep$jointPrecision)) {
+        par <- rep$par.fixed
+        V <- rep$cov.fixed
+      } else {
+        par <- c(rep$par.fixed, rep$par.random)
+        V <- solve(rep$jointPrecision)
+      }
+      
+      # Generate samples from MVN estimator distribution
+      post <- rmvn(n = n_post, mu = par, V = V)
+      
+      return(post)
+    },
+    
     #' @description Confidence intervals for model parameters on the working scale 
     #' 
     #' These are Wald confidence intervals, obtained from the standard errors 
@@ -964,18 +987,8 @@ HMM <- R6Class(
       # Number of time steps
       n_grid <- nrow(X_fe)/(n_states*(n_states-1))
       
-      # Get parameter estimates and covariance matrix
-      rep <- self$tmb_rep()
-      if(is.null(rep$jointPrecision)) {
-        par <- rep$par.fixed
-        V <- rep$cov.fixed    
-      } else {
-        par <- c(rep$par.fixed, rep$par.random)
-        V <- solve(rep$jointPrecision)
-      }
-      
-      # Generate samples from MVN estimator distribution
-      post <- rmvn(n = n_post, mu = par, V = V)
+      # Get posterior samples for coeff_fe and coeff_re
+      post <- self$post_coeff(n_post = n_post)
       
       # Extract coefficients for transition probabilities
       post_coeff_fe <- post[, which(colnames(post) == "coeff_fe_hid")]
@@ -1038,18 +1051,8 @@ HMM <- R6Class(
       # Number of time steps
       n_grid <- nrow(X_fe)/(n_states*(n_states-1))
       
-      # Get parameter estimates and covariance matrix
-      rep <- self$tmb_rep()
-      if(is.null(rep$jointPrecision)) {
-        par <- rep$par.fixed
-        V <- rep$cov.fixed    
-      } else {
-        par <- c(rep$par.fixed, rep$par.random)
-        V <- solve(rep$jointPrecision)
-      }
-      
-      # Generate samples from MVN estimator distribution
-      post <- rmvn(n = n_post, mu = par, V = V)
+      # Get posterior samples for coeff_fe and coeff_re
+      post <- self$post_coeff(n_post = n_post)
       
       # Extract coefficients for transition probabilities
       post_coeff_fe <- post[, which(colnames(post) == "coeff_fe_hid")]
@@ -1122,18 +1125,8 @@ HMM <- R6Class(
       # Number of time steps
       n_grid <- nrow(X_fe)/(n_par * n_states)
       
-      # Get parameter estimates and covariance matrix
-      rep <- self$tmb_rep()
-      if(is.null(rep$jointPrecision)) {
-        par <- rep$par.fixed
-        V <- rep$cov.fixed    
-      } else {
-        par <- c(rep$par.fixed, rep$par.random)
-        V <- solve(rep$jointPrecision)
-      }
-      
-      # Generate samples from MVN estimator distribution
-      post <- rmvn(n = n_post, mu = par, V = V)
+      # Get posterior samples for coeff_fe and coeff_re
+      post <- self$post_coeff(n_post = n_post)
       
       # Extract coefficients for observation parameters
       post_coeff_fe <- post[, which(colnames(post) == "coeff_fe_obs")]
