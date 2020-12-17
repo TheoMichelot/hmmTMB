@@ -3,14 +3,14 @@
 
 // Defines the abstract basic distribution Type and then a number of derived
 // distribution types, e.g., Poisson, Normal, and Gamma. 
-// Each distribution has a link function, an inverse link function, a pdf, and a 
-// specified number of parameters. 
+// Each distribution has a link function, an inverse link function, and a pdf.  
 
 #ifndef _HMMTMB_
 #define _HMMTMB_
 #include <TMB.hpp>
 #endif 
 
+// Abstract Distribution Class 
 template <class Type>
 class Dist {
 public:
@@ -19,17 +19,22 @@ public:
   // Link function
   virtual vector<Type> link(const vector<Type>& par, const int& n_states) = 0; 
   // Inverse link function
-  virtual matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) = 0; 
+  virtual matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) = 0;
+  
+  // Both a univariate and vector input can be given to a pdf() function. 
+  // Derived distributions can either have both options or only one. 
+  
   // Probability density/mass function
   virtual Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
     return(0.0); 
   };
   // Vector input Probability density/mass function
   virtual Type pdf(const vector<Type>& x, const vector<Type>& par, const bool& logpdf) {
-    std::cout << "pop!" << std::endl; 
     return(0.0); 
   }
 };
+
+// DISCRETE DISTRIBUTIONS ----------------------
 
 template<class Type> 
 class Poisson : public Dist<Type> {
@@ -309,6 +314,8 @@ public:
   }
 };
 
+// CONTINUOUS DISTRIBUTIONS --------------------
+
 template<class Type> 
 class Normal : public Dist<Type> {
 public:
@@ -558,6 +565,8 @@ public:
   }
 };
 
+// MIXED DISTRIBUTIONS -------------------------
+
 template<class Type> 
 class Tweedie : public Dist<Type> {
 public:
@@ -587,7 +596,7 @@ public:
   }
 };
 
-
+// ANGULAR DISTRIBUTIONS -----------------------
 template<class Type> 
 class VonMises : public Dist<Type> {
 public:
@@ -627,6 +636,8 @@ public:
     return(val); 
   }
 };
+
+// MULTIVARIATE DISTRIBUTIONS ------------------
 
 template<class Type> 
 class MultivariateNormal : public Dist<Type> {
@@ -776,8 +787,4 @@ public:
   }
 
 };
-
-
-
-
 #endif

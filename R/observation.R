@@ -706,7 +706,7 @@ Observation <- R6Class(
         tmp <- dist_list[[subname]]$clone()
         getdim <-as.numeric(gsub("[^0-9.]", "", name))
         if (subname == "cat") {
-          tmp$set_npar(getdim)
+          tmp$set_npar(getdim - 1)
         } else if (subname == "mvnorm") {
           tmp$set_npar(2 * getdim + (getdim^2 - getdim) / 2)
         } else if (subname == "dir") {

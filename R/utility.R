@@ -164,3 +164,41 @@ quad_pos_solve <- function(a, b, c) {
   roots <- roots[roots > 1e-10]
   return(as.numeric(roots))
 }
+
+#' Multivariate logit function 
+#' @export 
+mlogit <- function(x) {
+  s <- 1 - sum(x)
+  return(log(x / s))
+}
+
+#' Multivarite inverse logit function
+#' @export 
+invmlogit <- function(x) {
+  y <- exp(x)
+  s <- 1/(1 + sum(y))
+  y <- y * s
+  return(y)
+}
+
+#' Multivariate Normal link function 
+#' @export 
+mvnorm_link <- function(x) {
+  # get dimension 
+  m <- quad_pos_solve(1, 3, - 2 * length(x))
+  mu <- x[1:m]
+  sds <- log(x[(m + 1) : (2 * m)])
+  corr <- qlogis(x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)])
+  return(c(mu, sds, corr))
+}
+
+#' Multivariate Normal inverse link function 
+#' @export 
+mvnorm_invlink = function(x) {
+  # get dimension 
+  m <- quad_pos_solve(1, 3, - 2 * length(x))
+  mu <- x[1:m]
+  sds <- exp(x[(m + 1) : (2 * m)])
+  corr <- plogis(x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)])
+  return(c(mu, sds, corr))
+}

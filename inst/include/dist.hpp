@@ -7,6 +7,8 @@
 #include "dist_def.hpp"
 #include "added_dists.hpp"
 
+// Function that takes a distribution code and produces a pointer to an object
+// for that distribution class 
 template <class Type>
 std::unique_ptr<Dist<Type>> dist_generator(const int& code) {
   switch (code) {
