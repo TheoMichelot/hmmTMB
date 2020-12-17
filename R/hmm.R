@@ -469,9 +469,14 @@ HMM <- R6Class(
       # Get stored priors 
       priors <- self$priors() 
       
+      # Get variables for observation distributions
+      obsvar <- self$obs()$obs_var(expand = TRUE)
+      datadim <- attr(obsvar, "datadim")
+      
       # Data for TMB
       tmb_dat <- list(ID = self$obs()$data()$ID,
-                      data = as.matrix(self$obs()$obs_var()),
+                      data = as.matrix(obsvar),
+                      datadim = datadim, 
                       known_states = as.vector(self$obs()$known_states()) - 1, 
                       n_states = n_states,
                       statdist = statdist, 

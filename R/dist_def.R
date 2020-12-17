@@ -125,7 +125,7 @@ dist_cat <- Dist$new(
     # get class probabilities
     p <- c(...) 
     p <- c(1 - sum(p), p)
-    if (abs(sum(p) - 1) > 1e-8) stop("class probabilities must sum to one")
+    if (p[1] < -1e-10) stop("class probabilities must sum to one")
     n <- round(x)
     if (n < 0 | n > length(p)) stop("invalid input")
     val <- p[n + 1]
@@ -136,7 +136,7 @@ dist_cat <- Dist$new(
     # get class probabilities
     p <- c(...) 
     p <- c(1 - sum(p), p)
-    if (abs(sum(p) - 1) > 1e-8) stop("class probabilities must sum to one")
+    if (p[1] < -1e-10) stop("class probabilities must sum to one")
     # sample classes
     samp <- sample(1:length(p), size = n, prob = p, replace = TRUE) - 1
     return(samp)
@@ -352,6 +352,102 @@ dist_vm <- Dist$new(
   npar = 2
 )
 
+# Multivariate distributions ----------------------------------------------
+
+mlogit <- function(x) {
+  s <- 1 - sum(x)
+  return(log(x / s))
+}
+invmlogit <- function(x) {
+  y <- exp(x)
+  s <- 1/(1 + sum(y))
+  y <- y * s
+  return(y)
+}
+mlogit_bystates <- function(x, n_states) {
+  xmat <- unlist(x)
+  xmat <- matrix(xmat, nr = n_states, nc = length(xmat) / n_states)
+  ymat <- t(apply(xmat, 1, mlogit))
+  return(as.vector(ymat))
+}
+invmlogit_bystates <- function(x, n_states) {
+  xmat <- matrix(x, nr = n_states, nc = length(x) / n_states)
+  ymat <- t(apply(xmat, 1, invmlogit))
+  return(as.vector(ymat))
+}
+
+mvnorm_link <- function(x) {
+  # get dimension 
+  m <- quad_pos_solve(1, 3, - 2 * length(x))
+  mu <- x[1:m]
+  sds <- log(x[(m + 1) : (2 * m)])
+  corr <- qlogis(x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)])
+  return(c(mu, sds, corr))
+}
+
+mvnorm_invlink = function(x) {
+  # get dimension 
+  m <- quad_pos_solve(1, 3, - 2 * length(x))
+  mu <- x[1:m]
+  sds <- exp(x[(m + 1) : (2 * m)])
+  corr <- plogis(x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)])
+  return(c(mu, sds, corr))
+}
+
+mvnorm_link_bystates <- function(x, n_states) {
+  xmat <- unlist(x)
+  xmat <- matrix(xmat, nr = n_states, nc = length(xmat) / n_states)
+  ymat <- t(apply(xmat, 1, mvnorm_link))
+  return(as.vector(ymat))
+}
+
+mvnorm_invlink_bystates <- function(x, n_states) {
+  xmat <- matrix(x, nr = n_states, nc = length(x) / n_states)
+  ymat <- t(apply(xmat, 1, mvnorm_invlink))
+  return(as.vector(ymat))
+}
+
+dist_mvnorm <- Dist$new(
+  name = "mvnorm", 
+  pdf = function(x, ...,  log = FALSE) {
+    par <- c(...)
+    m <- quad_pos_solve(1, 3, - 2 * length(par))
+    y <- as.matrix(x[[1]])
+    mu <- par[1:m]
+    sds <- par[(m + 1) : (2 * m)]
+    corr <- par[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
+    V <- diag(m)
+    V[lower.tri(V)] <- corr 
+    V[upper.tri(V)] <- t(V)[upper.tri(V)]
+    for (i in 1:ncol(V)) {
+      V[i,] <- V[i,] * sds[i]
+      V[,i] <- V[,i] * sds[i]
+    }
+    p <- dmvn(y, mu, V)
+    if (!log) p <- exp(p)
+    return(p)
+  }, 
+  rng = function(n, ..., dim = 1) {
+    par <- c(...)
+    m <- quad_pos_solve(1, 3, - 2 * length(par))
+    mu <- par[1:m]
+    sds <- par[(m + 1) : (2 * m)]
+    corr <- par[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
+    V <- diag(m)
+    V[lower.tri(V)] <- corr 
+    V[upper.tri(V)] <- t(V)[upper.tri(V)]
+    for (i in 1:ncol(V)) {
+      V[i,] <- V[i,] * sds[i]
+      V[,i] <- V[,i] * sds[i]
+    }
+    sims <- rmvn(n, mu, V)
+    sims <- split(sims, 1:n)
+    return(sims)
+  }, 
+  link = mvnorm_link_bystates, 
+  invlink = mvnorm_invlink_bystates, 
+  npar = 3
+)
 
 # List of all distributions -----------------------------------------------
 
@@ -374,6 +470,7 @@ dist_list <- list(pois = dist_pois,
                   truncnorm = dist_truncnorm, 
                   foldednorm = dist_foldednorm, 
                   t = dist_t, 
-                  tweedie = dist_tweedie
+                  tweedie = dist_tweedie, 
+                  mvnorm = dist_mvnorm
                   )
 

@@ -149,3 +149,18 @@ strip_comments <- function(str) {
   res <- res[res != ""]
   return(res)
 }
+
+#' Solve for positive root of quadratic ax^2 + bx + c = 0 when it exists 
+#' @param a coefficient of x^2
+#' @param b coefficient of x 
+#' @param c scalar coefficient 
+#' @return real positive root if it exists 
+#' @export
+quad_pos_solve <- function(a, b, c) {
+  deter <- b^2 - 4 * a * c
+  if (deter < 0) stop("quadratic has no real roots")
+  roots <- (-b + c(-1, 1) * sqrt(deter)) / (2 * a)
+  if (all(roots < 1e-10)) stop("no positive roots for this quadratic")
+  roots <- roots[roots > 1e-10]
+  return(as.numeric(roots))
+}

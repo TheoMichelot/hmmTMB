@@ -21,7 +21,14 @@ public:
   // Inverse link function
   virtual matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) = 0; 
   // Probability density/mass function
-  virtual Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) = 0; 
+  virtual Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    return(0.0); 
+  };
+  // Vector input Probability density/mass function
+  virtual Type pdf(const vector<Type>& x, const vector<Type>& par, const bool& logpdf) {
+    std::cout << "pop!" << std::endl; 
+    return(0.0); 
+  }
 };
 
 template<class Type> 
@@ -618,6 +625,118 @@ public:
     else
       val = - log(2 * M_PI * b) + par(1) * cos(x - par(0));
     return(val); 
+  }
+};
+
+template<class Type> 
+class MultivariateNormal : public Dist<Type> {
+public:
+  // Constructor
+  MultivariateNormal() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size());
+    int n_par = wpar.size()/n_states;
+    int dim = this->dim(n_par); 
+    int k = 0; 
+    // means
+    // means
+    for (int d = 0; d < dim; ++d) {
+      for (int i = 0; i < n_states; ++i) {
+        wpar(k) = par(k); 
+        ++k; 
+      }
+    }
+    // sds 
+    for (int d = 0; d < dim; ++d) {
+      for (int i = 0; i < n_states; ++i) {
+        wpar(k) = log(par(k)); 
+        ++k; 
+      }
+    }
+    // corr 
+    for (int d = 0; d < 0.5*(dim * dim - dim); ++d) {
+      for (int i = 0; i < n_states; ++i) {
+       wpar(k) = log(par(k) / (1 - par(k))); 
+        ++k; 
+      }
+    }
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    int dim = this->dim(n_par);
+    int k = 0; 
+    // means
+    for (int d = 0; d < dim; ++d) {
+      for (int i = 0; i < n_states; ++i) {
+        par(i, d) = wpar(k); 
+        ++k; 
+      }
+    }
+    // sds 
+    for (int d = 0; d < dim; ++d) {
+      for (int i = 0; i < n_states; ++i) {
+        par(i, d + dim) = exp(wpar(k)); 
+        ++k; 
+      }
+    }
+    // corr 
+    for (int d = 0; d < 0.5*(dim * dim - dim); ++d) {
+      for (int i = 0; i < n_states; ++i) {
+        par(i, d + 2 * dim) = 1 / (1 + exp(-wpar(k))); 
+        ++k; 
+      }
+    }
+    return(par); 
+  }
+  // Univariate Probability density function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = dnorm(x, par(0), par(1), logpdf); 
+    return(val); 
+  }
+  
+  // Multivariate Probability density function 
+  Type pdf(const vector<Type>& x, const vector<Type>& par, const bool& logpdf) {
+    int dim = this->dim(par.size()); 
+    vector<Type> y(dim);
+    for (int i = 0; i < dim; ++i) y(i) = x(i) - par(i); 
+    vector<Type> sds(dim); 
+    for (int i = 0; i < dim; ++i) sds(i) = par(i + dim); 
+    vector<Type> corr((dim * dim - dim) / 2); 
+    for (int i = 0; i < (dim * dim - dim) / 2; ++i) corr(i) = par(i + 2 * dim);
+    matrix<Type> Sigma(dim, dim); 
+    int k = 0; 
+    for (int i = 0; i < dim; ++i) {
+      for (int j = i; j < dim; ++j) {
+        Sigma(j, i) = sds(j) * sds(i); 
+        if (i != j) {
+          Sigma(j, i) *= corr(k); 
+          ++k; 
+        }
+      }
+    }
+    for (int i = 0; i < dim; ++i) {
+      for (int j = 0; j < i; ++j) {
+        Sigma(j, i) = Sigma(i, j); 
+      }
+    }
+    Type val = density::MVNORM(Sigma)(y); 
+    val = -val; 
+    if (!logpdf) val = exp(val); 
+    return(val); 
+  }
+  
+  // Solve for dimension 
+  int dim(const double& l) {
+    double a = 1; 
+    double b = 3; 
+    double c = - 2 * l; 
+    double d = b * b - 4 * a * c; 
+    double root = (-b + sqrt(d)) / (2 * a); 
+    return(int(root)); 
   }
 };
 

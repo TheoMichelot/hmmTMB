@@ -30,6 +30,7 @@ Type objective_function<Type>::operator() ()
   // DATA
   DATA_VECTOR(ID); // vector of time series IDs
   DATA_MATRIX(data); // data stream
+  DATA_IVECTOR(datadim); // dimension of observations for each variable 
   DATA_VECTOR(known_states); // known states 
   DATA_INTEGER(n_states); // number of states
   DATA_INTEGER(statdist); // use stationary distribution with respect to first tpm 
@@ -145,6 +146,7 @@ Type objective_function<Type>::operator() ()
   
   // Counter to subset parameter vector
   int par_count = 0;
+  int var_count = 0; 
   
   // Loop over observed variables
   for(int var = 0; var < n_var; var++) {
@@ -154,7 +156,7 @@ Type objective_function<Type>::operator() ()
     // Loop over observations (rows)
     for (int i = 0; i < n; ++i) {
       // Don't update likelihood if the observation is missing
-      if(!R_IsNA(asDouble(data(i, var)))) {
+      if(!R_IsNA(asDouble(data(i, var_count)))) {
         // Subset and transform observation parameters
         vector<Type> sub_wpar = 
           par_mat.row(i).segment(par_count, distpar(var) * n_states);
@@ -163,14 +165,20 @@ Type objective_function<Type>::operator() ()
         for (int s = 0; s < n_states; ++s) {
           // Vector of parameters for state s
           vector<Type> subpar = par.row(s);
-          
-          prob(i, s) = prob(i, s) * obsdist->pdf(data(i, var), subpar, false);
+          if (datadim(var) > 1) {
+            vector<Type> subdat = data.row(i).segment(var_count, datadim(var)); 
+            prob(i, s) = prob(i, s) * obsdist->pdf(subdat, subpar, false);
+          } else {
+            prob(i, s) = prob(i, s) * obsdist->pdf(data(i, var_count), subpar, false);
+          }
         }        
       }
     }
-
+    var_count = var_count + datadim(var); 
     par_count = par_count + distpar(var) * n_states;
   }
+  
+  
   
   //======================//
   // Priors               //

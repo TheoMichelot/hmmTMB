@@ -142,9 +142,35 @@ Observation <- R6Class(
     terms = function() {return(private$terms_)},
     
     #' @description  Data frame of response variables
-    obs_var = function() {
+    obs_var = function(expand = FALSE) {
       obs_names <- names(self$dists())
       obs_var <- self$data()[, obs_names, drop = FALSE]
+      datadim <- rep(1, ncol(obs_var))
+      if (expand) {
+        multivar <- sapply(obs_var, is.list)
+        if (any(multivar)) {
+          wh <- which(multivar)
+          for (i in 1:length(wh)) {
+            v <- do.call(rbind, obs_var[[wh[i]]])
+            datadim[wh[i]] <- ncol(v)
+            tmp <- NULL
+            tmpnms <- NULL
+            if (wh > 1) {
+              tmp <- cbind(tmp, obs_var[,1:(wh[i] - 1)])
+              tmpnms <- c(tmpnms, colnames(obs_var)[1:(wh[i] - 1)])
+            }
+            tmp <- cbind(tmp, v)
+            tmpnms <- c(tmpnms, rep(names(wh[i]), ncol(v)))
+            if (wh < ncol(obs_var)) {
+              tmp <- cbind(tmp, obs_var[,(wh[i] + 1):ncol(obs_var)])
+              tmpnms <- c(tmpnms, colnames(obs_var)[(wh[i] + 1):ncol(obs_var)]) 
+            }
+            obs_var <- tmp
+            colnames(obs_var) <- tmpnms
+          }
+        }
+      }
+      attributes(obs_var)$datadim <- datadim
       return(obs_var)
     },
     
@@ -423,6 +449,7 @@ Observation <- R6Class(
       givenvarnms <- colnames(data)
       varnms <- names(self$obs_var())
       
+      
       # Loop over observed variables
       for(var in 1:n_var) {
         obsdist <- self$dists()[[var]]
@@ -673,12 +700,16 @@ Observation <- R6Class(
         # distribution with fixed parameter dimension
         return(dist_list[[name]]$clone())
       } else {
-        # distribution with a variable parameter dimension
+        # distribution with a variable dimension
         subname <- gsub("[0-9]+", "", name)
         if (!(subname %in% names(dist_list))) stop("distribution unknown")
         tmp <- dist_list[[subname]]$clone()
         getdim <-as.numeric(gsub("[^0-9.]", "", name))
-        tmp$set_npar(getdim)
+        if (subname == "cat") {
+          tmp$set_npar(getdim)
+        } else if (subname == "mvnorm") {
+          tmp$set_npar(2 * getdim + (getdim^2 - getdim) / 2)
+        }
         return(tmp)
       }
     }
