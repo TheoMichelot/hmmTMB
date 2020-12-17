@@ -59,10 +59,11 @@ MarkovChain <- R6Class(
       ls_form_char <- as.list(t(structure)[!diag(self$nstates())])
       ls_form <- lapply(ls_form_char, function(form_char) {
         if(form_char == ".")
-          return(NULL)
+          return(as.formula("~1"))
         else
           return(as.formula(form_char))
       })
+      
       # Names for transition probabilities
       tr_names <- paste0("S", rep(1:n_states, each = n_states), 
                          ">S", rep(1:n_states, n_states))

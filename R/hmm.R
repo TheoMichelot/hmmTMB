@@ -425,8 +425,14 @@ HMM <- R6Class(
         }
       }
       
-      private <- mod$.__enclos_env__$private
-      private$fixpar_
+      # check for transitions that have fixed probabilities 
+      # Find transitions that are fixed 
+      ls_form_char <- as.list(t(self$hidden()$structure())[!diag(self$hidden()$nstates())])
+      which_fixed <- sapply(ls_form_char, function(x) {x == "."})
+      getnms <- rownames(self$hidden()$coeff_fe())[which_fixed]
+      oldnms <- names(private$fixpar_$hid)
+      private$fixpar_$hid <- c(private$fixpar_$hid, rep(NA, length(getnms)))
+      names(private$fixpar_$hid) <- c(oldnms, getnms)
       
       # add custom mapping effects
       usernms <- c("obs", "hid", "lambda", "delta")
