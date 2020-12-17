@@ -19,15 +19,15 @@ HMM <- R6Class(
     #'               or pool into common values (using factor levels)
     #' 
     #' @return A new HMM object
-    initialize = function(obs, hidden = NULL, init = NULL, fixpar = NULL) {
+    initialize = function(file = NULL, obs = NULL, hidden = NULL, init = NULL, fixpar = NULL) {
       # Decide how model has been specified 
-      if (!is.character(obs) & is.null(hidden)) {
-        stop("either 'obs' must a file name for a file specifying the model or 
+      if (is.null(file) & is.null(obs)) {
+        stop("either 'file' must a file name for a file specifying the model or 
             both obs/hidden model objects should be supplied.")
       }
-      if (is.character(obs)) {
-        cat("Reading model specified at", obs, "\n")
-        spec <- private$read_file(obs)
+      if (!is.null(file) & is.null(obs)) {
+        cat("Reading model specified at", file, "\n")
+        spec <- private$read_file(file)
         # create obs
         obs <- Observation$new(data = spec$data, 
                                dists = spec$dists,
@@ -37,6 +37,7 @@ HMM <- R6Class(
         hidden <- MarkovChain$new(n_states = spec$nstates, 
                                   structure = spec$tpm, 
                                   data = spec$data)
+        if (!is.null(spec$fixed)) fixpar <- spec$fixed 
         if (!is.null(spec$tpm0)) hidden$update_tpm(spec$tpm0)
       }
       
@@ -1667,7 +1668,7 @@ HMM <- R6Class(
       # remove comments
       spec <- strip_comments(spec)
       # block names 
-      blocknms <- c("DATA", "DISTRIBUTION", "FORMULA", "TPM", "INITIAL")
+      blocknms <- c("DATA", "DISTRIBUTION", "FORMULA", "TPM", "INITIAL", "FIXED")
       # find blocks
       wh_blocks <- sapply(blocknms, FUN = function(b) {grep(b, spec)})
       wh_blocks <- unlist(wh_blocks[sapply(wh_blocks, length) > 0])
@@ -1716,7 +1717,23 @@ HMM <- R6Class(
         stop("INITIAL block is missing from model specification")
       }
       
-      return(list(data = dataset, nstates = nstates, dists = dists, forms = forms, tpm = tpm, par = ini$par, tpm0 = ini$tpm0))
+      # FIXED
+      if ("FIXED" %in% read_nms) {
+        fixed_block <- private$read_block("FIXED", wh_blocks, spec)
+        fixed <- list(obs = rep(NA, length(fixed_block)))
+        names(fixed$obs) <- fixed_block
+      } else {
+        fixed <- NULL
+      }
+      
+      return(list(data = dataset, 
+                  nstates = nstates, 
+                  dists = dists, 
+                  forms = forms, 
+                  tpm = tpm, 
+                  par = ini$par, 
+                  tpm0 = ini$tpm0, 
+                  fixed = fixed))
       
     }, 
     
