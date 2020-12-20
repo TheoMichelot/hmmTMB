@@ -97,14 +97,58 @@ MarkovChain <- R6Class(
     #' @description List of formulas for MarkovChain model
     formulas = function() {return(private$formulas_)},
     
-    #' @description Current transition probability matrix
-    tpm = function() {return(private$tpm_)},
+    #' @description Get transition probability matrices 
+    #' 
+    #' @param t time point, default 1; if t = "all" then 
+    #' all tpms are returned otherwise tpms for time points in t are returned
+    #' @param linpred custom linear predictor 
+    #' 
+    #' @return Array with one slice for each transition probability matrix
+    tpm = function(t = 1, linpred = NULL) {
+      n_states <- self$nstates()
+      npar <- n_states * (n_states - 1)
+      if (is.null(linpred)) linpred <- self$linpred() 
+      T <- length(linpred) / npar
+      if (length(t) == 1) if (t == "all") t <- 1:T
+      ind <- as.vector(sapply(1:npar, function(i) {t + (i - 1) * T}))
+      linpred <- matrix(linpred[ind], ncol = n_states * (n_states - 1))
+      val <- apply(linpred, 1, self$par2tpm)
+      val <- array(val, dim = c(n_states, n_states, ncol(val)))
+      return(val)
+    },
     
     #' @description Current parameter estimates (fixed effects)
     coeff_fe = function() {return(private$coeff_fe_)},
     
-    #' @description Current delta parameter estimates 
-    delta = function() {return(private$delta_)}, 
+    #' @description Stationary distributions
+    #' @param t time point, default is 1; if t = "all" then 
+    #' all deltas are returned otherwise deltas for time points in t are returned 
+    #' @param linpred custom linear predictor 
+    #' @return Matrix of stationary distributions. Each row corresponds to
+    #' a row of the design matrices, and each column corresponds to a state.
+    delta = function(t = 1, linpred = NULL) {
+      if (!is.null(t)) {
+        # Number of states
+        n_states <- self$nstates()
+        
+        # Derive transition probability matrices
+        tpms <- self$tpm(t = t, linpred = linpred)
+        
+        tryCatch({
+          # For each transition matrix, get corresponding stationary distribution
+          stat_dists <- apply(tpms, 3, function(tpm)
+            solve(t(diag(n_states) - tpm + 1), rep(1, n_states)))
+          stat_dists <- t(stat_dists)
+        },
+        error = function(e) {
+          stop(paste("The stationary distributions cannot be calculated",
+                     "for these covariate values (singular system)."))
+        })
+      } else {
+        stat_dists <- private$delta_
+      }
+      return(stat_dists)
+    }, 
     
     #' @description Use stationary distribution as initial distribution? 
     stationary = function() {return(private$stationary_)}, 
@@ -162,7 +206,6 @@ MarkovChain <- R6Class(
       private$coeff_fe_ <- matrix(rep(0, sum(self$terms()$ncol_fe)))
       private$coeff_fe_[i0] <- self$tpm2par(tpm)
       rownames(private$coeff_fe_) <- self$terms()$names_fe
-      private$tpm_ <- tpm
     },
     
     #' @description Update coefficients for fixed effect parameters
@@ -176,10 +219,6 @@ MarkovChain <- R6Class(
       }
       private$coeff_fe_ <- matrix(coeff_fe)
       rownames(private$coeff_fe_) <- self$terms()$names_fe
-      if(all(self$structure() %in% c(".", "~1"))) {
-        # Only update tpm if no covariates
-        private$tpm_ <- self$par2tpm(coeff_fe)        
-      }
     },
     
     #' @description Update coefficients for random effect parameters
@@ -189,6 +228,20 @@ MarkovChain <- R6Class(
       private$coeff_re_ <- matrix(coeff_re)
       rownames(private$coeff_re_) <- self$terms()$names_re_all
     },
+    
+    #' @description Update design matrix for fixed effects 
+    #' 
+    #' @param X_fe new design matrix for fixed effects
+    update_X_fe = function(X_fe) {
+      private$terms_$X_fe <- X_fe
+    }, 
+    
+    #' @description Update design matrix for random effects 
+    #' 
+    #' @param X_re new design matrix for random effects
+    update_X_re = function(X_re) {
+      private$terms_$X_re <- X_re
+    }, 
     
     #' @description Update delta coefficients 
     update_delta = function(new_delta) {
@@ -290,79 +343,11 @@ MarkovChain <- R6Class(
       return(tpm)
     },
     
-    #' @description Get transition probability matrices from design matrices
-    #' 
-    #' @param X_fe Design matrix for fixed effects, as returned
-    #' by \code{make_mat}
-    #' @param X_re Design matrix for random effects, as returned
-    #' by \code{make_mat}
-    #' @param coeff_fe Optional vector of coefficients for fixed effect
-    #' parameters. If this isn't provided, the model parameters
-    #' are used.
-    #' @param coeff_re Optional vector of coefficients for random 
-    #' effect parameters. If this isn't provided, the model parameters 
-    #' are used.
-    #' 
-    #' @return Array with one slice for each transition probability matrix
-    tpm_all = function(X_fe = NULL, X_re = NULL, coeff_fe = NULL, coeff_re = NULL) {
-      n_states <- self$nstates()
-      
-      # Define parameters
-      if (is.null(X_fe)) {
-        X_fe <- self$X_fe() 
-      }
-      if (is.null(X_re)) {
-        X_re <- self$X_re() 
-      }
-      if(length(coeff_fe) == 0)
-        coeff_fe <- self$coeff_fe()
-      if(length(coeff_re) == 0)
-        coeff_re <- self$coeff_re()
-      
-      # Linear predictor
-      ltpm <- X_fe %*% coeff_fe + X_re %*% coeff_re
-      ltpm_mat <- matrix(ltpm, ncol = n_states * (n_states - 1))
-      
-      # Transition probability matrices
-      tpm <- apply(ltpm_mat, 1, self$par2tpm)
-      tpm <- array(tpm, dim = c(n_states, n_states, nrow(ltpm_mat)))
-      return(tpm)
-    },
-    
-    #' @description Stationary distributions
-    #' 
-    #' @param X_fe Design matrix for fixed effects, as returned
-    #' by \code{make_mat}
-    #' @param X_re Design matrix for random effects, as returned
-    #' by \code{make_mat}
-    #'
-    #' @return Matrix of stationary distributions. Each row corresponds to
-    #' a row of the design matrices, and each column corresponds to a state.
-    stat_dists = function(X_fe = NULL, X_re = NULL) {
-      # Check inputs
-      if (is.null(X_fe)) X_fe <- self$X_fe() 
-      if (is.null(X_re)) X_re <- self$X_re() 
-      
-      # Number of states
-      n_states <- self$nstates()
-      
-      # Derive transition probability matrices
-      tpms <- self$tpm_all(X_fe = X_fe, X_re = X_re)
-      
-      tryCatch({
-        # For each transition matrix, get corresponding stationary distribution
-        stat_dists <- apply(tpms, 3, function(tpm)
-          solve(t(diag(n_states) - tpm + 1), rep(1, n_states)))
-        stat_dists <- t(stat_dists)
-      },
-      error = function(e) {
-        stop(paste("The stationary distributions cannot be calculated",
-                   "for these covariate values (singular system)."))
-      })
-      
-      return(stat_dists)
-    },
-    
+    linpred = function() {
+      linpred <- self$X_fe() %*% self$coeff_fe() + self$X_re() %*% self$coeff_re()
+      return(linpred[,1])
+    }, 
+  
     #' @description Simulate from Markov chain
     #' 
     #' @param n Number of time steps to simulate
@@ -393,7 +378,11 @@ MarkovChain <- R6Class(
       
       # Create transition probability matrices
       mats_hid <- self$make_mat(data = data, new_data = new_data)
-      tpms <- self$tpm_all(X_fe = mats_hid$X_fe, X_re = mats_hid$X_re)
+      X_fe_old <- mats_hid$X_fe
+      X_re_old <- mats_hid$X_re
+      self$update_X_fe(mats_hid$X_fe)
+      self$update_X_re(mats_hid$X_re)
+      tpms <- self$tpm(t = "all")
       
       # Uniform initial distribution for now
       delta <- rep(1/n_states, n_states) 
@@ -413,6 +402,10 @@ MarkovChain <- R6Class(
         }
       }
       if(!silent) cat("\n")
+      
+      # reset design matrices
+      self$update_X_fe(X_fe_old)
+      self$update_X_re(X_re_old)
       
       return(S)
     },
@@ -443,7 +436,6 @@ MarkovChain <- R6Class(
     coeff_re_ = NULL,
     delta_ = NULL, 
     lambda_ = NULL,
-    tpm_ = NULL,
     nstates_ = NULL,
     terms_ = NULL,
     

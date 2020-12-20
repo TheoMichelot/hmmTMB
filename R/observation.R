@@ -104,7 +104,63 @@ Observation <- R6Class(
     nstates = function() {return(private$nstates_)},
     
     #' @description Parameters on natural scale
-    par = function() {return(private$par_)},
+    #' @param t time point, default t = 1; 
+    #' if "all" then return for all time points, otherwise return at time points given in t 
+    #' @param full_names Logical. If TRUE, the rows of the output
+    #' are named in the format "variable.parameter" (default). If
+    #' FALSE, the rows are names in the format "parameter". The
+    #' latter is used in various internal functions, when the parameters
+    #' need to be passed on to an R function.
+    #' @param linpred custom linear predictor 
+    #' 
+    par = function(t = 1, full_names = TRUE, linpred = NULL) {
+      # Number of states
+      n_states <- self$nstates()
+      
+      # Number of parameters on natural scale (in each state)
+      n_par <- sum(sapply(self$dists(), function(d) d$npar()))
+      
+      # Get linear predictor
+      if (is.null(linpred)) linpred <- self$linpred() 
+      
+      # Number of observations
+      n <- length(linpred) / (n_par * n_states)
+        
+      # Subset by time
+      if (length(t) == 1) if (t == "all") t <- 1:n
+      ind <- as.vector(sapply(1:(n_states * n_par), function(i) {t + (i - 1) * n}))
+      linpred <- linpred[ind]
+        
+      # Matrix of linear predictor
+      lp_mat <- matrix(linpred, ncol = n_par * n_states)
+      
+      # Matrix of natural parameters
+      par_mat <- apply(lp_mat, 1, function(lp_vec) {
+        par_ls <- self$w2n(lp_vec)
+        par_vec <- unlist(par_ls, use.names = FALSE)
+        return(par_vec)
+      })
+      
+      # Array of natural parameters
+      par_array <- array(par_mat, dim = c(n_states, n_par, length(t)))
+        
+      # Hacky way to get parameter names
+      if(full_names) {
+        par_names <- names(unlist(rapply(self$w2n(lp_mat[1,]),
+                                         function(v) v[1])))
+      } else {
+        par_names <- unlist(lapply(self$w2n(lp_mat[1,]), names))
+      }
+        
+      # Set dimension names for rows and columns
+      dimnames(par_array) <- list(paste("state", 1:n_states),
+                                  par_names,
+                                  NULL)
+        
+      # Transpose each slice
+      par <- aperm(par_array, perm = c(2, 1, 3))
+      return(par)
+    },
     
     #' @description Fixed effect parameters on working scale
     coeff_fe = function() {return(private$coeff_fe_)},
@@ -190,8 +246,7 @@ Observation <- R6Class(
     #' 
     #' @param par New list of parameters
     update_par = function(par) {
-      private$par_ <- par
-      
+
       # Get index of first column of X_fe for each parameter
       ncol_fe <- self$terms()$ncol_fe
       n_par <- length(ncol_fe)
@@ -208,10 +263,6 @@ Observation <- R6Class(
     update_coeff_fe = function(coeff_fe) {
       private$coeff_fe_ <- matrix(coeff_fe)
       rownames(private$coeff_fe_) <- self$terms()$names_fe
-      if(all(rapply(self$formulas(), function(f) { f == ~1 }))) {
-        # Only update par if no covariates
-        private$par_ <- self$w2n(coeff_fe)
-      }
     },
     
     #' @description Update random effect parameters
@@ -222,6 +273,14 @@ Observation <- R6Class(
       private$coeff_re_ <- matrix(coeff_re)
       rownames(private$coeff_re_) <- self$terms()$names_re_all
     },
+    
+    update_X_fe = function(X_fe) {
+      private$terms_$X_fe <- X_fe
+    }, 
+    
+    update_X_re = function(X_re) {
+      private$terms_$X_re <- X_re
+    }, 
     
     #' @description Update smoothness parameters
     #' 
@@ -272,19 +331,13 @@ Observation <- R6Class(
     #' 
     #' @return A list with the same elements as the output of make_mat, 
     #' plus a data frame of covariates values.
-    make_mat_grid = function(var, covs = NULL, n_grid = 1e3) {
+    make_newdata_grid = function(var, covs = NULL, n_grid = 1e3) {
       # Data frame for covariate grid
       new_data <- cov_grid(var = var, data = self$data(), 
                            covs = covs, formulas = self$formulas(),
                            n_grid = n_grid)
       
-      # Create design matrices
-      mats <- self$make_mat(new_data = new_data)
-      
-      # Save data frame of covariate values
-      mats$new_data <- new_data
-      
-      return(mats)
+      return(new_data)
     },
     
     #' @description Natural to working parameter transformation
@@ -339,77 +392,11 @@ Observation <- R6Class(
       return(par)
     },
     
-    #' @description Get observation parameters from design matrices
-    #' 
-    #' @param X_fe Design matrix for fixed effects, as returned
-    #' by \code{make_mat}
-    #' @param X_re Design matrix for random effects, as returned
-    #' by \code{make_mat}
-    #' @param coeff_fe Optional vector of coefficients for fixed effect
-    #' parameters. If this isn't provided, the model parameters
-    #' are used.
-    #' @param coeff_re Optional vector of coefficients for random 
-    #' effect parameters. If this isn't provided, the model parameters 
-    #' are used.
-    #' @param full_names Logical. If TRUE, the rows of the output
-    #' are named in the format "variable.parameter" (default). If
-    #' FALSE, the rows are names in the format "parameter". The
-    #' latter is used in various internal functions, when the parameters
-    #' need to be passed on to an R function.
-    #' 
-    #' @return Array with one slice for each time step, one row 
-    #' for each observation parameter, and one column for each state.
-    par_all = function(X_fe = NULL, X_re = NULL, coeff_fe = NULL, coeff_re = NULL, 
-                       full_names = TRUE) {
-      # Number of states
-      n_states <- self$nstates()
-      
-      # Number of parameters on natural scale (in each state)
-      n_par <- sum(sapply(self$dists(), function(d) d$npar()))
-      
-      # Define parameters
-      if (is.null(X_fe)) X_fe <- self$X_fe() 
-      if (is.null(X_re)) X_re <- self$X_re() 
-      if(length(coeff_fe) == 0)
-        coeff_fe <- self$coeff_fe()
-      if(length(coeff_re) == 0)
-        coeff_re <- self$coeff_re()
-      
-      # Get linear predictor
-      lp <- X_fe %*% coeff_fe + X_re %*% coeff_re
-      lp_mat <- matrix(lp, ncol = n_par * n_states)
-      
-      # Number of observations
-      n <- nrow(lp_mat)
-      
-      # Matrix of natural parameters
-      par_mat <- apply(lp_mat, 1, function(lp_vec) {
-        par_ls <- self$w2n(lp_vec)
-        par_vec <- unlist(par_ls, use.names = FALSE)
-        return(par_vec)
-      })
-      
-      # Array of natural parameters
-      par_array <- array(par_mat, dim = c(n_states, n_par, n))
-      
-      # Hacky way to get parameter names
-      if(full_names) {
-        par_names <- names(unlist(rapply(self$w2n(lp_mat[1,]),
-                                         function(v) v[1])))
-      } else {
-        par_names <- unlist(lapply(self$w2n(lp_mat[1,]), names))
-      }
-      
-      # Set dimension names for rows and columns
-      dimnames(par_array) <- list(paste("state", 1:n_states),
-                                  par_names,
-                                  NULL)
-      
-      # Transpose each slice
-      par_array <- aperm(par_array, perm = c(2, 1, 3))
-      
-      return(par_array)
-    },
+    #' Compute linear predictor 
+    linpred = function() {
+      linpred <- self$X_fe() %*% self$coeff_fe() + self$X_re() %*% self$coeff_re()
+      return(linpred[,1])
+    }, 
     
     #' @description Observation likelihoods
     #' 
@@ -419,11 +406,18 @@ Observation <- R6Class(
     #' 
     #' @return Matrix of likelihoods of observations, with one row for each 
     #' time step, and one column for each state.
-    obs_probs = function(X_fe = NULL, X_re = NULL, data = NULL) {
+    obs_probs = function(data = NULL) {
       # Data frame of observations
-      if (is.null(X_fe)) X_fe <- self$X_fe() 
-      if (is.null(X_re)) X_re <- self$X_re() 
-      if (is.null(data)) data <- self$obs_var()
+      if (is.null(data)) {
+        data <- self$obs_var()
+        X_fe_old <- NULL
+      } else {
+        X_fe_old <- self$X_fe() 
+        X_re_old <- self$X_re() 
+        mats <- self$make_mat(data)
+        self$update_X_fe(mats$X_fe)
+        self$update_X_re(mats$X_re)
+      }
       
       # Number of observations
       n <- nrow(data)
@@ -433,7 +427,7 @@ Observation <- R6Class(
       n_var <- ncol(data)
       
       # State-dependent parameters
-      par <- self$par_all(X_fe = X_fe, X_re = X_re, full_names = FALSE)
+      par <- self$par(t = "all", full_names = FALSE)
       
       # Initialise matrix of probabilities
       prob <- matrix(1, nrow = n, ncol = n_states)
@@ -472,6 +466,12 @@ Observation <- R6Class(
         par_count <- par_count + obsdist$npar()
       }
       
+      # reset design matrices
+      if (!is.null(X_fe_old)) {
+        self$update_X_fe(X_fe_old)
+        self$update_X_re(X_re_old)
+      }
+      
       return(prob)
     },
     
@@ -484,29 +484,21 @@ Observation <- R6Class(
     #' 
     #' @param name Name of response variable for which the histogram
     #' and pdfs should be plotted.
-    #' @param par Optional matrix of parameters, with one row for each state
-    #' and one column for each parameter. The columns of the matrix should be
-    #' named with the names of the parameters, e.g. "mean" and "sd" for normal
-    #' distribution. If not provided, the parameters stored in the object are
-    #' used (default).
     #' @param weights Optional vector of length the number of pdfs that are
     #' plotted. Useful to visualise a mixture of distributions weighted by the
     #' proportion of time spent in the different states.
     #' 
     #' @return A ggplot object
-    plot_dist = function(name, par = NULL, weights = NULL) {
+    plot_dist = function(name, weights = NULL) {
       # Extract observed values for relevant variable
       obs <- data.frame(val = self$data()[[name]])
       
       # Matrix of parameters
-      if(is.null(par)) {
-        par <- matrix(unlist(self$par()[[name]]), nrow = self$nstates())
-        colnames(par) <- names(self$dists()[[name]]$link())
-      }
+      par <- matrix(unlist(self$par()[[name]]), nrow = self$nstates())
+      colnames(par) <- names(self$dists()[[name]]$link())
       
       # Weights for each state-dependent distribution
-      if(is.null(weights))
-        weights <- rep(1, self$nstates())
+      if(is.null(weights))weights <- rep(1, self$nstates())
       
       # Grid over range of observed variable
       n_grid <- 1e3
@@ -515,6 +507,7 @@ Observation <- R6Class(
       # Check if variable is integer 
       if (is_whole_number(obs)) {
         grid <- unique(floor(grid))
+        n_grid <- length(grid)
       }
       
       # Loop over states
@@ -607,7 +600,6 @@ Observation <- R6Class(
     known_states_ = NULL, 
     dists_ = NULL,
     nstates_ = NULL,
-    par_ = NULL,
     coeff_fe_ = NULL,
     coeff_re_ = NULL,
     lambda_ = NULL,

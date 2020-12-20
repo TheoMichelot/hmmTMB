@@ -188,7 +188,7 @@ HMM <- R6Class(
       
       # Update delta parameters 
       if (self$hidden()$stationary()) {
-        tpms <- self$hidden()$tpm_all()
+        tpms <- self$hidden()$tpm(t = "all")
         nstates <- self$hidden()$nstates()
         delta <- solve(t(diag(nstates) - tpms[,,1] + 1), rep(1, nstates))
         self$hidden()$update_delta(delta)
@@ -207,6 +207,9 @@ HMM <- R6Class(
     #' SD = 1/sqrt(lambda). It is particularly helpful to get the
     #' standard deviations of independent normal random effects.
     vcomp = function() {
+      if(is.null(private$tmb_rep_)) {
+        stop("Fit model first")
+      }
       return(list(obs = self$obs()$vcomp(),
                   hidden = self$hidden()$vcomp()))
     },
@@ -639,7 +642,7 @@ HMM <- R6Class(
       # get observation probabilities 
       obsprobs <- self$obs()$obs_probs()
       # get tpms 
-      tpms <- self$hidden()$tpm_all()
+      tpms <- self$hidden()$tpm(t = "all")
       # forward algorithm 
       p <- delta * obsprobs[1,]
       psum <- sum(p)
@@ -692,7 +695,7 @@ HMM <- R6Class(
       lback <- fb$logbackward
       lforw <- cbind(log(delta), lforw)
       # get transition matrices
-      tpms <- self$hidden()$tpm_all()
+      tpms <- self$hidden()$tpm(t = "all")
       # scaling 
       forwscale <- apply(lforw, 2, max)
       backscale <- apply(lback, 2, max)
@@ -790,7 +793,7 @@ HMM <- R6Class(
       obs_probs <- self$obs()$obs_probs()
       
       # Transition probability matrices      
-      tpm_all <- self$hidden()$tpm_all()
+      tpm_all <- self$hidden()$tpm(t = "all")
       
       # Number of unique IDs
       n_id <- length(unique(ID))
@@ -855,7 +858,7 @@ HMM <- R6Class(
       prob <- prob / sum(prob)
       states[n,] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
       # get tpms 
-      tpms <- self$hidden()$tpm_all()
+      tpms <- self$hidden()$tpm(t = "all")
       # get observation probabilties
       obsprobs <- self$obs()$obs_probs()
       # sample backward
@@ -886,9 +889,10 @@ HMM <- R6Class(
       return(pr_state)
     }, 
     
-    ################################
-    ## Uncertainty quantification ##
-    ################################
+    ###########################################
+    ## Parameter prediction and uncertainty  ##
+    ###########################################
+    
     #' @description Posterior sampling for model coefficients
     #' 
     #' @param n_post Number of posterior samples
@@ -909,377 +913,299 @@ HMM <- R6Class(
       # Generate samples from MVN estimator distribution
       post <- rmvn(n = n_post, mu = par, V = V)
       
+      # ensure it is a matrix
+      post <- matrix(post, nc = length(par), nr = n_post)
+      
+      # parameter names
+      colnames(post) <- names(par)
+      
       return(post)
     },
     
-    #' @description Confidence intervals for model parameters on the working scale 
+    #' @description Posterior sampling for linear predictor 
     #' 
-    #' These are Wald confidence intervals, obtained from the standard errors 
-    #' returned by the TMB function \code{sdreport}. See the TMB documentation 
-    #' for more details.
+    #' @param n_post Number of posterior samples
     #' 
-    #' @param level Confidence level (default: 0.95 for 95\% confidence intervals)
-    #' 
-    #' @return Matrix with three columns: (1) estimates, (2) lower bounds of
-    #' confidence intervals, (3) upper bounds of confidence intervals.
-    CI_coeff = function(level = 0.95) {
-      # Extract parameter estimates and standard errors from TMB output
-      par_list <- as.list(self$tmb_rep(), "Estimate")
-      se_list <- as.list(self$tmb_rep(), "Std. Error")
-      
-      # Lower bounds
-      lower <- lapply(seq_along(par_list), function(i) {
-        par_list[[i]] - qnorm(1 - (1 - level)/2) * se_list[[i]]
-      })
-      # Upper bounds
-      upper <- lapply(seq_along(par_list), function(i) {
-        par_list[[i]] + qnorm(1 - (1 - level)/2) * se_list[[i]]
-      })
-      
-      # Put estimates and CIs in matrix
-      CI_mat <- cbind(estimate = unlist(par_list), 
-                      lower = unlist(lower),
-                      upper = unlist(upper))
-      
-      # Remove parameters that were not estimated
-      na_ind <- which(is.na(CI_mat[,"lower"]))
-      if(length(na_ind) > 0) {
-        CI_mat <- CI_mat[-na_ind,]
+    #' @return Matrix with one column for each predictor and one row
+    #' for each posterior draw
+    post_linpred = function(n_post) {
+      # save current parameters 
+      coeff_fe_old <- self$coeff_fe() 
+      coeff_re_old <- self$coeff_re()
+      pars <- self$post_coeff(n_post)
+      # observation submodel 
+      obspars_fe <- pars[,which(colnames(pars) == "coeff_fe_obs")]
+      hidpars_fe <- pars[,which(colnames(pars) == "coeff_fe_hid")]
+      obspars_re <- pars[,which(colnames(pars) == "coeff_re_obs")]
+      hidpars_re <- pars[,which(colnames(pars) == "coeff_re_hid")]
+    
+      lp <- NULL
+      lp$obs <- matrix(0, nr = n_post, nc = nrow(self$obs()$X_fe()))
+      lp$hidden <- matrix(0, nr = n_post, nc = nrow(self$hidden()$X_fe()))
+      for (i in 1:n_post) {
+        self$obs()$update_coeff_fe(obspars_fe[i,])
+        self$obs()$update_coeff_re(obspars_re[i,])
+        self$hidden()$update_coeff_fe(hidpars_fe[i,])
+        self$hidden()$update_coeff_re(hidpars_re[i,])
+        lp$obs[i,] <- self$obs()$linpred()
+        lp$hidden[i,] <- self$hidden()$linpred()
       }
       
-      return(CI_mat)
-    },
+      # reset design matrices and parameters
+      self$obs()$update_coeff_fe(coeff_fe_old$obs)
+      self$obs()$update_coeff_re(coeff_re_old$obs)
+      self$hidden()$update_coeff_fe(coeff_fe_old$hidden)
+      self$hidden()$update_coeff_re(coeff_re_old$hidden)
+      
+      return(lp)
+    }, 
     
-    #' @description Confidence intervals for transition probabilities
-    #'
-    #' @param X_fe Design matrix for fixed effects, as returned
-    #' by \code{make_mat}
-    #' @param X_re Design matrix for random effects, as returned
-    #' by \code{make_mat}
-    #' @param level Confidence level (default: 0.95 for 95\% confidence 
-    #' intervals)
-    #' @param n_post Number of posterior samples from which the confidence
-    #' intervals are calculated. Larger values will reduce approximation
-    #' error, but increase computation time. Defaults to 1000.
+    #' Create posterior simulations of a function of a model component 
+    #' @param fn the function which takes a vector of linear predictors as input
+    #'           and produces either a scalar or vector output 
+    #' @param comp is "obs" for observation model linear predictor, "hidden" for
+    #'             hidden model linear predictor 
+    #' @param n_post number of posterior simulations 
+    #' @param level confidence interval level, default is 95% 
     #' 
-    #' This method generates confidence intervals by simulation.
-    #' That is, it generates \code{n_post} posterior samples of 
-    #' the estimated parameters from a multivariate normal distribution,
-    #' where the mean is the vector of estimates and the covariance matrix 
-    #' is provided by TMB. Then, transition probabilities are derived for 
-    #' each set of posterior parameter values, and confidence intervals
-    #' are obtained as quantiles of the posterior simulated transition
-    #' probabilities.
-    #' 
-    #' @return List with elements:
-    #' \itemize{
-    #'   \item{\code{low}}{Array of lower bounds of confidence intervals.
-    #'   Each slice of the array is a transiton probability matrix.}
-    #'   \item{\code{upp}}{Array of upper bounds of confidence intervals.
-    #'   Each slice of the array is a transiton probability matrix.}
-    #' }
-    CI_tpm = function(X_fe = NULL, X_re = NULL, level = 0.95, n_post = 1e3) {
-      # Design matrices 
-      if (is.null(X_fe)) X_fe <- self$hidden()$X_fe() 
-      if (is.null(X_re)) X_re <- self$hidden()$X_re() 
-      # Number of states
-      n_states <- self$hidden()$nstates()
-      # Number of time steps
-      n_grid <- nrow(X_fe)/(n_states*(n_states-1))
-      
-      # Get posterior samples for coeff_fe and coeff_re
-      post <- self$post_coeff(n_post = n_post)
-      
-      # Extract coefficients for transition probabilities
-      post_coeff_fe <- post[, which(colnames(post) == "coeff_fe_hid")]
-      post_coeff_re <- post[, which(colnames(post) == "coeff_re_hid")]
-      
-      # Get transition probabilities over rows of X_fe and X_re, for each 
-      # posterior sample of coeff_fe and coeff_re
-      post_tpm <- sapply(1:n_post, function(i) {
-        self$hidden()$tpm_all(X_fe = X_fe, X_re = X_re, 
-                              coeff_fe = post_coeff_fe[i,], 
-                              coeff_re = post_coeff_re[i,])
-      })
-      
-      # Get confidence intervals as quantiles of posterior tpms
-      alpha <- (1 - level)/2
-      CI <- t(apply(post_tpm, 1, quantile, probs = c(alpha, 1 - alpha)))
-      
-      # Format arrays for lower and upper bounds, where each layer is
-      # a transition probability matrix
-      low <- array(CI[,1], dim = c(n_states, n_states, n_grid))
-      upp <- array(CI[,2], dim = c(n_states, n_states, n_grid))
-      
-      return(list(low = low, upp = upp))
-    },
+    #' @return a vector (for scalar outputs of fn) or a matrix (for vector outputs)
+    #' with a column for each simulation 
+    post_fn = function(fn, n_post, comp = NULL, ..., level = 0) {
+      # get linear predictors
+      lp <- self$post_linpred(n_post)
+      # output
+      res <- NULL
+      # compute function of linear predictor
+      res$samp <- lapply(1:nrow(lp[[comp]]), FUN = function(i) {fn(linpred = lp[[comp]][i,], ...)})
+      # compute means 
+      res$mean <- Reduce("+", res$samp) / length(res$samp)
+      # compute confidence interval
+      if (level > 0) {
+        alp <- (1 - level) / 2
+        arr <- simplify2array(res$samp)
+        ci <- apply(arr, 1:(length(dim(arr)) - 1), quantile, prob = c(0.025, 0.975))
+        nci <- length(dim(ci))
+        ci <- aperm(ci, c(2:nci, 1))
+        block <- prod(dim(ci)[-nci])
+        lcl <- ci[1:block]
+        ucl <- ci[(1:block) + block]
+        dim(lcl) <- dim(ucl) <- dim(ci)[-nci]
+        res$lcl <- lcl
+        res$ucl <- ucl
+      }
+      return(res)
+    }, 
     
-    #' @description Confidence intervals for stationary distribution
-    #'
-    #' @param X_fe Design matrix for fixed effects, as returned
-    #' by \code{make_mat}
-    #' @param X_re Design matrix for random effects, as returned
-    #' by \code{make_mat}
-    #' @param level Confidence level (default: 0.95 for 95\% confidence 
-    #' intervals)
-    #' @param n_post Number of posterior samples from which the confidence
-    #' intervals are calculated. Larger values will reduce approximation
-    #' error, but increase computation time. Defaults to 1000.
-    #' 
-    #' This method generates confidence intervals by simulation.
-    #' That is, it generates \code{n_post} posterior samples of 
-    #' the estimated parameters from a multivariate normal distribution,
-    #' where the mean is the vector of estimates and the covariance matrix 
-    #' is provided by TMB. Then, stationary state probabilities are derived 
-    #' for each set of posterior parameter values, and confidence intervals
-    #' are obtained as quantiles of the posterior simulated stationary state
-    #' probabilities.
-    #' 
-    #' @return List with elements:
-    #' \itemize{
-    #'   \item{\code{low}}{Matrix of lower bounds of confidence intervals,
-    #'   with one row for each time step, and one column for each state.}
-    #'   \item{\code{upp}}{Matrix of upper bounds of confidence intervals,
-    #'   with one row for each time step, and one column for each state.}
-    #' }
-    CI_statdist = function(X_fe = NULL, X_re = NULL, level = 0.95, n_post = 1e3) {
-      # Design matrices 
-      if (is.null(X_fe)) X_fe <- self$hidden()$X_fe() 
-      if (is.null(X_re)) X_re <- self$hidden()$X_re() 
-      # Number of states
-      n_states <- self$hidden()$nstates()
-      # Number of time steps
-      n_grid <- nrow(X_fe)/(n_states*(n_states-1))
+    average_samples = function(samp) {
+    }, 
+    
+    #' Predict estimates from a fitted model
+    #' @param name which estimates to predict? Options include 
+    #' transition probability matrices "tpm", 
+    #' stationary distributions "delta", or 
+    #' observation distribution parameters "obspar"
+    #' @param t time points to predict at 
+    #' @param ... other arguments to the respective functions for hidden$tpm, hidden$delta, obs$par
+    #' @param newdata new dataframe to use for prediction
+    #' @param level if greater than zero, then produce confidence intervals with this level, e.g. CI = 0.95
+    #'           will produce 95% confidence intervals 
+    #' @param n_post if greater than zero then n_post posterior samples are produced 
+    predict = function(name, t = 1, newdata = NULL, level = 0, n_post = 0) {
+      if (!is.null(newdata)) {
+        old <- list(X_fe_obs = self$obs()$X_fe(), 
+                    X_re_obs = self$obs()$X_re(), 
+                    X_fe_hid = self$hidden()$X_fe(), 
+                    X_re_hid = self$hidden()$X_re())
+        obsmats <- self$obs()$make_mat(new_data = newdata)
+        hidmats <- self$hidden()$make_mat(data = self$obs()$data(), 
+                                          new_data = newdata)
+        self$obs()$update_X_fe(obsmats$X_fe)
+        self$obs()$update_X_re(obsmats$X_re)
+        self$hidden()$update_X_fe(hidmats$X_fe) 
+        self$hidden()$update_X_re(hidmats$X_re)
+      }
       
-      # Get posterior samples for coeff_fe and coeff_re
-      post <- self$post_coeff(n_post = n_post)
+      # get appropriate prediction function 
+      fn <- switch(name, 
+                   tpm = self$hidden()$tpm,
+                   delta = self$hidden()$delta,
+                   obspar = self$obs()$par)
       
-      # Extract coefficients for transition probabilities
-      post_coeff_fe <- post[, which(colnames(post) == "coeff_fe_hid")]
-      post_coeff_re <- post[, which(colnames(post) == "coeff_re_hid")]
+      # get appropriate model component 
+      comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
       
-      # Get stationary distributions over rows of X_fe and X_re, for each 
-      # posterior sample of coeff_fe and coeff_re
-      post_statdist <- sapply(1:n_post, function(i) {
-        tpms <- hid$tpm_all(X_fe = X_fe, X_re = X_re, 
-                            coeff_fe = post_coeff_fe[i,], 
-                            coeff_re = post_coeff_re[i,])
+      # just return predicted means if no confidence intervals wanted 
+      # or posterior simulations 
+      if (level == 0 & n_post == 0) {
+        val <- fn(...)
+      }
+      
+      # do posterior sampling if asked for  
+      if (n_post > 0) {
         
-        # For each transition matrix, get corresponding stationary distribution
-        stat_dists <- apply(tpms, 3, function(tpm)
-          solve(t(diag(n_states) - tpm + 1), rep(1, n_states)))
-        stat_dists <- t(stat_dists)
-        return(stat_dists)
-      })
+        sim <- self$post_fn(fn = fn, 
+                            n_post = n_post, 
+                            comp = comp, 
+                            t = t,
+                            level = level)
+        val <- sim
+      }
       
-      # Get confidence intervals as quantiles of posterior tpms
-      alpha <- (1 - level)/2
-      CI <- t(apply(post_statdist, 1, quantile, probs = c(alpha, 1 - alpha)))
-      
-      # Format arrays for lower and upper bounds, where each layer is
-      # a transition probability matrix
-      low <- matrix(CI[,1], nrow = n_grid, ncol = n_states)
-      upp <- matrix(CI[,2], nrow = n_grid, ncol = n_states)
-      
-      return(list(low = low, upp = upp))
-    },
-    
-    #' @description Confidence intervals for observation parameters
-    #'
-    #' @param X_fe Design matrix for fixed effects, as returned
-    #' by \code{make_mat}
-    #' @param X_re Design matrix for random effects, as returned
-    #' by \code{make_mat}
-    #' @param level Confidence level (default: 0.95 for 95\% confidence 
-    #' intervals)
-    #' @param n_post Number of posterior samples from which the confidence
-    #' intervals are calculated. Larger values will reduce approximation
-    #' error, but increase computation time. Defaults to 1000.
-    #' 
-    #' This method generates confidence intervals by simulation.
-    #' That is, it generates \code{n_post} posterior samples of 
-    #' the estimated parameters from a multivariate normal distribution,
-    #' where the mean is the vector of estimates and the covariance matrix 
-    #' is provided by TMB. Then, observation parameters are derived for 
-    #' each set of posterior parameter values, and confidence intervals
-    #' are obtained as quantiles of the posterior simulated observation
-    #' parameters.
-    #' 
-    #' @return List with elements:
-    #' \itemize{
-    #'   \item{\code{low}}{Array of lower bounds of confidence intervals,
-    #'   with one slice for each time step, one row for each observation 
-    #'   parameter, and one column for each state.}
-    #'   \item{\code{upp}}{Array of upper bounds of confidence intervals,
-    #'   with one slice for each time step, one row for each observation 
-    #'   parameter, and one column for each state.}
-    #' }
-    CI_obspar = function(X_fe, X_re, level = 0.95, n_post = 1e3) {
-      # Design matrices 
-      if (is.null(X_fe)) X_fe <- self$obs()$X_fe() 
-      if (is.null(X_re)) X_re <- self$obs()$X_re() 
-      # Number of states
-      n_states <- self$hidden()$nstates()
-      # Number of observation parameters (in each state)
-      n_par <- sum(sapply(self$obs()$dists(), function(d) d$npar()))
-      # Number of time steps
-      n_grid <- nrow(X_fe)/(n_par * n_states)
-      
-      # Get posterior samples for coeff_fe and coeff_re
-      post <- self$post_coeff(n_post = n_post)
-      
-      # Extract coefficients for observation parameters
-      post_coeff_fe <- post[, which(colnames(post) == "coeff_fe_obs")]
-      post_coeff_re <- post[, which(colnames(post) == "coeff_re_obs")]
-      
-      # Get observation parameters over rows of X_fe and X_re, for each 
-      # posterior sample of coeff_fe and coeff_re
-      post_obspar <- sapply(1:n_post, function(i) {
-        obs$par_all(X_fe = X_fe, X_re = X_re, 
-                    coeff_fe = post_coeff_fe[i,], 
-                    coeff_re = post_coeff_re[i,])
-      })
-      
-      # Get confidence intervals as quantiles of posterior parameters
-      alpha <- (1 - level)/2
-      CI <- t(apply(post_obspar, 1, quantile, probs = c(alpha, 1 - alpha)))
-      
-      # Format arrays for lower and upper bounds, with one slice for each 
-      # time step, one row for each observation parameter, and one column 
-      # for each state.
-      low <- array(CI[,1], dim = c(n_par, n_states, n_grid))
-      upp <- array(CI[,2], dim = c(n_par, n_states, n_grid))
-      
-      # Hacky way to get parameter names
-      par_names <- names(unlist(rapply(
-        self$obs()$w2n(post_obspar[1,]), function(v) v[1])))
-      
-      # Set dimension names for rows and columns
-      dimnames(low) <- list(par_names, paste("state", 1:n_states), NULL)
-      dimnames(upp) <- list(par_names, paste("state", 1:n_states), NULL)
-      
-      return(list(low = low, upp = upp))
-    },
-    
-    ##########################
-    ## Parameter prediction ##
-    ##########################
-    #' @description Predict transition probabilities
-    #' 
-    #' @param new_data Data frame containing covariate values for which the
-    #' transition probabilities should be predicted.
-    #' @param CI Logical argument: should the function return confidence
-    #' intervals for the parameters? Default: FALSE.
-    #' @param level Confidence level (default: 0.95 for 95\% confidence 
-    #' intervals) if \code{CI = TRUE}.
-    #' @param n_post Number of posterior samples from which the confidence
-    #' intervals are calculated if \code{CI = TRUE}. Larger values will reduce 
-    #' approximation error, but increase computation time. Defaults to 1000.
-    #' 
-    #' @return If \code{CI = FALSE}, returns an array of point estimates, 
-    #' where each slice is a transition probability matrix corresponding 
-    #' to one row of \code{new_data}. If \code{CI = TRUE}, returns a list 
-    #' with elements:
-    #' \itemize{
-    #'   \item{\code{estimate}}{Array of point estimates, where each slice is
-    #'   a transition probability matrix corresponding to one row of \code{new_data}.}
-    #'   \item{\code{low}}{Array of lower bounds of confidence intervals,
-    #'   with same structure as \code{estimate}.}
-    #'   \item{\code{upp}}{Array of upper bounds of confidence intervals,
-    #'   with same structure as \code{estimate}.}
-    #' }
-    predict_tpm = function(new_data = NULL, CI = FALSE, level = 0.95, n_post = 1e3) {
-      # Are there covariates in the observation process model?
-      nocovs <- all(self$hidden()$formulas() == as.formula("~1"))
-      
-      # Check that new_data is provided if necessary, else create dummy dataframe
-      if(is.null(new_data)) {
-        if(nocovs) {
-          new_data <- data.frame(dummy = 1)
-        } else {
-          stop("'new_data' must be provided if there are covariates in the model")      
+      # delta method for CI 
+      if (level > 0 & n_post < 1e-10) {
+        oldpar <- list(obs_coeff_fe = self$obs()$coeff_fe(), 
+                       obs_coeff_re = self$obs()$coeff_re(), 
+                       hid_coeff_fe = self$hidden()$coeff_fe(), 
+                       hid_coeff_re = self$hidden()$coeff_re())
+        # get variance-covariance matrix of linear predictor 
+        lfn <- function(par, ind_fe, ind_re, comp) {
+          self[[comp]]()$update_coeff_fe(par[ind_fe])
+          if(!is.null(ind_re)) self[[comp]]()$update_coeff_re(par[ind_re])
+          return(self[[comp]]()$linpred())
         }
-      }
-      
-      # Model matrices for new_data  
-      mats <- self$hidden()$make_mat(data = self$obs()$data(), 
-                                     new_data = new_data)
-      
-      # Transition probabilities
-      tpm <- self$hidden()$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
-      
-      if(CI) {
-        # Confidence intervals
-        CIs <- self$CI_tpm(X_fe = mats$X_fe, X_re = mats$X_re,
-                           level = level, n_post = n_post)
-        
-        # Return point estimates and confidence interval bounds  
-        preds <- list(estimate = tpm, low = CIs$low, upp = CIs$upp)
-      } else {
-        preds <- tpm
-      }
-      
-      return(preds)
-    },
-    
-    #' @description Predict observation parameters
-    #' 
-    #' @param new_data Data frame containing covariate values for which the
-    #' observation parameters should be predicted.
-    #' @param CI Logical argument: should the function return confidence
-    #' intervals for the parameters? Default: FALSE.
-    #' @param level Confidence level (default: 0.95 for 95\% confidence 
-    #' intervals) if \code{CI = TRUE}.
-    #' @param n_post Number of posterior samples from which the confidence
-    #' intervals are calculated if \code{CI = TRUE}. Larger values will reduce 
-    #' approximation error, but increase computation time. Defaults to 1000.
-    #' 
-    #' @return If \code{CI = FALSE}, returns an array of point estimates, 
-    #' with one slice for each row of \code{new_data}, one row for each 
-    #' observation parameter, and one column for each state. If 
-    #' \code{CI = TRUE}, returns a list with elements:
-    #' \itemize{
-    #'   \item{\code{estimate}}{Array of point estimates, with one slice for 
-    #'   each row of \code{new_data}, one row for each observation 
-    #'   parameter, and one column for each state.}
-    #'   \item{\code{low}}{Array of lower bounds of confidence intervals,
-    #'   with same structure as \code{estimate}.}
-    #'   \item{\code{upp}}{Array of upper bounds of confidence intervals,
-    #'   with same structure as \code{estimate}.}
-    #' }
-    predict_obspar = function(new_data = NULL, CI = FALSE, level = 0.95, n_post = 1e3) {
-      # Are there covariates in the observation process model?
-      nocovs <- all(unlist(self$obs()$formulas()) == as.formula("~1"))
-      
-      # Check that new_data is provided if necessary, else create dummy dataframe
-      if(is.null(new_data)) {
-        if(nocovs) {
-          new_data <- data.frame(dummy = 1)
+        # get variance-covariance of par 
+        if(is.null(self$tmb_rep()$jointPrecision)) {
+          par <- self$tmb_rep()$par.fixed
+          V <- self$tmb_rep()$cov.fixed
         } else {
-          stop("'new_data' must be provided if there are covariates in the model")      
+          par <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
+          V <- solve(self$tmb_rep()$jointPrecision)
         }
+        ind_fe <- grepl(paste0("coeff_fe_", substr(comp, 1, 3)), names(par))
+        ind_re <- grepl(paste0("coeff_re_", substr(comp, 1, 3)), names(par))
+        # compute jacobian 
+        J <- numDeriv::jacobian(lfn, 
+                                par, 
+                                ind_fe = ind_fe, 
+                                ind_re = ind_re, 
+                                comp = comp)
+        # compute variance-covariance for linear predictor
+        Vlinpred <- J %*% V %*% t(J)
+        sds <- sqrt(diag(Vlinpred))
+        # compute confidence bounds on linear predictor scale
+        mu <- self[[comp]]()$linpred()
+        z <- qnorm(1 - (1 - level) / 2)
+        lcl <- mu - z * sds 
+        ucl <- mu + z * sds 
+        # get results on response scale
+        mu <- fn(linpred = mu, t = t)
+        lcl <- fn(linpred = lcl, t = t)
+        ucl <- fn(linpred = ucl, t = t)
+        # reset parameters 
+        self$obs()$update_coeff_fe(oldpar$obs_coeff_fe)
+        self$obs()$update_coeff_re(oldpar$obs_coeff_re)
+        self$hidden()$update_coeff_fe(oldpar$hid_coeff_fe)
+        self$hidden()$update_coeff_re(oldpar$hid_coeff_re)
+        val <- list(mean = mu, lcl = lcl, ucl = ucl)
       }
       
-      # Model matrices for new_data
-      mats <- self$obs()$make_mat(new_data = new_data)
-      
-      # Observation parameters
-      par <- self$obs()$par_all(X_fe = mats$X_fe, X_re = mats$X_re)
-      
-      if(CI) {
-        # Confidence intervals
-        CIs <- self$CI_obspar(X_fe = mats$X_fe, X_re = mats$X_re, 
-                              level = level, n_post = n_post)
-        
-        # Return point estimates and confidence interval bounds        
-        preds <- list(estimate = par, low = CIs$low, upp = CIs$upp)
-      } else {
-        preds <- par
+      if (!is.null(newdata)) {
+        self$obs()$update_X_fe(old$X_fe_obs)
+        self$hidden()$update_X_fe(old$X_fe_hid)
+        self$obs()$update_X_re(old$X_re_obs)
+        self$hidden()$update_X_re(old$X_re_hid)
       }
       
-      return(preds)
-    },
+      return(val)
+      
+    }, 
     
+    
+    plot = function(name, var = NULL, covs = NULL, i = NULL, j = NULL, n_grid = 50, ...) {
+      # Get relevant model component 
+      comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
+      # Get x-axis 
+      # get newdata over a grid 
+      newdata <- cov_grid(var = var, 
+                          data = self$obs()$data(), 
+                          covs = covs, 
+                          formulas = self[[comp]]()$formulas(), 
+                          n_grid = n_grid)
+      
+      # Number of states
+      n_states <- self$hidden()$nstates()
+      
+      # Get predictions and uncertainty 
+      preds <- self$predict(name, t = "all", newdata = newdata, level = 0.95)
+
+      # Data frame for plot
+      df <- as.data.frame.table(preds$mean)
+      df$low <- as.vector(preds$lcl)
+      df$upp <- as.vector(preds$ucl)
+      if (name == "tpm") {
+        colnames(df) <- c("from", "to", "var", "prob", "low", "upp")
+        levels(df$from) <- paste("State", 1:n_states)
+        levels(df$to) <- paste("State", 1:n_states)
+        df$var <- rep(newdata[, var], each = n_states * n_states)
+        if (!is.null(i)) df <- df[df$from == paste0("State ", i),]
+        if (!is.null(j)) df <- df[df$to == paste0("State ", j),]
+      } else if (name == "delta") {
+        colnames(df) <- c("var", "state", "prob", "low", "upp")
+        levels(df$state) <- paste("State", 1:n_states)
+        df$var <- rep(newdata[, var], n_states)
+        if (!is.null(i)) df <- df[df$state == paste0("State ", i),]
+      } else if (name == "obspar") {
+        colnames(df) <- c("par", "state", "var", "val", "low", "upp")
+        levels(df$state) <- paste("State", 1:n_states)
+        df$var <- rep(newdata[, var], each = nrow(df)/nrow(newdata))
+        if (!is.null(i)) df <- df[df$par == i,]
+        if (!is.null(j)) df <- df[df$state == paste0("State ", j),]
+      }
+      
+      # Create caption with values of other (fixed) covariates      
+      plot_txt <- NULL
+      if(ncol(newdata) > 1) {
+        other_covs <- newdata[1, which(colnames(newdata) != var), 
+                                    drop = FALSE]
+        
+        # Round numeric values, and transform factors to strings
+        num_ind <- sapply(other_covs, is.numeric)
+        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
+          round(cov, 2))
+        fac_ind <- sapply(other_covs, is.factor)
+        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
+        
+        plot_txt <- paste(colnames(other_covs), "=", other_covs, 
+                          collapse = ", ")
+      }
+      
+      if (name == "tpm") {
+        p <- ggplot(df, aes(var, prob)) + 
+          geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
+          geom_line() + 
+          facet_wrap(c("from", "to"), 
+                     strip.position = "left",
+                     labeller = label_bquote("Pr("*.(from)*" -> "*.(to)*")")) +
+          xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
+          theme_light() +
+          theme(strip.background = element_blank(),
+                strip.placement = "outside", 
+                strip.text = element_text(colour = "black")) + 
+          coord_cartesian(ylim = c(0, 1))
+      } else if (name == "delta") {
+        p <- ggplot(df, aes(var, prob, group = state, col = state)) +
+          geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
+          geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
+          scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
+          xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
+          theme_light() + 
+          coord_cartesian(ylim = c(0, 1))
+      } else if (name == "obspar") {
+        p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
+          geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
+          geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
+          scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
+          facet_wrap(c("par"), scales = "free_y",
+                     strip.position = "left",
+                     labeller = label_bquote(.(par))) +
+          xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
+          theme(strip.background = element_blank(),
+                strip.placement = "outside", 
+                strip.text = element_text(colour = "black"))
+      }
+      return(p)
+    }, 
+
     ################
     ## Simulation ##
     ################
@@ -1308,8 +1234,11 @@ HMM <- R6Class(
       
       # Create observation parameters
       mats_obs <- self$obs()$make_mat(new_data = data)
-      par_obs <- self$obs()$par_all(X_fe = mats_obs$X_fe, X_re = mats_obs$X_re,
-                                    full_names = FALSE)
+      X_fe_old <- self$obs()$X_fe()
+      X_re_old <- self$obs()$X_re()
+      self$obs()$update_X_fe(mats_obs$X_fe)
+      self$obs()$update_X_re(mats_obs$X_re)
+      par_obs <- self$obs()$par(t = "all", full_names = FALSE)
       
       # Simulate observation process
       obs_dists <- self$obs()$dists()
@@ -1338,6 +1267,10 @@ HMM <- R6Class(
         par_count <- par_count + obsdist$npar()
         if(!silent) cat("\n")
       }
+      
+      # reset design matrices
+      self$obs()$update_X_fe(X_fe_old)
+      self$obs()$update_X_re(X_re_old)
       
       return(obs_all)
     },
@@ -1453,197 +1386,6 @@ HMM <- R6Class(
       return(p)
     },
     
-    #' @description Plot transition probability matrix
-    #' 
-    #' @param var Name of covariate as a function of which the transition
-    #' probabilities should be plotted
-    #' @param covs Optional data frame with a single row and one column
-    #' for each covariate, giving the values that should be used. If this is
-    #' not specified, the mean value is used for numeric variables, and the
-    #' first level for factor variables.
-    #' @param level Confidence level for confidence intervals (default: 0.95)
-    #' 
-    #' @return A ggplot object
-    plot_tpm = function(var, covs = NULL, level = 0.95) {
-      # Number of states
-      n_states <- self$hidden()$nstates()
-      
-      # Create design matrices for grid of "var" values
-      mats <- self$hidden()$make_mat_grid(
-        var = var, data = self$obs()$data(), 
-        covs = covs, n_grid = 50)
-      # Get transition probability matrices
-      tpms <- self$hidden()$tpm_all(X_fe = mats$X_fe, X_re = mats$X_re)
-      # Get confidence intervals
-      CIs <- self$CI_tpm(X_fe = mats$X_fe, X_re = mats$X_re, level = level)
-      
-      # Data frame for plot
-      df <- as.data.frame.table(tpms)
-      colnames(df) <- c("from", "to", "var", "prob")
-      levels(df$from) <- paste("State", 1:n_states)
-      levels(df$to) <- paste("State", 1:n_states)
-      df$var <- rep(mats$new_data[, var], each = n_states * n_states)
-      df$low <- as.vector(CIs$low)
-      df$upp <- as.vector(CIs$upp)
-      
-      # Create caption with values of other (fixed) covariates      
-      plot_txt <- NULL
-      if(ncol(mats$new_data) > 1) {
-        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var), 
-                                    drop = FALSE]
-        
-        # Round numeric values, and transform factors to strings
-        num_ind <- sapply(other_covs, is.numeric)
-        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
-          round(cov, 2))
-        fac_ind <- sapply(other_covs, is.factor)
-        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
-        
-        plot_txt <- paste(colnames(other_covs), "=", other_covs, 
-                          collapse = ", ")
-      }
-      
-      # Create plot using facets
-      p <- ggplot(df, aes(var, prob)) + 
-        geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
-        geom_line() + 
-        facet_wrap(c("from", "to"), 
-                   strip.position = "left",
-                   labeller = label_bquote("Pr("*.(from)*" -> "*.(to)*")")) +
-        xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
-        theme_light() +
-        theme(strip.background = element_blank(),
-              strip.placement = "outside", 
-              strip.text = element_text(colour = "black")) + 
-        coord_cartesian(ylim = c(0, 1))
-      
-      return(p)
-    },
-    
-    #' @description Plot stationary state probabilities
-    #' 
-    #' @param var Name of covariate as a function of which the state
-    #' probabilities should be plotted
-    #' @param covs Optional data frame with a single row and one column
-    #' for each covariate, giving the values that should be used. If this is
-    #' not specified, the mean value is used for numeric variables, and the
-    #' first level for factor variables.
-    #' @param level Confidence level for confidence intervals (default: 0.95)
-    #' 
-    #' @return A ggplot object
-    plot_stat_dist = function(var, covs = NULL, level = 0.95) {
-      # Number of states
-      n_states <- self$hidden()$nstates()
-      
-      # Create design matrices for grid of "var" values
-      mats <- self$hidden()$make_mat_grid(
-        var = var, data = self$obs()$data(), 
-        covs = covs, n_grid = 50)
-      # Get stationary distributions
-      stat_dists <- self$hidden()$stat_dists(X_fe = mats$X_fe, X_re = mats$X_re)
-      # Get confidence intervals
-      CIs <- self$CI_statdist(X_fe = mats$X_fe, X_re = mats$X_re, level = level)
-      
-      # Data frame for plot
-      df <- as.data.frame.table(stat_dists)
-      colnames(df) <- c("var", "state", "prob")
-      levels(df$state) <- paste("State", 1:n_states)
-      df$var <- rep(mats$new_data[, var], n_states)
-      df$low <- as.vector(CIs$low)
-      df$upp <- as.vector(CIs$upp)
-      
-      # Create caption with values of other (fixed) covariates      
-      plot_txt <- NULL
-      if(ncol(mats$new_data) > 1) {
-        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var), 
-                                    drop = FALSE]
-        
-        # Round numeric values, and transform factors to strings
-        num_ind <- sapply(other_covs, is.numeric)
-        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
-          round(cov, 2))
-        fac_ind <- sapply(other_covs, is.factor)
-        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
-        
-        plot_txt <- paste(colnames(other_covs), "=", other_covs, 
-                          collapse = ", ")
-      }
-      
-      # Create plot
-      p <- ggplot(df, aes(var, prob, group = state, col = state)) +
-        geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
-        geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
-        scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
-        xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
-        theme_light() + 
-        coord_cartesian(ylim = c(0, 1))
-      
-      return(p)
-    },
-    
-    #' @description Plot observation parameters
-    #' 
-    #' @param var Name of covariate as a function of which the parameters
-    #' should be plotted
-    #' @param covs Optional data frame with a single row and one column
-    #' for each covariate, giving the values that should be used. If this is
-    #' not specified, the mean value is used for numeric variables, and the
-    #' first level for factor variables.
-    #' @param level Confidence level for confidence intervals (default: 0.95)
-    #' 
-    #' @return A ggplot object
-    plot_obspar = function(var, covs = NULL, level = 0.95) {
-      # Number of states
-      n_states <- self$hidden()$nstates()
-      
-      # Create design matrices for grid of "var" values
-      mats <- self$obs()$make_mat_grid(var = var, covs = covs, n_grid = 50)
-      # Get observation parameters over covariate grid
-      obs_par <- self$obs()$par_all(X_fe = mats$X_fe, X_re = mats$X_re)
-      # Get confidence intervals over covariate grid
-      CIs <- self$CI_obspar(X_fe = mats$X_fe, X_re = mats$X_re, level = level)
-      
-      # Data frame for plot
-      df <- as.data.frame.table(obs_par)
-      colnames(df) <- c("par", "state", "var", "val")
-      levels(df$state) <- paste("State", 1:n_states)
-      df$var <- rep(mats$new_data[, var], each = nrow(df)/nrow(mats$new_data))
-      df$low <- as.vector(CIs$low)
-      df$upp <- as.vector(CIs$upp)
-      
-      # Create caption with values of other (fixed) covariates      
-      plot_txt <- NULL
-      if(ncol(mats$new_data) > 1) {
-        other_covs <- mats$new_data[1, which(colnames(mats$new_data) != var), 
-                                    drop = FALSE]
-        
-        # Round numeric values, and transform factors to strings
-        num_ind <- sapply(other_covs, is.numeric)
-        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
-          round(cov, 2))
-        fac_ind <- sapply(other_covs, is.factor)
-        other_covs[fac_ind] <- lapply(other_covs[fac_ind], base::as.character)
-        
-        plot_txt <- paste(colnames(other_covs), "=", other_covs, 
-                          collapse = ", ")
-      }
-      
-      # Create plot
-      par_name <- base::as.character(par)
-      p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
-        geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
-        geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
-        scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
-        facet_wrap(c("par"), scales = "free_y",
-                   strip.position = "left",
-                   labeller = label_bquote(par_name)) +
-        xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
-        theme(strip.background = element_blank(),
-              strip.placement = "outside", 
-              strip.text = element_text(colour = "black"))
-      
-      return(p)
-    },
     
     ###################
     ## Other methods ##
