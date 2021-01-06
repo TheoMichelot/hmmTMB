@@ -215,15 +215,16 @@ HMM <- R6Class(
     },
     
     #' @description Model parameters
+    #' @param t returns parameters at time t, default is t = 1 
     #' 
     #' @return A list with elements:
     #' \itemize{
     #'   \item{\code{obspar}}{Parameters of observation model}
     #'   \item{\code{tpm}}{Transition probability matrix of hidden state model}
     #' }
-    par = function() {
-      obspar <- self$obs()$par()
-      tpm <- self$hidden()$tpm()
+    par = function(t = 1) {
+      obspar <- self$obs()$par(t = t)
+      tpm <- self$hidden()$tpm(t = t)
       return(list(obspar = obspar, tpm = tpm))
     },
     
