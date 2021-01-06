@@ -293,14 +293,24 @@ HMM <- R6Class(
       return(private$mcmc_)
     }, 
     
-    #' @description Objective function
+    #' @description Log-likelihood at current parameters
     #' 
-    #' @param par Vector of parameters for which the function should be
-    #' evaluated (on the working scale).
-    #' 
-    #' @return Negative log-likelihood
-    nllk = function(par) {
-      self$tmb_obj()$fn(par)
+    #' @return Log-likelihood
+    llk = function() {
+      # Setup if necessary
+      if(is.null(private$tmb_obj_)) {
+        self$setup(silent = TRUE)
+      }
+      # set parameter vector to current values 
+      delta <- self$hidden()$delta() 
+      ldelta <- log(delta[-length(delta)] / delta[length(delta)])
+      par <- c(self$obs()$coeff_fe(), 
+               self$obs()$lambda(), 
+               self$hidden()$coeff_fe(), 
+               self$hidden()$lambda(), 
+               ldelta)
+      # compute log-likelihood
+      return(-self$tmb_obj()$fn(par))
     },
     
     #' @description Compute effective degrees of freedom 
@@ -628,6 +638,16 @@ HMM <- R6Class(
       self$update_par(par_list)
       
     },
+    
+    #' @description Get maximum likelihood estimates once model fitted
+    #' 
+    #' @return list of maximum likelihood estimates as described as
+    #' input for the function update_par() 
+    mle = function() {
+      if (is.null(private$out_)) stop("must fit model with fit() function first")
+      par_list <- as.list(self$tmb_rep(), "Estimate")
+      return(par_list)
+    }, 
     
     ####################################
     ## Forward-Backward Probabilities ##
