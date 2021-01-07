@@ -7,11 +7,11 @@ HMM <- R6Class(
   classname = "HMM",
   
   public = list(
-    #################
-    ## Constructor ##
-    #################
+
+    # Constructor -------------------------------------------------------------
     #' @description Create new HMM object
     #' 
+    #' @param file path to specification file for HMM 
     #' @param obs Observation object
     #' @param hidden MarkovChain object
     #' @param init HMM object to initialize parameters with 
@@ -38,13 +38,13 @@ HMM <- R6Class(
                                   structure = spec$tpm, 
                                   data = spec$data)
         if (!is.null(spec$fixed)) fixpar <- spec$fixed 
-        if (!is.null(spec$tpm0)) hidden$update_tpm(spec$tpm0)
+        if (!is.null(spec$tpm0))  hidden$update_tpm(spec$tpm0)
       }
       
       # Check arguments
-      private$check_args(obs = obs, hidden = hidden)
+      private$check_args(obs = obs, hidden = hidden, init = init)
       
-      # Get names of all covariates (in MarkovChain and Observation models)
+      # Get names of all covariates
       var_names <- unique(c(rapply(hidden$formulas(), all.vars), 
                           rapply(obs$formulas(), all.vars)))
       if(length(var_names) > 0) {
@@ -64,7 +64,6 @@ HMM <- R6Class(
       
       # initialize model parameters if init provided 
       if (!is.null(init)) {
-        if (!("HMM" %in% class(init))) stop("init must be a HMM object.")
         private$obs_$update_coeff_fe(private$initialize_submodel(private$obs_$coeff_fe(), 
                                                          init$obs()$coeff_fe()))
         private$obs_$update_coeff_re(private$initialize_submodel(private$obs_$coeff_re(), 
@@ -77,12 +76,11 @@ HMM <- R6Class(
       
       # initialize priors 
       self$set_priors()
-      
     },
     
-    ###############
-    ## Accessors ##
-    ###############
+
+    # Accessors ---------------------------------------------------------------
+
     #' @description Observation object for this model
     obs = function() {return(private$obs_)},
     
@@ -92,9 +90,8 @@ HMM <- R6Class(
     #' @description Output of optimiser after model fitting
     out = function() {
       if (is.null(private$out_)) {
-        stop("Fit model first")
+        stop("fit model first using $fit()")
       }
-      
       return(private$out_)
     },
     
@@ -107,9 +104,8 @@ HMM <- R6Class(
     #' }
     tmb_obj = function() {
       if(is.null(private$tmb_obj_)) {
-        stop("Setup model first")
+        stop("setup or fit model first")
       }
-      
       return(private$tmb_obj_)
     },
     
@@ -117,9 +113,8 @@ HMM <- R6Class(
     #' estimates and standard errors for all model parameters.
     tmb_rep = function() {
       if(is.null(private$tmb_rep_)) {
-        stop("Fit model first")
+        stop("fit model first")
       }
-      
       return(private$tmb_rep_)
     },
     
@@ -127,9 +122,8 @@ HMM <- R6Class(
     #' been run
     states = function() {
       if(is.null(private$states_)) {
-        stop("Run viterbi first")
+        stop("run viterbi first")
       }
-      
       return(private$states_)
     },
     
@@ -155,9 +149,10 @@ HMM <- R6Class(
     #' @param par_list a list for coeff_f(r)e_obs, coeff_f(r)e_hid, log_delta, 
     #'                   log_lambda_hid log_lambda_obs
     update_par = function(par_list = NULL, iter = NULL) {
-      if (is.null(par_list) & is.null(iter)) stop("No new paramter values to update to")
+      if (is.null(par_list) & is.null(iter)) stop("No new parameter values to update to")
       if (!is.null(iter) & !is.null(par_list)) stop("Either specify iter or par_list in update_par, not both")
       if (!is.null(iter)) {
+        # update to MCMC iteration 
         if (is.null(private$iters_)) stop("Must run mcmc() before using iterations")
         if (is.numeric(iter)) {
           if (iter > dim(private$iters_)[1]) stop("iter exceeds number of mcmc iterations available")
@@ -208,7 +203,7 @@ HMM <- R6Class(
     #' standard deviations of independent normal random effects.
     vcomp = function() {
       if(is.null(private$tmb_rep_)) {
-        stop("Fit model first")
+        stop("fit model first")
       }
       return(list(obs = self$obs()$vcomp(),
                   hidden = self$hidden()$vcomp()))
@@ -231,12 +226,17 @@ HMM <- R6Class(
     #' @description Suggest initial parameters for the model based on kmeans
     #' clustering 
     #' 
-    #' @return initial parameters 
+    #' @return list of initial parameters for each observation variable 
     suggest_initial = function() {
+      # do clustering
       cluster <- kmeans(self$obs()$obs_var(expand = TRUE), centers = self$hidden()$nstates())
       states <- cluster$cluster
       # get current parameters 
       current_par <- self$obs()$par(t = 1, full_names = FALSE)[,,1]
+      # handle one parameter case
+      if (is.null(dim(current_par))) {
+        current_par <- matrix(current_par, nc = length(current_par))
+      }
       par_count <- 1 
       # initial observation parameters 
       par <- vector(mode = "list", length = ncol(self$obs()$obs_var()))
@@ -244,6 +244,7 @@ HMM <- R6Class(
       # loop over observed variables 
       for (i in 1:length(self$obs()$dists())) {
         var <- self$obs()$obs_var()[,i]
+        # possibly pass fixed parameters to parapprox function within dist
         par_ind <- par_count:(par_count + self$obs()$dists()[[i]]$npar() - 1)
         sub_current_par <- current_par[par_ind,,drop=FALSE]
         sub_current_par <- sub_current_par[self$obs()$dists()[[i]]$fixed(),,drop=FALSE]
@@ -378,9 +379,9 @@ HMM <- R6Class(
       return(df + edf)
     }, 
     
-    ###################
-    ## Model fitting ##
-    ###################
+
+    # Model fitting -----------------------------------------------------------
+
     #' @description TMB setup
     #' 
     #' This creates an attribute \code{tmb_obj}, which can be used to 
@@ -395,7 +396,7 @@ HMM <- R6Class(
       
       # check distcodes exist
       if (any(is.null(distcode))) {
-        stop("Not all observation distributions are properly created. If you added any custom distributions
+        stop("not all observation distributions are properly created. If you added any custom distributions
              recently, make sure you re-create them using Dist$new after you have recompiled the package.")
       }
       
@@ -474,7 +475,7 @@ HMM <- R6Class(
       }
       
       # check for transitions that have fixed probabilities 
-      # Find transitions that are fixed 
+      # find transitions that are fixed 
       ls_form_char <- as.list(t(self$hidden()$structure())[!diag(self$hidden()$nstates())])
       which_fixed <- sapply(ls_form_char, function(x) {x == "."})
       getnms <- rownames(self$hidden()$coeff_fe())[which_fixed]
@@ -557,7 +558,7 @@ HMM <- R6Class(
       
       nllk0 <- obj$fn(obj$par)
       if(is.nan(nllk0) | is.infinite(nllk0)) {
-        stop(paste("Log-likelihood is NaN or infinite at starting parameters.",
+        stop(paste("log-likelihood is NaN or infinite at starting parameters.",
                    "Check that the data are within the domain of definition of the",
                    "observation distributions, and/or try other starting parameters."))
       }
@@ -652,7 +653,7 @@ HMM <- R6Class(
                              control = args$control)
       best <- which.min(private$out_$value)
       if (private$out_$convcode[best] != 0) {
-        warning("Convergence code was not zero, indicating that the optimizer may
+        warning("convergence code was not zero, indicating that the optimizer may
                 not have converged to the correct estimates. Please check by consulting
                 the out() function which shows what optimx returned.")
       }
@@ -682,13 +683,12 @@ HMM <- R6Class(
       return(par_list)
     }, 
     
-    ####################################
-    ## Forward-Backward Probabilities ##
-    ####################################
+
+    # Forward-backward probabilities ------------------------------------------
     
-    #' @description Foward-backward algorithm 
+    #' @description Forward-backward algorithm 
     #' 
-    #' @return logforward and logbackward probabilities 
+    #' @return log-forward and log-backward probabilities 
     forward_backward = function() {
       delta <- self$hidden()$delta() 
       n <- nrow(self$obs()$data())
@@ -724,12 +724,8 @@ HMM <- R6Class(
       return(list(logforward = lforw, logbackward = lback))
     }, 
   
-    
-    ###############################
-    ## Conditional distributions ##
-    ###############################
-    
-    
+    # Conditional distributions -----------------------------------------------
+
     #' @description Compute conditional cumulative distribution functions 
     #' @param ngrid how many cells on the grid that CDF is computed on 
     #' @param silent if TRUE then no messages are printed 
@@ -785,9 +781,8 @@ HMM <- R6Class(
       return(list(grids = grids, pdfs = pdfs))
     }, 
     
-    ###############################
-    ## Pseudo-residuals          ##
-    ###############################
+    # Pseudo-residuals --------------------------------------------------------
+
     #' @description Pseudo-residuals
     #' 
     #' @details Compute pseudo-residuals for the fitted model. If the fitted model
@@ -825,10 +820,9 @@ HMM <- R6Class(
       }
       return(r)
     }, 
+  
+    # State estimation --------------------------------------------------------
     
-    ######################
-    ## State estimation ##
-    ######################
     #' @description Viterbi algorithm
     #' 
     #' @return Most likely state sequence
@@ -898,6 +892,7 @@ HMM <- R6Class(
     
     #' @description Sample posterior state sequences using forward-filtering
     #' backward-sampling 
+    #' @param nsamp number of samples to produce 
     #' 
     #' @return matrix where each column is a different sample of state sequences 
     sample_states = function(nsamp = 1) {
@@ -943,9 +938,7 @@ HMM <- R6Class(
       return(pr_state)
     }, 
     
-    ###########################################
-    ## Parameter prediction and uncertainty  ##
-    ###########################################
+    # Prediction and Uncertainty ----------------------------------------------
     
     #' @description Posterior sampling for model coefficients
     #' 
@@ -1050,9 +1043,6 @@ HMM <- R6Class(
       return(res)
     }, 
     
-    average_samples = function(samp) {
-    }, 
-    
     #' Predict estimates from a fitted model
     #' @param name which estimates to predict? Options include 
     #' transition probability matrices "tpm", 
@@ -1064,6 +1054,7 @@ HMM <- R6Class(
     #' @param level if greater than zero, then produce confidence intervals with this level, e.g. CI = 0.95
     #'           will produce 95% confidence intervals 
     #' @param n_post if greater than zero then n_post posterior samples are produced 
+    #' @return named array of predictions and confidence interval, if requested
     predict = function(name, t = 1, newdata = NULL, level = 0, n_post = 0) {
       if (!is.null(newdata)) {
         old <- list(X_fe_obs = self$obs()$X_fe(), 
@@ -1164,105 +1155,8 @@ HMM <- R6Class(
       
     }, 
     
+    # Simulation --------------------------------------------------------------
     
-    plot = function(name, var = NULL, covs = NULL, i = NULL, j = NULL, n_grid = 50, ...) {
-      # Get relevant model component 
-      comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
-      # Get x-axis 
-      # get newdata over a grid 
-      newdata <- cov_grid(var = var, 
-                          data = self$obs()$data(), 
-                          covs = covs, 
-                          formulas = self[[comp]]()$formulas(), 
-                          n_grid = n_grid)
-      
-      # Number of states
-      n_states <- self$hidden()$nstates()
-      
-      # Get predictions and uncertainty 
-      preds <- self$predict(name, t = "all", newdata = newdata, level = 0.95)
-
-      # Data frame for plot
-      df <- as.data.frame.table(preds$mean)
-      df$low <- as.vector(preds$lcl)
-      df$upp <- as.vector(preds$ucl)
-      if (name == "tpm") {
-        colnames(df) <- c("from", "to", "var", "prob", "low", "upp")
-        levels(df$from) <- paste("State", 1:n_states)
-        levels(df$to) <- paste("State", 1:n_states)
-        df$var <- rep(newdata[, var], each = n_states * n_states)
-        if (!is.null(i)) df <- df[df$from == paste0("State ", i),]
-        if (!is.null(j)) df <- df[df$to == paste0("State ", j),]
-      } else if (name == "delta") {
-        colnames(df) <- c("var", "state", "prob", "low", "upp")
-        levels(df$state) <- paste("State", 1:n_states)
-        df$var <- rep(newdata[, var], n_states)
-        if (!is.null(i)) df <- df[df$state == paste0("State ", i),]
-      } else if (name == "obspar") {
-        colnames(df) <- c("par", "state", "var", "val", "low", "upp")
-        levels(df$state) <- paste("State", 1:n_states)
-        df$var <- rep(newdata[, var], each = nrow(df)/nrow(newdata))
-        if (!is.null(i)) df <- df[df$par == i,]
-        if (!is.null(j)) df <- df[df$state == paste0("State ", j),]
-      }
-      
-      # Create caption with values of other (fixed) covariates      
-      plot_txt <- NULL
-      if(ncol(newdata) > 1) {
-        other_covs <- newdata[1, which(colnames(newdata) != var), 
-                                    drop = FALSE]
-        
-        # Round numeric values, and transform factors to strings
-        num_ind <- sapply(other_covs, is.numeric)
-        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
-          round(cov, 2))
-        fac_ind <- sapply(other_covs, is.factor)
-        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
-        
-        plot_txt <- paste(colnames(other_covs), "=", other_covs, 
-                          collapse = ", ")
-      }
-      
-      if (name == "tpm") {
-        p <- ggplot(df, aes(var, prob)) + 
-          geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
-          geom_line() + 
-          facet_wrap(c("from", "to"), 
-                     strip.position = "left",
-                     labeller = label_bquote("Pr("*.(from)*" -> "*.(to)*")")) +
-          xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
-          theme_light() +
-          theme(strip.background = element_blank(),
-                strip.placement = "outside", 
-                strip.text = element_text(colour = "black")) + 
-          coord_cartesian(ylim = c(0, 1))
-      } else if (name == "delta") {
-        p <- ggplot(df, aes(var, prob, group = state, col = state)) +
-          geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
-          geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
-          scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
-          xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
-          theme_light() + 
-          coord_cartesian(ylim = c(0, 1))
-      } else if (name == "obspar") {
-        p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
-          geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
-          geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
-          scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
-          facet_wrap(c("par"), scales = "free_y",
-                     strip.position = "left",
-                     labeller = label_bquote(.(par))) +
-          xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
-          theme(strip.background = element_blank(),
-                strip.placement = "outside", 
-                strip.text = element_text(colour = "black"))
-      }
-      return(p)
-    }, 
-
-    ################
-    ## Simulation ##
-    ################
     #' @description Simulate from hidden Markov model
     #' 
     #' @param n Number of time steps to simulate
@@ -1393,9 +1287,9 @@ HMM <- R6Class(
       return(list(obs_stat = obs_stat, stats = stats, plot = p))
     }, 
     
-    ######################
-    ## Plotting methods ##
-    ######################
+
+    # Plotting ----------------------------------------------------------------
+    
     #' @description Time series plot coloured by states
     #' 
     #' Creates a plot of the data coloured by the most likely state sequence,
@@ -1440,21 +1334,131 @@ HMM <- R6Class(
       return(p)
     },
     
+    #' Plot a model component 
+    #' @param name name of model component: tpm, delta, or obspar 
+    #' @param var covariate to plot on x-axis 
+    #' @param covs Optional data frame with a single row and one column
+    #' for each covariate, giving the values that should be used. If this is
+    #' not specified, the mean value is used for numeric variables, and the
+    #' first level for factor variables.
+    #' @param i if plotting tpm then rows of tpm, if plotting delta then state, 
+    #' if plotting obspar then indices of parameter to plot 
+    #' @param j if plotting tpm then cols of tpm to plot, if plotting delta then
+    #' ignored, if plotting obspar then indices of states to plot 
+    #' @param n_grid coarseness of grid over x-axis to create 
+    #' @return desired plot 
+    plot = function(name, var = NULL, covs = NULL, i = NULL, j = NULL, n_grid = 50) {
+      # Get relevant model component 
+      comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
+      # Get x-axis 
+      # get newdata over a grid 
+      newdata <- cov_grid(var = var, 
+                          data = self$obs()$data(), 
+                          covs = covs, 
+                          formulas = self[[comp]]()$formulas(), 
+                          n_grid = n_grid)
+      
+      # Number of states
+      n_states <- self$hidden()$nstates()
+      
+      # Get predictions and uncertainty 
+      preds <- self$predict(name, t = "all", newdata = newdata, level = 0.95)
+      
+      # Data frame for plot
+      df <- as.data.frame.table(preds$mean)
+      df$low <- as.vector(preds$lcl)
+      df$upp <- as.vector(preds$ucl)
+      if (name == "tpm") {
+        colnames(df) <- c("from", "to", "var", "prob", "low", "upp")
+        levels(df$from) <- paste("State", 1:n_states)
+        levels(df$to) <- paste("State", 1:n_states)
+        df$var <- rep(newdata[, var], each = n_states * n_states)
+        if (!is.null(i)) df <- df[df$from == paste0("State ", i),]
+        if (!is.null(j)) df <- df[df$to == paste0("State ", j),]
+      } else if (name == "delta") {
+        colnames(df) <- c("var", "state", "prob", "low", "upp")
+        levels(df$state) <- paste("State", 1:n_states)
+        df$var <- rep(newdata[, var], n_states)
+        if (!is.null(i)) df <- df[df$state == paste0("State ", i),]
+      } else if (name == "obspar") {
+        colnames(df) <- c("par", "state", "var", "val", "low", "upp")
+        levels(df$state) <- paste("State", 1:n_states)
+        df$var <- rep(newdata[, var], each = nrow(df)/nrow(newdata))
+        if (!is.null(i)) df <- df[df$par == i,]
+        if (!is.null(j)) df <- df[df$state == paste0("State ", j),]
+      }
+      
+      # Create caption with values of other (fixed) covariates      
+      plot_txt <- NULL
+      if(ncol(newdata) > 1) {
+        other_covs <- newdata[1, which(colnames(newdata) != var), 
+                              drop = FALSE]
+        
+        # Round numeric values, and transform factors to strings
+        num_ind <- sapply(other_covs, is.numeric)
+        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov) 
+          round(cov, 2))
+        fac_ind <- sapply(other_covs, is.factor)
+        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
+        
+        plot_txt <- paste(colnames(other_covs), "=", other_covs, 
+                          collapse = ", ")
+      }
+      
+      if (name == "tpm") {
+        p <- ggplot(df, aes(var, prob)) + 
+          geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
+          geom_line() + 
+          facet_wrap(c("from", "to"), 
+                     strip.position = "left",
+                     labeller = label_bquote("Pr("*.(from)*" -> "*.(to)*")")) +
+          xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
+          theme_light() +
+          theme(strip.background = element_blank(),
+                strip.placement = "outside", 
+                strip.text = element_text(colour = "black")) + 
+          coord_cartesian(ylim = c(0, 1))
+      } else if (name == "delta") {
+        p <- ggplot(df, aes(var, prob, group = state, col = state)) +
+          geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
+          geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
+          scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
+          xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
+          theme_light() + 
+          coord_cartesian(ylim = c(0, 1))
+      } else if (name == "obspar") {
+        p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
+          geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
+          geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
+          scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
+          facet_wrap(c("par"), scales = "free_y",
+                     strip.position = "left",
+                     labeller = label_bquote(.(par))) +
+          xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
+          theme(strip.background = element_blank(),
+                strip.placement = "outside", 
+                strip.text = element_text(colour = "black"))
+      }
+      return(p)
+    }, 
     
-    ###################
-    ## Other methods ##
-    ###################
+    
+
+    # Print methods -----------------------------------------------------------
     #' @description Print model formulation
     formulation = function() {
       self$obs()$formulation()
       self$hidden()$formulation()
+    }, 
+    
+    print = function() {
+      self$formulation()
     }
   ),
   
   private = list(
-    ################
-    ## Attributes ##
-    ################
+
+    # Private data members ----------------------------------------------------
     obs_ = NULL,
     hidden_ = NULL,
     out_ = NULL,
@@ -1467,9 +1471,8 @@ HMM <- R6Class(
     fixpar_ = NULL, 
     states_ = NULL,
     
-    #######################################
-    ## Functions to read model from file ##
-    #######################################
+    # Reading from spec file --------------------------------------------------
+    
     #' @description Read model specification files
     #' 
     #' @param file file location 
@@ -1483,6 +1486,7 @@ HMM <- R6Class(
     #'   \item{\code{tpm}}{Structure of hidden state model}
     #'   \item{\code{par}}{Initial parameters for observation model}
     #'   \item{\code{tpm0}}{Initial transition probability matrix}
+    #'   \item{\code{fixed}}{Fixed parameters}
     #' }
     read_file = function(file) {
       if (!file.exists(file)) stop("model specification file does not exist in this location:", file)
@@ -1645,9 +1649,8 @@ HMM <- R6Class(
       return(res)
     },
     
-    ###########################
-    ## Other private methods ##
-    ###########################
+    # Other private methods ---------------------------------------------------
+    
     #' Compute effective degrees of freedom for a GAM 
     comp_edf = function(X, S, lambda){
       
@@ -1668,7 +1671,7 @@ HMM <- R6Class(
       return(sum(diag(F)))
     }, 
     
-    #' initialize submodel component 
+    #' Initialize submodel component 
     initialize_submodel = function(par, initpar) {
       # find which parts of initializing model occur in current model
       wh <- match(rownames(initpar), rownames(par))
@@ -1683,17 +1686,16 @@ HMM <- R6Class(
       return(par)
     },
     
-    #################################
-    ## Check constructor arguments ##
-    #################################
+    #' Check constructor arguments 
     # (For argument description, see constructor)
-    check_args = function(obs, hidden) {
+    check_args = function(obs, hidden, init) {
       if(!inherits(obs, "Observation")) {
         stop("'obs' should be an Observation object")
       }
       if(!inherits(hidden, "MarkovChain")) {
         stop("'hidden' should be an MarkovChain object")
       }
+      if(!is.null(init)) if (!("HMM" %in% class(init))) stop("init must be a HMM object.")
     }
   )
 )
