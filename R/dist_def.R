@@ -10,7 +10,11 @@ dist_pois <- Dist$new(
   rng = rpois,
   link = list(lambda = log),
   invlink = list(lambda = exp),
-  npar = 1
+  npar = 1, 
+  parnames = c("lambda"), 
+  parapprox = function(x) {
+    return(mean(x))
+  }
 )
 
 # Zero-Inflated Poisson ========================
@@ -29,7 +33,23 @@ dist_zip <- Dist$new(
     return(y)}, 
   link = list(z = qlogis, lambda = log), 
   invlink = list(z = plogis, lambda = exp), 
-  npar = 2
+  npar = 2, 
+  parnames = c("z", "lambda"), 
+  parapprox = function(x) {
+    # Beckett, S., Jee, J., Ncube, T., Pompilus, S., Washington, Q., Singh, A., & Pal, N. (2014). 
+    # Zero-inflated Poisson (ZIP) distribution: parameter estimation and applications to model data 
+    # from natural calamities. Involve, a Journal of Mathematics, 7(6), 751-767.
+    mu <- mean(x)
+    s2 <- var(x)
+    if (mu > s2) {
+      z <- 1e-3
+      lambda <- mu 
+    } else {
+      lambda <- mu + s2 / mu - 1 
+      z <- s2 / mu - 1 / lambda 
+    }
+    return(c(z, lambda))
+  }
 )
 
 # Zero-Truncated Poisson ========================
@@ -50,7 +70,12 @@ dist_ztp <- Dist$new(
   }, 
   link = list(lambda = log), 
   invlink = list(lambda = exp), 
-  npar = 1
+  npar = 1, 
+  parnames = c("lambda"), 
+  parapprox = function(x) {
+    warning("approximating parameters ignores zero truncation")
+    return(mean(x))
+  }
 )
 
 
@@ -62,28 +87,48 @@ dist_binom <- Dist$new(
   link = list(size = identity, prob = qlogis), 
   invlink = list(size = identity, prob = plogis),
   npar = 2, 
-  fixed = c(size = TRUE, prob = FALSE)
+  parnames = c("size", "prob"), 
+  fixed = c(size = TRUE, prob = FALSE), 
+  parapprox = function(x, size = 1) {
+    p <- sum(x) / (size * length(x))
+    return(c(size, p))
+  }
 )
 
 # Zero-inflated Binomial =======================
 dist_zib <- Dist$new(
   name = "zib", 
-  pdf = function(x, z, size, p, log = FALSE) {
+  pdf = function(x, z, size, prob, log = FALSE) {
     zero <- x < 1e-10 
-    l <- z * zero + (1 - z) * dbinom(x, size, p)
+    l <- z * zero + (1 - z) * dbinom(x, size, prob)
     if (log) l <- log(l)
     return(l)
   }, 
-  rng = function(n, z, size, p) {
+  rng = function(n, z, size, prob) {
     zero <- rbinom(n, 1, z)
-    y <- rbinom(n, size, p)
+    y <- rbinom(n, size, prob)
     y[zero == 1] <- 0
     return(y)
   }, 
-  link = list(z = qlogis, size = identity, p = qlogis), 
-  invlink = list(z = plogis, size = identity, p = plogis), 
+  link = list(z = qlogis, size = identity, prob = qlogis), 
+  invlink = list(z = plogis, size = identity, prob = plogis), 
   npar = 3, 
-  fixed = c(z = FALSE, size = TRUE, p = FALSE) 
+  parnames = c("z", "size", "prob"), 
+  fixed = c(z = FALSE, size = TRUE, prob = FALSE), 
+  parapprox = function(x, size = 1) {
+    # approximates Binomial with Poisson 
+    mu <- mean(x)
+    s2 <- var(x)
+    if (mu > s2) {
+      z <- 1e-3
+      lambda <- mu 
+    } else {
+      lambda <- mu + s2 / mu - 1 
+      z <- s2 / mu - 1 / lambda 
+    }
+    prob <- lambda / size 
+    return(c(z, size, prob))
+  }
 )
 
 # Negative-binomial ============================
@@ -94,6 +139,14 @@ dist_nbinom <- Dist$new(
   link = list(size = log, prob = qlogis), 
   invlink = list(size = exp, prob = plogis), 
   npar = 2, 
+  parnames = c("size", "prob"), 
+  parapprox = function(x, size = 1) {
+    # use minimum variance unbiased estimate of p
+    k <- sum(x)
+    n <- length(x)
+    prob <- (n * size - 1) / (n * size + k - 1)
+    return(c(size, prob))
+  }
 )
 
 # Categorical ============================
@@ -130,7 +183,11 @@ dist_cat <- Dist$new(
     ymat <- t(apply(xmat, 1, invmlogit))
     return(as.vector(ymat))
   }, 
-  npar = 1, 
+  npar = 1,
+  parnames = c("p1"), 
+  parapprox = function(x) {
+    return(as.numeric(prop.table(table(x))))
+  }
 )
 
 # Zero-inflated Negative-Binomial ==============
@@ -151,6 +208,24 @@ dist_zinb <- Dist$new(
   link = list(z = qlogis, size = log, p = qlogis), 
   invlink = list(z = plogis, size = exp, p = plogis), 
   npar = 3, 
+  parnames = c("z", "size", "p"), 
+  parapprox = function(x, size = 1) {
+    # approximates Negative binomial with Poisson 
+    mu <- mean(x)
+    s2 <- var(x)
+    if (mu > s2) {
+      z <- 1e-3
+      lambda <- mu 
+    } else {
+      lambda <- mu + s2 / mu - 1 
+      z <- s2 / mu - 1 / lambda 
+    }
+    # use minimum variance unbiased estimate of p
+    n <- length(x)
+    k <- lambda * n
+    prob <- (n * size - 1) / (n * size + k - 1)
+    return(c(z, size, prob))
+  }
 )
 
 # Zero-Truncated Negative-Binomial ========================
@@ -171,7 +246,16 @@ dist_ztnb <- Dist$new(
   }, 
   link = list(size = log, p = qlogis), 
   invlink = list(size = exp, p = plogis), 
-  npar = 2, 
+  npar = 2,
+  parnames = c("size", "p"), 
+  parapprox = function(x, size = 1) {
+    warning("parameter approximation ignores zero truncation")
+    # use minimum variance unbiased estimate of p
+    k <- sum(x)
+    n <- length(x)
+    prob <- (n * size - 1) / (n * size + k - 1)
+    return(c(size, prob))
+  }
 )
 
 # Continuous distributions ------------------------------------------------
@@ -183,7 +267,11 @@ dist_norm <- Dist$new(
   rng = rnorm,
   link = list(mean = identity, sd = log),
   invlink = list(mean = identity, sd = exp),
-  npar = 2
+  npar = 2, 
+  parnames = c("mean", "sd"), 
+  parapprox = function(x) {
+    return(c(mean(x), sd(x)))
+  }
 )
 
 
@@ -207,6 +295,11 @@ dist_truncnorm <- Dist$new(
   link = list(mean = identity, sd = log, min = identity, max = identity),
   invlink = list(mean = identity, sd = exp, min = identity, max = identity),
   npar = 4, 
+  parnames = c("mean", "sd", "min", "max"), 
+  parapprox = function(x) {
+    warning("parameter approximations ignore truncations in distributions")
+    return(c(mean(x), sd(x)))
+  }, 
   fixed = c(mean = FALSE, sd = FALSE, min = TRUE, max = TRUE)
 )
 
@@ -225,24 +318,36 @@ dist_foldednorm <- Dist$new(
   },
   link = list(mean = identity, sd = log),
   invlink = list(mean = identity, sd = exp),
-  npar = 2
+  npar = 2, 
+  parnames = c("mean", "sd"), 
+  parapprox = function(x) {
+    warning("parameter approximations ignore folded distributions")
+    return(c(mean(x), sd(x)))
+  }
 )
 
 # Student's t distribution =====================
 dist_t <- Dist$new(
+  # assumes that degrees of freedom > 2 (so mean and variance are finite)
   name = "t", 
-  pdf = function(x, mean, scale, df, log = FALSE) {
-    y <- (x - mean) / scale
-    return(dt(y, df = df, log = log) / scale)
+  pdf = function(x, mean, scale, log = FALSE) {
+    y <- x - mean
+    df <- 2 * scale^2 / (scale^2 - 1)
+    return(dt(y, df = df, log = log))
   }, 
-  rng = function(n, mean, scale, df) {
+  rng = function(n, mean, scale) {
+    df <- 2 * scale^2 / (scale^2 - 1)
     y <- rt(n, df = df)
-    x <- y * scale + mean 
+    x <- y + mean 
     return(x)
   }, 
-  link = list(mean = identity, scale = log, df = log), 
-  invlink = list(mean = identity, scale = exp, df = exp), 
-  npar = 3
+  link = list(mean = identity, scale = log), 
+  invlink = list(mean = identity, scale = exp), 
+  npar = 2, 
+  parnames = c("mean", "scale"), 
+  parapprox = function(x) {
+    return(c(mean(x), sd(x)))
+  }
 )
 
 # Log-Normal ===================================
@@ -252,7 +357,11 @@ dist_lnorm <- Dist$new(
   rng = rlnorm,
   link = list(meanlog = identity, sdlog = log),
   invlink = list(meanlog = identity, sdlog = exp),
-  npar = 2
+  npar = 2, 
+  parnames = c("meanlog", "sdlog"), 
+  parapprox = function(x) {
+    return(c(mean(log(x)), sd(log(x))))
+  }
 )
 
 # Gamma ========================================
@@ -262,7 +371,17 @@ dist_gamma <- Dist$new(
   rng = rgamma,
   link = list(shape = log, scale = log),
   invlink = list(shape = exp, scale = exp),
-  npar = 2
+  npar = 2, 
+  parnames = c("shape", "scale"), 
+  parapprox = function(x) {
+    # use log-moment estimators 
+    n <- length(x)
+    lx <- log(x)
+    tmp <- n * sum(x * lx) - sum(lx) * sum(x)
+    shape <- n * sum(x) / tmp
+    scale <- tmp / n^2 
+    return(c(shape, scale))
+  }
 )
 
 # Weibull ========================================
@@ -272,7 +391,20 @@ dist_weibull <- Dist$new(
   rng = rweibull,
   link = list(shape = log, scale = log),
   invlink = list(shape = exp, scale = exp),
-  npar = 2
+  npar = 2, 
+  parnames = c("shape", "scale"), 
+  parapprox = function(x) {
+    # regress empirical survival function against sampled values
+    tmpfn <- ecdf(x)
+    lx <- log(x)
+    y <- -log(1 - tmpfn(x))
+    lx <- lx[y < 1]
+    y <- y[y < 1]
+    m <- lm(y ~ lx)
+    shape <- coef(m)[2]
+    scale <- exp(-coef(m)[1] / shape)
+    return(c(shape, scale))
+  }
 )
 
 # Exponential ==================================
@@ -282,7 +414,11 @@ dist_exp <- Dist$new(
   rng = rexp, 
   link = list(rate = log), 
   invlink = list(rate = exp), 
-  npar = 1
+  npar = 1,
+  parnames = c("rate"), 
+  parapprox = function(x) {
+    return(1 / mean(x))
+  }
 )
 
 # Beta =========================================
@@ -292,7 +428,20 @@ dist_beta <- Dist$new(
   rng = rbeta,
   link = list(shape1 = log, shape2 = log),
   invlink = list(shape1 = exp, shape2 = exp),
-  npar = 2
+  npar = 2,
+  parnames = c("shape1", "shape2"), 
+  parapprox = function(x) {
+    # method of moments 
+    mu <- mean(x)
+    s2 <- var(x)
+    tmp <- mu * (1 - mu) / s2 - 1
+    if (tmp < 1e-10) {
+      shape1 <- shape2 <- 1e-3
+    }
+    shape1 <- mu * tmp
+    shape2 <- (1 - mu) * tmp
+    return(c(shape1, shape2))
+  }
 )
 
 
@@ -311,7 +460,14 @@ dist_tweedie <- Dist$new(
   }, 
   link = list(mean = identity, p = qlogis, phi = log), 
   invlink = list(mean = identity, p = plogis, phi = exp), 
-  npar = 3
+  npar = 3, 
+  parnames = c("mean", "p", "phi"), 
+  parapprox = function(x) {
+    p <- 0.5
+    mean <- mean(x)
+    phi <- sqrt(var(x) / mean^p)
+    return(c(mean, p, phi))
+  }
 )
 
 # Angular distributions ---------------------------------------------------
@@ -336,7 +492,20 @@ dist_vm <- Dist$new(
               kappa = log),
   invlink = list(mu = function(x) 2 * pi * plogis(x) - pi, 
                  kappa = exp),
-  npar = 2
+  npar = 2, 
+  parnames = c("mu", "kappa"), 
+  parapprox = function(x) {
+    # approximate Von-Mises with Wrapped Normal
+    mcosx <- mean(cos(x))
+    msinx <- mean(sin(x))
+    mu <- atan2(msinx, mcosx)
+    r <- mcosx^2 + msinx^2 
+    n <- length(x)
+    r <- n * (r - 1 / n) / (n - 1)
+    s2 <- log(1/r)
+    kappa <- 1 - exp(-s2/2)
+    return(c(mu, kappa))
+  }
 )
 
 # Multivariate distributions ----------------------------------------------
@@ -347,7 +516,7 @@ dist_mvnorm <- Dist$new(
   pdf = function(x, ...,  log = FALSE) {
     par <- c(...)
     m <- quad_pos_solve(1, 3, - 2 * length(par))
-    y <- as.matrix(x[[1]])
+    y <- do.call(cbind, as.matrix(x))
     mu <- par[1:m]
     sds <- par[(m + 1) : (2 * m)]
     corr <- par[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
@@ -390,7 +559,15 @@ dist_mvnorm <- Dist$new(
     ymat <- t(apply(xmat, 1, mvnorm_invlink))
     return(as.vector(ymat))
   }, 
-  npar = 3
+  npar = 5, 
+  parnames = c("mu1, mu2, sd1, sd2, corr12"), 
+  parapprox = function(x) {
+    y <- do.call(cbind, as.matrix(x))
+    mu <- rowMeans(y)
+    sds <- apply(y, 1, sd)
+    corr <- cor(t(y))
+    return(c(mu, sds, corr[upper.tri(corr)]))
+  }
 )
 
 # Dirichlet Distribution =======================
@@ -398,7 +575,7 @@ dist_dir <- Dist$new(
   name = "dir", 
   pdf = function(x, ...,  log = FALSE) {
     alpha <- c(...)
-    y <- as.matrix(x[[1]])
+    y <- do.call(cbind, as.matrix(x))
     p <- gamma(sum(alpha)) * prod(y ^ (alpha - 1)) /  prod(gamma(alpha))
     if (log) p <- log(p)
     return(p)
@@ -413,7 +590,16 @@ dist_dir <- Dist$new(
   }, 
   link = function(x, n_states) {log(unlist(x))}, 
   invlink = function(x, n_states) {exp(x)}, 
-  npar = 2
+  npar = 2, 
+  parnames = c("alpha1", "alpha2"), 
+  parapprox = function(x) {
+    y <- do.call(cbind, as.matrix(x))
+    mu <- rowMeans(y)
+    sds <- apply(y, 1, sd)
+    a0 <- mean(mu * (1 - mu) / sds^2 - 1)
+    alpha <- mu * a0 
+    return(alpha)
+  }
 )
 
 # List of all distributions -----------------------------------------------

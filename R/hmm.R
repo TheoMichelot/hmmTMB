@@ -228,6 +228,39 @@ HMM <- R6Class(
       return(list(obspar = obspar, tpm = tpm))
     },
     
+    #' @description Suggest initial parameters for the model based on kmeans
+    #' clustering 
+    #' 
+    #' @return initial parameters 
+    suggest_initial = function() {
+      cluster <- kmeans(self$obs()$obs_var(expand = TRUE), centers = self$hidden()$nstates())
+      states <- cluster$cluster
+      # get current parameters 
+      current_par <- self$obs()$par(t = 1, full_names = FALSE)[,,1]
+      par_count <- 1 
+      # initial observation parameters 
+      par <- vector(mode = "list", length = ncol(self$obs()$obs_var()))
+      names(par) <- colnames(self$obs()$obs_var())
+      # loop over observed variables 
+      for (i in 1:length(self$obs()$dists())) {
+        var <- self$obs()$obs_var()[,i]
+        par_ind <- par_count:(par_count + self$obs()$dists()[[i]]$npar() - 1)
+        sub_current_par <- current_par[par_ind,,drop=FALSE]
+        sub_current_par <- sub_current_par[self$obs()$dists()[[i]]$fixed(),,drop=FALSE]
+        npar <- self$obs()$dists()[[i]]$npar()
+        subpar <- vector(mode = "list", length = npar)
+        for (j in 1:self$hidden()$nstates()) {
+          args <- c(list(x = var[states == j]), as.list(sub_current_par[,j]))
+          approx <- do.call(self$obs()$dists()[[i]]$parapprox(), args)
+          for (k in 1:npar) subpar[[k]] <- c(subpar[[k]], approx[k])
+        }
+        par_count <- par_count + self$obs()$dists()[[i]]$npar()
+        names(subpar) <- self$obs()$dists()[[i]]$parnames()
+        par[[i]] <- subpar
+      }
+      return(par)
+    }, 
+    
     #' Set priors for coefficients 
     #' @param new_priors is a list of matrices for optionally 
     #' coeff_fe_obs, coeff_fe_hid, log_lambda_obs log_lambda_hid 

@@ -21,12 +21,13 @@ Dist <- R6Class(
     #' @param invlink Named list of inverse link functions for distribution
     #' parameters
     #' @param npar Number of parameters of the distribution
+    #' @param parapprox Function that takes a sample and produces approximate values for the unknown parameters
     #' @param fixed vector with element for each parameter which is TRUE if parameter is fixed
     #' @param cpp location of C++ TMB definition of distribution
     #' @param compile_cpp if FALSE then distribution code in cpp is added but not compiled into package
     #' 
     #' @return A new Dist object
-    initialize = function(name, pdf, rng, link, invlink, npar, fixed = NULL, cpp = NULL, compile_cpp = TRUE) {
+    initialize = function(name, pdf, rng, link, invlink, npar, parnames = NULL, parapprox = NULL, fixed = NULL, cpp = NULL, compile_cpp = TRUE) {
       # Check arguments
       private$check_args(name = name, pdf = pdf, rng = rng, link = link, 
                          invlink = invlink, npar = npar)
@@ -38,7 +39,9 @@ Dist <- R6Class(
       private$link_ <- link
       private$invlink_ <- invlink
       private$npar_ <- npar
-      private$fixed_ <- fixed 
+      private$parnames_ <- parnames 
+      private$parapprox_ <- parapprox 
+      private$fixed_ <- fixed
       
       # all parameters are unfixed by default
       if (is.null(fixed)) private$fixed_ <- rep(FALSE, npar)
@@ -127,23 +130,33 @@ Dist <- R6Class(
     
     #' @description Return number of parameters of Dist object
     npar = function() {return(private$npar_)},
+    
+    #' @description Return names of parameters 
+    parnames = function() {return(private$parnames_)}, 
+    
+    #' @description Return function that approximates parameters
+    parapprox = function() {return(private$parapprox_)}, 
   
     #' @description Return which parameters are fixed 
     fixed = function() {return(private$fixed_)}, 
     
     #' @description Return code of Dist object
     code = function() {return(private$code_)},
-    
+  
     ###############
     ## Mutators  ##
     ###############
     
     #' @description Set number of parameters this distribution has 
     set_npar = function(new_npar) {private$npar_ <- new_npar}, 
+    
+    #' @description Set parameter names 
+    set_parnames = function(new_parnames) {private$parnames_ <- new_parnames}, 
 
     ###################
     ## Other methods ##
     ###################
+
     #' @description Evaluate probability density/mass function
     #' 
     #' This method is used in Observation$obs_probs. It is a wrapper around self\$pdf,
@@ -247,6 +260,7 @@ Dist <- R6Class(
       
       return(par)
     }
+    
   ),
   
   private = list(
@@ -259,6 +273,8 @@ Dist <- R6Class(
     link_ = NULL,
     invlink_ = NULL,
     npar_ = NULL,
+    parnames_ = NULL, 
+    parapprox_ = NULL, 
     fixed_ = NULL, 
     code_ = NULL,
     

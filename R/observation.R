@@ -84,7 +84,24 @@ Observation <- R6Class(
       
       # Fixed effect parameters     
       if(!is.null(par)) {
-        self$update_par(par)
+        # make sure par is in right order 
+        n_var <- ncol(self$obs_var())
+        varnm <- colnames(self$obs_var())
+        corrected_par <- vector(mode = "list", length = n_var)
+        for (i in 1:n_var) {
+          subvars <- self$dists()[[i]]$parnames()
+          if (!all(subvars %in% names(par[[varnm[i]]]))) {
+            stop("parameters for variable ", varnm[i], " are missing or have wrong name")
+          }
+          subpar <- vector(mode = "list", length = length(subvars))
+          for (j in 1:length(subvars)) {
+            subpar[[j]] <- par[[varnm[i]]][[subvars[j]]]
+          }
+          names(subpar) <- subvars
+          corrected_par[[i]] <- subpar
+        }
+        names(corrected_par) <- varnm
+        self$update_par(corrected_par)
       } else {
         stop("'par' must be provided")
       }
@@ -144,14 +161,14 @@ Observation <- R6Class(
       # Array of natural parameters
       par_array <- array(par_mat, dim = c(n_states, n_par, length(t)))
         
-      # Hacky way to get parameter names
+      # Get parameter names 
+      par_names <- unlist(lapply(self$dists(), FUN = function(x) {x$parnames()}), use.names = FALSE)
       if(full_names) {
-        par_names <- names(unlist(rapply(self$w2n(lp_mat[1,]),
-                                         function(v) v[1])))
-      } else {
-        par_names <- unlist(lapply(self$w2n(lp_mat[1,]), names))
-      }
-        
+        var_names <- unlist(sapply(1:length(self$dists()), FUN = function(d) {rep(names(self$dists())[d], self$dists()[[d]]$npar())}), use.names = FALSE)
+        par_names <- paste0(var_names, ".", par_names)
+      } 
+      names(par_names) <- NULL 
+      
       # Set dimension names for rows and columns
       dimnames(par_array) <- list(paste("state", 1:n_states),
                                   par_names,
@@ -699,10 +716,17 @@ Observation <- R6Class(
         getdim <-as.numeric(gsub("[^0-9.]", "", name))
         if (subname == "cat") {
           tmp$set_npar(getdim - 1)
+          tmp$set_parnames(paste0("p", 1:(getdim - 1)))
         } else if (subname == "mvnorm") {
           tmp$set_npar(2 * getdim + (getdim^2 - getdim) / 2)
+          V <- matrix(1:getdim, nr = getdim, nc = getdim)
+          tV <- t(V)
+          tmp$set_parnames(c(paste0("mu", 1:getdim), 
+                             paste0("sd", 1:getdim), 
+                             paste0("corr", V[upper.tri(V)], tV[upper.tri(tV)])))
         } else if (subname == "dir") {
           tmp$set_npar(getdim)
+          tmp$set_parnames(paste0("alpha", 1:getdim))
         }
         return(tmp)
       }
