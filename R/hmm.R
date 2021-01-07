@@ -15,11 +15,15 @@ HMM <- R6Class(
     #' @param obs Observation object
     #' @param hidden MarkovChain object
     #' @param init HMM object to initialize parameters with 
-    #' @param fixpar a named list of parameters in coeff_fe that you want fixed (set to NA)
-    #'               or pool into common values (using factor levels)
+    #' @param fixpar a named list of parameters in coeff_fe that you want fixed 
+    #' (set to NA) or pool into common values (using factor levels)
     #' 
     #' @return A new HMM object
-    initialize = function(file = NULL, obs = NULL, hidden = NULL, init = NULL, fixpar = NULL) {
+    initialize = function(file = NULL, 
+                          obs = NULL, 
+                          hidden = NULL, 
+                          init = NULL, 
+                          fixpar = NULL) {
       # Decide how model has been specified 
       if (is.null(file) & is.null(obs)) {
         stop("either 'file' must a file name for a file specifying the model or 
@@ -50,7 +54,8 @@ HMM <- R6Class(
       if(length(var_names) > 0) {
         data <- obs$data()
         # Remove NAs in covariates (replace by last non-NA value)
-        data[,var_names] <- lapply(data[,var_names, drop=FALSE], function(col) na_fill(col))
+        data[,var_names] <- lapply(data[,var_names, drop=FALSE], 
+                                   function(col) na_fill(col))
         # Update data frame in obs
         obs$update_data(data)
       }
@@ -149,13 +154,21 @@ HMM <- R6Class(
     #' @param par_list a list for coeff_f(r)e_obs, coeff_f(r)e_hid, log_delta, 
     #'                   log_lambda_hid log_lambda_obs
     update_par = function(par_list = NULL, iter = NULL) {
-      if (is.null(par_list) & is.null(iter)) stop("No new parameter values to update to")
-      if (!is.null(iter) & !is.null(par_list)) stop("Either specify iter or par_list in update_par, not both")
+      if (is.null(par_list) & is.null(iter)) {
+        stop("No new parameter values to update to")
+      }
+      if (!is.null(iter) & !is.null(par_list)) {
+        stop("Either specify iter or par_list in update_par, not both")
+      }
       if (!is.null(iter)) {
         # update to MCMC iteration 
-        if (is.null(private$iters_)) stop("Must run mcmc() before using iterations")
+        if (is.null(private$iters_)) {
+          stop("Must run mcmc() before using iterations")
+        }
         if (is.numeric(iter)) {
-          if (iter > dim(private$iters_)[1]) stop("iter exceeds number of mcmc iterations available")
+          if (iter > dim(private$iters_)[1]) {
+            stop("iter exceeds number of mcmc iterations available")
+          }
           samp <- private$iters_[iter,]
         } else if (iter == "mean") {
           samp <- colMeans(private$iters_)
@@ -169,14 +182,16 @@ HMM <- R6Class(
       }
       # Update observation parameters
       self$obs()$update_coeff_fe(coeff_fe = par_list$coeff_fe_obs)
-      if(!is.null(self$obs()$terms()$ncol_re)) { # Only update if there are random effects
+      if(!is.null(self$obs()$terms()$ncol_re)) { 
+        # Only update if there are random effects
         self$obs()$update_coeff_re(coeff = par_list$coeff_re_obs)
         self$obs()$update_lambda(exp(par_list$log_lambda_obs))
       }
       
       # Update transition probabilities
       self$hidden()$update_coeff_fe(coeff_fe = par_list$coeff_fe_hid)
-      if(!is.null(self$hidden()$terms()$ncol_re)) { # Only update if there are random effects
+      if(!is.null(self$hidden()$terms()$ncol_re)) { 
+        # Only update if there are random effects
         self$hidden()$update_coeff_re(coeff_re = par_list$coeff_re_hid)
         self$hidden()$update_lambda(exp(par_list$log_lambda_hid))
       }
@@ -229,7 +244,8 @@ HMM <- R6Class(
     #' @return list of initial parameters for each observation variable 
     suggest_initial = function() {
       # do clustering
-      cluster <- kmeans(self$obs()$obs_var(expand = TRUE), centers = self$hidden()$nstates())
+      cluster <- kmeans(self$obs()$obs_var(expand = TRUE), 
+                        centers = self$hidden()$nstates())
       states <- cluster$cluster
       # get current parameters 
       current_par <- self$obs()$par(t = 1, full_names = FALSE)[,,1]
@@ -247,7 +263,8 @@ HMM <- R6Class(
         # possibly pass fixed parameters to parapprox function within dist
         par_ind <- par_count:(par_count + self$obs()$dists()[[i]]$npar() - 1)
         sub_current_par <- current_par[par_ind,,drop=FALSE]
-        sub_current_par <- sub_current_par[self$obs()$dists()[[i]]$fixed(),,drop=FALSE]
+        sub_current_par <- sub_current_par[self$obs()$dists()[[i]]$fixed(),,
+                                           drop=FALSE]
         npar <- self$obs()$dists()[[i]]$npar()
         subpar <- vector(mode = "list", length = npar)
         for (j in 1:self$hidden()$nstates()) {
@@ -309,7 +326,9 @@ HMM <- R6Class(
     #' 
     #' @return see output of as.matrix in stan 
     iters = function(type = "response") {
-      if (is.null(private$iters_)) stop("must run mcmc before extracting iterations")
+      if (is.null(private$iters_)) {
+        stop("must run mcmc before extracting iterations")
+      }
       if (type == "response") {
         return(private$par_iters_)
       } else if (type == "raw") {
@@ -323,7 +342,9 @@ HMM <- R6Class(
     #' 
     #' @return the stanfit object 
     stan = function() {
-      if (is.null(private$iters_)) stop("must run mcmc before extracting stan fitted object")
+      if (is.null(private$iters_)) {
+        stop("must run mcmc before extracting stan fitted object")
+      }
       return(private$mcmc_)
     }, 
     
@@ -360,7 +381,9 @@ HMM <- R6Class(
       k <- 1
       for (i in seq_along(S_hid_list)) {
         if(!is.null(S_hid_list[[i]])) {
-          edf <- edf + private$comp_edf(X_hid_list[[i]], S_hid_list[[i]], smoopar_hid[k])
+          edf <- edf + private$comp_edf(X_hid_list[[i]], 
+                                        S_hid_list[[i]], 
+                                        smoopar_hid[k])
           k <- k + 1 
         }
       }
@@ -372,7 +395,9 @@ HMM <- R6Class(
       k <- 1 
       for (i in seq_along(S_obs_list)) {
         if(!is.null(S_obs_list[[i]])) {
-          edf <- edf + private$comp_edf(X_obs_list[[i]], S_obs_list[[i]], smoopar_obs[k])
+          edf <- edf + private$comp_edf(X_obs_list[[i]], 
+                                        S_obs_list[[i]], 
+                                        smoopar_obs[k])
           k <- k + 1 
         }
       }
@@ -616,7 +641,8 @@ HMM <- R6Class(
     #' accessed using the method \code{out}.
     #' 
     #' @param silent Logical. If FALSE, all tracing outputs are hidden (default).
-    #' @param ... other arguments to optimx which is used to optimise likelihood, see ?optimx
+    #' @param ... other arguments to optimx which is used to optimise likelihood, 
+    #' see ?optimx
     fit = function(silent = FALSE, ...) {
       self$formulation()
       
@@ -631,8 +657,7 @@ HMM <- R6Class(
       # Fit model
       args <- list(...)
       if (any(c("par", "fn", "gr", "he", "hessian") %in% names(args))) {
-        stop("cannot supply arguments to fit of name par, fn, gr, he, or hessian. These
-             are handled by TMB")
+        stop("cannot supply arguments to fit of name par, fn, gr, he, or hessian. These are handled by TMB")
       }
       if (any(c("lower", "upper") %in% names(args))) {
         warning("lower and upper arguments to optimx are ignored in hmmTMB")
@@ -1490,7 +1515,11 @@ HMM <- R6Class(
     #' }
     read_file = function(file) {
       if (!file.exists(file)) stop("model specification file does not exist in this location:", file)
-      spec <- scan(file = file, character(), sep = "\n", strip.white = TRUE, quiet = TRUE)
+      spec <- scan(file = file, 
+                   character(), 
+                   sep = "\n", 
+                   strip.white = TRUE, 
+                   quiet = TRUE)
       # remove comments
       spec <- strip_comments(spec)
       # block names 
@@ -1530,7 +1559,10 @@ HMM <- R6Class(
       # TPM
       if ("TPM" %in% read_nms) {
         tpm_block <- private$read_block("TPM", wh_blocks, spec)
-        tpm <- matrix(str_trim(unlist(str_split(tpm_block, ":"))), nr = nstates, nc = nstates, byrow = TRUE)
+        tpm <- matrix(str_trim(unlist(str_split(tpm_block, ":"))), 
+                      nr = nstates, 
+                      nc = nstates, 
+                      byrow = TRUE)
       } else {
         tpm <- NULL
       }
