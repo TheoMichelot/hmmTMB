@@ -6,9 +6,9 @@ MarkovChain <- R6Class(
   classname = "MarkovChain",
   
   public = list(
-    #################
-    ## Constructor ##
-    #################
+
+    # Constructor -------------------------------------------------------------
+    
     #' @description Create new MarkovChain object
     #' 
     #' @param n_states Number of states. If not specified, then \code{structure} 
@@ -24,11 +24,15 @@ MarkovChain <- R6Class(
     #' @param data Data frame, needed to create model matrices
     #' 
     #' @return A new MarkovChain object
-    initialize = function(n_states = NULL, structure = NULL, 
-                          stationary = FALSE, data) {
+    initialize = function(n_states = NULL, 
+                          structure = NULL, 
+                          stationary = FALSE, 
+                          data) {
       # Check arguments
-      private$check_args(n_states = n_states, structure = structure, 
-                         stationary = stationary, data = data)
+      private$check_args(n_states = n_states, 
+                         structure = structure, 
+                         stationary = stationary, 
+                         data = data)
       
       # Define 'structure' as matrix
       if(is.null(structure)) {
@@ -88,9 +92,9 @@ MarkovChain <- R6Class(
       self$update_delta(rep(1 / n_states, n_states))
     },
     
-    ###############
-    ## Accessors ##
-    ###############
+
+    # Accessors ---------------------------------------------------------------
+
     #' @description Structure of MarkovChain model
     structure = function() {return(private$structure_)},
     
@@ -179,9 +183,9 @@ MarkovChain <- R6Class(
     #' @description Terms of model formulas
     terms = function() {return(private$terms_)},
     
-    ##############
-    ## Mutators ##
-    ##############
+
+    # Mutators ----------------------------------------------------------------
+
     #' @description Update transition probability matrix
     #' 
     #' @param tpm New transition probability matrix
@@ -257,9 +261,9 @@ MarkovChain <- R6Class(
       rownames(private$lambda_) <- self$terms()$names_re
     },
     
-    ###################
-    ## Other methods ##
-    ###################
+
+    # Other methods -----------------------------------------------------------
+
     #' @description Make model matrices
     #' 
     #' @param data Data frame containing all needed covariates
@@ -426,9 +430,9 @@ MarkovChain <- R6Class(
   ),
   
   private = list(
-    ################
-    ## Attributes ##
-    ################
+
+    # Private data members ----------------------------------------------------
+    
     structure_ = NULL,
     stationary_ = NULL, 
     formulas_ = NULL,
@@ -439,9 +443,7 @@ MarkovChain <- R6Class(
     nstates_ = NULL,
     terms_ = NULL,
     
-    #################################
-    ## Check constructor arguments ##
-    #################################
+    #' Check constructor arguments ##
     # (For argument description, see constructor)
     check_args = function(n_states, structure, stationary, data) {
       if(!is.null(n_states)) {
