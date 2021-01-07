@@ -7,9 +7,8 @@ Observation <- R6Class(
   classname = "Observation",
   
   public = list(
-    #################
-    ## Constructor ##
-    #################
+
+    # Constructor -------------------------------------------------------------
     #' @description Create new Observation object
     #' 
     #' @param data Data frame containing response variables and covariates
@@ -20,7 +19,11 @@ Observation <- R6Class(
     #' 
     #' @return A new Observation object
     initialize = function(data, dists, n_states, par = NULL, formulas = NULL) {
-      private$check_args(data = data, dists = dists, n_states = n_states, par = par, formulas = formulas)
+      private$check_args(data = data, 
+                         dists = dists, 
+                         n_states = n_states, 
+                         par = par, 
+                         formulas = formulas)
       
       # Make sure there is an ID column in the data and it's a factor
       if(is.null(data$ID)) {
@@ -108,9 +111,8 @@ Observation <- R6Class(
     
     },
     
-    ###############
-    ## Accessors ##
-    ###############
+    # Accessors ---------------------------------------------------------------
+    
     #' @description Data frame
     data = function() {return(private$data_)},
     
@@ -215,6 +217,8 @@ Observation <- R6Class(
     terms = function() {return(private$terms_)},
     
     #' @description  Data frame of response variables
+    #' @param expand if TRUE then multivariate variables in observations are expanded 
+    #' to be univariate, creating extra columns 
     obs_var = function(expand = FALSE) {
       obs_names <- names(self$dists())
       obs_var <- self$data()[, obs_names, drop = FALSE]
@@ -252,9 +256,8 @@ Observation <- R6Class(
       return(private$known_states_)
     }, 
     
-    ##############
-    ## Mutators ##
-    ##############
+    # Mutators ----------------------------------------------------------------
+    
     #' @description Update parameters
     #' 
     #' Updates the 'par' attribute to the list passed as input,
@@ -291,10 +294,16 @@ Observation <- R6Class(
       rownames(private$coeff_re_) <- self$terms()$names_re_all
     },
     
+    #' @description Update fixed effect design matrix
+    #' 
+    #' @param X_fe New fixed effect design matrix 
     update_X_fe = function(X_fe) {
       private$terms_$X_fe <- X_fe
     }, 
     
+    #' @description Update random effect design matrix
+    #' 
+    #' @param X_fe New random effect design matrix 
     update_X_re = function(X_re) {
       private$terms_$X_re <- X_re
     }, 
@@ -314,9 +323,9 @@ Observation <- R6Class(
       private$data_ <- data
     },
     
-    ###################
-    ## Other methods ##
-    ###################
+
+    # Other methods -----------------------------------------------------------
+
     #' @description Make model matrices
     #' 
     #' @param new_data Optional new data set, including covariates for which
@@ -409,7 +418,7 @@ Observation <- R6Class(
       return(par)
     },
     
-    #' Compute linear predictor 
+    #' @description Compute linear predictor 
     linpred = function() {
       linpred <- self$X_fe() %*% self$coeff_fe() + self$X_re() %*% self$coeff_re()
       return(linpred[,1])
@@ -610,9 +619,9 @@ Observation <- R6Class(
   ),
   
   private = list(
-    ################
-    ## Attributes ##
-    ################
+
+    # Private data members ----------------------------------------------------
+    
     data_ = NULL,
     known_states_ = NULL, 
     dists_ = NULL,
@@ -625,9 +634,7 @@ Observation <- R6Class(
     terms_ = NULL,
     mats_ = NULL, 
     
-    #################################
-    ## Check constructor arguments ##
-    #################################
+    #' Check constructor arguments 
     # (For argument description, see constructor)
     check_args = function(data, dists, n_states, par, formulas) {
       if(!inherits(data, "data.frame")) {
@@ -704,6 +711,8 @@ Observation <- R6Class(
       }
     }, 
     
+    #' Create a distribution 
+    #' @param name name of distribution to create 
     dist_maker = function(name) {
       if (name %in% names(dist_list)) {
         # distribution with fixed parameter dimension
