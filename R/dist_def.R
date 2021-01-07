@@ -560,7 +560,7 @@ dist_mvnorm <- Dist$new(
     return(as.vector(ymat))
   }, 
   npar = 5, 
-  parnames = c("mu1, mu2, sd1, sd2, corr12"), 
+  parnames = c("mu1", "mu2", "sd1", "sd2", "corr12"), 
   parapprox = function(x) {
     y <- do.call(cbind, as.matrix(x))
     mu <- rowMeans(y)
