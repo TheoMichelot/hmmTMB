@@ -7,9 +7,8 @@ Dist <- R6Class(
   classname = "Dist",
   
   public = list(
-    #################
-    ## Constructor ##
-    #################
+
+    # Constructor -------------------------------------------------------------
     #' @description Create a Dist object
     #' 
     #' @param name Name of distribution
@@ -21,18 +20,34 @@ Dist <- R6Class(
     #' @param invlink Named list of inverse link functions for distribution
     #' parameters
     #' @param npar Number of parameters of the distribution
+    #' @param parnames character vector with name of each parameter 
     #' @param parapprox Function that takes a sample and produces approximate values for the unknown parameters
     #' @param fixed vector with element for each parameter which is TRUE if parameter is fixed
     #' @param cpp location of C++ TMB definition of distribution
     #' @param compile_cpp if FALSE then distribution code in cpp is added but not compiled into package
     #' 
     #' @return A new Dist object
-    initialize = function(name, pdf, rng, link, invlink, npar, parnames = NULL, parapprox = NULL, fixed = NULL, cpp = NULL, compile_cpp = TRUE) {
+    initialize = function(name, 
+                          pdf, 
+                          rng, 
+                          link, 
+                          invlink, 
+                          npar, 
+                          parnames, 
+                          parapprox = NULL, 
+                          fixed = NULL, 
+                          cpp = NULL, 
+                          compile_cpp = TRUE) {
       # Check arguments
-      private$check_args(name = name, pdf = pdf, rng = rng, link = link, 
-                         invlink = invlink, npar = npar)
+      private$check_args(name = name, 
+                         pdf = pdf, 
+                         rng = rng, 
+                         link = link, 
+                         invlink = invlink, 
+                         npar = npar, 
+                         parnames = parnames)
       
-      # Define object attributes
+      # Define private data members 
       private$name_ <- name
       private$pdf_ <- pdf
       private$rng_ <- rng
@@ -43,7 +58,7 @@ Dist <- R6Class(
       private$parapprox_ <- parapprox 
       private$fixed_ <- fixed
       
-      # all parameters are unfixed by default
+      # All parameters are unfixed by default
       if (is.null(fixed)) private$fixed_ <- rep(FALSE, npar)
       
       # Load list of distributions included in the package and check against 
@@ -105,13 +120,12 @@ Dist <- R6Class(
         }
         
       } else {
-        private$code_ <- distnames$code[which(distnames$name == name)] # Starts at 0 for C++        
+        # load code unique to this distribution 
+        private$code_ <- distnames$code[which(distnames$name == name)]       
       }
     },
     
-    ###############
-    ## Accessors ##
-    ###############
+    # Accessors ----------------------------------------------------------------
     #' @description Return name of Dist object
     name = function() {return(private$name_)},
     
@@ -124,8 +138,7 @@ Dist <- R6Class(
     #' @description Return link function of Dist object
     link = function() {return(private$link_)},
     
-    #' @description Return inverse link function 
-    #' of Dist object
+    #' @description Return inverse link function of Dist object
     invlink = function() {return(private$invlink_)},
     
     #' @description Return number of parameters of Dist object
@@ -143,19 +156,15 @@ Dist <- R6Class(
     #' @description Return code of Dist object
     code = function() {return(private$code_)},
   
-    ###############
-    ## Mutators  ##
-    ###############
-    
+    # Mutators ----------------------------------------------------------------
+
     #' @description Set number of parameters this distribution has 
     set_npar = function(new_npar) {private$npar_ <- new_npar}, 
     
     #' @description Set parameter names 
     set_parnames = function(new_parnames) {private$parnames_ <- new_parnames}, 
 
-    ###################
-    ## Other methods ##
-    ###################
+    # Other methods -----------------------------------------------------------
 
     #' @description Evaluate probability density/mass function
     #' 
@@ -264,25 +273,21 @@ Dist <- R6Class(
   ),
   
   private = list(
-    ################
-    ## Attributes ##
-    ################
-    name_ = NULL,
-    pdf_ = NULL,
-    rng_ = NULL,
-    link_ = NULL,
-    invlink_ = NULL,
-    npar_ = NULL,
-    parnames_ = NULL, 
-    parapprox_ = NULL, 
-    fixed_ = NULL, 
-    code_ = NULL,
-    
-    #################################
-    ## Check constructor arguments ##
-    #################################
+
+    # Data members ------------------------------------------------------------
+    name_ = NULL, # name of distribution 
+    pdf_ = NULL, # pdf function 
+    rng_ = NULL, # random number generator 
+    link_ = NULL, # list of link functions or all-in-one link function 
+    invlink_ = NULL, # list of inverse link functions or all-in-one inverse link 
+    npar_ = NULL, # number of parameters for this distribution 
+    parnames_ = NULL,  # name of each parameter 
+    parapprox_ = NULL,  # function to compute approximate parameters from sample
+    fixed_ = NULL,  # TRUE/FALSE for each parameter on whether it is fixed or estimated
+    code_ = NULL, # unique distribution code
+  
     # (For argument description, see constructor)
-    check_args = function(name, pdf, rng, link, invlink, npar) {
+    check_args = function(name, pdf, rng, link, invlink, npar, parnames) {
       if(!is.character(name)) {
         stop("'name' must be a character string")
       }
@@ -305,13 +310,25 @@ Dist <- R6Class(
                    "parameters"))
       }
       
-      #if(!all(sapply(link, is.function)) | !all(sapply(invlink, is.function))) {
-      #  stop(paste("Elements of 'link' and 'invlink' should be R functions"))
-      #}
+      if (is.list(link)) {
+        if(!all(sapply(link, is.function)) | !all(sapply(invlink, is.function))) {
+          stop(paste("Elements of 'link' and 'invlink' should be R functions"))
+        }
+      } else {
+        if (!is.function(link) | !is.function(invlink)) {
+          stop(paste("'link' and 'invlink' should either be functions or lists of 
+                     functions"))
+        }
+      }
       
       if(!is.numeric(npar) | npar < 1) {
         stop("'npar' should be a numeric >= 1")
       }
+      
+      if (length(parnames) != npar) {
+        stop("parnames not same length as number of parameters")
+      }
+      
     }
   )
 )
