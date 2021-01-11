@@ -4,12 +4,15 @@
 #' @param input_forms Nested list of formulas, with two levels: observed variable, 
 #' and parameter of the observation distribution. The formulas can contain 
 #' state-specific terms, e.g. "~ state1(x1) + x2".
+#' @param var_names character vector name of each observation variable 
+#' @param par_names list with element for each observation variable that
+#' contains character vector of name of each parameter in its distribution 
 #' @param n_states Number of states
 #' 
 #' @details Formulas for the observation parameters can be different for the
 #' different states, using special functions of the form "state1", "state2", etc.
 #' This method processes the list of formulas passed by the user to extract the 
-#' state-specific formulas.
+#' state-specific formulas. Missing formulas are assumed to be intercept-only ~1. 
 #' 
 #' @return Nested list of formulas, with three levels: observed variable,
 #' parameter of the observation distribution, and state.
@@ -20,22 +23,38 @@
 #'                     count = list(lambda = ~ state1(x1) + state2(s(x2, bs = "cs"))))
 #'
 #' make_formulas(input_forms = input_forms, n_states = 2)
-make_formulas <- function(input_forms, n_states) {
+make_formulas <- function(input_forms, 
+                          var_names, 
+                          par_names,
+                          n_states) {
   # Output list
   output_forms <- list()
   
+  # Get formula names
+  form_names <- names(input_forms)
+  
   # Loop over observed variables
-  for(i in 1:length(input_forms)) {
-    # List of formulas for this variable
-    var_forms <- input_forms[[i]]
+  for(i in 1:length(var_names)) {
+    # List of formulas for this variable, if any are given 
+    mch <- match(var_names[i], form_names)
+    if(!is.na(mch)) {
+      var_forms <- input_forms[[mch]]
+    } else {
+      var_forms <- NULL
+    }
     
     # Updated list of formulas, with extra level for state
     var_forms_new <- list()
     
     # Loop over parameters
-    for(j in 1:length(var_forms)) {
-      # Formula for this parameter
-      form <- var_forms[[j]]
+    for(j in 1:length(par_names[[i]])) {
+      # Formula for this parameter, if it is given 
+      par_mch <- match(par_names[[i]][[j]], names(var_forms))
+      if (!is.na(par_mch)) {
+        form <- var_forms[[par_mch]]
+      } else {
+        form <- as.formula("~ 1")
+      }
       
       # Terms object for this formula
       form_terms <- terms(form, specials = paste0("state", 1:n_states))
@@ -80,12 +99,12 @@ make_formulas <- function(input_forms, n_states) {
       
       # Updated list of formulas for this parameter
       var_forms_new[[j]] <- state_forms
-      names(var_forms_new)[j] <- names(var_forms)[j]
+      names(var_forms_new)[j] <- par_names[[i]][[j]]
     }
     
     # Updated list of formulas for this variable
     output_forms[[i]] <- var_forms_new
-    names(output_forms)[i] <- names(input_forms)[i]
+    names(output_forms)[i] <- var_names[i]
   }
   
   return(output_forms)

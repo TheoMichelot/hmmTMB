@@ -69,7 +69,12 @@ Observation <- R6Class(
         })
       } else {
         private$raw_formulas_ <- formulas 
-        private$formulas_ <- make_formulas(formulas, n_states = n_states)        
+        var_names <- colnames(self$obs_var())
+        par_names <- lapply(self$dists(), FUN = function(x) {x$parnames()})
+        private$formulas_ <- make_formulas(formulas, 
+                                           var_names = var_names,
+                                           par_names = par_names, 
+                                           n_states = n_states)        
       }
       
       # Save terms of model formulas
@@ -705,7 +710,7 @@ Observation <- R6Class(
           stop("'formulas' should be a list of R formulas")
         }
         
-        if(!all(names(formulas) == names(dists))) {
+        if(!all(names(formulas) %in% names(dists))) {
           stop("'formulas' should have the same names as 'dists'")
         }
       }
