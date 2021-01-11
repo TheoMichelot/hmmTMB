@@ -20,7 +20,7 @@ dat <- true_mod$simulate(n)
 # plot data
 plot(dat$count, pch = 20, xlab = "time", ylab = "count")
 
-# Fit model ------------------------------------------------------------
+# Create model ------------------------------------------------------------
 
 # create model to fit 
 mod <- HMM$new(file = "pois_mod.hmm")
