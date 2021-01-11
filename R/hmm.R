@@ -757,7 +757,7 @@ HMM <- R6Class(
     #' 
     #' @return cdfs on grid for each variable 
     cond = function(ngrid = 100, silent = FALSE) {
-      delta <- self$hidden()$delta() 
+      delta <- t(self$hidden()$delta())
       vars <- self$obs()$obs_var()
       nvars <- ncol(vars)
       n <- nrow(self$obs()$data())
@@ -798,7 +798,7 @@ HMM <- R6Class(
         for (g in 1:length(grid)) {
           tmp <- data.frame(var = rep(grid[g], n))
           colnames(tmp) <- varnms[i]
-          probs <- self$obs()$obs_probs(obsmats$X_fe, obsmats$X_re, data = tmp)
+          probs <- self$obs()$obs_probs(data = tmp)
           pdfs[i, , g] <- rowSums(probs * cond)
         }
         if (!silent) cat("done\n")
@@ -1265,7 +1265,7 @@ HMM <- R6Class(
     #' simulation)
     #' \item{plot} ggplot object
     #' \end{itemize}
-    gof = function(gof_fn, nsims = 100, silent = TRUE) {
+    gof = function(gof_fn, nsims = 100, silent = FALSE) {
       # Evaluate statistics for observed data
       obs_stat <- gof_fn(self$obs()$data())
       
