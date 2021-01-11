@@ -593,7 +593,7 @@ HMM <- R6Class(
     },
     
     #' @description Fit model using tmbstan
-    mcmc = function(...) {
+    mcmc = function(..., silent = FALSE) {
       self$formulation()
       
       if (!requireNamespace("rstan", quietly = TRUE)) {
@@ -623,7 +623,6 @@ HMM <- R6Class(
         self$update_par(iter = i)
         par_iters[i,] <- unlist(self$par())
       }
-      colnames(par_iters) <- names(unlist(self$par()))
       private$par_iters_ <- par_iters 
       
       # set coefficients to posterior means 
@@ -918,30 +917,53 @@ HMM <- R6Class(
     #' @description Sample posterior state sequences using forward-filtering
     #' backward-sampling 
     #' @param nsamp number of samples to produce 
+    #' @param full if TRUE and model fit by mcmc then parameter estimates are 
+    #' sampled from the posterior samples before simulating each sequence 
     #' 
     #' @return matrix where each column is a different sample of state sequences 
-    sample_states = function(nsamp = 1) {
-      # get forward-backward probabilities 
-      fb <- self$forward_backward()
-      n <- nrow(self$obs()$data())
+    sample_states = function(nsamp = 1, full = FALSE) {
+      if (full & is.null(private$mcmc_)) stop("must fit model with $mcmc first")
+      if (full) {
+        n_full_samp <- nsamp
+        nsamp <- 1 
+      } else {
+        n_full_samp <- 1
+      }
       nstates <- self$hidden()$nstates()
-      states <- matrix(0, nr = n, nc = nsamp)
-      # sample last states
-      L <- log(sum(exp(fb$logforward[,n] - max(fb$logforward[,n])))) + max(fb$logforward[,n])
-      prob <- exp(fb$logforward[,n] - L)
-      prob <- prob / sum(prob)
-      states[n,] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
-      # get tpms 
-      tpms <- self$hidden()$tpm(t = "all")
-      # get observation probabilties
-      obsprobs <- self$obs()$obs_probs()
-      # sample backward
-      for (s in 1:nsamp) {
-        for (i in (n - 1):1) {
-          prob <- exp(fb$logforward[, i] + log(tpms[, states[i + 1, s], i + 1]) + 
-            log(obsprobs[i + 1, states[i + 1, s]]) + fb$logbackward[states[i + 1, s], i + 1] - L) 
-          prob <- prob / sum(prob)
-          states[i, s] <- sample(1:nstates, prob = prob, size = 1)
+      actual_samps <- max(n_full_samp, nsamp)
+      states <- matrix(0, nr = n, nc = actual_samps)
+      n <- nrow(self$obs()$data())
+      for (k in 1:n_full_samp) {
+        # sample a parameter iteration at random, if FULL asked for 
+        if (full) self$update_par(iter = sample(1:nrow(mod$iters()), size = 1))
+        # get forward-backward probabilities 
+        fb <- self$forward_backward()
+        # sample last states
+        L <- log(sum(exp(fb$logforward[,n] - max(fb$logforward[,n])))) + max(fb$logforward[,n])
+        prob <- exp(fb$logforward[,n] - L)
+        prob <- prob / sum(prob)
+        if (full) {
+          states[n,k] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
+        } else {
+          states[n,] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
+        }
+        # get tpms 
+        tpms <- self$hidden()$tpm(t = "all")
+        # get observation probabilties
+        obsprobs <- self$obs()$obs_probs()
+        # sample backward
+        for (s in 1:nsamp) {
+          for (i in (n - 1):1) {
+            prob <- exp(fb$logforward[, i] + log(tpms[, states[i + 1, s], i + 1]) + 
+              log(obsprobs[i + 1, states[i + 1, s]]) + fb$logbackward[states[i + 1, s], i + 1] - L) 
+            prob <- prob / sum(prob)
+            if (full) {
+              ind <- k
+            } else {
+              ind <- s 
+            }
+            states[i, ind] <- sample(1:nstates, prob = prob, size = 1)
+          }
         }
       }
       return(states)
@@ -1081,6 +1103,7 @@ HMM <- R6Class(
     #' @param n_post if greater than zero then n_post posterior samples are produced 
     #' @return named array of predictions and confidence interval, if requested
     predict = function(name, t = 1, newdata = NULL, level = 0, n_post = 0) {
+      if (is.null(private$out_) & (level > 0 | n_post > 0)) stop("must fit model with fit() function first")
       if (!is.null(newdata)) {
         old <- list(X_fe_obs = self$obs()$X_fe(), 
                     X_re_obs = self$obs()$X_re(), 
@@ -1253,6 +1276,8 @@ HMM <- R6Class(
     #' @param gof_fn goodness-of-fit function which accepts "data" as input
     #'               and returns a statistic: either a vector or a single number. 
     #' @param nsims number of simulations to perform 
+    #' @param full if model fit with MCMC then full set to TRUE will sample from
+    #' posterior for each simulation 
     #' @param silent Logical. If FALSE, simulation progress is shown. 
     #' (Default: TRUE)
     #' 
@@ -1265,7 +1290,7 @@ HMM <- R6Class(
     #' simulation)
     #' \item{plot} ggplot object
     #' \end{itemize}
-    gof = function(gof_fn, nsims = 100, silent = FALSE) {
+    gof = function(gof_fn, nsims = 100, full = FALSE, silent = FALSE) {
       # Evaluate statistics for observed data
       obs_stat <- gof_fn(self$obs()$data())
       
@@ -1273,6 +1298,11 @@ HMM <- R6Class(
       stats <- matrix(0, nc = nsims, nr = length(obs_stat))
       for (sim in 1:nsims) {
         if (!silent) cat("Simulating", sim, " / ", nsims, "\r")
+        
+        # if full and mcmc then sample parameter
+        if (full & !is.null(private$mcmc_)) {
+          self$update_par(iter = sample(1:nrow(self$iters()), size = 1))
+        }
         
         # simulate new data
         newdat <- self$simulate(n = nrow(self$obs()$data()), 
