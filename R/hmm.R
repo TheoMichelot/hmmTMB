@@ -1130,7 +1130,7 @@ HMM <- R6Class(
       # just return predicted means if no confidence intervals wanted 
       # or posterior simulations 
       if (level == 0 & n_post == 0) {
-        val <- fn(...)
+        val <- fn(linpred = self[[comp]]()$linpred(), t = t)
       }
       
       # do posterior sampling if asked for  
@@ -1408,7 +1408,7 @@ HMM <- R6Class(
       # Get x-axis 
       # get newdata over a grid 
       newdata <- cov_grid(var = var, 
-                          data = self$obs()$data(), 
+                          obj = self, 
                           covs = covs, 
                           formulas = self[[comp]]()$formulas(), 
                           n_grid = n_grid)
