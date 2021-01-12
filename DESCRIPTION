@@ -10,7 +10,11 @@ Description: Fitting hidden Markov models with template model builder allows
 License: MIT + License
 Depends: R6, mgcv, TMB, RcppEigen, Matrix, ggplot2, stringr, formula.tools, optimx
 LinkingTo: TMB, RcppEigen
-Suggests: tmbstan, rstan, CircStats
+Suggests: 
+    tmbstan,
+    rstan,
+    CircStats,
+    testthat
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
