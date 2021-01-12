@@ -667,10 +667,14 @@ HMM <- R6Class(
         private$tmb_obj_$method <- args$method 
         args <- args[which(names(args) != "method")]
       }
+      # create temporary optimization function
+      opt_fn <- function(par) {as.vector(args$fn(par))}
+      opt_gr <- function(par) {as.vector(args$gr(par))}
+      # fit model 
       args <- c(private$tmb_obj_, args)
       private$out_ <- optimx(par = args$par, 
-                             fn = args$fn, 
-                             gr = args$gr, 
+                             fn = opt_fn, 
+                             gr = opt_gr, 
                              method = args$method,
                              itnmax = args$itnmax, 
                              hessian = args$hessian, 
