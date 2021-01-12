@@ -55,27 +55,13 @@ Observation <- R6Class(
       }
       
       # Set formulas
-      if(is.null(formulas)) {
-        # Default: set all formulas to ~1
-        private$formulas_ <- lapply(par, function(varpar) {
-          f <- lapply(varpar, function(...) {
-            g <- lapply(1:n_states, function(...) {
-              return(~1)              
-            })
-            names(g) <- paste0("state", 1:n_states)
-            return(g)
-          })
-          return(f)
-        })
-      } else {
-        private$raw_formulas_ <- formulas 
-        var_names <- colnames(self$obs_var())
-        par_names <- lapply(self$dists(), FUN = function(x) {x$parnames()})
-        private$formulas_ <- make_formulas(formulas, 
-                                           var_names = var_names,
-                                           par_names = par_names, 
-                                           n_states = n_states)        
-      }
+      private$raw_formulas_ <- formulas 
+      var_names <- colnames(self$obs_var())
+      par_names <- lapply(self$dists(), FUN = function(x) {x$parnames()})
+      private$formulas_ <- make_formulas(formulas, 
+                                         var_names = var_names,
+                                         par_names = par_names, 
+                                         n_states = n_states)        
       
       # Save terms of model formulas
       mats <- self$make_mat()
