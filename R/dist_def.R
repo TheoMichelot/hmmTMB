@@ -193,22 +193,22 @@ dist_cat <- Dist$new(
 # Zero-inflated Negative-Binomial ==============
 dist_zinb <- Dist$new(
   name = "zinb", 
-  pdf = function(x, z, size, p, log = FALSE) {
+  pdf = function(x, z, size, prob, log = FALSE) {
     zero <- x < 1e-10 
-    l <- z * zero + (1 - z) * dnbinom(x, size, p)
+    l <- z * zero + (1 - z) * dnbinom(x, size, prob)
     if (log) l <- log(l)
     return(l)
   }, 
-  rng = function(n, z, size, p) {
+  rng = function(n, z, size, prob) {
     zero <- rbinom(n, 1, z)
-    y <- rnbinom(n, size, p)
+    y <- rnbinom(n, size, prob)
     y[zero == 1] <- 0
     return(y)
   }, 
-  link = list(z = qlogis, size = log, p = qlogis), 
-  invlink = list(z = plogis, size = exp, p = plogis), 
+  link = list(z = qlogis, size = log, prob = qlogis), 
+  invlink = list(z = plogis, size = exp, prob = plogis), 
   npar = 3, 
-  parnames = c("z", "size", "p"), 
+  parnames = c("z", "size", "prob"), 
   parapprox = function(x, size = 1) {
     # approximates Negative binomial with Poisson 
     mu <- mean(x)
@@ -231,23 +231,23 @@ dist_zinb <- Dist$new(
 # Zero-Truncated Negative-Binomial ========================
 dist_ztnb <- Dist$new(
   name = "ztnb", 
-  pdf = function(x, size, p, log = FALSE) {
-    l <- dnbinom(x, size, p) / (1 - dnbinom(0, size, p))
+  pdf = function(x, size, prob, log = FALSE) {
+    l <- dnbinom(x, size, prob) / (1 - dnbinom(0, size, prob))
     if (log) l <- log(l)
     return(l)
   }, 
-  rng = function(n, size, p) {
+  rng = function(n, size, prob) {
     y <- NULL 
     while (length(y) < n) {
-      z <- rnbinom(n, size, p)
+      z <- rnbinom(n, size, prob)
       y <- c(y, z[z > 1e-10])
     }
     return(y)
   }, 
-  link = list(size = log, p = qlogis), 
-  invlink = list(size = exp, p = plogis), 
+  link = list(size = log, prob = qlogis), 
+  invlink = list(size = exp, prob = plogis), 
   npar = 2,
-  parnames = c("size", "p"), 
+  parnames = c("size", "prob"), 
   parapprox = function(x, size = 1) {
     warning("parameter approximation ignores zero truncation")
     # use minimum variance unbiased estimate of p
@@ -279,16 +279,19 @@ dist_norm <- Dist$new(
 dist_truncnorm <- Dist$new(
   name = "truncnorm", 
   pdf = function(x, mean, sd, min = -Inf, max = Inf, log = FALSE) {
-    left <- pnorm(min, mean, sd)
-    right <- pnorm(max, mean, sd)
-    p <- dnorm(x, mean, sd) / (right - left)
+    left <- pnorm((min - mean) / sd)
+    right <- pnorm((max - mean) / sd)
+    p <- ifelse(x >= min & x <= max, 
+                dnorm((x - mean) / sd) / (right - left),
+                0)
+    p <- p / sd
     if (log) p <- log(p)
     return(p)
   },
   rng = function(n, mean, sd, min = -Inf, max = Inf) {
     u <- runif(n)
-    left <- pnorm(min, mean, sd)
-    right <- pnorm(max, mean, sd) - pnorm(min, mean, sd)
+    left <- pnorm((min - mean) / sd)
+    right <- pnorm((max - mean) / sd) - pnorm((min - mean) / sd)
     x <- qnorm(left + u * right) * sd + mean 
     return(x)
   },
@@ -486,7 +489,7 @@ dist_vm <- Dist$new(
   rng = function(n, mu, kappa) {
     # rvm and dvm use different parameter names
     # (also, translate rvm output from [0, 2pi] to [-pi, pi])
-    rvm(n = n, mean = mu, k = kappa) - pi
+    CircStats::rvm(n = n, mean = mu + pi, k = kappa) - pi
   },
   link = list(mu = function(x) qlogis((x + pi) / (2 * pi)), 
               kappa = log),
