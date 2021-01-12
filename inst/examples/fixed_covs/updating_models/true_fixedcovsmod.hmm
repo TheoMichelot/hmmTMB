@@ -1,0 +1,21 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+count ~ pois
+
+INITIAL 
+count:
+  lambda = 5, 20
+tpm:
+  0.8, 0.2
+  0.1, 0.9
+
+FORMULA:
+count:
+  lambda ~ x + I(z^2) + f
+  
+TPM
+. : ~x
+~1 : .
