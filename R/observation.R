@@ -35,6 +35,7 @@ Observation <- R6Class(
       # Set data and nstates attributes
       private$data_ <- data
       private$nstates_ <- n_states
+      private$inipar_ <- par
       
       # Check for observed states 
       if ("state" %in% colnames(data)) {
@@ -55,13 +56,24 @@ Observation <- R6Class(
       }
       
       # Set formulas
-      private$raw_formulas_ <- formulas 
       var_names <- colnames(self$obs_var())
       par_names <- lapply(self$dists(), FUN = function(x) {x$parnames()})
       private$formulas_ <- make_formulas(formulas, 
                                          var_names = var_names,
                                          par_names = par_names, 
-                                         n_states = n_states)        
+                                         n_states = n_states)
+      if (is.null(formulas)) {
+        # Default: set all formulas to ~1
+        forms <- lapply(par, function(varpar) {
+          f <- lapply(varpar, function(...) {
+              return(~1)            
+          })
+          return(f)
+        })
+        private$raw_formulas_ <- forms
+      } else {
+        private$raw_formulas_ <- formulas 
+      }
       
       # Save terms of model formulas
       mats <- self$make_mat()
@@ -171,6 +183,9 @@ Observation <- R6Class(
       par <- aperm(par_array, perm = c(2, 1, 3))
       return(par)
     },
+    
+    #' @description Return initial parameter values supplied 
+    inipar = function() {return(private$inipar_)}, 
     
     #' @description Fixed effect parameters on working scale
     coeff_fe = function() {return(private$coeff_fe_)},
@@ -622,6 +637,7 @@ Observation <- R6Class(
     lambda_ = NULL,
     formulas_ = NULL,
     raw_formulas_ = NULL, 
+    inipar_ = NULL, 
     terms_ = NULL,
     mats_ = NULL, 
     
