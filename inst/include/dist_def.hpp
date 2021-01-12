@@ -414,8 +414,7 @@ public:
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
-    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
-    for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i)); 
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); ; 
     return(wpar); 
   } 
   // Inverse link function 
@@ -424,12 +423,12 @@ public:
     matrix<Type> par(n_states, n_par);
     for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
     for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // scale
-    for (int i = 0; i < n_states; ++i) par(i, 2) = exp(wpar(i + 2 * n_states)); // df
     return(par); 
   }
   // Probability density/mass function
   Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
-    Type val = dt((x - par(0)) / par(1), par(2), 0) / par(1); 
+    Type df = 2 * par(1) * par(1) / (par(1) * par(1) - 1); 
+    Type val = dt(x - par(0), df, 0); 
     if (logpdf) val = log(val); 
     return(val); 
   }
