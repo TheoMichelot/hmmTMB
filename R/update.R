@@ -7,8 +7,9 @@
 #' @param j if "hidden" then j is the column of the structure containing the change
 #'          if "obs" then j is the parameter whose formula is to be changed 
 #' @param change the change to make to the formula, see ?update.formula for details
+#' @param fit if FALSE then change is made but model is not re-fit
 #' @export
-update.HMM <- function(mod, type, i, j, change) {
+update.HMM <- function(mod, type, i, j, change, fit = TRUE) {
   
   if (type == "hidden") {
     # copy model components 
@@ -19,9 +20,9 @@ update.HMM <- function(mod, type, i, j, change) {
     # update relevant formula 
     new_struct[i, j] <- as.character(update(as.formula(new_struct[i, j]), change))
     # create new hidden sub-model component 
-    new_hid <- MarkovChain$new(n_states = new_hid$nstates(), 
+    new_hid <- MarkovChain$new(n_states = mod$hidden()$nstates(), 
                                structure = new_struct, 
-                               data = mod1$obs()$data()) 
+                               data = mod$obs()$data()) 
   } else if (type == "obs") {
     # copy model components 
     copy_obs <- mod$obs()$clone()
@@ -34,13 +35,13 @@ update.HMM <- function(mod, type, i, j, change) {
     new_obs <- Observation$new(data = copy_obs$data(), 
                                dists = copy_obs$dists(), 
                                n_states = copy_obs$nstates(), 
-                               par = copy_obs$par(), 
+                               par = copy_obs$inipar(), 
                                formulas = forms)
   }
   # create new HMM object 
   new_mod <- HMM$new(obs = new_obs, hid = new_hid, init = mod)
   # fit new model 
-  new_mod$fit() 
+  if(fit) new_mod$fit() 
   # return fitted model 
   return(new_mod)
 }
