@@ -1,0 +1,16 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ t
+
+INITIAL 
+y:
+  mean = 5, 10
+  scale = 1.2, 1.5
+tpm:
+  0.8, 0.2
+  0.1, 0.9
+ 
+  

@@ -1,0 +1,17 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ truncnorm
+
+INITIAL 
+y:
+  mean = 3, 10
+  sd = 0.5, 2
+  min = 4, 7
+  max = 7, Inf
+tpm:
+  0.95, 0.05
+  0.05, 0.95
+ 

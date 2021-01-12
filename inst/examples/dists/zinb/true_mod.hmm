@@ -1,0 +1,17 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ zinb
+
+INITIAL 
+y:
+  size = 5, 10
+  prob = 0.6, 0.2
+  z = 0.05, 0.1
+tpm:
+  0.8, 0.2
+  0.1, 0.9
+ 
+  

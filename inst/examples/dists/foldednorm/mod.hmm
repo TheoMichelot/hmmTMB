@@ -1,0 +1,15 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ foldednorm
+
+INITIAL 
+y:
+  mean = 2, 7
+  sd = 1, 1
+tpm:
+  0.95, 0.05
+  0.05, 0.95
+ 

@@ -1,0 +1,16 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ cat3
+
+INITIAL 
+y:
+  p1 = 0.2, 0.7
+  p2 = 0.6, 0.1
+tpm:
+  0.8, 0.2
+  0.1, 0.9
+ 
+  

@@ -1,0 +1,16 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ beta
+
+INITIAL 
+y:
+  shape1 = 0.5, 1.5
+  shape2 = 1.2, 0.8
+tpm:
+  0.8, 0.2
+  0.1, 0.9
+ 
+  

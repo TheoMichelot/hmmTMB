@@ -1,0 +1,19 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ mvnorm2
+
+INITIAL 
+y:
+  mu1 = 5, 10
+  mu2 = 0.5, 0.8
+  sd1 = 1, 2
+  sd2 = 0.1, 0.2
+  corr12 = 0.2, 0.8
+tpm:
+  0.8, 0.2
+  0.1, 0.9
+ 
+  

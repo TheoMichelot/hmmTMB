@@ -1,0 +1,16 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ lnorm
+
+INITIAL 
+y:
+  meanlog = 5, 10
+  sdlog = 1, 2
+tpm:
+  0.8, 0.2
+  0.1, 0.9
+ 
+  

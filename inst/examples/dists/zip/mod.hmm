@@ -1,0 +1,15 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ zip
+
+INITIAL 
+y:
+  lambda = 5, 10
+  z = 0.05, 0.1
+tpm:
+  0.95, 0.05
+  0.05, 0.95
+ 

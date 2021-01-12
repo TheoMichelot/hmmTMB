@@ -1,0 +1,15 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ vm
+
+INITIAL 
+y:
+  mu = 0, 1
+  kappa = 1, 2
+tpm:
+  0.95, 0.05
+  0.05, 0.95
+ 
