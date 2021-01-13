@@ -1,4 +1,13 @@
 
+# Tests to add:
+# check dimensions of X_re and X_fe and S
+# check that elements of terms are compatible (e.g. same length...)
+# check update functions
+# check dimensions of tpm
+# check delta for one special case?
+# check that delta throws error when no solution
+# check dimension of linpred
+
 context("MarkovChain class")
 
 test_that("Parameter transformation functions cancel out", {
