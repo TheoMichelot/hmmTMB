@@ -64,7 +64,7 @@ test_that("Update methods work", {
     # Test update of delta and tpm
     new_delta <- c(0.3, 0.7)
     mc$update_delta(new_delta = new_delta)
-    expect_equal(as.vector(mc$delta(t = NULL)), new_delta)
+    expect_equal(unname(mc$delta(t = NULL)), new_delta)
     new_tpm <- matrix(c(0.8, 0.3, 0.2, 0.7), ncol = 2)
     mc$update_tpm(tpm = new_tpm)
     expect_equal(mc$tpm()[,,1], new_tpm)
