@@ -1,7 +1,5 @@
 
 # Tests to add:
-# check dimension of par
-# check dimension of obs_var
 # check dimensions of obs_probs
 
 context("Observation class")
@@ -39,6 +37,22 @@ test_that("Model terms are consistent", {
 
 test_that("linpred has correct length", {
     expect_equal(length(obs$linpred()), 4*n)
+})
+
+test_that("par has correct dimensions", {
+    expect_equal(dim(obs$par()), c(2, 2, 1))
+    expect_equal(dim(obs$par(t = 5)), c(2, 2, 1))
+    expect_equal(dim(obs$par(t = 6:10)), c(2, 2, 5))
+    expect_equal(dim(obs$par(t = "all")), c(2, 2, n))
+    expect_equal(dim(obs$par(t = "all", linpred = seq(-2, 2, length = 4))), c(2, 2, 1))
+})
+
+test_that("obs_var has correct dimensions", {
+    expect_equal(dim(obs$obs_var()), c(n, 1))
+})
+
+test_that("obs_probs has correct dimensions", {
+    expect_equal(dim(obs$obs_probs()), c(n, 2))
 })
 
 test_that("Update methods work", {
