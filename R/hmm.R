@@ -1479,26 +1479,40 @@ HMM <- R6Class(
                 strip.placement = "outside", 
                 strip.text = element_text(colour = "black")) + 
           coord_cartesian(ylim = c(0, 1))
-      } else if (name == "delta") {
-        p <- ggplot(df, aes(var, prob, group = state, col = state)) +
-          geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
-          geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
-          scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
-          xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
-          theme_light() + 
-          coord_cartesian(ylim = c(0, 1))
-      } else if (name == "obspar") {
-        p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
-          geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3) +
-          geom_line(size = 0.7) + scale_color_manual("", values = hmmTMB_cols) +
-          scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
-          facet_wrap(c("par"), scales = "free_y",
-                     strip.position = "left",
-                     labeller = label_bquote(.(par))) +
-          xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
-          theme(strip.background = element_blank(),
-                strip.placement = "outside", 
-                strip.text = element_text(colour = "black"))
+        if(is.factor(df$var)) {
+          p <- p + geom_point(size = 0.7) +
+            geom_segment(aes(x = var, y = low, xend = var, yend = upp), alpha = 0.3)
+        } else {
+          p <- p + geom_line(size = 0.7) +
+            geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3)
+        }
+      } else {
+        if (name == "delta") {
+          p <- ggplot(df, aes(var, prob, group = state, col = state)) +
+            scale_color_manual("", values = hmmTMB_cols) +
+            scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
+            xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
+            theme_light() + 
+            coord_cartesian(ylim = c(0, 1))
+        } else if (name == "obspar") {
+          p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
+            scale_color_manual("", values = hmmTMB_cols) +
+            scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
+            facet_wrap(c("par"), scales = "free_y",
+                       strip.position = "left",
+                       labeller = label_bquote(.(par))) +
+            xlab(var) + ylab(NULL) + ggtitle(plot_txt) +
+            theme(strip.background = element_blank(),
+                  strip.placement = "outside", 
+                  strip.text = element_text(colour = "black"))
+        }
+        if(is.factor(df$var)) {
+          p <- p + geom_point(size = 0.7) +
+            geom_segment(aes(x = var, y = low, xend = var, yend = upp), alpha = 0.3)
+        } else {
+          p <- p + geom_line(size = 0.7) +
+            geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3)
+        }
       }
       return(p)
     }, 
