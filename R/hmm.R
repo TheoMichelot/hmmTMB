@@ -1063,7 +1063,7 @@ HMM <- R6Class(
     #' @param comp is "obs" for observation model linear predictor, "hidden" for
     #'             hidden model linear predictor 
     #' @param n_post number of posterior simulations 
-    #' @param level confidence interval level, default is 95% 
+    #' @param level confidence interval level, default is 95\% 
     #' 
     #' @return a vector (for scalar outputs of fn) or a matrix (for vector outputs)
     #' with a column for each simulation 
@@ -1102,7 +1102,7 @@ HMM <- R6Class(
     #' @param ... other arguments to the respective functions for hidden$tpm, hidden$delta, obs$par
     #' @param newdata new dataframe to use for prediction
     #' @param level if greater than zero, then produce confidence intervals with this level, e.g. CI = 0.95
-    #'           will produce 95% confidence intervals 
+    #'           will produce 95\% confidence intervals 
     #' @param n_post if greater than zero then n_post posterior samples are produced 
     #' @return named array of predictions and confidence interval, if requested
     predict = function(name, t = 1, newdata = NULL, level = 0, n_post = 0) {
