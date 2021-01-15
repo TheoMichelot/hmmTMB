@@ -4,12 +4,10 @@
 \alias{cov_grid}
 \title{Grid of covariates}
 \usage{
-cov_grid(var, data, covs = NULL, formulas, n_grid = 1000)
+cov_grid(var, obj, covs = NULL, formulas, n_grid = 1000)
 }
 \arguments{
 \item{var}{Name of variable}
-
-\item{data}{Data frame containing the covariates}
 
 \item{covs}{Optional data frame with a single row and one column
 for each covariate, giving the values that should be used. If this is
@@ -19,6 +17,8 @@ first level for factor variables.}
 \item{formulas}{List of formulas used in the model}
 
 \item{n_grid}{Grid size (number of points). Default: 1000.}
+
+\item{data}{Data frame containing the covariates}
 }
 \value{
 Data frame of covariates, with 'var' defined over a grid,

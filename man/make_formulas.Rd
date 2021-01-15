@@ -4,12 +4,17 @@
 \alias{make_formulas}
 \title{Process formulas and store in nested list}
 \usage{
-make_formulas(input_forms, n_states)
+make_formulas(input_forms, var_names, par_names, n_states)
 }
 \arguments{
 \item{input_forms}{Nested list of formulas, with two levels: observed variable, 
 and parameter of the observation distribution. The formulas can contain 
 state-specific terms, e.g. "~ state1(x1) + x2".}
+
+\item{var_names}{character vector name of each observation variable}
+
+\item{par_names}{list with element for each observation variable that
+contains character vector of name of each parameter in its distribution}
 
 \item{n_states}{Number of states}
 }
@@ -24,5 +29,5 @@ Process formulas and store in nested list
 Formulas for the observation parameters can be different for the
 different states, using special functions of the form "state1", "state2", etc.
 This method processes the list of formulas passed by the user to extract the 
-state-specific formulas.
+state-specific formulas. Missing formulas are assumed to be intercept-only ~1.
 }
