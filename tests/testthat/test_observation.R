@@ -1,7 +1,4 @@
 
-# Tests to add:
-# check dimensions of obs_probs
-
 context("Observation class")
 
 # Create Observation object for tests
