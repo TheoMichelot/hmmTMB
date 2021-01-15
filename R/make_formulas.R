@@ -22,7 +22,10 @@
 #'                                 scale = ~ x1),
 #'                     count = list(lambda = ~ state1(x1) + state2(s(x2, bs = "cs"))))
 #'
-#' make_formulas(input_forms = input_forms, n_states = 2)
+#' make_formulas(input_forms = input_forms, 
+#'               var_names = names(input_forms), 
+#'               par_names = lapply(input_forms, function(f) names(f)), 
+#'               n_states = 2)
 make_formulas <- function(input_forms, 
                           var_names, 
                           par_names,
