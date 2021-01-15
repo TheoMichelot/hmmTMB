@@ -20,22 +20,29 @@ the observation model from a hidden Markov model.
 \item \href{#method-dists}{\code{Observation$dists()}}
 \item \href{#method-nstates}{\code{Observation$nstates()}}
 \item \href{#method-par}{\code{Observation$par()}}
+\item \href{#method-inipar}{\code{Observation$inipar()}}
 \item \href{#method-coeff_fe}{\code{Observation$coeff_fe()}}
 \item \href{#method-coeff_re}{\code{Observation$coeff_re()}}
+\item \href{#method-X_fe}{\code{Observation$X_fe()}}
+\item \href{#method-X_re}{\code{Observation$X_re()}}
 \item \href{#method-lambda}{\code{Observation$lambda()}}
 \item \href{#method-vcomp}{\code{Observation$vcomp()}}
 \item \href{#method-formulas}{\code{Observation$formulas()}}
 \item \href{#method-terms}{\code{Observation$terms()}}
 \item \href{#method-obs_var}{\code{Observation$obs_var()}}
+\item \href{#method-known_states}{\code{Observation$known_states()}}
 \item \href{#method-update_par}{\code{Observation$update_par()}}
 \item \href{#method-update_coeff_fe}{\code{Observation$update_coeff_fe()}}
 \item \href{#method-update_coeff_re}{\code{Observation$update_coeff_re()}}
+\item \href{#method-update_X_fe}{\code{Observation$update_X_fe()}}
+\item \href{#method-update_X_re}{\code{Observation$update_X_re()}}
 \item \href{#method-update_lambda}{\code{Observation$update_lambda()}}
+\item \href{#method-update_data}{\code{Observation$update_data()}}
 \item \href{#method-make_mat}{\code{Observation$make_mat()}}
-\item \href{#method-make_mat_grid}{\code{Observation$make_mat_grid()}}
+\item \href{#method-make_newdata_grid}{\code{Observation$make_newdata_grid()}}
 \item \href{#method-n2w}{\code{Observation$n2w()}}
 \item \href{#method-w2n}{\code{Observation$w2n()}}
-\item \href{#method-par_all}{\code{Observation$par_all()}}
+\item \href{#method-linpred}{\code{Observation$linpred()}}
 \item \href{#method-obs_probs}{\code{Observation$obs_probs()}}
 \item \href{#method-plot_dist}{\code{Observation$plot_dist()}}
 \item \href{#method-formulation}{\code{Observation$formulation()}}
@@ -48,15 +55,7 @@ the observation model from a hidden Markov model.
 \subsection{Method \code{new()}}{
 Create new Observation object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$new(
-  data,
-  dists,
-  n_states,
-  par = NULL,
-  coeff_fe = NULL,
-  coeff_re = NULL,
-  formulas = NULL
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$new(data, dists, n_states, par = NULL, formulas = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -69,11 +68,6 @@ Create new Observation object
 \item{\code{n_states}}{Number of states (needed to construct model formulas)}
 
 \item{\code{par}}{List of observation parameters (for covariate-free model)}
-
-\item{\code{coeff_fe}}{Vector of fixed effect parameters on working scale}
-
-\item{\code{coeff_re}}{Vector of random effect parameters. Defaults to a
-vector of zeros if not provided.}
 
 \item{\code{formulas}}{List of formulas for observation parameters}
 }
@@ -119,7 +113,33 @@ Number of states
 \subsection{Method \code{par()}}{
 Parameters on natural scale
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$par()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$par(t = 1, full_names = TRUE, linpred = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{t}}{time point, default t = 1; 
+if "all" then return for all time points, otherwise return at time points given in t}
+
+\item{\code{full_names}}{Logical. If TRUE, the rows of the output
+are named in the format "variable.parameter" (default). If
+FALSE, the rows are names in the format "parameter". The
+latter is used in various internal functions, when the parameters
+need to be passed on to an R function.}
+
+\item{\code{linpred}}{custom linear predictor}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-inipar"></a>}}
+\if{latex}{\out{\hypertarget{method-inipar}{}}}
+\subsection{Method \code{inipar()}}{
+Return initial parameter values supplied
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$inipar()}\if{html}{\out{</div>}}
 }
 
 }
@@ -140,6 +160,26 @@ Fixed effect parameters on working scale
 Random effect parameters
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$coeff_re()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-X_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-X_fe}{}}}
+\subsection{Method \code{X_fe()}}{
+Fixed effect design matrix
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$X_fe()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-X_re"></a>}}
+\if{latex}{\out{\hypertarget{method-X_re}{}}}
+\subsection{Method \code{X_re()}}{
+Random effect design matrix
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$X_re()}\if{html}{\out{</div>}}
 }
 
 }
@@ -174,7 +214,7 @@ standard deviations of independent normal random effects.
 \subsection{Method \code{formulas()}}{
 List of model formulas for observation model
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$formulas()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$formulas(raw = FALSE)}\if{html}{\out{</div>}}
 }
 
 }
@@ -194,7 +234,25 @@ Terms of model formulas
 \subsection{Method \code{obs_var()}}{
 Data frame of response variables
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$obs_var()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$obs_var(expand = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{expand}}{if TRUE then multivariate variables in observations are expanded 
+to be univariate, creating extra columns}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-known_states"></a>}}
+\if{latex}{\out{\hypertarget{method-known_states}{}}}
+\subsection{Method \code{known_states()}}{
+Vector of known states
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$known_states()}\if{html}{\out{</div>}}
 }
 
 }
@@ -256,6 +314,40 @@ parameters}
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-update_X_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-update_X_fe}{}}}
+\subsection{Method \code{update_X_fe()}}{
+Update fixed effect design matrix
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$update_X_fe(X_fe)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{X_fe}}{New fixed effect design matrix}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-update_X_re"></a>}}
+\if{latex}{\out{\hypertarget{method-update_X_re}{}}}
+\subsection{Method \code{update_X_re()}}{
+Update random effect design matrix
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$update_X_re(X_re)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{X_fe}}{New random effect design matrix}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_lambda"></a>}}
 \if{latex}{\out{\hypertarget{method-update_lambda}{}}}
 \subsection{Method \code{update_lambda()}}{
@@ -268,6 +360,23 @@ Update smoothness parameters
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{lambda}}{New smoothness parameter vector}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-update_data"></a>}}
+\if{latex}{\out{\hypertarget{method-update_data}{}}}
+\subsection{Method \code{update_data()}}{
+Update data
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$update_data(data)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{data}}{New data frame}
 }
 \if{html}{\out{</div>}}
 }
@@ -303,11 +412,11 @@ Design matrices for grid of covariates
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-make_mat_grid"></a>}}
-\if{latex}{\out{\hypertarget{method-make_mat_grid}{}}}
-\subsection{Method \code{make_mat_grid()}}{
+\if{html}{\out{<a id="method-make_newdata_grid"></a>}}
+\if{latex}{\out{\hypertarget{method-make_newdata_grid}{}}}
+\subsection{Method \code{make_newdata_grid()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$make_mat_grid(var, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$make_newdata_grid(var, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -378,49 +487,14 @@ List of parameters on natural scale
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-par_all"></a>}}
-\if{latex}{\out{\hypertarget{method-par_all}{}}}
-\subsection{Method \code{par_all()}}{
-Get observation parameters from design matrices
+\if{html}{\out{<a id="method-linpred"></a>}}
+\if{latex}{\out{\hypertarget{method-linpred}{}}}
+\subsection{Method \code{linpred()}}{
+Compute linear predictor
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$par_all(
-  X_fe,
-  X_re,
-  coeff_fe = NULL,
-  coeff_re = NULL,
-  full_names = TRUE
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$linpred()}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{X_fe}}{Design matrix for fixed effects, as returned
-by \code{make_mat}}
-
-\item{\code{X_re}}{Design matrix for random effects, as returned
-by \code{make_mat}}
-
-\item{\code{coeff_fe}}{Optional vector of coefficients for fixed effect
-parameters. If this isn't provided, the model parameters
-are used.}
-
-\item{\code{coeff_re}}{Optional vector of coefficients for random 
-effect parameters. If this isn't provided, the model parameters 
-are used.}
-
-\item{\code{full_names}}{Logical. If TRUE, the rows of the output
-are named in the format "variable.parameter" (default). If
-FALSE, the rows are names in the format "parameter". The
-latter is used in various internal functions, when the parameters
-need to be passed on to an R function.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Array with one slice for each time step, one row 
-for each observation parameter, and one column for each state.
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-obs_probs"></a>}}
@@ -428,12 +502,14 @@ for each observation parameter, and one column for each state.
 \subsection{Method \code{obs_probs()}}{
 Observation likelihoods
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$obs_probs(X_fe, X_re)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$obs_probs(data = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{data}}{optional dataframe to include in form of obs_var() output}
+
 \item{\code{X_fe}}{Design matrix for fixed effects}
 
 \item{\code{X_re}}{Design matrix for random effects}
@@ -456,7 +532,7 @@ overlaid with the pdf of the specified distribution for that data stream.
 Helpful to select initial parameter values for model fitting, or to visualise 
 fitted state-dependent distributions.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$plot_dist(name, par = NULL, weights = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$plot_dist(name, weights = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -464,12 +540,6 @@ fitted state-dependent distributions.
 \describe{
 \item{\code{name}}{Name of response variable for which the histogram
 and pdfs should be plotted.}
-
-\item{\code{par}}{Optional matrix of parameters, with one row for each state
-and one column for each parameter. The columns of the matrix should be
-named with the names of the parameters, e.g. "mean" and "sd" for normal
-distribution. If not provided, the parameters stored in the object are
-used (default).}
 
 \item{\code{weights}}{Optional vector of length the number of pdfs that are
 plotted. Useful to visualise a mixture of distributions weighted by the
@@ -486,6 +556,8 @@ A ggplot object
 \if{latex}{\out{\hypertarget{method-formulation}{}}}
 \subsection{Method \code{formulation()}}{
 Print model formulation
+Check constructor arguments 
+Create a distribution
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$formulation()}\if{html}{\out{</div>}}
 }

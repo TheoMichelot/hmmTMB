@@ -11,6 +11,10 @@ R6 class for hidden Markov model
 \details{
 Encapsulates the observation and hidden state models for a hidden
 Markov model.
+
+Compute pseudo-residuals for the fitted model. If the fitted model
+is the "true" model, the pseudo-residuals follow a standard normal distribution.
+Deviations from normality suggest lack of fit.
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -25,24 +29,36 @@ Markov model.
 \item \href{#method-coeff_fe}{\code{HMM$coeff_fe()}}
 \item \href{#method-coeff_re}{\code{HMM$coeff_re()}}
 \item \href{#method-lambda}{\code{HMM$lambda()}}
+\item \href{#method-update_par}{\code{HMM$update_par()}}
 \item \href{#method-vcomp}{\code{HMM$vcomp()}}
 \item \href{#method-par}{\code{HMM$par()}}
-\item \href{#method-nllk}{\code{HMM$nllk()}}
+\item \href{#method-suggest_initial}{\code{HMM$suggest_initial()}}
+\item \href{#method-set_priors}{\code{HMM$set_priors()}}
+\item \href{#method-priors}{\code{HMM$priors()}}
+\item \href{#method-iters}{\code{HMM$iters()}}
+\item \href{#method-stan}{\code{HMM$stan()}}
+\item \href{#method-llk}{\code{HMM$llk()}}
+\item \href{#method-edf}{\code{HMM$edf()}}
 \item \href{#method-setup}{\code{HMM$setup()}}
+\item \href{#method-mcmc}{\code{HMM$mcmc()}}
 \item \href{#method-fit}{\code{HMM$fit()}}
+\item \href{#method-mle}{\code{HMM$mle()}}
+\item \href{#method-forward_backward}{\code{HMM$forward_backward()}}
+\item \href{#method-cond}{\code{HMM$cond()}}
+\item \href{#method-pseudores}{\code{HMM$pseudores()}}
 \item \href{#method-viterbi}{\code{HMM$viterbi()}}
-\item \href{#method-CI_coeff}{\code{HMM$CI_coeff()}}
-\item \href{#method-CI_tpm}{\code{HMM$CI_tpm()}}
-\item \href{#method-CI_statdist}{\code{HMM$CI_statdist()}}
-\item \href{#method-CI_obspar}{\code{HMM$CI_obspar()}}
-\item \href{#method-predict_tpm}{\code{HMM$predict_tpm()}}
-\item \href{#method-predict_obspar}{\code{HMM$predict_obspar()}}
+\item \href{#method-sample_states}{\code{HMM$sample_states()}}
+\item \href{#method-state_probs}{\code{HMM$state_probs()}}
+\item \href{#method-post_coeff}{\code{HMM$post_coeff()}}
+\item \href{#method-post_linpred}{\code{HMM$post_linpred()}}
+\item \href{#method-post_fn}{\code{HMM$post_fn()}}
+\item \href{#method-predict}{\code{HMM$predict()}}
 \item \href{#method-simulate}{\code{HMM$simulate()}}
+\item \href{#method-gof}{\code{HMM$gof()}}
 \item \href{#method-plot_ts}{\code{HMM$plot_ts()}}
-\item \href{#method-plot_tpm}{\code{HMM$plot_tpm()}}
-\item \href{#method-plot_stat_dist}{\code{HMM$plot_stat_dist()}}
-\item \href{#method-plot_obspar}{\code{HMM$plot_obspar()}}
+\item \href{#method-plot}{\code{HMM$plot()}}
 \item \href{#method-formulation}{\code{HMM$formulation()}}
+\item \href{#method-print}{\code{HMM$print()}}
 \item \href{#method-clone}{\code{HMM$clone()}}
 }
 }
@@ -52,15 +68,22 @@ Markov model.
 \subsection{Method \code{new()}}{
 Create new HMM object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$new(obs, hidden)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$new(file = NULL, obs = NULL, hidden = NULL, init = NULL, fixpar = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{file}}{path to specification file for HMM}
+
 \item{\code{obs}}{Observation object}
 
 \item{\code{hidden}}{MarkovChain object}
+
+\item{\code{init}}{HMM object to initialize parameters with}
+
+\item{\code{fixpar}}{a named list of parameters in coeff_fe that you want fixed 
+(set to NA) or pool into common values (using factor levels)}
 }
 \if{html}{\out{</div>}}
 }
@@ -167,6 +190,24 @@ Smoothness parameters
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-update_par"></a>}}
+\if{latex}{\out{\hypertarget{method-update_par}{}}}
+\subsection{Method \code{update_par()}}{
+Update parameters stored inside model object
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$update_par(par_list = NULL, iter = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{par_list}}{a list for coeff_f(r)e_obs, coeff_f(r)e_hid, log_delta, 
+log_lambda_hid log_lambda_obs}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-vcomp"></a>}}
 \if{latex}{\out{\hypertarget{method-vcomp}{}}}
 \subsection{Method \code{vcomp()}}{
@@ -187,9 +228,16 @@ standard deviations of independent normal random effects.
 \subsection{Method \code{par()}}{
 Model parameters
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$par()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$par(t = 1)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{t}}{returns parameters at time t, default is t = 1}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 A list with elements:
 \itemize{
@@ -199,25 +247,97 @@ A list with elements:
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-nllk"></a>}}
-\if{latex}{\out{\hypertarget{method-nllk}{}}}
-\subsection{Method \code{nllk()}}{
-Objective function
+\if{html}{\out{<a id="method-suggest_initial"></a>}}
+\if{latex}{\out{\hypertarget{method-suggest_initial}{}}}
+\subsection{Method \code{suggest_initial()}}{
+Suggest initial parameters for the model based on kmeans
+clustering
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$nllk(par)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$suggest_initial()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+list of initial parameters for each observation variable 
+Set priors for coefficients
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-set_priors"></a>}}
+\if{latex}{\out{\hypertarget{method-set_priors}{}}}
+\subsection{Method \code{set_priors()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$set_priors(new_priors = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{par}}{Vector of parameters for which the function should be
-evaluated (on the working scale).}
+\item{\code{new_priors}}{is a list of matrices for optionally 
+coeff_fe_obs, coeff_fe_hid, log_lambda_obs log_lambda_hid 
+each matrix has two rows (first row = mean, second row = sd) 
+specifying parameters for Normal priors}
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Returns}{
-Negative log-likelihood
 }
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-priors"></a>}}
+\if{latex}{\out{\hypertarget{method-priors}{}}}
+\subsection{Method \code{priors()}}{
+Extract stored priors
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$priors()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-iters"></a>}}
+\if{latex}{\out{\hypertarget{method-iters}{}}}
+\subsection{Method \code{iters()}}{
+Iterations from stan MCMC fit
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$iters(type = "response")}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+see output of as.matrix in stan
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-stan"></a>}}
+\if{latex}{\out{\hypertarget{method-stan}{}}}
+\subsection{Method \code{stan()}}{
+fitted stan object from MCMC fit
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$stan()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+the stanfit object
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-llk"></a>}}
+\if{latex}{\out{\hypertarget{method-llk}{}}}
+\subsection{Method \code{llk()}}{
+Log-likelihood at current parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$llk()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Log-likelihood
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-edf"></a>}}
+\if{latex}{\out{\hypertarget{method-edf}{}}}
+\subsection{Method \code{edf()}}{
+Compute effective degrees of freedom
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$edf()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-setup"></a>}}
@@ -240,6 +360,16 @@ evaluate the negative log-likelihood function.
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-mcmc"></a>}}
+\if{latex}{\out{\hypertarget{method-mcmc}{}}}
+\subsection{Method \code{mcmc()}}{
+Fit model using tmbstan
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$mcmc(..., silent = FALSE)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-fit"></a>}}
 \if{latex}{\out{\hypertarget{method-fit}{}}}
 \subsection{Method \code{fit()}}{
@@ -252,15 +382,81 @@ the random effects out of the likelihood.
 After the model has been fitted, the output of \code{optim} can be
 accessed using the method \code{out}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$fit(silent = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$fit(silent = FALSE, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{silent}}{Logical. If TRUE, all tracing outputs are hidden (default).}
+\item{\code{silent}}{Logical. If FALSE, all tracing outputs are hidden (default).}
+
+\item{\code{...}}{other arguments to optimx which is used to optimise likelihood, 
+see ?optimx}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-mle"></a>}}
+\if{latex}{\out{\hypertarget{method-mle}{}}}
+\subsection{Method \code{mle()}}{
+Get maximum likelihood estimates once model fitted
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$mle()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+list of maximum likelihood estimates as described as
+input for the function update_par()
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-forward_backward"></a>}}
+\if{latex}{\out{\hypertarget{method-forward_backward}{}}}
+\subsection{Method \code{forward_backward()}}{
+Forward-backward algorithm
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$forward_backward()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+log-forward and log-backward probabilities
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-cond"></a>}}
+\if{latex}{\out{\hypertarget{method-cond}{}}}
+\subsection{Method \code{cond()}}{
+Compute conditional cumulative distribution functions
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$cond(ngrid = 100, silent = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{ngrid}}{how many cells on the grid that CDF is computed on}
+
+\item{\code{silent}}{if TRUE then no messages are printed}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+cdfs on grid for each variable
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-pseudores"></a>}}
+\if{latex}{\out{\hypertarget{method-pseudores}{}}}
+\subsection{Method \code{pseudores()}}{
+Pseudo-residuals
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$pseudores()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Matrix of pseudo-residuals, with one row for each response variable
+and one column for each observation
 }
 }
 \if{html}{\out{<hr>}}
@@ -277,253 +473,145 @@ Most likely state sequence
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CI_coeff"></a>}}
-\if{latex}{\out{\hypertarget{method-CI_coeff}{}}}
-\subsection{Method \code{CI_coeff()}}{
-Confidence intervals for model parameters on the working scale 
-
-These are Wald confidence intervals, obtained from the standard errors 
-returned by the TMB function \code{sdreport}. See the TMB documentation 
-for more details.
+\if{html}{\out{<a id="method-sample_states"></a>}}
+\if{latex}{\out{\hypertarget{method-sample_states}{}}}
+\subsection{Method \code{sample_states()}}{
+Sample posterior state sequences using forward-filtering
+backward-sampling
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$CI_coeff(level = 0.95)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$sample_states(nsamp = 1, full = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{level}}{Confidence level (default: 0.95 for 95\% confidence intervals)}
+\item{\code{nsamp}}{number of samples to produce}
+
+\item{\code{full}}{if TRUE and model fit by mcmc then parameter estimates are 
+sampled from the posterior samples before simulating each sequence}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Matrix with three columns: (1) estimates, (2) lower bounds of
-confidence intervals, (3) upper bounds of confidence intervals.
+matrix where each column is a different sample of state sequences
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CI_tpm"></a>}}
-\if{latex}{\out{\hypertarget{method-CI_tpm}{}}}
-\subsection{Method \code{CI_tpm()}}{
-Confidence intervals for transition probabilities
+\if{html}{\out{<a id="method-state_probs"></a>}}
+\if{latex}{\out{\hypertarget{method-state_probs}{}}}
+\subsection{Method \code{state_probs()}}{
+Compute posterior probability of being in each state
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$CI_tpm(X_fe, X_re, level = 0.95, n_post = 1000)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$state_probs()}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{X_fe}}{Design matrix for fixed effects, as returned
-by \code{make_mat}}
-
-\item{\code{X_re}}{Design matrix for random effects, as returned
-by \code{make_mat}}
-
-\item{\code{level}}{Confidence level (default: 0.95 for 95\% confidence 
-intervals)}
-
-\item{\code{n_post}}{Number of posterior samples from which the confidence
-intervals are calculated. Larger values will reduce approximation
-error, but increase computation time. Defaults to 1000.
-
-This method generates confidence intervals by simulation.
-That is, it generates \code{n_post} posterior samples of 
-the estimated parameters from a multivariate normal distribution,
-where the mean is the vector of estimates and the covariance matrix 
-is provided by TMB. Then, transition probabilities are derived for 
-each set of posterior parameter values, and confidence intervals
-are obtained as quantiles of the posterior simulated transition
-probabilities.}
-}
-\if{html}{\out{</div>}}
-}
 \subsection{Returns}{
-List with elements:
-\itemize{
-  \item{\code{low}}{Array of lower bounds of confidence intervals.
-  Each slice of the array is a transiton probability matrix.}
-  \item{\code{upp}}{Array of upper bounds of confidence intervals.
-  Each slice of the array is a transiton probability matrix.}
-}
+matrix with a row for each observation and a column for each state
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CI_statdist"></a>}}
-\if{latex}{\out{\hypertarget{method-CI_statdist}{}}}
-\subsection{Method \code{CI_statdist()}}{
-Confidence intervals for stationary distribution
+\if{html}{\out{<a id="method-post_coeff"></a>}}
+\if{latex}{\out{\hypertarget{method-post_coeff}{}}}
+\subsection{Method \code{post_coeff()}}{
+Posterior sampling for model coefficients
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$CI_statdist(X_fe, X_re, level = 0.95, n_post = 1000)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$post_coeff(n_post)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{X_fe}}{Design matrix for fixed effects, as returned
-by \code{make_mat}}
-
-\item{\code{X_re}}{Design matrix for random effects, as returned
-by \code{make_mat}}
-
-\item{\code{level}}{Confidence level (default: 0.95 for 95\% confidence 
-intervals)}
-
-\item{\code{n_post}}{Number of posterior samples from which the confidence
-intervals are calculated. Larger values will reduce approximation
-error, but increase computation time. Defaults to 1000.
-
-This method generates confidence intervals by simulation.
-That is, it generates \code{n_post} posterior samples of 
-the estimated parameters from a multivariate normal distribution,
-where the mean is the vector of estimates and the covariance matrix 
-is provided by TMB. Then, stationary state probabilities are derived 
-for each set of posterior parameter values, and confidence intervals
-are obtained as quantiles of the posterior simulated stationary state
-probabilities.}
+\item{\code{n_post}}{Number of posterior samples}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-List with elements:
-\itemize{
-  \item{\code{low}}{Matrix of lower bounds of confidence intervals,
-  with one row for each time step, and one column for each state.}
-  \item{\code{upp}}{Matrix of upper bounds of confidence intervals,
-  with one row for each time step, and one column for each state.}
-}
+Matrix with one column for each coefficient and one row
+for each posterior draw
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CI_obspar"></a>}}
-\if{latex}{\out{\hypertarget{method-CI_obspar}{}}}
-\subsection{Method \code{CI_obspar()}}{
-Confidence intervals for observation parameters
+\if{html}{\out{<a id="method-post_linpred"></a>}}
+\if{latex}{\out{\hypertarget{method-post_linpred}{}}}
+\subsection{Method \code{post_linpred()}}{
+Posterior sampling for linear predictor
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$CI_obspar(X_fe, X_re, level = 0.95, n_post = 1000)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$post_linpred(n_post)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{X_fe}}{Design matrix for fixed effects, as returned
-by \code{make_mat}}
-
-\item{\code{X_re}}{Design matrix for random effects, as returned
-by \code{make_mat}}
-
-\item{\code{level}}{Confidence level (default: 0.95 for 95\% confidence 
-intervals)}
-
-\item{\code{n_post}}{Number of posterior samples from which the confidence
-intervals are calculated. Larger values will reduce approximation
-error, but increase computation time. Defaults to 1000.
-
-This method generates confidence intervals by simulation.
-That is, it generates \code{n_post} posterior samples of 
-the estimated parameters from a multivariate normal distribution,
-where the mean is the vector of estimates and the covariance matrix 
-is provided by TMB. Then, observation parameters are derived for 
-each set of posterior parameter values, and confidence intervals
-are obtained as quantiles of the posterior simulated observation
-parameters.}
+\item{\code{n_post}}{Number of posterior samples}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-List with elements:
-\itemize{
-  \item{\code{low}}{Array of lower bounds of confidence intervals,
-  with one slice for each time step, one row for each observation 
-  parameter, and one column for each state.}
-  \item{\code{upp}}{Array of upper bounds of confidence intervals,
-  with one slice for each time step, one row for each observation 
-  parameter, and one column for each state.}
-}
+Matrix with one column for each predictor and one row
+for each posterior draw
+Create posterior simulations of a function of a model component
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predict_tpm"></a>}}
-\if{latex}{\out{\hypertarget{method-predict_tpm}{}}}
-\subsection{Method \code{predict_tpm()}}{
-Predict transition probabilities
+\if{html}{\out{<a id="method-post_fn"></a>}}
+\if{latex}{\out{\hypertarget{method-post_fn}{}}}
+\subsection{Method \code{post_fn()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$predict_tpm(new_data = NULL, CI = FALSE, level = 0.95, n_post = 1000)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$post_fn(fn, n_post, comp = NULL, ..., level = 0)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{new_data}}{Data frame containing covariate values for which the
-transition probabilities should be predicted.}
+\item{\code{fn}}{the function which takes a vector of linear predictors as input
+and produces either a scalar or vector output}
 
-\item{\code{CI}}{Logical argument: should the function return confidence
-intervals for the parameters? Default: FALSE.}
+\item{\code{n_post}}{number of posterior simulations}
 
-\item{\code{level}}{Confidence level (default: 0.95 for 95\% confidence 
-intervals) if \code{CI = TRUE}.}
+\item{\code{comp}}{is "obs" for observation model linear predictor, "hidden" for
+hidden model linear predictor}
 
-\item{\code{n_post}}{Number of posterior samples from which the confidence
-intervals are calculated if \code{CI = TRUE}. Larger values will reduce 
-approximation error, but increase computation time. Defaults to 1000.}
+\item{\code{level}}{confidence interval level, default is 95%}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-If \code{CI = FALSE}, returns an array of point estimates, 
-where each slice is a transition probability matrix corresponding 
-to one row of \code{new_data}. If \code{CI = TRUE}, returns a list 
-with elements:
-\itemize{
-  \item{\code{estimate}}{Array of point estimates, where each slice is
-  a transition probability matrix corresponding to one row of \code{new_data}.}
-  \item{\code{low}}{Array of lower bounds of confidence intervals,
-  with same structure as \code{estimate}.}
-  \item{\code{upp}}{Array of upper bounds of confidence intervals,
-  with same structure as \code{estimate}.}
-}
+a vector (for scalar outputs of fn) or a matrix (for vector outputs)
+with a column for each simulation 
+Predict estimates from a fitted model
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predict_obspar"></a>}}
-\if{latex}{\out{\hypertarget{method-predict_obspar}{}}}
-\subsection{Method \code{predict_obspar()}}{
-Predict observation parameters
+\if{html}{\out{<a id="method-predict"></a>}}
+\if{latex}{\out{\hypertarget{method-predict}{}}}
+\subsection{Method \code{predict()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$predict_obspar(new_data = NULL, CI = FALSE, level = 0.95, n_post = 1000)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$predict(name, t = 1, newdata = NULL, level = 0, n_post = 0)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{new_data}}{Data frame containing covariate values for which the
-observation parameters should be predicted.}
+\item{\code{name}}{which estimates to predict? Options include 
+transition probability matrices "tpm", 
+stationary distributions "delta", or 
+observation distribution parameters "obspar"}
 
-\item{\code{CI}}{Logical argument: should the function return confidence
-intervals for the parameters? Default: FALSE.}
+\item{\code{t}}{time points to predict at}
 
-\item{\code{level}}{Confidence level (default: 0.95 for 95\% confidence 
-intervals) if \code{CI = TRUE}.}
+\item{\code{newdata}}{new dataframe to use for prediction}
 
-\item{\code{n_post}}{Number of posterior samples from which the confidence
-intervals are calculated if \code{CI = TRUE}. Larger values will reduce 
-approximation error, but increase computation time. Defaults to 1000.}
+\item{\code{level}}{if greater than zero, then produce confidence intervals with this level, e.g. CI = 0.95
+will produce 95% confidence intervals}
+
+\item{\code{n_post}}{if greater than zero then n_post posterior samples are produced}
+
+\item{\code{...}}{other arguments to the respective functions for hidden$tpm, hidden$delta, obs$par}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-If \code{CI = FALSE}, returns an array of point estimates, 
-with one slice for each row of \code{new_data}, one row for each 
-observation parameter, and one column for each state. If 
-\code{CI = TRUE}, returns a list with elements:
-\itemize{
-  \item{\code{estimate}}{Array of point estimates, with one slice for 
-  each row of \code{new_data}, one row for each observation 
-  parameter, and one column for each state.}
-  \item{\code{low}}{Array of lower bounds of confidence intervals,
-  with same structure as \code{estimate}.}
-  \item{\code{upp}}{Array of upper bounds of confidence intervals,
-  with same structure as \code{estimate}.}
-}
+named array of predictions and confidence interval, if requested
 }
 }
 \if{html}{\out{<hr>}}
@@ -532,7 +620,7 @@ observation parameter, and one column for each state. If
 \subsection{Method \code{simulate()}}{
 Simulate from hidden Markov model
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$simulate(n, data = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$simulate(n, data = NULL, silent = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -541,12 +629,51 @@ Simulate from hidden Markov model
 \item{\code{n}}{Number of time steps to simulate}
 
 \item{\code{data}}{Optional data frame including covariates}
+
+\item{\code{silent}}{if TRUE then no messages are printed}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 Data frame including columns of data (if provided), and simulated
 data variables
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-gof"></a>}}
+\if{latex}{\out{\hypertarget{method-gof}{}}}
+\subsection{Method \code{gof()}}{
+Compute goodness-of-fit statistics using simulation
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$gof(gof_fn, nsims = 100, full = FALSE, silent = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{gof_fn}}{goodness-of-fit function which accepts "data" as input
+and returns a statistic: either a vector or a single number.}
+
+\item{\code{nsims}}{number of simulations to perform}
+
+\item{\code{full}}{if model fit with MCMC then full set to TRUE will sample from
+posterior for each simulation}
+
+\item{\code{silent}}{Logical. If FALSE, simulation progress is shown. 
+(Default: TRUE)}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+List with elements:
+\begin{itemize}
+\item{obs_stat} Vector of values of goodness-of-fit statistics for the
+observed data
+\item{stats} Matrix of values of goodness-of-fit statistics for the
+simulated data sets (one row for each statistic, and one column for each
+simulation)
+\item{plot} ggplot object
+\end{itemize}
 }
 }
 \if{html}{\out{<hr>}}
@@ -574,90 +701,41 @@ are plotted against each other.
 }
 \subsection{Returns}{
 A ggplot object
+Plot a model component
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plot_tpm"></a>}}
-\if{latex}{\out{\hypertarget{method-plot_tpm}{}}}
-\subsection{Method \code{plot_tpm()}}{
-Plot transition probability matrix
+\if{html}{\out{<a id="method-plot"></a>}}
+\if{latex}{\out{\hypertarget{method-plot}{}}}
+\subsection{Method \code{plot()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_tpm(var, covs = NULL, level = 0.95)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot(name, var = NULL, covs = NULL, i = NULL, j = NULL, n_grid = 50)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{var}}{Name of covariate as a function of which the transition
-probabilities should be plotted}
+\item{\code{name}}{name of model component: tpm, delta, or obspar}
+
+\item{\code{var}}{covariate to plot on x-axis}
 
 \item{\code{covs}}{Optional data frame with a single row and one column
 for each covariate, giving the values that should be used. If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
 
-\item{\code{level}}{Confidence level for confidence intervals (default: 0.95)}
+\item{\code{i}}{if plotting tpm then rows of tpm, if plotting delta then state, 
+if plotting obspar then indices of parameter to plot}
+
+\item{\code{j}}{if plotting tpm then cols of tpm to plot, if plotting delta then
+ignored, if plotting obspar then indices of states to plot}
+
+\item{\code{n_grid}}{coarseness of grid over x-axis to create}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A ggplot object
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plot_stat_dist"></a>}}
-\if{latex}{\out{\hypertarget{method-plot_stat_dist}{}}}
-\subsection{Method \code{plot_stat_dist()}}{
-Plot stationary state probabilities
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_stat_dist(var, covs = NULL, level = 0.95)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of covariate as a function of which the state
-probabilities should be plotted}
-
-\item{\code{covs}}{Optional data frame with a single row and one column
-for each covariate, giving the values that should be used. If this is
-not specified, the mean value is used for numeric variables, and the
-first level for factor variables.}
-
-\item{\code{level}}{Confidence level for confidence intervals (default: 0.95)}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A ggplot object
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plot_obspar"></a>}}
-\if{latex}{\out{\hypertarget{method-plot_obspar}{}}}
-\subsection{Method \code{plot_obspar()}}{
-Plot observation parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_obspar(var, covs = NULL, level = 0.95)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of covariate as a function of which the parameters
-should be plotted}
-
-\item{\code{covs}}{Optional data frame with a single row and one column
-for each covariate, giving the values that should be used. If this is
-not specified, the mean value is used for numeric variables, and the
-first level for factor variables.}
-
-\item{\code{level}}{Confidence level for confidence intervals (default: 0.95)}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A ggplot object
+desired plot
 }
 }
 \if{html}{\out{<hr>}}
@@ -667,6 +745,15 @@ A ggplot object
 Print model formulation
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$formulation()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-print"></a>}}
+\if{latex}{\out{\hypertarget{method-print}{}}}
+\subsection{Method \code{print()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$print()}\if{html}{\out{</div>}}
 }
 
 }

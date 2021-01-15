@@ -22,7 +22,12 @@ functions for a probability distribution.
 \item \href{#method-link}{\code{Dist$link()}}
 \item \href{#method-invlink}{\code{Dist$invlink()}}
 \item \href{#method-npar}{\code{Dist$npar()}}
+\item \href{#method-parnames}{\code{Dist$parnames()}}
+\item \href{#method-parapprox}{\code{Dist$parapprox()}}
+\item \href{#method-fixed}{\code{Dist$fixed()}}
 \item \href{#method-code}{\code{Dist$code()}}
+\item \href{#method-set_npar}{\code{Dist$set_npar()}}
+\item \href{#method-set_parnames}{\code{Dist$set_parnames()}}
 \item \href{#method-pdf_apply}{\code{Dist$pdf_apply()}}
 \item \href{#method-rng_apply}{\code{Dist$rng_apply()}}
 \item \href{#method-n2w}{\code{Dist$n2w()}}
@@ -36,7 +41,19 @@ functions for a probability distribution.
 \subsection{Method \code{new()}}{
 Create a Dist object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$new(name, pdf, rng, link, invlink, npar)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Dist$new(
+  name,
+  pdf,
+  rng,
+  link,
+  invlink,
+  npar,
+  parnames,
+  parapprox = NULL,
+  fixed = NULL,
+  cpp = NULL,
+  compile_cpp = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -56,6 +73,16 @@ Create a Dist object
 parameters}
 
 \item{\code{npar}}{Number of parameters of the distribution}
+
+\item{\code{parnames}}{character vector with name of each parameter}
+
+\item{\code{parapprox}}{Function that takes a sample and produces approximate values for the unknown parameters}
+
+\item{\code{fixed}}{vector with element for each parameter which is TRUE if parameter is fixed}
+
+\item{\code{cpp}}{location of C++ TMB definition of distribution}
+
+\item{\code{compile_cpp}}{if FALSE then distribution code in cpp is added but not compiled into package}
 }
 \if{html}{\out{</div>}}
 }
@@ -107,8 +134,7 @@ Return link function of Dist object
 \if{html}{\out{<a id="method-invlink"></a>}}
 \if{latex}{\out{\hypertarget{method-invlink}{}}}
 \subsection{Method \code{invlink()}}{
-Return inverse link function 
-of Dist object
+Return inverse link function of Dist object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dist$invlink()}\if{html}{\out{</div>}}
 }
@@ -125,12 +151,62 @@ Return number of parameters of Dist object
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-parnames"></a>}}
+\if{latex}{\out{\hypertarget{method-parnames}{}}}
+\subsection{Method \code{parnames()}}{
+Return names of parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$parnames()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-parapprox"></a>}}
+\if{latex}{\out{\hypertarget{method-parapprox}{}}}
+\subsection{Method \code{parapprox()}}{
+Return function that approximates parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$parapprox()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-fixed"></a>}}
+\if{latex}{\out{\hypertarget{method-fixed}{}}}
+\subsection{Method \code{fixed()}}{
+Return which parameters are fixed
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$fixed()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-code"></a>}}
 \if{latex}{\out{\hypertarget{method-code}{}}}
 \subsection{Method \code{code()}}{
 Return code of Dist object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dist$code()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-set_npar"></a>}}
+\if{latex}{\out{\hypertarget{method-set_npar}{}}}
+\subsection{Method \code{set_npar()}}{
+Set number of parameters this distribution has
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$set_npar(new_npar)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-set_parnames"></a>}}
+\if{latex}{\out{\hypertarget{method-set_parnames}{}}}
+\subsection{Method \code{set_parnames()}}{
+Set parameter names
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$set_parnames(new_parnames)}\if{html}{\out{</div>}}
 }
 
 }
