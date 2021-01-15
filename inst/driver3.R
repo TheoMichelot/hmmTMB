@@ -62,7 +62,7 @@ simHMM <- function(nind, n, shape_par, scale_par, lambda_par, lambda_re, tpm, X)
 }
 
 # Simulation parameters
-nind <- 30
+nind <- 20
 n <- 50
 shape_par <- matrix(c(log(0.5), log(6),
                       -0.1, -0.1,
@@ -94,33 +94,24 @@ states <- simdat$state
 # Observation distributions
 dists <- list(step = dist_gamma, count = dist_pois)
 
-# Initial coefficients for fixed effects
-par0_shape <- c(log(1), log(4), 0, 0, 0, 0)
-par0_scale <- c(log(1), log(4))
-par0_lambda <- c(log(3), log(7))
-coeff_fe <- c(par0_shape, par0_scale, par0_lambda)
+# Initial coefficients for intercepts
+par0 <- list(step = list(shape = c(1, 4), scale = c(1, 4)),
+             count = list(lambda = c(3, 7)))
 
 # Formulas on observation parameters
 formulas <- list(step = list(shape = ~ x1 + x2, scale = ~ 1),
                  count = list(lambda = ~ s(ID, bs = "re")))
 
 # Create objects
-obs <- Observation$new(data = data, dists = dists, n_states = 2, coeff_fe = coeff_fe, 
+obs <- Observation$new(data = data, dists = dists, n_states = 2, par = par0, 
                        formulas = formulas)
-hid <- MarkovChain$new(n_states = 2)
-mod <- HMM$new(obs, hid)
+hid <- MarkovChain$new(n_states = 2, data = data)
+mod <- HMM$new(obs = obs, hidden = hid)
 
 # Fit model
 mod$fit(silent = FALSE)
 
-
-var <- "x1"
-m <- obs$make_mat_grid(var = var, n_grid = 10)
-ci <- mod$CI_obspar(X_fe = m$X_fe, X_re = m$X_re)
-par <- obs$par_all(X_fe = m$X_fe, X_re = m$X_re)
-
-
-mod$plot_obspar(var = var)
+mod$plot(name = "obspar", var = "x1")
 
 # Unpack parameters
 coeff_fe <- obs$coeff_fe()
@@ -131,3 +122,5 @@ lambda_est <- matrix(coeff_fe[9:10], ncol = 2)
 
 s <- mod$viterbi()
 table(s == states)/length(s)
+
+mod$plot(name = "obspar", var = "ID")

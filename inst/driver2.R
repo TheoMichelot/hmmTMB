@@ -29,7 +29,8 @@ struct <- matrix(c(".", "~ x1 + x2",
                  ncol = 2, byrow = TRUE)
 par_hid0 <- c(-1.5, 0.2, -0.3, -3, 0.5)
 hid <- MarkovChain$new(n_states = 2, structure = struct, 
-                       coeff_fe0 = par_hid0, data = covs)
+                       data = covs)
+hid$update_coeff_fe(par_hid0)
 
 # Create HMM object and simulate data
 mod <- HMM$new(obs = obs, hidden = hid)
@@ -59,4 +60,4 @@ mod2$hidden()$coeff_fe()
 
 # Compare estimated states and true states
 s <- mod2$viterbi()
-table(s == sim$state)/n_sim
+table(s == attr(sim, "state"))/n_sim
