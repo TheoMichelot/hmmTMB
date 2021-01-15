@@ -1154,8 +1154,10 @@ HMM <- R6Class(
                        hid_coeff_fe = self$hidden()$coeff_fe(), 
                        hid_coeff_re = self$hidden()$coeff_re())
         # get variance-covariance matrix of linear predictor 
-        lfn <- function(par, ind_fe, ind_re, comp) {
-          self[[comp]]()$update_coeff_fe(par[ind_fe])
+        lfn <- function(par, oldpar, ind_fe, ind_re, comp) {
+          new_par <- oldpar[[paste0(comp, "_coeff_fe")]]
+          new_par[!(rownames(new_par) %in% names(private$fixpar_[[comp]]))] <- par[ind_fe]
+          self[[comp]]()$update_coeff_fe(new_par)
           if(!is.null(ind_re)) self[[comp]]()$update_coeff_re(par[ind_re])
           return(self[[comp]]()$linpred())
         }
@@ -1172,6 +1174,7 @@ HMM <- R6Class(
         # compute jacobian 
         J <- numDeriv::jacobian(lfn, 
                                 par, 
+                                oldpar = oldpar, 
                                 ind_fe = ind_fe, 
                                 ind_re = ind_re, 
                                 comp = comp)
