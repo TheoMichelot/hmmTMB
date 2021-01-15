@@ -24,7 +24,7 @@
 #'
 #' make_formulas(input_forms = input_forms, 
 #'               var_names = names(input_forms), 
-#'               par_names = lapply(input_forms, function(f) names(f)), 
+#'               par_names = lapply(input_forms, names), 
 #'               n_states = 2)
 make_formulas <- function(input_forms, 
                           var_names, 
