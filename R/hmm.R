@@ -30,7 +30,6 @@ HMM <- R6Class(
             both obs/hidden model objects should be supplied.")
       }
       if (!is.null(file) & is.null(obs)) {
-        cat("Reading model specified at", file, "\n")
         spec <- private$read_file(file)
         # create obs
         obs <- Observation$new(data = spec$data, 
@@ -643,7 +642,7 @@ HMM <- R6Class(
     #' @param ... other arguments to optimx which is used to optimise likelihood, 
     #' see ?optimx
     fit = function(silent = FALSE, ...) {
-      self$formulation()
+      if(!silent) self$formulation()
       
       # Setup if necessary
       if(is.null(private$tmb_obj_)) {
