@@ -4,7 +4,7 @@
 \alias{cov_grid}
 \title{Grid of covariates}
 \usage{
-cov_grid(var, obj, covs = NULL, formulas, n_grid = 1000)
+cov_grid(var, obj = NULL, covs = NULL, formulas, n_grid = 1000)
 }
 \arguments{
 \item{var}{Name of variable}

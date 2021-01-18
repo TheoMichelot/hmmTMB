@@ -571,7 +571,7 @@ and produces either a scalar or vector output}
 \item{\code{comp}}{is "obs" for observation model linear predictor, "hidden" for
 hidden model linear predictor}
 
-\item{\code{level}}{confidence interval level, default is 95%}
+\item{\code{level}}{confidence interval level, default is 95\%}
 }
 \if{html}{\out{</div>}}
 }
@@ -602,7 +602,7 @@ observation distribution parameters "obspar"}
 \item{\code{newdata}}{new dataframe to use for prediction}
 
 \item{\code{level}}{if greater than zero, then produce confidence intervals with this level, e.g. CI = 0.95
-will produce 95% confidence intervals}
+will produce 95\% confidence intervals}
 
 \item{\code{n_post}}{if greater than zero then n_post posterior samples are produced}
 
