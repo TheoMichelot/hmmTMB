@@ -1290,14 +1290,14 @@ HMM <- R6Class(
     #' (Default: TRUE)
     #' 
     #' @return List with elements:
-    #' \begin{itemize}
-    #' \item{obs_stat} Vector of values of goodness-of-fit statistics for the
-    #' observed data
-    #' \item{stats} Matrix of values of goodness-of-fit statistics for the
-    #' simulated data sets (one row for each statistic, and one column for each
-    #' simulation)
-    #' \item{plot} ggplot object
-    #' \end{itemize}
+    #' \itemize{
+    #'   \item{obs_stat}{Vector of values of goodness-of-fit statistics for the
+    #'   observed data}
+    #'   \item{stats}{Matrix of values of goodness-of-fit statistics for the
+    #'   simulated data sets (one row for each statistic, and one column for each
+    #'   simulation)}
+    #'   \item{plot}{ggplot object}
+    #' }
     gof = function(gof_fn, nsims = 100, full = FALSE, silent = FALSE) {
       # Evaluate statistics for observed data
       obs_stat <- gof_fn(self$obs()$data())
