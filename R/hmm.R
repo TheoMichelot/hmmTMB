@@ -50,6 +50,8 @@ HMM <- R6Class(
       # Get names of all covariates
       var_names <- unique(c(rapply(hidden$formulas(), all.vars), 
                           rapply(obs$formulas(), all.vars)))
+      # Remove pi from list of covariates if it is in the formulas
+      var_names <- var_names[which(var_names!="pi")]
       if(length(var_names) > 0) {
         data <- obs$data()
         # Remove NAs in covariates (replace by last non-NA value)

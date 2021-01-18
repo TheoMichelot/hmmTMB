@@ -76,6 +76,9 @@ na_fill <- function(x) {
 #' and other covariates fixed to their mean (numeric) or first level
 #' (factor).
 cov_grid <- function(var, obj = NULL, covs = NULL, formulas, n_grid = 1e3) {
+  # Get data set
+  data <- obj$obs()$data()
+  
   # Get covariate names
   if(!is.null(obj)) {
     var_names <- unique(c(rapply(obj$obs()$formulas(), all.vars), 
@@ -94,7 +97,7 @@ cov_grid <- function(var, obj = NULL, covs = NULL, formulas, n_grid = 1e3) {
   }
   
   # Get data frame of covariates
-  all_vars <- obj$obs()$data()[, var_names, drop = FALSE]
+  all_vars <- data[, var_names, drop = FALSE]
   
   # Grid of covariate
   if(is.factor(all_vars[, var])) {
