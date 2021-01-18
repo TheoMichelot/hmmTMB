@@ -666,14 +666,14 @@ posterior for each simulation}
 }
 \subsection{Returns}{
 List with elements:
-\begin{itemize}
-\item{obs_stat} Vector of values of goodness-of-fit statistics for the
-observed data
-\item{stats} Matrix of values of goodness-of-fit statistics for the
-simulated data sets (one row for each statistic, and one column for each
-simulation)
-\item{plot} ggplot object
-\end{itemize}
+\itemize{
+  \item{obs_stat}{Vector of values of goodness-of-fit statistics for the
+  observed data}
+  \item{stats}{Matrix of values of goodness-of-fit statistics for the
+  simulated data sets (one row for each statistic, and one column for each
+  simulation)}
+  \item{plot}{ggplot object}
+}
 }
 }
 \if{html}{\out{<hr>}}
