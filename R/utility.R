@@ -114,8 +114,13 @@ cov_grid <- function(var, obj = NULL, covs = NULL, formulas, n_grid = 1e3) {
   new_data[, var] <- grid
   
   # Select value for other covariates
-  if(is.null(covs)) {
-    covs_list <- lapply(all_vars, function(col) {
+  covs_list <- lapply(seq_along(all_vars), function(i) {
+    if(!is.null(covs[[var_names[i]]])) {
+      # Set to user-provided value if possible
+      return(covs[[var_names[i]]])
+    } else {
+      # No user-provided value
+      col <- all_vars[, i]
       if(is.numeric(col)) {
         # If numeric, use mean value
         return(mean(col, na.rm = TRUE)) 
@@ -123,9 +128,11 @@ cov_grid <- function(var, obj = NULL, covs = NULL, formulas, n_grid = 1e3) {
         # If factor, use first factor level
         return(unique(col)[1])
       }
-    })
-    covs <- as.data.frame(covs_list)
-  }
+    }
+  })
+  covs <- as.data.frame(covs_list)
+  colnames(covs) <- colnames(all_vars)
+  
   # Fill columns for other covariates
   for(var_name in colnames(new_data)) {
     if(var_name != var)
