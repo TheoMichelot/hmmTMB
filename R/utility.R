@@ -64,7 +64,9 @@ na_fill <- function(x) {
 #' Grid of covariates
 #' 
 #' @param var Name of variable
-#' @param data Data frame containing the covariates
+#' @param data Data frame containing the covariates. If not provided, data
+#' are extracted from obj
+#' @param obj HMM model object containing data and formulas
 #' @param covs Optional data frame with a single row and one column
 #' for each covariate, giving the values that should be used. If this is
 #' not specified, the mean value is used for numeric variables, and the
@@ -75,14 +77,16 @@ na_fill <- function(x) {
 #' @return Data frame of covariates, with 'var' defined over a grid,
 #' and other covariates fixed to their mean (numeric) or first level
 #' (factor).
-cov_grid <- function(var, obj = NULL, covs = NULL, formulas, n_grid = 1e3) {
+cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid = 1e3) {
   # Get data set
-  data <- obj$obs()$data()
+  if(is.null(data)) {
+    data <- obj$obs()$data()    
+  }
   
   # Get covariate names
   if(!is.null(obj)) {
     var_names <- unique(c(rapply(obj$obs()$formulas(), all.vars), 
-                      rapply(obj$hidden()$formulas(), all.vars)))
+                          rapply(obj$hidden()$formulas(), all.vars)))
   } else {
     var_names <- unique(rapply(formulas, all.vars))
   }
