@@ -260,9 +260,11 @@ MarkovChain <- R6Class(
     }, 
     
     #' @description Update delta coefficients 
-    update_delta = function(new_delta) {
-      private$delta_ <- new_delta
-      names(private$delta_) <- paste0("state", 1:length(new_delta))
+    #' 
+    #' @param delta Vector of delta coefficients
+    update_delta = function(delta) {
+      private$delta_ <- delta
+      names(private$delta_) <- paste0("state", 1:length(delta))
     }, 
     
     #' @description Update smoothness parameters
@@ -359,6 +361,7 @@ MarkovChain <- R6Class(
       return(tpm)
     },
     
+    #' @description Linear predictor for transition probabilities
     linpred = function() {
       linpred <- self$X_fe() %*% self$coeff_fe() + self$X_re() %*% self$coeff_re()
       return(linpred[,1])
