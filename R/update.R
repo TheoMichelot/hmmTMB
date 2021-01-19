@@ -1,13 +1,16 @@
 
-#' @description Update a model to a new model by changing one formula
+#' Update a model to a new model by changing one formula
+#' 
 #' @param mod a HMM model object 
-#' @param type are you updating the "hidden" or "obs" part of the model? 
-#' @param i if "hidden" then i is the row of the structure containing the change
-#'          if "obs" then i is the observation variable name
-#' @param j if "hidden" then j is the column of the structure containing the change
-#'          if "obs" then j is the parameter whose formula is to be changed 
+#' @param type character string for the part of the model that is updated
+#' (either "hidden" or "obs") 
+#' @param i if type="hidden" then i is the row of the structure containing the change
+#'          if type="obs" then i is the observation variable name
+#' @param j if type="hidden" then j is the column of the structure containing the change
+#'          if type="obs" then j is the parameter whose formula is to be changed 
 #' @param change the change to make to the formula, see ?update.formula for details
 #' @param fit if FALSE then change is made but model is not re-fit
+#' 
 #' @export
 update.HMM <- function(mod, type, i, j, change, fit = TRUE) {
   

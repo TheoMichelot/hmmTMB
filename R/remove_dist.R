@@ -1,6 +1,9 @@
-#' @description Remove distribution from package's stored distributions 
+
+#' Remove distribution from package's stored distributions
+#' 
 #' @param name name of distribution to remove 
-#' @parama compile_cpp if FALSE then package is not recompiled after changes 
+#' @param compile_cpp if FALSE then package is not recompiled after changes 
+#' 
 #' @export
 remove_dist <- function(name, compile_cpp = TRUE) {
   # load list of stored distributions

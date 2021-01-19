@@ -1,5 +1,8 @@
-#' @description logLik function for HMM TMB 
+
+#' logLik function for HMM class
+#' 
 #' @param object the HMM model object 
+#' 
 #' @export logLik.HMM
 logLik.HMM <- function(object, ...) {
   val <- -object$out()$value 
