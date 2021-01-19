@@ -1563,21 +1563,21 @@ HMM <- R6Class(
     
     # Reading from spec file --------------------------------------------------
     
-    #' @description Read model specification files
-    #' 
-    #' @param file file location 
-    #' 
-    #' @return List with elements:
-    #' \itemize{
-    #'   \item{\code{data}}{Data frame}
-    #'   \item{\code{nstates}}{Number of states}
-    #'   \item{\code{dists}}{List of observation distributions}
-    #'   \item{\code{forms}}{Formulas for observation model}
-    #'   \item{\code{tpm}}{Structure of hidden state model}
-    #'   \item{\code{par}}{Initial parameters for observation model}
-    #'   \item{\code{tpm0}}{Initial transition probability matrix}
-    #'   \item{\code{fixed}}{Fixed parameters}
-    #' }
+    ## @description Read model specification files
+    ## 
+    ## @param file file location 
+    ## 
+    ## @return List with elements:
+    ## \itemize{
+    ##   \item{\code{data}}{Data frame}
+    ##   \item{\code{nstates}}{Number of states}
+    ##   \item{\code{dists}}{List of observation distributions}
+    ##   \item{\code{forms}}{Formulas for observation model}
+    ##   \item{\code{tpm}}{Structure of hidden state model}
+    ##   \item{\code{par}}{Initial parameters for observation model}
+    ##   \item{\code{tpm0}}{Initial transition probability matrix}
+    ##   \item{\code{fixed}}{Fixed parameters}
+    ## }
     read_file = function(file) {
       if (!file.exists(file)) stop("model specification file does not exist in this location:", file)
       spec <- scan(file = file, 
@@ -1660,7 +1660,7 @@ HMM <- R6Class(
       
     }, 
     
-    #' @description Read a specified block in a model specification file 
+    ## @description Read a specified block in a model specification file 
     read_block = function(name, wh_blocks, spec) {
       find <- which(names(wh_blocks) == name)
       start_block <- wh_blocks[find] + 1 
@@ -1669,18 +1669,18 @@ HMM <- R6Class(
       return(block)
     }, 
     
-    #' @description Separate left hand side and right hand side variables from a equation 
-    #' @param x character vector of equations 
-    #' @return list of left hand sides (lhs) and right hand sides (rhs)
+    ## @description Separate left hand side and right hand side variables from a equation 
+    ## @param x character vector of equations 
+    ## @return list of left hand sides (lhs) and right hand sides (rhs)
     read_equals = function(x) {
       rhs <- str_trim(gsub(".*=", "", x))
       lhs <- str_trim(gsub("=.*", "", x))
       return(list(lhs = lhs, rhs = rhs))
     }, 
     
-    #' @description Read distribution block 
-    #' @param dist character vector of distribtion block 
-    #' @return list of distributions 
+    ## @description Read distribution block 
+    ## @param dist character vector of distribtion block 
+    ## @return list of distributions 
     read_dists = function(dists) {
       ds <- strsplit(dists, "\n")
       terms <- sapply(ds, FUN = function(x) {all.vars(as.formula(x))})
@@ -1689,10 +1689,10 @@ HMM <- R6Class(
       return(ls)
     }, 
     
-    #' @description Read both formula and initial blocks 
-    #' @param forms character vector of block to read
-    #' @param ini if TRUE then read as if it is initial block otherwise assume it
-    #' is the formula block 
+    ## @description Read both formula and initial blocks 
+    ## @param forms character vector of block to read
+    ## @param ini if TRUE then read as if it is initial block otherwise assume it
+    ## is the formula block 
     read_forms = function(forms, ini = FALSE, nstates = NULL) {
       # find variables 
       wh_vars <- grep(":", forms)
@@ -1748,7 +1748,7 @@ HMM <- R6Class(
     
     # Other private methods ---------------------------------------------------
     
-    #' Compute effective degrees of freedom for a GAM 
+    ## Compute effective degrees of freedom for a GAM 
     comp_edf = function(X, S, lambda){
       
       if(length(lambda)==0){
@@ -1768,7 +1768,7 @@ HMM <- R6Class(
       return(sum(diag(F)))
     }, 
     
-    #' Initialize submodel component 
+    ## Initialize submodel component 
     initialize_submodel = function(par, initpar) {
       # find which parts of initializing model occur in current model
       wh <- match(rownames(initpar), rownames(par))
@@ -1783,7 +1783,7 @@ HMM <- R6Class(
       return(par)
     },
     
-    #' Check constructor arguments 
+    ## Check constructor arguments 
     # (For argument description, see constructor)
     check_args = function(obs, hidden, init) {
       if(!inherits(obs, "Observation")) {
