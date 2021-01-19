@@ -19,6 +19,9 @@ MarkovChain <- R6Class(
     #' dependence.)
     #' @param n_states Number of states. If not specified, then \code{structure} 
     #' needs to be provided as a matrix, and n_states is deduced from its dimensions.
+    #' @param tpm Optional transition probability matrix, to initialise the model
+    #' parameters (intercepts in model with covariates). If not provided, the default 
+    #' is a matrix with 0.9 on the diagonal. 
     #' @param stationary if TRUE then stationary distribution with respect to tpm for 
     #' first time point is used as initial distribution, if FALSE then initial distribution
     #' is estimated 
@@ -26,7 +29,8 @@ MarkovChain <- R6Class(
     #' @return A new MarkovChain object
     initialize = function(data,
                           structure = NULL, 
-                          n_states = NULL, 
+                          n_states = NULL,
+                          tpm = NULL,
                           stationary = FALSE) {
       # Check arguments
       private$check_args(n_states = n_states, 
@@ -90,6 +94,14 @@ MarkovChain <- R6Class(
       self$update_coeff_re(rep(0, sum(ncol_re))) 
       self$update_lambda(rep(1, length(ncol_re)))
       self$update_delta(rep(1 / n_states, n_states))
+      
+      # Initialise tpm
+      if(is.null(tpm)) {
+        # Defaults to diagonal of 0.9 if no initial tpm provided
+        tpm <- matrix(0.1/(n_states-1), nrow = n_states, ncol = n_states)
+        diag(tpm) <- 0.9
+      }
+      self$update_tpm(tpm)
     },
     
 
