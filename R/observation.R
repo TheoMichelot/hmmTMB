@@ -12,13 +12,17 @@ Observation <- R6Class(
     #' @description Create new Observation object
     #' 
     #' @param data Data frame containing response variables and covariates
-    #' @param dists Named list of Distribution objects for each data stream
-    #' @param n_states Number of states (needed to construct model formulas)
-    #' @param par List of observation parameters (for covariate-free model)
     #' @param formulas List of formulas for observation parameters
+    #' @param n_states Number of states (needed to construct model formulas)
+    #' @param dists Named list of Distribution objects for each data stream
+    #' @param par List of observation parameters (for covariate-free model)
     #' 
     #' @return A new Observation object
-    initialize = function(data, dists, n_states, par = NULL, formulas = NULL) {
+    initialize = function(data, 
+                          dists, 
+                          formulas = NULL, 
+                          n_states, 
+                          par = NULL) {
       private$check_args(data = data, 
                          dists = dists, 
                          n_states = n_states, 

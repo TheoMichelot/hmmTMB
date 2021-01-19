@@ -11,23 +11,23 @@ MarkovChain <- R6Class(
     
     #' @description Create new MarkovChain object
     #' 
-    #' @param n_states Number of states. If not specified, then \code{structure} 
-    #' needs to be provided as a matrix, and n_states is deduced from its dimensions.
+    #' @param data Data frame, needed to create model matrices
     #' @param structure Either (1) matrix with an entry of "." on diagonal, a "0" for 
     #' transitions that are not allowed (not implemented yet), and a formula "~1" 
     #' for covariates affecting transitions that are to be estimated, or (2) single
     #' formula, assumed for all transition probabilities. (Default: no covariate
     #' dependence.)
+    #' @param n_states Number of states. If not specified, then \code{structure} 
+    #' needs to be provided as a matrix, and n_states is deduced from its dimensions.
     #' @param stationary if TRUE then stationary distribution with respect to tpm for 
     #' first time point is used as initial distribution, if FALSE then initial distribution
     #' is estimated 
-    #' @param data Data frame, needed to create model matrices
     #' 
     #' @return A new MarkovChain object
-    initialize = function(n_states = NULL, 
+    initialize = function(data,
                           structure = NULL, 
-                          stationary = FALSE, 
-                          data) {
+                          n_states = NULL, 
+                          stationary = FALSE) {
       # Check arguments
       private$check_args(n_states = n_states, 
                          structure = structure, 
