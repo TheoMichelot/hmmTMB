@@ -215,6 +215,9 @@ Observation <- R6Class(
     vcomp = function() {return(1/sqrt(private$lambda_))},
     
     #' @description List of model formulas for observation model
+    #' 
+    #' @param raw Logical. If FALSE, returns the nested list created by
+    #' make_formulas (default). If TRUE, returns formulas passed as input.
     formulas = function(raw = FALSE) {
       if (raw) {
         return(private$raw_formulas_)   
@@ -313,7 +316,7 @@ Observation <- R6Class(
     
     #' @description Update random effect design matrix
     #' 
-    #' @param X_fe New random effect design matrix 
+    #' @param X_re New random effect design matrix 
     update_X_re = function(X_re) {
       private$terms_$X_re <- X_re
     }, 
@@ -722,8 +725,8 @@ Observation <- R6Class(
       }
     }, 
     
-    #' Create a distribution 
-    #' @param name name of distribution to create 
+    # Create a distribution 
+    # @param name name of distribution to create 
     dist_maker = function(name) {
       if (name %in% names(dist_list)) {
         # distribution with fixed parameter dimension
