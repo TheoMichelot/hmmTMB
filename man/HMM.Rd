@@ -16,6 +16,10 @@ Compute pseudo-residuals for the fitted model. If the fitted model
 is the "true" model, the pseudo-residuals follow a standard normal distribution.
 Deviations from normality suggest lack of fit.
 }
+\references{
+Wood (2017). Generalized additive models: an introduction with R. 
+CRC press.
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -203,6 +207,10 @@ Update parameters stored inside model object
 \describe{
 \item{\code{par_list}}{a list for coeff_f(r)e_obs, coeff_f(r)e_hid, log_delta, 
 log_lambda_hid log_lambda_obs}
+
+\item{\code{iter}}{Optional argument to update model parameters based on MCMC
+iterations (if using rstan). Either the index of the iteration to use,
+or "mean" if the posterior mean should be used.}
 }
 \if{html}{\out{</div>}}
 }
@@ -257,14 +265,14 @@ clustering
 }
 
 \subsection{Returns}{
-list of initial parameters for each observation variable 
-Set priors for coefficients
+list of initial parameters for each observation variable
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_priors"></a>}}
 \if{latex}{\out{\hypertarget{method-set_priors}{}}}
 \subsection{Method \code{set_priors()}}{
+Set priors for coefficients
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$set_priors(new_priors = NULL)}\if{html}{\out{</div>}}
 }
@@ -299,6 +307,14 @@ Iterations from stan MCMC fit
 \if{html}{\out{<div class="r">}}\preformatted{HMM$iters(type = "response")}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{type}}{Either "response" for parameters on the response (natural)
+scale, or "raw" for parameters on the linear predictor scale.}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 see output of as.matrix in stan
 }
@@ -333,7 +349,12 @@ Log-likelihood
 \if{html}{\out{<a id="method-edf"></a>}}
 \if{latex}{\out{\hypertarget{method-edf}{}}}
 \subsection{Method \code{edf()}}{
-Compute effective degrees of freedom
+Compute effective degrees of freedom 
+
+The degrees of freedom of the fixed effects are obtained as the number of
+fixed effect parameters. The effective degrees of freedom of the random 
+effects are computed in the comp_edf private method, based on the formula 
+from Section 5.4.2 from Wood (2017).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$edf()}\if{html}{\out{</div>}}
 }
@@ -368,6 +389,15 @@ Fit model using tmbstan
 \if{html}{\out{<div class="r">}}\preformatted{HMM$mcmc(..., silent = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Arguments passed to tmbstan}
+
+\item{\code{silent}}{Logical. If FALSE, all tracing outputs are shown (default).}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-fit"></a>}}
@@ -549,13 +579,13 @@ Posterior sampling for linear predictor
 \subsection{Returns}{
 Matrix with one column for each predictor and one row
 for each posterior draw
-Create posterior simulations of a function of a model component
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-post_fn"></a>}}
 \if{latex}{\out{\hypertarget{method-post_fn}{}}}
 \subsection{Method \code{post_fn()}}{
+Create posterior simulations of a function of a model component
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$post_fn(fn, n_post, comp = NULL, ..., level = 0)}\if{html}{\out{</div>}}
 }
@@ -571,20 +601,22 @@ and produces either a scalar or vector output}
 \item{\code{comp}}{is "obs" for observation model linear predictor, "hidden" for
 hidden model linear predictor}
 
+\item{\code{...}}{arguments passed to fn}
+
 \item{\code{level}}{confidence interval level, default is 95\%}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 a vector (for scalar outputs of fn) or a matrix (for vector outputs)
-with a column for each simulation 
-Predict estimates from a fitted model
+with a column for each simulation
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-predict"></a>}}
 \if{latex}{\out{\hypertarget{method-predict}{}}}
 \subsection{Method \code{predict()}}{
+Predict estimates from a fitted model
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$predict(name, t = 1, newdata = NULL, level = 0, n_post = 0)}\if{html}{\out{</div>}}
 }
@@ -701,13 +733,13 @@ are plotted against each other.
 }
 \subsection{Returns}{
 A ggplot object
-Plot a model component
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-plot"></a>}}
 \if{latex}{\out{\hypertarget{method-plot}{}}}
 \subsection{Method \code{plot()}}{
+Plot a model component
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$plot(name, var = NULL, covs = NULL, i = NULL, j = NULL, n_grid = 50)}\if{html}{\out{</div>}}
 }
@@ -717,7 +749,7 @@ Plot a model component
 \describe{
 \item{\code{name}}{name of model component: tpm, delta, or obspar}
 
-\item{\code{var}}{covariate to plot on x-axis}
+\item{\code{var}}{name of covariate to plot on x-axis}
 
 \item{\code{covs}}{Optional data frame with a single row and one column
 for each covariate, giving the values that should be used. If this is
@@ -735,7 +767,7 @@ ignored, if plotting obspar then indices of states to plot}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-desired plot
+A ggplot object
 }
 }
 \if{html}{\out{<hr>}}
@@ -752,6 +784,7 @@ Print model formulation
 \if{html}{\out{<a id="method-print"></a>}}
 \if{latex}{\out{\hypertarget{method-print}{}}}
 \subsection{Method \code{print()}}{
+Print HMM object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$print()}\if{html}{\out{</div>}}
 }

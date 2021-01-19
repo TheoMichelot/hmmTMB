@@ -55,7 +55,7 @@ the observation model from a hidden Markov model.
 \subsection{Method \code{new()}}{
 Create new Observation object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$new(data, dists, n_states, par = NULL, formulas = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$new(data, dists, formulas = NULL, n_states, par = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -65,11 +65,11 @@ Create new Observation object
 
 \item{\code{dists}}{Named list of Distribution objects for each data stream}
 
+\item{\code{formulas}}{List of formulas for observation parameters}
+
 \item{\code{n_states}}{Number of states (needed to construct model formulas)}
 
 \item{\code{par}}{List of observation parameters (for covariate-free model)}
-
-\item{\code{formulas}}{List of formulas for observation parameters}
 }
 \if{html}{\out{</div>}}
 }
@@ -217,6 +217,14 @@ List of model formulas for observation model
 \if{html}{\out{<div class="r">}}\preformatted{Observation$formulas(raw = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{raw}}{Logical. If FALSE, returns the nested list created by
+make_formulas (default). If TRUE, returns formulas passed as input.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-terms"></a>}}
@@ -342,7 +350,7 @@ Update random effect design matrix
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{X_fe}}{New random effect design matrix}
+\item{\code{X_re}}{New random effect design matrix}
 }
 \if{html}{\out{</div>}}
 }
@@ -556,8 +564,7 @@ A ggplot object
 \if{latex}{\out{\hypertarget{method-formulation}{}}}
 \subsection{Method \code{formulation()}}{
 Print model formulation
-Check constructor arguments 
-Create a distribution
+Check constructor arguments
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$formulation()}\if{html}{\out{</div>}}
 }

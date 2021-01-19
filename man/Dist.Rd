@@ -199,6 +199,13 @@ Set number of parameters this distribution has
 \if{html}{\out{<div class="r">}}\preformatted{Dist$set_npar(new_npar)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{new_npar}}{Number of parameters}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-set_parnames"></a>}}
@@ -209,6 +216,13 @@ Set parameter names
 \if{html}{\out{<div class="r">}}\preformatted{Dist$set_parnames(new_parnames)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{new_parnames}}{Parameter names}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-pdf_apply"></a>}}

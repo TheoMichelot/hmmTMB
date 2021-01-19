@@ -51,14 +51,19 @@ Contains the parameters and model formulas for the hidden process model.
 \subsection{Method \code{new()}}{
 Create new MarkovChain object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$new(n_states = NULL, structure = NULL, stationary = FALSE, data)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$new(
+  data,
+  structure = NULL,
+  n_states = NULL,
+  tpm = NULL,
+  stationary = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{n_states}}{Number of states. If not specified, then \code{structure} 
-needs to be provided as a matrix, and n_states is deduced from its dimensions.}
+\item{\code{data}}{Data frame, needed to create model matrices}
 
 \item{\code{structure}}{Either (1) matrix with an entry of "." on diagonal, a "0" for 
 transitions that are not allowed (not implemented yet), and a formula "~1" 
@@ -66,11 +71,16 @@ for covariates affecting transitions that are to be estimated, or (2) single
 formula, assumed for all transition probabilities. (Default: no covariate
 dependence.)}
 
+\item{\code{n_states}}{Number of states. If not specified, then \code{structure} 
+needs to be provided as a matrix, and n_states is deduced from its dimensions.}
+
+\item{\code{tpm}}{Optional transition probability matrix, to initialise the model
+parameters (intercepts in model with covariates). If not provided, the default 
+is a matrix with 0.9 on the diagonal.}
+
 \item{\code{stationary}}{if TRUE then stationary distribution with respect to tpm for 
 first time point is used as initial distribution, if FALSE then initial distribution
 is estimated}
-
-\item{\code{data}}{Data frame, needed to create model matrices}
 }
 \if{html}{\out{</div>}}
 }
@@ -331,9 +341,16 @@ Update design matrix for random effects
 \subsection{Method \code{update_delta()}}{
 Update delta coefficients
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_delta(new_delta)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_delta(delta)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{delta}}{Vector of delta coefficients}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update_lambda"></a>}}
@@ -468,6 +485,7 @@ Transition probability matrix
 \if{html}{\out{<a id="method-linpred"></a>}}
 \if{latex}{\out{\hypertarget{method-linpred}{}}}
 \subsection{Method \code{linpred()}}{
+Linear predictor for transition probabilities
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$linpred()}\if{html}{\out{</div>}}
 }
