@@ -1,5 +1,5 @@
 
-# Colour palette
+#' hmmTMB colour palette
 hmmTMB_cols <- c("#00798c", "#d1495b", "#edae49", "#66a182", "#2e4057", "#8d96a3")
 
 #' Create block diagonal matrix (safe version)
@@ -157,12 +157,15 @@ is_whole_number <- function(x, tol = 1e-10) {
   y <- floor(x)
   return(all(abs(x - y) < tol))
 }
+
 #' Strip comments marked with a hash from a character vector 
+#' 
 #' @param str the character vector 
 #' 
 #' @return character vector with comments removed (and lines with only comments
 #' completely removed) 
 #' @export 
+#' 
 strip_comments <- function(str) {
   res <- str_trim(str_split_fixed(str, "#|;", 2)[, 1])
   res <- res[res != ""]
