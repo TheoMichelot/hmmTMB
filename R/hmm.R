@@ -284,7 +284,8 @@ HMM <- R6Class(
       return(par)
     }, 
     
-    #' Set priors for coefficients 
+    #' @description Set priors for coefficients 
+    #' 
     #' @param new_priors is a list of matrices for optionally 
     #' coeff_fe_obs, coeff_fe_hid, log_lambda_obs log_lambda_hid 
     #' each matrix has two rows (first row = mean, second row = sd) 
@@ -377,6 +378,14 @@ HMM <- R6Class(
     },
     
     #' @description Compute effective degrees of freedom 
+    #' 
+    #' The degrees of freedom of the fixed effects are obtained as the number of
+    #' fixed effect parameters. The effective degrees of freedom of the random 
+    #' effects are computed in the comp_edf private method, based on the formula 
+    #' from Section 5.4.2 from Wood (2017).
+    #' 
+    #' @references Wood (2017). Generalized additive models: an introduction with R. 
+    #' CRC press.
     edf = function() {
       # DF for fixed effects 
       df <- nrow(self$obs()$coeff_fe()) + nrow(self$hidden()$coeff_fe())
@@ -766,6 +775,7 @@ HMM <- R6Class(
     # Conditional distributions -----------------------------------------------
 
     #' @description Compute conditional cumulative distribution functions 
+    #' 
     #' @param ngrid how many cells on the grid that CDF is computed on 
     #' @param silent if TRUE then no messages are printed 
     #' 
@@ -931,6 +941,7 @@ HMM <- R6Class(
     
     #' @description Sample posterior state sequences using forward-filtering
     #' backward-sampling 
+    #' 
     #' @param nsamp number of samples to produce 
     #' @param full if TRUE and model fit by mcmc then parameter estimates are 
     #' sampled from the posterior samples before simulating each sequence 
@@ -1069,7 +1080,7 @@ HMM <- R6Class(
       return(lp)
     }, 
     
-    #' Create posterior simulations of a function of a model component 
+    #' @description Create posterior simulations of a function of a model component 
     #' 
     #' @param fn the function which takes a vector of linear predictors as input
     #'           and produces either a scalar or vector output 
@@ -1107,7 +1118,8 @@ HMM <- R6Class(
       return(res)
     }, 
     
-    #' Predict estimates from a fitted model
+    #' @description Predict estimates from a fitted model
+    #' 
     #' @param name which estimates to predict? Options include 
     #' transition probability matrices "tpm", 
     #' stationary distributions "delta", or 
@@ -1409,9 +1421,10 @@ HMM <- R6Class(
       return(p)
     },
     
-    #' Plot a model component 
+    #' @description Plot a model component 
+    #' 
     #' @param name name of model component: tpm, delta, or obspar 
-    #' @param var covariate to plot on x-axis 
+    #' @param var name of covariate to plot on x-axis 
     #' @param covs Optional data frame with a single row and one column
     #' for each covariate, giving the values that should be used. If this is
     #' not specified, the mean value is used for numeric variables, and the
@@ -1421,7 +1434,8 @@ HMM <- R6Class(
     #' @param j if plotting tpm then cols of tpm to plot, if plotting delta then
     #' ignored, if plotting obspar then indices of states to plot 
     #' @param n_grid coarseness of grid over x-axis to create 
-    #' @return desired plot 
+    #' 
+    #' @return A ggplot object 
     plot = function(name, var = NULL, covs = NULL, i = NULL, j = NULL, n_grid = 50) {
       # Get relevant model component 
       comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
