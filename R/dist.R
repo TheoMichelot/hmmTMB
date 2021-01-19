@@ -158,10 +158,14 @@ Dist <- R6Class(
   
     # Mutators ----------------------------------------------------------------
 
-    #' @description Set number of parameters this distribution has 
+    #' @description Set number of parameters this distribution has
+    #' 
+    #' @param new_npar Number of parameters
     set_npar = function(new_npar) {private$npar_ <- new_npar}, 
     
     #' @description Set parameter names 
+    #' 
+    #' @param new_parnames Parameter names
     set_parnames = function(new_parnames) {private$parnames_ <- new_parnames}, 
 
     # Other methods -----------------------------------------------------------
