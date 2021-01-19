@@ -152,8 +152,12 @@ HMM <- R6Class(
     },
     
     #' @description Update parameters stored inside model object
+    #' 
     #' @param par_list a list for coeff_f(r)e_obs, coeff_f(r)e_hid, log_delta, 
     #'                   log_lambda_hid log_lambda_obs
+    #' @param iter Optional argument to update model parameters based on MCMC
+    #' iterations (if using rstan). Either the index of the iteration to use,
+    #' or "mean" if the posterior mean should be used.
     update_par = function(par_list = NULL, iter = NULL) {
       if (is.null(par_list) & is.null(iter)) {
         stop("No new parameter values to update to")
@@ -324,6 +328,9 @@ HMM <- R6Class(
     }, 
     
     #' @description Iterations from stan MCMC fit 
+    #' 
+    #' @param type Either "response" for parameters on the response (natural)
+    #' scale, or "raw" for parameters on the linear predictor scale.
     #' 
     #' @return see output of as.matrix in stan 
     iters = function(type = "response") {
@@ -594,6 +601,9 @@ HMM <- R6Class(
     },
     
     #' @description Fit model using tmbstan
+    #' 
+    #' @param ... Arguments passed to tmbstan
+    #' @param silent Logical. If FALSE, all tracing outputs are shown (default).
     mcmc = function(..., silent = FALSE) {
       self$formulation()
       
@@ -1060,11 +1070,13 @@ HMM <- R6Class(
     }, 
     
     #' Create posterior simulations of a function of a model component 
+    #' 
     #' @param fn the function which takes a vector of linear predictors as input
     #'           and produces either a scalar or vector output 
     #' @param comp is "obs" for observation model linear predictor, "hidden" for
     #'             hidden model linear predictor 
     #' @param n_post number of posterior simulations 
+    #' @param ... arguments passed to fn
     #' @param level confidence interval level, default is 95\% 
     #' 
     #' @return a vector (for scalar outputs of fn) or a matrix (for vector outputs)
@@ -1528,6 +1540,7 @@ HMM <- R6Class(
       self$hidden()$formulation()
     }, 
     
+    #' @description Print HMM object
     print = function() {
       self$formulation()
     }
