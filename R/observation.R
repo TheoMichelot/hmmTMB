@@ -130,6 +130,7 @@ Observation <- R6Class(
     nstates = function() {return(private$nstates_)},
     
     #' @description Parameters on natural scale
+    #' 
     #' @param t time point, default t = 1; 
     #' if "all" then return for all time points, otherwise return at time points given in t 
     #' @param full_names Logical. If TRUE, the rows of the output
@@ -138,8 +139,15 @@ Observation <- R6Class(
     #' latter is used in various internal functions, when the parameters
     #' need to be passed on to an R function.
     #' @param linpred custom linear predictor 
+    #' @param as_list Logical. If TRUE, the output is a nested list with three levels:
+    #' (1) time step, (2) observed variable, (3) observation parameter. If FALSE (default),
+    #' the output is an array with one row for each observation parameter, one column for
+    #' each state, and one slice for each time step.
     #' 
-    par = function(t = 1, full_names = TRUE, linpred = NULL) {
+    #' @return Array of parameters with one row for each observation parameter, 
+    #' one column for each state, and one slice for each time step. (See as_list
+    #' argument for alternative output format.)
+    par = function(t = 1, full_names = TRUE, linpred = NULL, as_list = FALSE) {
       # Number of states
       n_states <- self$nstates()
       
@@ -160,31 +168,39 @@ Observation <- R6Class(
       # Matrix of linear predictor
       lp_mat <- matrix(linpred, ncol = n_par * n_states)
       
-      # Matrix of natural parameters
-      par_mat <- apply(lp_mat, 1, function(lp_vec) {
-        par_ls <- self$w2n(lp_vec)
-        par_vec <- unlist(par_ls, use.names = FALSE)
-        return(par_vec)
-      })
-      
-      # Array of natural parameters
-      par_array <- array(par_mat, dim = c(n_states, n_par, length(t)))
+      if(as_list) {
+        # List with three levels: (1) time step, (2) observed variable, 
+        # (3) observation parameter
+        par <- apply(lp_mat, 1, self$w2n)
+      } else {
+        # Matrix of natural parameters
+        par_mat <- apply(lp_mat, 1, function(lp_vec) {
+          par_ls <- self$w2n(lp_vec)
+          par_vec <- unlist(par_ls, use.names = FALSE)
+          return(par_vec)
+        })
         
-      # Get parameter names 
-      par_names <- unlist(lapply(self$dists(), FUN = function(x) {x$parnames()}), use.names = FALSE)
-      if(full_names) {
-        var_names <- unlist(sapply(1:length(self$dists()), FUN = function(d) {rep(names(self$dists())[d], self$dists()[[d]]$npar())}), use.names = FALSE)
-        par_names <- paste0(var_names, ".", par_names)
-      } 
-      names(par_names) <- NULL 
-      
-      # Set dimension names for rows and columns
-      dimnames(par_array) <- list(paste("state", 1:n_states),
-                                  par_names,
-                                  NULL)
+        # Array of natural parameters
+        par_array <- array(par_mat, dim = c(n_states, n_par, length(t)))
         
-      # Transpose each slice
-      par <- aperm(par_array, perm = c(2, 1, 3))
+        # Get parameter names 
+        par_names <- unlist(lapply(self$dists(), FUN = function(x) {x$parnames()}), use.names = FALSE)
+        if(full_names) {
+          var_names <- unlist(sapply(1:length(self$dists()), FUN = function(d) 
+            {rep(names(self$dists())[d], self$dists()[[d]]$npar())}), use.names = FALSE)
+          par_names <- paste0(var_names, ".", par_names)
+        } 
+        names(par_names) <- NULL 
+        
+        # Set dimension names for rows and columns
+        dimnames(par_array) <- list(paste("state", 1:n_states),
+                                    par_names,
+                                    NULL)
+        
+        # Transpose each slice
+        par <- aperm(par_array, perm = c(2, 1, 3))
+      }
+      
       return(par)
     },
     
@@ -537,7 +553,7 @@ Observation <- R6Class(
       colnames(par) <- names(self$dists()[[name]]$link())
       
       # Weights for each state-dependent distribution
-      if(is.null(weights))weights <- rep(1, self$nstates())
+      if(is.null(weights)) weights <- rep(1, self$nstates())
       
       # Grid over range of observed variable
       n_grid <- 1e3
