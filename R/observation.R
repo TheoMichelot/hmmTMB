@@ -542,14 +542,16 @@ Observation <- R6Class(
     #' @param weights Optional vector of length the number of pdfs that are
     #' plotted. Useful to visualise a mixture of distributions weighted by the
     #' proportion of time spent in the different states.
+    #' @param t Index of time step to use for covariates (default: 1).
     #' 
     #' @return A ggplot object
-    plot_dist = function(name, weights = NULL) {
+    plot_dist = function(name, weights = NULL, t = 1) {
       # Extract observed values for relevant variable
       obs <- data.frame(val = self$data()[[name]])
       
       # Matrix of parameters
-      par <- matrix(unlist(self$par()[[name]]), nrow = self$nstates())
+      par <- matrix(unlist(self$par(t = t, as_list = TRUE)[[1]][[name]]), 
+                    nrow = self$nstates())
       colnames(par) <- names(self$dists()[[name]]$link())
       
       # Weights for each state-dependent distribution
