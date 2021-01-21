@@ -7,7 +7,7 @@ Observation <- R6Class(
   classname = "Observation",
   
   public = list(
-
+    
     # Constructor -------------------------------------------------------------
     #' @description Create new Observation object
     #' 
@@ -70,7 +70,7 @@ Observation <- R6Class(
         # Default: set all formulas to ~1
         forms <- lapply(par, function(varpar) {
           f <- lapply(varpar, function(...) {
-              return(~1)            
+            return(~1)            
           })
           return(f)
         })
@@ -84,8 +84,8 @@ Observation <- R6Class(
       ncol_fe <- mats$ncol_fe
       ncol_re <- mats$ncol_re
       private$terms_ <- c(mats, list(names_fe = colnames(mats$X_fe),
-                             names_re_all = colnames(mats$X_re),
-                             names_re = names(ncol_re)))
+                                     names_re_all = colnames(mats$X_re),
+                                     names_re = names(ncol_re)))
       
       # Initialise parameters      
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
@@ -115,7 +115,7 @@ Observation <- R6Class(
       } else {
         stop("'par' must be provided")
       }
-    
+      
     },
     
     # Accessors ---------------------------------------------------------------
@@ -159,12 +159,12 @@ Observation <- R6Class(
       
       # Number of observations
       n <- length(linpred) / (n_par * n_states)
-        
+      
       # Subset by time
       if (length(t) == 1) if (t == "all") t <- 1:n
       ind <- as.vector(sapply(1:(n_states * n_par), function(i) {t + (i - 1) * n}))
       linpred <- linpred[ind]
-        
+      
       # Matrix of linear predictor
       lp_mat <- matrix(linpred, ncol = n_par * n_states)
       
@@ -187,7 +187,7 @@ Observation <- R6Class(
         par_names <- unlist(lapply(self$dists(), FUN = function(x) {x$parnames()}), use.names = FALSE)
         if(full_names) {
           var_names <- unlist(sapply(1:length(self$dists()), FUN = function(d) 
-            {rep(names(self$dists())[d], self$dists()[[d]]$npar())}), use.names = FALSE)
+          {rep(names(self$dists())[d], self$dists()[[d]]$npar())}), use.names = FALSE)
           par_names <- paste0(var_names, ".", par_names)
         } 
         names(par_names) <- NULL 
@@ -295,7 +295,7 @@ Observation <- R6Class(
     #' 
     #' @param par New list of parameters
     update_par = function(par) {
-
+      
       # Get index of first column of X_fe for each parameter
       ncol_fe <- self$terms()$ncol_fe
       n_par <- length(ncol_fe)
@@ -352,9 +352,9 @@ Observation <- R6Class(
       private$data_ <- data
     },
     
-
+    
     # Other methods -----------------------------------------------------------
-
+    
     #' @description Make model matrices
     #' 
     #' @param new_data Optional new data set, including covariates for which
@@ -405,11 +405,11 @@ Observation <- R6Class(
     #' 
     #' @return Vector of parameters on working scale
     n2w = function(par) {
-      coeff_fe <- lapply(seq_along(self$dists()), 
-                         function(i) self$dists()[[i]]$n2w(par[[i]]))
-      names(coeff_fe) <- names(par)
-      coeff_fe <- unlist(coeff_fe)
-      return(coeff_fe)
+      wpar <- lapply(seq_along(self$dists()), 
+                     function(i) self$dists()[[i]]$n2w(par[[i]]))
+      names(wpar) <- names(par)
+      wpar <- unlist(wpar)
+      return(wpar)
     },
     
     #' @description  Working to natural parameter transformation
@@ -418,10 +418,10 @@ Observation <- R6Class(
     #' distribution parameters, to transform parameters from the working
     #' scale (i.e., linear predictor scale) to their natural scale.
     #'
-    #' @param coeff_fe Vector of parameters on working scale
+    #' @param wpar Vector of parameters on working scale
     #' 
     #' @return List of parameters on natural scale
-    w2n = function(coeff_fe) {
+    w2n = function(wpar) {
       # Initialise list of natural parameters
       par <- list()
       
@@ -438,9 +438,9 @@ Observation <- R6Class(
         # Number of parameters for this distribution
         npar <- self$dists()[[var]]$npar()
         # Subset and transform working parameters
-        sub_coeff_fe <- coeff_fe[par_count:(par_count + npar*n_states - 1)]
+        sub_wpar <- wpar[par_count:(par_count + npar*n_states - 1)]
         par_count <- par_count + npar*n_states
-        par[[var]] <- self$dists()[[var]]$w2n(sub_coeff_fe)
+        par[[var]] <- self$dists()[[var]]$w2n(sub_wpar)
       }
       
       names(par) <- names(self$dists())
@@ -650,7 +650,7 @@ Observation <- R6Class(
   ),
   
   private = list(
-
+    
     # Private data members ----------------------------------------------------
     
     data_ = NULL,
