@@ -957,8 +957,8 @@ HMM <- R6Class(
       }
       nstates <- self$hidden()$nstates()
       actual_samps <- max(n_full_samp, nsamp)
-      states <- matrix(0, nr = n, nc = actual_samps)
       n <- nrow(self$obs()$data())
+      states <- matrix(0, nr = n, nc = actual_samps)
       for (k in 1:n_full_samp) {
         # sample a parameter iteration at random, if FULL asked for 
         if (full) self$update_par(iter = sample(1:nrow(mod$iters()), size = 1))
