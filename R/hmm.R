@@ -1806,6 +1806,11 @@ HMM <- R6Class(
       if(!inherits(hidden, "MarkovChain")) {
         stop("'hidden' should be an MarkovChain object")
       }
+      if(obs$nstates() != hidden$nstates()) {
+        stop(paste0("The observation model and hidden state model should have the ",
+                    "same number of states. (obs$nstates = ", obs$nstates(), 
+                    ", hidden$nstates = ", hidden$nstates(), ")"))
+      }
       if(!is.null(init)) if (!("HMM" %in% class(init))) stop("init must be a HMM object.")
     }
   )
