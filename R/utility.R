@@ -67,8 +67,8 @@ na_fill <- function(x) {
 #' @param data Data frame containing the covariates. If not provided, data
 #' are extracted from obj
 #' @param obj HMM model object containing data and formulas
-#' @param covs Optional data frame with a single row and one column
-#' for each covariate, giving the values that should be used. If this is
+#' @param covs Optional named list for values of covariates (other than 'var') 
+#' that should be used in the plot (or dataframe with single row). If this is
 #' not specified, the mean value is used for numeric variables, and the
 #' first level for factor variables.
 #' @param formulas List of formulas used in the model

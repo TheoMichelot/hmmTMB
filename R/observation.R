@@ -362,8 +362,8 @@ Observation <- R6Class(
     #' Design matrices for grid of covariates
     #' 
     #' @param var Name of variable
-    #' @param covs Optional data frame with a single row and one column
-    #' for each covariate, giving the values that should be used. If this is
+    #' @param covs Optional named list for values of covariates (other than 'var') 
+    #' that should be used in the plot (or dataframe with single row). If this is
     #' not specified, the mean value is used for numeric variables, and the
     #' first level for factor variables.
     #' @param n_grid Grid size (number of points). Default: 1000.
