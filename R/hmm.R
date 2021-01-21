@@ -249,7 +249,7 @@ HMM <- R6Class(
     #' @return list of initial parameters for each observation variable 
     suggest_initial = function() {
       # do clustering
-      cluster <- kmeans(self$obs()$obs_var(expand = TRUE), 
+      cluster <- kmeans(na.omit(self$obs()$obs_var(expand = TRUE)), 
                         centers = self$hidden()$nstates())
       states <- cluster$cluster
       # get current parameters 
