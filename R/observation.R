@@ -645,6 +645,11 @@ Observation <- R6Class(
         # Print parameter formulas
         cat(s_list[[i]], "\n")
       }
+    },
+    
+    #' @description Print Observation object
+    print = function() {
+      self$formulation()
     }
     
   ),

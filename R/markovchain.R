@@ -441,6 +441,11 @@ MarkovChain <- R6Class(
       colnames(hid_forms) <- paste0("state ", 1:n_states)
       print(hid_forms)
       cat("\n")
+    },
+    
+    #' @description Print MarkovChain object
+    print = function() {
+      self$formulation()
     }
   ),
   
