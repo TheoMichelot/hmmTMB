@@ -491,10 +491,25 @@ dist_vm <- Dist$new(
     # (also, translate rvm output from [0, 2pi] to [-pi, pi])
     CircStats::rvm(n = n, mean = mu + pi, k = kappa) - pi
   },
-  link = list(mu = function(x) qlogis((x + pi) / (2 * pi)), 
+  link = list(mu = function(x) qlogis((x + pi) / (2 * pi)),
               kappa = log),
-  invlink = list(mu = function(x) 2 * pi * plogis(x) - pi, 
+  invlink = list(mu = function(x) 2 * pi * plogis(x) - pi,
                  kappa = exp),
+  # link = function(x, n_states) {
+  #   # View mean and concentration as polar coordinates for a point in R^2,
+  #   # and use corresponding Cartesian coordinates as working parameters
+  #   xmat <- matrix(unlist(x), nrow = n_states)
+  #   coord1 <- xmat[,2] * cos(xmat[,1])
+  #   coord2 <- xmat[,2] * sin(xmat[,1])
+  #   return(c(coord1, coord2))
+  # },
+  # invlink = function(x, n_states) {
+  #   # Transform back to polar coordinates
+  #   xmat <- matrix(x, nrow = n_states)
+  #   mu <- atan2(xmat[,2], xmat[,1])
+  #   kappa <- sqrt(xmat[,1]^2 + xmat[,2]^2)
+  #   return(c(mu, kappa))
+  # },
   npar = 2, 
   parnames = c("mu", "kappa"), 
   parapprox = function(x) {
