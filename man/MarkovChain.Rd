@@ -42,6 +42,7 @@ Contains the parameters and model formulas for the hidden process model.
 \item \href{#method-linpred}{\code{MarkovChain$linpred()}}
 \item \href{#method-simulate}{\code{MarkovChain$simulate()}}
 \item \href{#method-formulation}{\code{MarkovChain$formulation()}}
+\item \href{#method-print}{\code{MarkovChain$print()}}
 \item \href{#method-clone}{\code{MarkovChain$clone()}}
 }
 }
@@ -420,8 +421,8 @@ Used in plotting functions such as HMM$plot_tpm and HMM$plot_stat_dist
 
 \item{\code{data}}{Data frame containing the covariates}
 
-\item{\code{covs}}{Optional data frame with a single row and one column
-for each covariate, giving the values that should be used. If this is
+\item{\code{covs}}{Optional named list for values of covariates (other than 'var') 
+that should be used in the plot (or dataframe with single row). If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
 
@@ -526,9 +527,19 @@ Sequence of states of simulated chain
 \if{latex}{\out{\hypertarget{method-formulation}{}}}
 \subsection{Method \code{formulation()}}{
 Print model formulation
-Check constructor arguments ##
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$formulation()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-print"></a>}}
+\if{latex}{\out{\hypertarget{method-print}{}}}
+\subsection{Method \code{print()}}{
+Print MarkovChain object
+Check constructor arguments ##
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$print()}\if{html}{\out{</div>}}
 }
 
 }

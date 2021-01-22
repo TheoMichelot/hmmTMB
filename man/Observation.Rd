@@ -46,6 +46,7 @@ the observation model from a hidden Markov model.
 \item \href{#method-obs_probs}{\code{Observation$obs_probs()}}
 \item \href{#method-plot_dist}{\code{Observation$plot_dist()}}
 \item \href{#method-formulation}{\code{Observation$formulation()}}
+\item \href{#method-print}{\code{Observation$print()}}
 \item \href{#method-clone}{\code{Observation$clone()}}
 }
 }
@@ -113,7 +114,7 @@ Number of states
 \subsection{Method \code{par()}}{
 Parameters on natural scale
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$par(t = 1, full_names = TRUE, linpred = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$par(t = 1, full_names = TRUE, linpred = NULL, as_list = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -129,8 +130,18 @@ latter is used in various internal functions, when the parameters
 need to be passed on to an R function.}
 
 \item{\code{linpred}}{custom linear predictor}
+
+\item{\code{as_list}}{Logical. If TRUE, the output is a nested list with three levels:
+(1) time step, (2) observed variable, (3) observation parameter. If FALSE (default),
+the output is an array with one row for each observation parameter, one column for
+each state, and one slice for each time step.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Array of parameters with one row for each observation parameter, 
+one column for each state, and one slice for each time step. (See as_list
+argument for alternative output format.)
 }
 }
 \if{html}{\out{<hr>}}
@@ -432,8 +443,8 @@ Design matrices for grid of covariates
 \describe{
 \item{\code{var}}{Name of variable}
 
-\item{\code{covs}}{Optional data frame with a single row and one column
-for each covariate, giving the values that should be used. If this is
+\item{\code{covs}}{Optional named list for values of covariates (other than 'var') 
+that should be used in the plot (or dataframe with single row). If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
 
@@ -480,13 +491,13 @@ This function applies the inverse link functions of the
 distribution parameters, to transform parameters from the working
 scale (i.e., linear predictor scale) to their natural scale.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$w2n(coeff_fe)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$w2n(wpar)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{coeff_fe}}{Vector of parameters on working scale}
+\item{\code{wpar}}{Vector of parameters on working scale}
 }
 \if{html}{\out{</div>}}
 }
@@ -540,7 +551,7 @@ overlaid with the pdf of the specified distribution for that data stream.
 Helpful to select initial parameter values for model fitting, or to visualise 
 fitted state-dependent distributions.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$plot_dist(name, weights = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$plot_dist(name, weights = NULL, t = 1)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -552,6 +563,8 @@ and pdfs should be plotted.}
 \item{\code{weights}}{Optional vector of length the number of pdfs that are
 plotted. Useful to visualise a mixture of distributions weighted by the
 proportion of time spent in the different states.}
+
+\item{\code{t}}{Index of time step to use for covariates (default: 1).}
 }
 \if{html}{\out{</div>}}
 }
@@ -564,9 +577,19 @@ A ggplot object
 \if{latex}{\out{\hypertarget{method-formulation}{}}}
 \subsection{Method \code{formulation()}}{
 Print model formulation
-Check constructor arguments
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$formulation()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-print"></a>}}
+\if{latex}{\out{\hypertarget{method-print}{}}}
+\subsection{Method \code{print()}}{
+Print Observation object
+Check constructor arguments
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$print()}\if{html}{\out{</div>}}
 }
 
 }
