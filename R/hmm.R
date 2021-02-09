@@ -615,6 +615,10 @@ HMM <- R6Class(
       
       # Negative log-likelihood function
       private$tmb_obj_ <- obj
+      
+      # Joint negative log-likelihood function
+      private$tmb_obj_joint_ <- MakeADFun(tmb_dat, tmb_par, dll = "hmmTMB", 
+                                          map = map, silent = silent)
     },
     
     #' @description Fit model using tmbstan
@@ -1553,7 +1557,34 @@ HMM <- R6Class(
       return(p)
     }, 
     
+    # AIC methods (for simulation experiments) --------------------------------
+    #' @description Marginal AIC
+    AIC_marginal = function() {
+      llk <- -self$out()$value
+      npar <- nrow(self$obs()$coeff_fe()) + 
+        nrow(self$hidden()$coeff_fe()) +
+        length(self$obs()$lambda()) +
+        length(self$hidden()$lambda())
+      
+      aic <- - 2 * llk + 2 * npar
+      
+      return(aic)
+    },
     
+    tmb_obj_joint = function() {return(private$tmb_obj_joint_)},
+    
+    #' @description Conditional AIC
+    AIC_conditional = function() {
+      # Get all estimated parameters (fixed and random)
+      par_all <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
+      
+      llk <- - private$tmb_obj_joint_$fn(par_all)
+      npar <- self$edf()
+      
+      aic <- - 2 * llk + 2 * npar
+      
+      return(aic)
+    },
 
     # Print methods -----------------------------------------------------------
     #' @description Print model formulation
@@ -1575,6 +1606,7 @@ HMM <- R6Class(
     hidden_ = NULL,
     out_ = NULL,
     tmb_obj_ = NULL,
+    tmb_obj_joint_ = NULL,
     tmb_rep_ = NULL,
     priors_ = NULL, 
     mcmc_ = NULL, 
