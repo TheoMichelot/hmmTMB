@@ -479,7 +479,7 @@ Observation <- R6Class(
       # Number of states
       n_states <- self$nstates()
       # Number of variables
-      n_var <- ncol(data)
+      n_var <- ncol(self$obs_var())
       
       # State-dependent parameters
       par <- self$par(t = "all", full_names = FALSE)
@@ -498,7 +498,6 @@ Observation <- R6Class(
       givenvarnms <- colnames(data)
       varnms <- names(self$obs_var())
       
-      
       # Loop over observed variables
       for(var in 1:n_var) {
         obsdist <- self$dists()[[var]]
@@ -508,16 +507,15 @@ Observation <- R6Class(
           # Loop over observations (rows of prob)
           for (i in 1:n) {
             # Don't update likelihood is observation is missing
-            if(!is.na(data[i, var])) {
+            if(!is.na(data[i, varnms[var]])) {
               # Loop over states (columns of prob)
               for (s in 1:n_states) {
                 prob[i, s] <- prob[i, s] * 
-                  obsdist$pdf_apply(x = data[i, var], par = par[par_ind, s, i])
+                  obsdist$pdf_apply(x = data[i, varnms[var]], par = par[par_ind, s, i])
               }            
             }
           }
         }
-        
         par_count <- par_count + obsdist$npar()
       }
       

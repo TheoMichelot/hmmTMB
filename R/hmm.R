@@ -828,7 +828,7 @@ HMM <- R6Class(
       }
       if(!silent) cat("done\n")
       # list to store cdfs 
-      pdfs <- array(0, dim = c(nvars, n, ngrid))
+      pdfs <- vector(mode = "list", length = nvars)
       grids <- vector(mode = "list", length = nvars)
       # compute cdf for each variable 
       obsmats <- self$obs()$terms()
@@ -839,12 +839,13 @@ HMM <- R6Class(
         if (is_whole_number(vars[,i])) {
           grid <- unique(floor(grid))
         }
+        pdfs[[i]] <- matrix(0, nr = n, nc = length(grid))
         grids[[i]] <- grid 
         for (g in 1:length(grid)) {
           tmp <- data.frame(var = rep(grid[g], n))
           colnames(tmp) <- varnms[i]
           probs <- self$obs()$obs_probs(data = tmp)
-          pdfs[i, , g] <- rowSums(probs * cond)
+          pdfs[[i]][, g] <- rowSums(probs * cond)
         }
         if (!silent) cat("done\n")
       }
@@ -870,23 +871,24 @@ HMM <- R6Class(
       nvars <- ncol(vars)
       varnms <- names(vars)
       # sum CDFs cumulatively 
-      cdfs <- array(0, dim = dim(pdfs))
+      cdfs <- vector(mode = "list", length = length(pdfs)) #array(0, dim = dim(pdfs))
       for (v in 1:nvars) {
-        cdfs[v,,] <- t(apply(pdfs[v,,], 1, cumsum))
+        # apply normalisation to PDFs to reduce effect of gridding 
+        cdfs[[v]] <- t(apply(pdfs[[v]], 1, FUN = function(x) {cumsum(x)/sum(x)}))
         # if continuous then approximate the integral using Riemann sum
         if (!is_whole_number(vars[,v])) {
           dgrid <- diff(grids[[v]])[1]
-          cdfs[v,,] <- cdfs[v,,] * dgrid 
+          cdfs[[v]] <- cdfs[[v]] * dgrid 
         }
       }
       # do residuals for each variable 
       r <- matrix(0, nr = nvars, nc = n)
+      rownames(r) <- varnms 
       for (v in 1:nvars) {
         for (i in 1:length(vars[,v])) {
           wh <- which.min(abs(vars[i, v] - grids[[v]]))
-          r[v, i] <- qnorm(cdfs[v, i, wh])
+          r[v, i] <- qnorm(cdfs[[v]][i, wh])
         }
-        rownames(r)[v] <- varnms[v]
       }
       return(r)
     }, 
