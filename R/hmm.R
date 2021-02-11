@@ -1001,7 +1001,7 @@ HMM <- R6Class(
           if (full) {
             states[m,k] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
           } else {
-            states[m,k] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
+            states[m,] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
           }
           # sample backward
           for (s in 1:nsamp) {
