@@ -752,34 +752,39 @@ HMM <- R6Class(
     forward_backward = function() {
       delta <- self$hidden()$delta() 
       n <- nrow(self$obs()$data())
+      ni <- as.numeric(table(self$obs()$data()$ID))
       lforw <- lback <- matrix(0, nr = self$hidden()$nstates(), nc = n)
       # get observation probabilities 
       obsprobs <- self$obs()$obs_probs()
       # get tpms 
       tpms <- self$hidden()$tpm(t = "all")
       # forward algorithm 
-      p <- delta * obsprobs[1,]
-      psum <- sum(p)
-      llk <- log(psum)
-      p <- p / psum
-      lforw[, 1] <- log(p) + llk
-      for (i in 2:n) {
-        p <- p %*% tpms[, , i] * obsprobs[i, ]
+      k <- 1 
+      for (ind in 1:length(ni)) {
+        p <- delta * obsprobs[k,]
         psum <- sum(p)
-        llk <- llk + log(psum)
+        llk <- log(psum)
         p <- p / psum
-        lforw[, i] <- log(p) + llk 
-      }
-      # backward algorithm
-      lback[, n] <- rep(0, self$hidden()$nstates())
-      p <- rep(1 / self$hidden()$nstates(), self$hidden()$nstates())
-      llk <- log(self$hidden()$nstates())
-      for (i in (n - 1):1) {
-        p <- tpms[, , i] %*% (obsprobs[i + 1, ] * p)
-        lback[, i] <- log(p) + llk
-        psum <- sum(p)
-        p <- p / psum
-        llk <- llk + log(psum)
+        lforw[, k] <- log(p) + llk
+        for (i in 2:ni[ind]) {
+          p <- p %*% tpms[, , k + i - 2] * obsprobs[k + i - 1, ]
+          psum <- sum(p)
+          llk <- llk + log(psum)
+          p <- p / psum
+          lforw[, k + i - 1] <- log(p) + llk 
+        }
+        # backward algorithm
+        lback[, k + ni[ind] - 1] <- rep(0, self$hidden()$nstates())
+        p <- rep(1 / self$hidden()$nstates(), self$hidden()$nstates())
+        llk <- log(self$hidden()$nstates())
+        for (i in (ni[ind] - 1):1) {
+          p <- tpms[, , k + i - 1] %*% (obsprobs[k + i, ] * p)
+          lback[, k + i - 1] <- log(p) + llk
+          psum <- sum(p)
+          p <- p / psum
+          llk <- llk + log(psum)
+        }
+        k <- k + ni[ind]
       }
       return(list(logforward = lforw, logbackward = lback))
     }, 
