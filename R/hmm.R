@@ -809,7 +809,6 @@ HMM <- R6Class(
       fb <- self$forward_backward() 
       lforw <- fb$logforward
       lback <- fb$logbackward
-      lforw <- cbind(log(delta), lforw)
       # get transition matrices
       tpms <- self$hidden()$tpm(t = "all")
       # scaling 
@@ -819,7 +818,12 @@ HMM <- R6Class(
       if (!silent) cat("Computing conditional state probabilities...")
       cond <- matrix(0, nr = n, nc = self$hidden()$nstates()) 
       for (i in 1:n) {
-        p <- (exp(lforw[,i] - forwscale[i]) %*% tpms[, , i]) * exp(lback[, i] - backscale[i])
+        if (i == 1 || (self$obs()$data()$ID[i] != self$obs()$data()$ID[i - 1])) {
+          f <- log(t(delta))
+        } else {
+          f <- lforw[,i]
+        }
+        p <- (exp(f - forwscale[i]) %*% tpms[, , i]) * exp(lback[, i] - backscale[i])
         cond[i, ] <- p / sum(p)
       }
       if(!silent) cat("done\n")
@@ -981,31 +985,38 @@ HMM <- R6Class(
         if (full) self$update_par(iter = sample(1:nrow(mod$iters()), size = 1))
         # get forward-backward probabilities 
         fb <- self$forward_backward()
-        # sample last states
-        L <- log(sum(exp(fb$logforward[,n] - max(fb$logforward[,n])))) + max(fb$logforward[,n])
-        prob <- exp(fb$logforward[,n] - L)
-        prob <- prob / sum(prob)
-        if (full) {
-          states[n,k] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
-        } else {
-          states[n,] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
-        }
         # get tpms 
         tpms <- self$hidden()$tpm(t = "all")
-        # get observation probabilties
+        # get observation probabilities
         obsprobs <- self$obs()$obs_probs()
-        # sample backward
-        for (s in 1:nsamp) {
-          for (i in (n - 1):1) {
-            prob <- exp(fb$logforward[, i] + log(tpms[, states[i + 1, s], i + 1]) + 
-              log(obsprobs[i + 1, states[i + 1, s]]) + fb$logbackward[states[i + 1, s], i + 1] - L) 
-            prob <- prob / sum(prob)
-            if (full) {
-              ind <- k
-            } else {
-              ind <- s 
+        # get number of observations per individual 
+        ni <- as.numeric(table(self$obs()$data()$ID))
+        cumn <- cumsum(ni)
+        for (ind in 1:length(ni)) {
+          m <- cumn[ind]
+          # sample last state
+          L <- logsumexp(fb$logforward[,m])
+          prob <- exp(fb$logforward[,m] - L)
+          prob <- prob / sum(prob)
+          if (full) {
+            states[m,k] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
+          } else {
+            states[m,k] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
+          }
+          # sample backward
+          for (s in 1:nsamp) {
+            for (i in 1:(ni[ind] - 1)) {
+              lprob <- fb$logforward[, m - i] + log(tpms[, states[m - i + 1, s], m - i]) + 
+                log(obsprobs[m - i + 1, states[m - i + 1, s]]) + fb$logbackward[states[m - i + 1, s], m - i + 1] - L 
+              lprob <- lprob - logsumexp(lprob)
+              prob <- exp(lprob)
+              if (full) {
+                ind <- k
+              } else {
+                ind <- s 
+              }
+              states[m - i, ind] <- sample(1:nstates, prob = prob, size = 1)
             }
-            states[i, ind] <- sample(1:nstates, prob = prob, size = 1)
           }
         }
       }
@@ -1019,11 +1030,17 @@ HMM <- R6Class(
       delta <- self$hidden()$delta
       n <- nrow(self$obs()$data())
       nstates <- self$hidden()$nstates()
+      ni <- as.numeric(table(self$obs()$data()$ID))
+      cn <- cumsum(ni)
       fb <- self$forward_backward()
-      llk <- log(sum(exp(fb$logforward[,n] - max(fb$logforward[,n])))) + max(fb$logforward[,n])
       pr_state <- matrix(0, nr = n, nc = nstates)
-      for (i in 1:n) {
-        pr_state[i,] <- exp(fb$logforward[,i] + fb$logbackward[,i] - llk)
+      k <- 0 
+      for (ind in 1:length(ni)) {
+        llk <- logsumexp(fb$logforward[,cn[ind]])
+        for (i in 1:ni[ind]) {
+          pr_state[k + i,] <- exp(fb$logforward[, k + i] + fb$logbackward[,k + i] - llk)
+        }
+        k <- k + ni[ind]
       }
       return(pr_state)
     }, 

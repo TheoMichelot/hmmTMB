@@ -224,3 +224,11 @@ mvnorm_invlink = function(x) {
   corr <- plogis(x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)])
   return(c(mu, sds, corr))
 }
+
+#' Log of sum of exponentials 
+#' @export 
+logsumexp <- function(x) {
+  xmin <- min(x)
+  val <- xmin + log(sum(exp(x - xmin)))
+  return(val)
+}
