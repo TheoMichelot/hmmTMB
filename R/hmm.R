@@ -1700,7 +1700,7 @@ HMM <- R6Class(
       # TPM
       if ("TPM" %in% read_nms) {
         tpm_block <- private$read_block("TPM", wh_blocks, spec)
-        tpm <- matrix(str_trim(unlist(str_split(tpm_block, ":"))), 
+        tpm <- matrix(str_trim(unlist(str_split(tpm_block, ";"))), 
                       nr = nstates, 
                       nc = nstates, 
                       byrow = TRUE)
@@ -1787,7 +1787,7 @@ HMM <- R6Class(
           nstates <- length(subforms)
           tpm0 <- matrix(0, nr = nstates, nstates)
           for (s in 1:nstates) {
-            tpm0[s,] <- as.numeric(strsplit(subforms[s], ";")[[1]])
+            tpm0[s,] <- as.numeric(strsplit(subforms[s], ":")[[1]])
           }
         } else {
           subpar <- NULL
