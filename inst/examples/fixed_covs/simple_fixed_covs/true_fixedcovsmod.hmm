@@ -17,7 +17,7 @@ count:
   lambda ~ x
 
 TPM
-. : ~x
-~1 : . 
+. ; ~x
+~1 ; . 
  
   

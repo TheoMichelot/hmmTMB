@@ -17,5 +17,5 @@ count:
   lambda ~ x + I(z^2) + f
   
 TPM
-. : ~x
-~1 : .
+. ; ~x
+~1 ; .
