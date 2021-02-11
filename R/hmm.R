@@ -1185,8 +1185,8 @@ HMM <- R6Class(
       if (level > 0 & n_post < 1e-10) {
         oldpar <- list(obs_coeff_fe = self$obs()$coeff_fe(), 
                        obs_coeff_re = self$obs()$coeff_re(), 
-                       hid_coeff_fe = self$hidden()$coeff_fe(), 
-                       hid_coeff_re = self$hidden()$coeff_re())
+                       hidden_coeff_fe = self$hidden()$coeff_fe(), 
+                       hidden_coeff_re = self$hidden()$coeff_re())
         # get variance-covariance matrix of linear predictor 
         lfn <- function(par, oldpar, ind_fe, ind_re, comp) {
           new_par <- oldpar[[paste0(comp, "_coeff_fe")]]
@@ -1227,8 +1227,8 @@ HMM <- R6Class(
         # reset parameters 
         self$obs()$update_coeff_fe(oldpar$obs_coeff_fe)
         self$obs()$update_coeff_re(oldpar$obs_coeff_re)
-        self$hidden()$update_coeff_fe(oldpar$hid_coeff_fe)
-        self$hidden()$update_coeff_re(oldpar$hid_coeff_re)
+        self$hidden()$update_coeff_fe(oldpar$hidden_coeff_fe)
+        self$hidden()$update_coeff_re(oldpar$hidden_coeff_re)
         val <- list(mean = mu, lcl = lcl, ucl = ucl)
       }
       
