@@ -61,6 +61,10 @@ mod$plot_ts("count")
 sim_states <- mod$sample_states(nsamp = 100)
 plot(sim_states[,1], pch = 20, col = 1 + (sim_states[,1] < 1.5))
 
+# get state probabilities 
+state_probs <- mod$state_probs()
+summary(state_probs)
+
 # Goodness-of-fit ---------------------------------------------------------
 
 # get pseudo-residuals, should be normally distributed 
