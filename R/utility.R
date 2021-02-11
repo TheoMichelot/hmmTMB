@@ -167,7 +167,7 @@ is_whole_number <- function(x, tol = 1e-10) {
 #' @export 
 #' 
 strip_comments <- function(str) {
-  res <- str_trim(str_split_fixed(str, "#|;", 2)[, 1])
+  res <- str_trim(str_split_fixed(str, "#", 2)[, 1])
   res <- res[res != ""]
   return(res)
 }
