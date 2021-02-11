@@ -1011,11 +1011,11 @@ HMM <- R6Class(
               lprob <- lprob - logsumexp(lprob)
               prob <- exp(lprob)
               if (full) {
-                ind <- k
+                index <- k
               } else {
-                ind <- s 
+                index <- s 
               }
-              states[m - i, ind] <- sample(1:nstates, prob = prob, size = 1)
+              states[m - i, index] <- sample(1:nstates, prob = prob, size = 1)
             }
           }
         }
