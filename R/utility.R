@@ -232,3 +232,17 @@ logsumexp <- function(x) {
   val <- xmin + log(sum(exp(x - xmin)))
   return(val)
 }
+
+#' Read formula with as.character without splitting
+#' Citation: this function was taken from the R package
+#' formula.tools: 
+#'   Christopher Brown (2018). formula.tools: Programmatic Utilities for Manipulating Formulas,
+#'   Expressions, Calls, Assignments and Other R Objects. R package version 1.7.1.
+#'   https://CRAN.R-project.org/package=formula.tools
+#' @export 
+as_character_formula <- function (x, ...) 
+{
+  form <- paste(deparse(x), collapse = " ")
+  form <- gsub("\\s+", " ", form, perl = FALSE)
+  return(form)
+}

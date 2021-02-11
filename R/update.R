@@ -21,7 +21,7 @@ update.HMM <- function(mod, type, i, j, change, fit = TRUE) {
     # extract current structure 
     new_struct <- copy_hid$structure()
     # update relevant formula 
-    new_struct[i, j] <- as.character(update(as.formula(new_struct[i, j]), change))
+    new_struct[i, j] <- as_character_formula(update(as.formula(new_struct[i, j]), change))
     # create new hidden sub-model component 
     new_hid <- MarkovChain$new(n_states = mod$hidden()$nstates(), 
                                structure = new_struct, 
