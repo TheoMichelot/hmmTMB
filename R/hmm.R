@@ -1229,7 +1229,14 @@ HMM <- R6Class(
           V <- self$tmb_rep()$cov.fixed
         } else {
           par <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
-          V <- solve(self$tmb_rep()$jointPrecision)
+          V <- try(as.matrix(solve(self$tmb_rep()$jointPrecision)), silent = TRUE)
+          if(inherits(V, "try-error")) {
+            message <- attr(V, 'condition')$message
+            V <- MASS::ginv(as.matrix(self$tmb_rep()$jointPrecision))
+            warning(paste0("Inversion of precision matrix using 'solve' failed: ", 
+                           message, ". Using 'MASS::ginv' instead (uncertainty ",
+                           "estimates may be unreliable)."))
+          }
         }
         ind_fe <- grepl(paste0("coeff_fe_", substr(comp, 1, 3)), names(par))
         ind_re <- grepl(paste0("coeff_re_", substr(comp, 1, 3)), names(par))
