@@ -250,13 +250,22 @@ Type objective_function<Type>::operator() ()
       int Sn = ncol_re_obs(i);
 
       // Penalty matrix for this smooth
-      Eigen::SparseMatrix<Type> this_S = S_obs.block(S_start, S_start, Sn, Sn);
-
+      // (dense matrix for matinvpd and sparse matrix for Quadform)
+      matrix<Type> this_S_dense = S_obs.block(S_start, S_start, Sn, Sn);
+      Eigen::SparseMatrix<Type> this_S = asSparseMatrix(this_S_dense);
+      
       // Coefficients for this smooth
       vector<Type> this_coeff_re = coeff_re_obs.segment(S_start, Sn);
 
+      // Get log-determinant of S^(-1) for additive constant
+      Type log_det = 0;
+      matrix<Type> inv_this_S = atomic::matinvpd(this_S_dense, log_det);
+      log_det = - log_det; // det(S^(-1)) = 1/det(S)
+      
       // Add penalty
-      nllk = nllk -
+      nllk = nllk +
+        Type(0.5) * Sn * log(2*M_PI) +
+        Type(0.5) * log_det -
         Type(0.5) * Sn * log_lambda_obs(i) +
         Type(0.5) * exp(log_lambda_obs(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
 
@@ -276,13 +285,22 @@ Type objective_function<Type>::operator() ()
       int Sn = ncol_re_hid(i);
 
       // Penalty matrix for this smooth
-      Eigen::SparseMatrix<Type> this_S = S_hid.block(S_start, S_start, Sn, Sn);
-
+      // (dense matrix for matinvpd and sparse matrix for Quadform)
+      matrix<Type> this_S_dense = S_hid.block(S_start, S_start, Sn, Sn);
+      Eigen::SparseMatrix<Type> this_S = asSparseMatrix(this_S_dense);
+      
       // Coefficients for this smooth
       vector<Type> this_coeff_re = coeff_re_hid.segment(S_start, Sn);
 
+      // Get log-determinant of S^(-1) for additive constant
+      Type log_det = 0;
+      matrix<Type> inv_this_S = atomic::matinvpd(this_S_dense, log_det);
+      log_det = - log_det; // det(S^(-1)) = 1/det(S)
+      
       // Add penalty
-      nllk = nllk -
+      nllk = nllk +
+        Type(0.5) * Sn * log(2*M_PI) +
+        Type(0.5) * log_det -
         Type(0.5) * Sn * log_lambda_hid(i) +
         Type(0.5) * exp(log_lambda_hid(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
 
