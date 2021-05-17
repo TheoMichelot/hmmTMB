@@ -1427,7 +1427,7 @@ HMM <- R6Class(
         theme_light() +
         theme(strip.background = element_blank(),
               strip.text = element_text(colour = "black"))
-      plot(p)
+      if (!silent) plot(p)
       
       return(list(obs_stat = obs_stat, stats = stats, plot = p))
     }, 
