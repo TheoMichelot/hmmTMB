@@ -699,6 +699,11 @@ HMM <- R6Class(
         private$tmb_obj_$method <- args$method 
         args <- args[which(names(args) != "method")]
       }
+      if (!("control" %in% names(args))) {
+        args$control <- list(kkt = FALSE, 
+                             starttests = FALSE,
+                             dowarn = FALSE)
+      }
       # create temporary optimization function
       opt_fn <- function(par) {as.vector(args$fn(par))}
       opt_gr <- function(par) {as.vector(args$gr(par))}
