@@ -4,7 +4,7 @@ library(hmmTMB)
 # Simulate data -----------------------------------------------------------
 
 # number of time steps
-n <- 100
+n <- 1000
 
 # number of individual time series
 n_ID <- 10
@@ -16,14 +16,14 @@ dat <- data.frame(ID = factor(rep(1:n_ID, each = n)), count = rep(0, n * n_ID))
 true_mod <- HMM$new(file = "individual_random_effects_truemod.hmm")
 
 # set random effects  
-re_sd <- c(0.5, 1)
+re_sd <- c(0.1, 0.3)
 par <- true_mod$coeff_re()$obs
 par[1:n_ID] <- rnorm(n_ID, 0, re_sd[1])
 par[(n_ID + 1):nrow(par)] <- rnorm(n_ID, 0, re_sd[2]) 
 true_mod$obs()$update_coeff_re(par)
 
 # simulate from true model
-set.seed(58320)
+set.seed(75145)
 dat <- true_mod$simulate(n * n_ID, data = dat)
 
 plot(dat$count ~ dat$ID)
