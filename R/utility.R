@@ -246,3 +246,13 @@ as_character_formula <- function (x, ...)
   form <- gsub("\\s+", " ", form, perl = FALSE)
   return(form)
 }
+
+#' Load table of distribution names in hmmTMB
+#'
+#' @return loads table into variable called "distnames" 
+#' @export
+load_distnames <- function() {
+  load(paste0(find.package("hmmTMB"), "/distnames.RData"))
+}
+
+
