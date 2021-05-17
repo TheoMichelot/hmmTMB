@@ -2,9 +2,10 @@
 library(hmmTMB)
 
 # Simulate data -----------------------------------------------------------
+set.seed(13763)
 
 # number of time steps
-n <- 1000
+n <- 2500
 
 # create an empty dataset
 dat <- data.frame(ID = rep(1, n), count = rep(0, n))
@@ -17,16 +18,21 @@ true_mod <- HMM$new(file = "true_gam_mod.hmm")
 
 # set gam coefficients for observed 
 par <- true_mod$coeff_re()$obs
-par <- rnorm(length(par)) * 0.1
+S <- true_mod$obs()$make_mat()$S # precision matrix for smooth 
+# exclude null space parameters 
+samp <- rmvn(n = 1, rep(0, ncol(S) - 2), solve(S[-c(9, 18), -c(9, 18)]))
+par <- c(samp[1:8], 0, samp[9:length(samp)], 0)
 true_mod$obs()$update_coeff_re(par)
 
 # set gam coefficients for tpm 
 tpmpar <- true_mod$coeff_re()$hidden
-tpmpar <- rnorm(length(tpmpar)) 
+Shid <- true_mod$hidden()$make_mat(data = dat)$S
+samphid <- rmvn(n = 1, rep(0, ncol(Shid)- 1), solve(0.1 * Shid[-9, -9]))
+tpmpar <- c(samphid, 0)
 true_mod$hidden()$update_coeff_re(tpmpar)
 
 # simulate from true model
-set.seed(58320)
+set.seed(52320)
 dat <- true_mod$simulate(n, data = dat)
 
 plot(dat$x, dat$count)

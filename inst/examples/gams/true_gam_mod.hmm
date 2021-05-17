@@ -14,11 +14,11 @@ tpm:
   
 FORMULA
 count:
-  lambda ~ s(x)
+  lambda ~ s(x, bs = "ts")
 
 TPM
-. : ~ s(x)
-~ 1 : . 
+. ; ~ s(x, bs = "ts")
+~ 1 ; . 
 
  
   

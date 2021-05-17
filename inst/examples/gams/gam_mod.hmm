@@ -9,14 +9,14 @@ INITIAL
 count:
   lambda = 5, 10
 tpm:
-  0.95, 0.05
-  0.05, 0.95
+  0.9, 0.1
+  0.1, 0.9
   
 FORMULA
 count:
-  lambda ~ s(x)
+  lambda ~ s(x, bs = "ts")
   
 TPM
-. : ~s(x)
-~1 : .
+. ; ~ s(x, bs = "ts")
+~1 ; .
   
