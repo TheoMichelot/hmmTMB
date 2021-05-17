@@ -96,10 +96,14 @@ Dist <- R6Class(
           
           # recompile TMB library 
           if (compile_cpp) {
+            # add to distnames data 
+            distnames <- rbind(distnames, c(name, code))
+            distnames$code <- as.numeric(distnames$code)
+            save(distnames, file = paste0(root, "/distnames.RData"))
             # create a dummy compilation file 
             cat('#include "hmm_tmb.hpp"\n', file = paste0(root, "/include/hmm_tmb.cpp"))
             # compile using dummy file 
-            comp <- tryCatch(TMB::compile(paste0(root, "/include/hmm_tmb.cpp")))
+            comp <- tryCatch(TMB::compile(paste0(root, "/include/hmm_tmb.cpp"), flags = "-Wno-ignored-attributes"))
             if ("try-error" %in% class(comp)) {
               cat(new_dist_file, file = paste0(root, "/include/added_dists.hpp"), sep = "\n")
               cat(new_dist_file, file = paste0(root, "/include/dist.hpp"), sep = "\n")
@@ -112,10 +116,6 @@ Dist <- R6Class(
             } else {
               warning("You must restart the R session for the new distribution to be available.")
             }
-            # add to distnames data 
-            distnames <- rbind(distnames, c(name, code))
-            distnames$code <- as.numeric(distnames$code)
-            save(distnames, file = paste0(root, "/distnames.RData"))
           }
         }
         
