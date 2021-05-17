@@ -18,12 +18,12 @@ true_mod <- HMM$new(file = "true_fixedcovsmod.hmm")
 
 # set covariate effect on observation distribution
 par <- true_mod$coeff_fe()$obs
-par <- c(par[1], -0.5, par[2], 0.8)
+par <- c(par[1], -0.05, par[3], 0.08)
 true_mod$obs()$update_coeff_fe(par)
 
 # set covariate effect on transition probability 
 tpmpar <- true_mod$coeff_fe()$hidden
-tpmpar <- c(tpmpar[1], 0.8, tpmpar[3])
+tpmpar <- c(tpmpar[1], 0.1, tpmpar[3])
 true_mod$hidden()$update_coeff_fe(tpmpar)
 
 # simulate from true model
@@ -65,7 +65,7 @@ mod$plot("obspar", "x")
 # get uncertainty on tpms for first 3 time points
 mod$predict("tpm", t = 1:3, level = 0.95)
 
-# plot estimated relationship between tpm(2, 2) entry and x
-mod$plot("tpm", "x", i = 2, j = 2)
+# plot estimated relationship between tpm(1, 2) entry and x
+mod$plot("tpm", "x", i = 1, j = 2)
 
 
