@@ -14,7 +14,7 @@ dat <- data.frame(ID = rep(0, n), count = rep(0, n))
 true_mod <- HMM$new(file = "true_pois_mod.hmm")
 
 # simulate from true model
-set.seed(58320)
+set.seed(57320)
 dat <- true_mod$simulate(n)
 
 # plot data
@@ -63,6 +63,8 @@ plot(sim_states[,1], pch = 20, col = 1 + (sim_states[,1] < 1.5))
 
 # get state probabilities 
 state_probs <- mod$state_probs()
+plot(state_probs[,1], type = "l", col = 1)
+lines(state_probs[,2], col = 2)
 summary(state_probs)
 
 # Goodness-of-fit ---------------------------------------------------------
