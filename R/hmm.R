@@ -832,7 +832,7 @@ HMM <- R6Class(
         cond[i, ] <- p / sum(p)
       }
       if(!silent) cat("done\n")
-      # list to store cdfs 
+      # list to store pdfs 
       pdfs <- vector(mode = "list", length = nvars)
       grids <- vector(mode = "list", length = nvars)
       # compute cdf for each variable 
@@ -876,9 +876,9 @@ HMM <- R6Class(
       nvars <- ncol(vars)
       varnms <- names(vars)
       # sum CDFs cumulatively 
-      cdfs <- vector(mode = "list", length = length(pdfs)) #array(0, dim = dim(pdfs))
+      cdfs <- vector(mode = "list", length = length(pdfs))
       for (v in 1:nvars) {
-        # apply normalisation to PDFs to reduce effect of gridding 
+        # apply normalisation to PDFs to reduce effect of griding 
         cdfs[[v]] <- t(apply(pdfs[[v]], 1, FUN = function(x) {cumsum(x)/sum(x)}))
         # if continuous then approximate the integral using Riemann sum
         if (!is_whole_number(vars[,v])) {
@@ -891,8 +891,18 @@ HMM <- R6Class(
       rownames(r) <- varnms 
       for (v in 1:nvars) {
         for (i in 1:length(vars[,v])) {
-          wh <- which.min(abs(vars[i, v] - grids[[v]]))
-          r[v, i] <- qnorm(cdfs[[v]][i, wh])
+          dist <- vars[i, v] - grids[[v]]
+          wh <- which.min(abs(dist))
+          val <- cdfs[[v]][i, wh]
+          if (is_whole_number(vars[,v])) {
+            if ((dist[wh] < 1e-16 & wh > 1) | (wh > length(grids[[v]]) - 1)) {
+              wh2 <- wh - 1
+            } else {
+              wh2 <- wh + 1
+            }
+            val <- (val + cdfs[[v]][i, wh2]) / 2
+          }
+          r[v, i] <- qnorm(val - 1e-16)
         }
       }
       return(r)
