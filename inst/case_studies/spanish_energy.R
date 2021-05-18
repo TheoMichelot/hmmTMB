@@ -45,6 +45,10 @@ Price:
 m <- HMM$new(file = "energy.hmm")
 m$fit()
 
-m$plot("obspar", "EurDol", i = "Price.mean")
+
+states <- m$viterbi()
+energy$state <- factor(paste0("State ", states))
+m$plot("obspar", "EurDol", i = "Price.mean") + 
+  geom_point(data = energy, aes(x = EurDol, y = Price, fill = state, col = state), alpha = 0.3)
 
 
