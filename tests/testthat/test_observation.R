@@ -11,11 +11,22 @@ par0 <- list(z = list(mean = c(-1, 1), sd = c(0.5, 2)))
 obs <- Observation$new(data = data, dists = dists, n_states = 2, 
                 formulas = formulas, par = par0)
 
+test_that("Specification stored correctly", {
+    expect_equal(obs$data()[-4], data)
+    expect_equal(obs$dists(), list(z = dist_norm))
+    expect_equal(obs$nstates(), 2)
+})
+
+test_that("Correct parameter values returned", {
+    expect_equal(as.numeric(obs$par()), c(-1, 0.5, 1, 2))
+    expect_equal(as.numeric(obs$par(t = 1:5)), rep(c(-1, 0.5, 1, 2), 5))
+})
+
 test_that("Parameter transformation functions cancel out", {
     # Transform to linear predictor scale
     wpar <- obs$n2w(par = par0)
     # Transform back to natural scale
-    par2 <- unlist(obs$w2n(coeff_fe = wpar)[[1]])
+    par2 <- unlist(obs$w2n(wpar)[[1]])
     expect_equal(unname(unlist(par0)), unname(par2))
 })
 
@@ -80,3 +91,4 @@ test_that("Update methods work", {
     obs <- Observation$new(data = data, dists = dists, n_states = 2, 
                            formulas = formulas, par = par0)
 })
+

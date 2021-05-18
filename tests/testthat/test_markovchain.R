@@ -20,7 +20,7 @@ test_that("Parameter transformation functions cancel out", {
 
 test_that("Simulation output is as expected", {
     nsim <- 50
-    sim <- mc$simulate(n = nsim, data = data)
+    sim <- mc$simulate(n = nsim, data = data, silent = TRUE)
     # Check length of output
     expect_equal(length(sim), nsim)
     # Check that output is in state space

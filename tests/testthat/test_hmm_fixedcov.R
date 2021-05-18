@@ -11,13 +11,13 @@ dat$x <<- rnorm(n)
 # create true model 
 true_mod <<- HMM$new(file = "../../inst/examples/fixed_covs/simple_fixed_covs/true_fixedcovsmod.hmm")
 # set covariate effect on observation distribution
-par <<- true_mod$coeff_fe()$obs
-par <<- c(par[1], -0.05, par[3], 0.08)
+par <- true_mod$coeff_fe()$obs
+par <- c(par[1], -0.05, par[3], 0.08)
 true_mod$obs()$update_coeff_fe(par)
 
 # set covariate effect on transition probability 
-tpmpar <<- true_mod$coeff_fe()$hidden
-tpmpar <<- c(tpmpar[1], 0.1, tpmpar[3])
+tpmpar <- true_mod$coeff_fe()$hidden
+tpmpar <- c(tpmpar[1], 0.1, tpmpar[3])
 true_mod$hidden()$update_coeff_fe(tpmpar)
 # simulate from true model
 dat <<- true_mod$simulate(n, data = dat, silent = TRUE)
