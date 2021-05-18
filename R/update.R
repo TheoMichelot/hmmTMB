@@ -10,9 +10,10 @@
 #'          if type="obs" then j is the parameter whose formula is to be changed 
 #' @param change the change to make to the formula, see ?update.formula for details
 #' @param fit if FALSE then change is made but model is not re-fit
+#' @param silent if TRUE then no model fitting output is given 
 #' 
 #' @export
-update.HMM <- function(mod, type, i, j, change, fit = TRUE) {
+update.HMM <- function(mod, type, i, j, change, fit = TRUE, silent = FALSE) {
   
   if (type == "hidden") {
     # copy model components 
@@ -44,7 +45,7 @@ update.HMM <- function(mod, type, i, j, change, fit = TRUE) {
   # create new HMM object 
   new_mod <- HMM$new(obs = new_obs, hid = new_hid, init = mod)
   # fit new model 
-  if(fit) new_mod$fit() 
+  if(fit) new_mod$fit(silent = silent) 
   # return fitted model 
   return(new_mod)
 }
