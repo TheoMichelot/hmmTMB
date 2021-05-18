@@ -1,0 +1,18 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+count ~ pois
+
+INITIAL 
+count:
+  lambda = 5, 10
+tpm:
+  0.95, 0.05
+  0.05, 0.95
+  
+FORMULA
+count:
+  lambda ~ s(ID, bs = "re")
+  
