@@ -880,11 +880,6 @@ HMM <- R6Class(
       for (v in 1:nvars) {
         # apply normalisation to PDFs to reduce effect of griding 
         cdfs[[v]] <- t(apply(pdfs[[v]], 1, FUN = function(x) {cumsum(x)/sum(x)}))
-        # if continuous then approximate the integral using Riemann sum
-        if (!is_whole_number(vars[,v])) {
-          dgrid <- diff(grids[[v]])[1]
-          cdfs[[v]] <- cdfs[[v]] * dgrid 
-        }
       }
       # do residuals for each variable 
       r <- matrix(0, nr = nvars, nc = n)
