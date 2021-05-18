@@ -27,7 +27,7 @@ for (i in 1:nsims) {
   par[(n_ID + 1):nrow(par)] <- rnorm(n_ID, 0, re_sd[2]) 
   true_mod$obs()$update_coeff_re(par)
   # simulate data
-  dat <- true_mod$simulate(n, data = dat, silent = TRUE)
+  dat <- true_mod$simulate(n * n_ID, data = dat, silent = TRUE)
   # fit model 
   mod <- HMM$new(file = "individual_random_effects_mod.hmm")
   mod$fit(silent = TRUE)
