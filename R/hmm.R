@@ -802,7 +802,7 @@ HMM <- R6Class(
     #' @param silent if TRUE then no messages are printed 
     #' 
     #' @return cdfs on grid for each variable 
-    cond = function(ngrid = 100, silent = FALSE) {
+    cond = function(ngrid = 1000, silent = FALSE) {
       delta <- t(self$hidden()$delta())
       vars <- self$obs()$obs_var()
       nvars <- ncol(vars)
@@ -886,17 +886,19 @@ HMM <- R6Class(
       rownames(r) <- varnms 
       for (v in 1:nvars) {
         for (i in 1:length(vars[,v])) {
+          if (is.na(vars[i, v])) {
+            r[v, i] <- NA
+            next
+          }
           dist <- vars[i, v] - grids[[v]]
           wh <- which.min(abs(dist))
           val <- cdfs[[v]][i, wh]
-          if (is_whole_number(vars[,v])) {
-            if ((dist[wh] < 1e-16 & wh > 1) | (wh > length(grids[[v]]) - 1)) {
-              wh2 <- wh - 1
-            } else {
-              wh2 <- wh + 1
-            }
-            val <- (val + cdfs[[v]][i, wh2]) / 2
+          if ((dist[wh] < 1e-16 & wh > 1) | (wh > length(grids[[v]]) - 1)) {
+            wh2 <- wh - 1
+          } else {
+            wh2 <- wh + 1
           }
+          val <- (val + cdfs[[v]][i, wh2]) / 2
           r[v, i] <- qnorm(val - 1e-16)
         }
       }
