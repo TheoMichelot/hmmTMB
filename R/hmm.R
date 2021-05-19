@@ -39,7 +39,9 @@ HMM <- R6Class(
                                formulas = spec$forms)
         hidden <- MarkovChain$new(n_states = spec$nstates, 
                                   structure = spec$tpm, 
-                                  data = spec$data)
+                                  data = spec$data, 
+                                  stationary = is.null(spec$delta))
+        if(!is.null(spec$delta)) hidden$update_delta(spec$delta)
         if (!is.null(spec$fixed)) fixpar <- spec$fixed 
         if (!is.null(spec$tpm0))  hidden$update_tpm(spec$tpm0)
       }
@@ -66,7 +68,7 @@ HMM <- R6Class(
       private$hidden_ <- hidden
       
       # store fixed parameter 
-      private$fixpar_ <- fixpar 
+      private$fixpar_user_ <- private$fixpar_ <- fixpar 
       
       # initialize model parameters if init provided 
       if (!is.null(init)) {
@@ -145,6 +147,10 @@ HMM <- R6Class(
                   hidden = self$hidden()$coeff_re()))
     },
     
+    fixpar = function() {
+      return(private$fixpar_user_)
+    }, 
+    
     #' @description Smoothness parameters
     lambda = function() {
       return(list(obs = self$obs()$lambda(),
@@ -208,10 +214,16 @@ HMM <- R6Class(
         delta <- solve(t(diag(nstates) - tpms[,,1] + 1), rep(1, nstates))
         self$hidden()$update_delta(delta)
       } else {
-        ldelta <- par_list$log_delta 
-        delta <- c(exp(ldelta), 1)
-        delta <- delta / sum(delta)
-        self$hidden()$update_delta(delta)
+        if (!is.null(private$fixpar_$delta)) {
+          delta <- par_list$log_delta
+          delta <- c(delta, 1 - sum(delta))
+          self$hidden()$update_delta(delta)
+        } else {
+          ldelta <- par_list$log_delta 
+          delta <- c(exp(ldelta), 1)
+          delta <- delta / sum(delta)
+          self$hidden()$update_delta(delta)
+        }
       }
     }, 
     
@@ -471,7 +483,13 @@ HMM <- R6Class(
       
       # Prepare delta initial parameter
       delta <- self$hidden()$delta() 
-      ldelta <- log(delta[-length(delta)] / delta[length(delta)])
+      if (!is.null(private$fixpar_$delta)) {
+        # if it is fixed, don't transform it to working scale 
+        # as it may be common to have fixed values of zero 
+        ldelta <- delta[-length(delta)]
+      } else {
+        ldelta <- log(delta[-length(delta)] / delta[length(delta)])
+      }
       
       # Setup TMB parameters
       tmb_par <- list(coeff_fe_obs = self$obs()$coeff_fe(),
@@ -505,10 +523,12 @@ HMM <- R6Class(
       
       # check if delta to be stationary (overrides custom map specified)
       statdist <- 0 
-      if (self$hidden()$stationary()) {
-        private$fixpar_$log_delta <- rep(NA, self$hidden()$nstates())
+      if (!is.null(private$fixpar_$delta)) {
+        statdist <- -1
+      } else if (self$hidden()$stationary()) {
+        private$fixpar_$log_delta <- rep(NA, self$hidden()$nstates() - 1)
         statdist <- 1 
-      }
+      } 
       
       # check for parameters that must always be fixed (identified by having
       # a fixed = TRUE in dist)
@@ -1655,7 +1675,8 @@ HMM <- R6Class(
     mcmc_ = NULL, 
     iters_= NULL,
     par_iters_ = NULL, 
-    fixpar_ = NULL, 
+    fixpar_ = NULL,
+    fixpar_user_ = NULL, 
     states_ = NULL,
     
     # Reading from spec file --------------------------------------------------
@@ -1740,8 +1761,15 @@ HMM <- R6Class(
       # FIXED
       if ("FIXED" %in% read_nms) {
         fixed_block <- private$read_block("FIXED", wh_blocks, spec)
-        fixed <- list(obs = rep(NA, length(fixed_block)))
-        names(fixed$obs) <- fixed_block
+        len <- length(fixed_block)
+        fixed <- NULL
+        if ("delta" %in% fixed_block) {
+          fixed$delta <- rep(NA, nstates - 1)
+          names(fixed$delta) <- paste0("state", 1:(nstates - 1))
+          len <- len - 1
+        }
+        fixed$obs <- rep(NA, len)
+        names(fixed$obs) <- fixed_block[fixed_block != "delta"]
       } else {
         fixed <- NULL
       }
@@ -1752,7 +1780,8 @@ HMM <- R6Class(
                   forms = forms, 
                   tpm = tpm, 
                   par = ini$par, 
-                  tpm0 = ini$tpm0, 
+                  tpm0 = ini$tpm0,
+                  delta = ini$delta, 
                   fixed = fixed))
       
     }, 
@@ -1796,6 +1825,7 @@ HMM <- R6Class(
       vars <- str_trim(gsub(":", "", forms[wh_vars]))
       par <- NULL
       tpm0 <- NULL
+      delta <- NULL
       for (i in 1:length(vars)){
         # find sub-block of formula/initial values for that variable 
         if (i < length(vars)) {
@@ -1810,6 +1840,8 @@ HMM <- R6Class(
           for (s in 1:nstates) {
             tpm0[s,] <- as.numeric(strsplit(subforms[s], ",")[[1]])
           }
+        } else if (str_trim(vars[i]) == "delta") {
+          delta <- as.numeric(strsplit(subforms, ",")[[1]])
         } else {
           subpar <- NULL
           subparnms <- NULL
@@ -1834,9 +1866,9 @@ HMM <- R6Class(
           par <- c(par, list(subpar))
         }
       }
-      names(par) <- vars[vars != "tpm"]
+      names(par) <- vars[!(vars %in% c("tpm", "delta"))]
       if (ini) {
-        res <- list(par = par, tpm0 = tpm0)
+        res <- list(par = par, tpm0 = tpm0, delta = delta)
       } else {
         res <- par 
       }
