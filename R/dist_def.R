@@ -454,7 +454,7 @@ dist_beta <- Dist$new(
 dist_tweedie <- Dist$new(
   name = "tweedie", 
   pdf = function(x, mean, p, phi, log = FALSE) {
-    l <- mgcv::ldTweedie(x, mu = mean, p = p + 1, phi = phi)
+    l <- mgcv::ldTweedie(x, mu = mean, p = p + 1, phi = phi)[1,1]
     if (!log) l <- exp(l)
     return(l)
   }, 
