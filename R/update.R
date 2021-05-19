@@ -26,7 +26,8 @@ update.HMM <- function(mod, type, i, j, change, fit = TRUE, silent = FALSE) {
     # create new hidden sub-model component 
     new_hid <- MarkovChain$new(n_states = mod$hidden()$nstates(), 
                                structure = new_struct, 
-                               data = mod$obs()$data()) 
+                               data = mod$obs()$data(), 
+                               stationary = mod$hidden()$stationary()) 
   } else if (type == "obs") {
     # copy model components 
     copy_obs <- mod$obs()$clone()
@@ -43,7 +44,8 @@ update.HMM <- function(mod, type, i, j, change, fit = TRUE, silent = FALSE) {
                                formulas = forms)
   }
   # create new HMM object 
-  new_mod <- HMM$new(obs = new_obs, hid = new_hid, init = mod)
+  new_mod <- HMM$new(obs = new_obs, hid = new_hid, init = mod, 
+                     fixpar = mod$fixpar())
   # fit new model 
   if(fit) new_mod$fit(silent = silent) 
   # return fitted model 
