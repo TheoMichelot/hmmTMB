@@ -142,7 +142,7 @@ MarkovChain <- R6Class(
     #' @param linpred custom linear predictor 
     #' @return Matrix of stationary distributions. Each row corresponds to
     #' a row of the design matrices, and each column corresponds to a state.
-    delta = function(t = 1, linpred = NULL) {
+    delta = function(t = NULL, linpred = NULL) {
       if (!is.null(t)) {
         # Number of states
         n_states <- self$nstates()
