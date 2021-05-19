@@ -120,11 +120,16 @@ Type objective_function<Type>::operator() ()
     } catch(...) {
       for (int i = 0; i < n_states; ++i) delta(0, i) = 1.0 / n_states; 
     }
-  } else {
+  } else if (statdist == 0) {
     delta.setOnes();
     for(int i = 0; i < n_states - 1; i++)
       delta(0, i) = exp(log_delta(i));
     delta = delta/delta.sum();
+  } else {
+    delta.setZero(); 
+    for (int i = 0; i < n_states - 1; i++) 
+      delta(0, i) = log_delta(i); 
+    delta(0, n_states - 1) = 1.0 - delta.sum(); 
   }
 
   //===================================//  
