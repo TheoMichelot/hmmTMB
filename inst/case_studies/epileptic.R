@@ -4,6 +4,8 @@
 # Hidden Markov models for time series: an introduction using R. CRC press.
 # See that chapter for details. 
 
+library(hmmTMB)
+
 # Data --------------------------------------------------------------------
 
 epil <- c(0, 3, 0, 0, 0, 0, 1, 1, 0, 2, 1, 1, 2, 0, 0, 1, 2, 1, 3, 1, 3,
