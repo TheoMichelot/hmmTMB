@@ -844,7 +844,7 @@ HMM <- R6Class(
       cond <- matrix(0, nr = n, nc = self$hidden()$nstates()) 
       for (i in 1:n) {
         if (i == 1 || (self$obs()$data()$ID[i] != self$obs()$data()$ID[i - 1])) {
-          f <- log(t(delta))
+          f <- log(delta)
         } else {
           f <- lforw[,i]
         }
