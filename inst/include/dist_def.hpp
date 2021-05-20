@@ -667,7 +667,8 @@ public:
     // corr 
     for (int d = 0; d < 0.5*(dim * dim - dim); ++d) {
       for (int i = 0; i < n_states; ++i) {
-       wpar(k) = log(par(k) / (1 - par(k))); 
+       Type tmp = 0.5 * (par(k) + 1); 
+       wpar(k) = log(tmp / (1 - tmp)); 
         ++k; 
       }
     }
@@ -697,6 +698,7 @@ public:
     for (int d = 0; d < 0.5*(dim * dim - dim); ++d) {
       for (int i = 0; i < n_states; ++i) {
         par(i, d + 2 * dim) = 1 / (1 + exp(-wpar(k))); 
+        par(i, d + 2 * dim) = 2 * par(i, d + 2 * dim) - 1; 
         ++k; 
       }
     }

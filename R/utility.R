@@ -210,7 +210,7 @@ mvnorm_link <- function(x) {
   m <- quad_pos_solve(1, 3, - 2 * length(x))
   mu <- x[1:m]
   sds <- log(x[(m + 1) : (2 * m)])
-  corr <- qlogis(x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)])
+  corr <- qlogis((x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)] + 1) / 2)
   return(c(mu, sds, corr))
 }
 
@@ -221,7 +221,7 @@ mvnorm_invlink = function(x) {
   m <- quad_pos_solve(1, 3, - 2 * length(x))
   mu <- x[1:m]
   sds <- exp(x[(m + 1) : (2 * m)])
-  corr <- plogis(x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)])
+  corr <- 2 * plogis(x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]) - 1
   return(c(mu, sds, corr))
 }
 
