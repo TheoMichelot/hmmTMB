@@ -15,6 +15,12 @@
 #' @export
 update.HMM <- function(mod, type, i, j, change, fit = TRUE, silent = FALSE) {
   
+  # make sure data has state column added back in 
+  dat <- mod$obs()$data() 
+  if (!all(is.na(mod$obs()$known_states(mat = FALSE)))) {
+    dat$state <- mod$obs()$known_states(mat = FALSE)
+  }
+  
   if (type == "hidden") {
     # copy model components 
     new_obs <- mod$obs()$clone()
@@ -26,7 +32,7 @@ update.HMM <- function(mod, type, i, j, change, fit = TRUE, silent = FALSE) {
     # create new hidden sub-model component 
     new_hid <- MarkovChain$new(n_states = mod$hidden()$nstates(), 
                                structure = new_struct, 
-                               data = mod$obs()$data(), 
+                               data = dat, 
                                stationary = mod$hidden()$stationary()) 
   } else if (type == "obs") {
     # copy model components 
@@ -37,7 +43,7 @@ update.HMM <- function(mod, type, i, j, change, fit = TRUE, silent = FALSE) {
     # make change 
     forms[[i]][[j]] <- update(forms[[i]][[j]], change)
     # create new obs 
-    new_obs <- Observation$new(data = copy_obs$data(), 
+    new_obs <- Observation$new(data = dat, 
                                dists = copy_obs$dists(), 
                                n_states = copy_obs$nstates(), 
                                par = copy_obs$inipar(), 

@@ -602,7 +602,7 @@ HMM <- R6Class(
       tmb_dat <- list(ID = self$obs()$data()$ID,
                       data = as.matrix(obsvar),
                       datadim = datadim, 
-                      known_states = as.vector(self$obs()$known_states()) - 1, 
+                      known_states = self$obs()$known_states(), 
                       n_states = n_states,
                       statdist = statdist, 
                       distcode = distcode,

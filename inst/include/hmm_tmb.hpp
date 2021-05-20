@@ -31,7 +31,7 @@ Type objective_function<Type>::operator() ()
   DATA_VECTOR(ID); // vector of time series IDs
   DATA_MATRIX(data); // data stream
   DATA_IVECTOR(datadim); // dimension of observations for each variable 
-  DATA_VECTOR(known_states); // known states 
+  DATA_MATRIX(known_states); // known states n observations x states 1 = possible, 0 = impossible
   DATA_INTEGER(n_states); // number of states
   DATA_INTEGER(statdist); // use stationary distribution with respect to first tpm 
   DATA_IVECTOR(distcode); // codes of observation distributions
@@ -140,7 +140,7 @@ Type objective_function<Type>::operator() ()
   for(int i = 0; i < n; i++) {
     if (!R_IsNA(asDouble(known_states(i)))) {
       for (int s = 0; s < n_states; ++s) {
-        prob(i, s) = (s == known_states(i)) ? 1 : 0; 
+        prob(i, s) = (known_states(i, s) == 1) ? 1 : 0; 
       }
     } else {
       for(int s = 0; s < n_states; s++) {

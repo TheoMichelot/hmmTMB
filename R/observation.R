@@ -43,11 +43,17 @@ Observation <- R6Class(
       
       # Check for observed states 
       if ("state" %in% colnames(data)) {
-        private$known_states_ <- data$state
+        kn <- lapply(strsplit(as.character(data$state), ","), FUN = as.numeric)
+        private$known_states_data_ <- data$state
+        known_states <- matrix(1, nr = nrow(data), nc = n_states)
+        for (i in 1:nrow(data)) {
+          known_states[i, -kn[[i]]] <- 0
+        }
+        private$known_states_ <- known_states
         wh <- which(colnames(data) == "state")
         private$data_ <- data[,-wh]
       } else {
-        private$known_states_ <- rep(NA, nrow(data))
+        private$known_states_ <- matrix(NA, nrow = nrow(data), nc = n_states)
       }
       
       # Define observation distributions
@@ -281,8 +287,12 @@ Observation <- R6Class(
     },
     
     #' @description Vector of known states 
-    known_states = function() {
-      return(private$known_states_)
+    known_states = function(mat = TRUE) {
+      if (mat) {
+        return(private$known_states_)
+      } else {
+        return(private$known_states_data_)
+      }
     }, 
     
     # Mutators ----------------------------------------------------------------
@@ -488,7 +498,7 @@ Observation <- R6Class(
       prob <- matrix(1, nrow = n, ncol = n_states)
       for(i in which(!is.na(self$known_states()))) {
         # Set other probabilities to zero if state is known
-        prob[i,-self$known_states()[i]] <- 0
+        prob[i,self$known_states()[i,] == 0] <- 0
       }
       
       # Counter to subset parameter vector
@@ -657,7 +667,8 @@ Observation <- R6Class(
     # Private data members ----------------------------------------------------
     
     data_ = NULL,
-    known_states_ = NULL, 
+    known_states_ = NULL,
+    known_states_data_ = NULL, 
     dists_ = NULL,
     nstates_ = NULL,
     coeff_fe_ = NULL,
