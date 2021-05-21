@@ -1,0 +1,16 @@
+DATA 
+dataset = dat
+nstates = 2 
+
+DISTRIBUTION
+y ~ wrpcauchy
+
+INITIAL 
+y:
+  mu = 0, 0
+  rho = 0.2, 0.8
+tpm:
+  0.8, 0.2
+  0.1, 0.9
+ 
+  

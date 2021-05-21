@@ -542,7 +542,34 @@ dist_vm <- Dist$new(
   }
 )
 
-
+# Wrapped Cauchy ====================================
+dist_wrpcauchy <- Dist$new(
+  name = "wrpcauchy",
+  pdf = CircStats::dwrpcauchy,
+  rng = function(n, mu, rho) {
+    samp <- CircStats::rwrpcauchy(n, mu, rho)
+    samp <- ifelse(samp > pi, samp - 2 * pi, samp)
+    return(samp)
+  },
+  link = list(mu = function(x) qlogis((x + pi) / (2 * pi)),
+              rho = qlogis),
+  invlink = list(mu = function(x) 2 * pi * plogis(x) - pi,
+                 rho = plogis), 
+  npar = 2, 
+  parnames = c("mu", "rho"), 
+  parapprox = function(x) {
+    # approximate Von-Mises with Wrapped Normal
+    mcosx <- mean(cos(x))
+    msinx <- mean(sin(x))
+    mu <- atan2(msinx, mcosx)
+    r <- mcosx^2 + msinx^2 
+    n <- length(x)
+    r <- n * (r - 1 / n) / (n - 1)
+    s2 <- log(1/r)
+    rho <- 1 - exp(-s2/2)
+    return(c(mu, rho))
+  }
+)
 
 # Multivariate distributions ----------------------------------------------
 
@@ -662,4 +689,5 @@ dist_list <- list(pois = dist_pois,
                   tweedie = dist_tweedie, 
                   mvnorm = dist_mvnorm, 
                   dir = dist_dir, 
-                  altgamma = dist_altgamma)
+                  altgamma = dist_altgamma,
+                  wrpcauchy = dist_wrpcauchy)
