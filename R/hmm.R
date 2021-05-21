@@ -1501,6 +1501,16 @@ HMM <- R6Class(
       return(p)
     },
     
+    #' Wrapped for obs$plot_dist that weights by initial distribution 
+    #'
+    #' @param name data stream 
+    #'
+    #' @return plot of distribution with data underneath 
+    #' @export
+    plot_dist = function(name) {
+      return(self$obs()$plot_dist(name, weights = self$hidden()$delta()))
+    },
+    
     #' @description Plot a model component 
     #' 
     #' @param name name of model component: tpm, delta, or obspar 
