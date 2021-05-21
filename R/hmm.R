@@ -117,6 +117,22 @@ HMM <- R6Class(
       return(private$tmb_obj_)
     },
     
+    #' @description Model object created by TMB for the joint likelihood of
+    #' the fixed and random effects. This is the output of the TMB function 
+    #' \code{MakeADFun}, and it is a list including elements
+    #' \itemize{
+    #'   \item{\code{fn}}{Objective function}
+    #'   \item{\code{gr}}{Gradient function of fn}
+    #'   \item{\code{par}}{Vector of initial parameters on working scale}
+    #' }
+    tmb_obj_joint = function() {
+      if(is.null(private$tmb_obj_joint_)) {
+        stop("setup model first")
+      }
+      
+      return(private$tmb_obj_joint_)
+    },
+    
     #' @description Output of the TMB function \code{sdreport}, which includes 
     #' estimates and standard errors for all model parameters.
     tmb_rep = function() {
@@ -397,50 +413,39 @@ HMM <- R6Class(
       return(-self$tmb_obj()$fn(par))
     },
     
-    #' @description Compute effective degrees of freedom 
-    #' 
-    #' The degrees of freedom of the fixed effects are obtained as the number of
-    #' fixed effect parameters. The effective degrees of freedom of the random 
-    #' effects are computed in the comp_edf private method, based on the formula 
-    #' from Section 5.4.2 from Wood (2017).
-    #' 
-    #' @references Wood (2017). Generalized additive models: an introduction with R. 
-    #' CRC press.
+    #' @description Effective degrees of freedom
+    #'
+    #' @return Number of effective degrees of freedom
+    #' (accounting for flexibility in non-parametric 
+    #' terms implied by smoothing)
     edf = function() {
-      # DF for fixed effects 
-      df <- nrow(self$obs()$coeff_fe()) + nrow(self$hidden()$coeff_fe())
-      # EDF for hidden sub-model 
-      mod_mat_hid <- self$hidden()$terms() 
-      S_hid_list <- mod_mat_hid$S_list
-      X_hid_list <- mod_mat_hid$X_list_re
-      smoopar_hid <- self$lambda()$hidden[,1]
-      edf <- 0 
-      k <- 1
-      for (i in seq_along(S_hid_list)) {
-        if(!is.null(S_hid_list[[i]])) {
-          edf <- edf + private$comp_edf(X_hid_list[[i]], 
-                                        S_hid_list[[i]], 
-                                        smoopar_hid[k])
-          k <- k + 1 
-        }
+      # Degrees of freedom for fixed effects
+      edf <- nrow(self$obs()$coeff_fe()) + nrow(self$hidden()$coeff_fe())
+      
+      if(!is.null(self$tmb_rep()$jointPrecision)) {
+        # Joint covariance matrix
+        Q <- self$tmb_rep()$jointPrecision
+        V <- MASS::ginv(as.matrix(Q))
+        
+        # Extract covariance for random effect components
+        ind_re_hid <- which(colnames(Q) == "coeff_re_hid")
+        ind_re_obs <- which(colnames(Q) == "coeff_re_obs")
+        V_re_hid <- V[ind_re_hid, ind_re_hid]
+        V_re_obs <- V[ind_re_obs, ind_re_obs]
+        
+        # Random effect EDF
+        mod_mat_hid <- self$hidden()$terms() 
+        X_re_hid <- as.matrix(mod_mat_hid$X_re)
+        I_re_hid <- t(X_re_hid) %*% X_re_hid 
+        mod_mat_obs <- self$obs()$terms()
+        X_re_obs <- as.matrix(mod_mat_obs$X_re)
+        I_re_obs <- t(X_re_obs) %*% X_re_obs 
+        edf <- edf + sum(diag(V_re_hid %*% I_re_hid)) +
+          sum(diag(V_re_obs %*% I_re_obs))
       }
-      # EDF for observation sub-model 
-      mod_mat_obs <- self$obs()$terms()
-      S_obs_list <- mod_mat_obs$S_list
-      X_obs_list <- mod_mat_obs$X_list_re
-      smoopar_obs <- self$lambda()$obs[,1]
-      k <- 1 
-      for (i in seq_along(S_obs_list)) {
-        if(!is.null(S_obs_list[[i]])) {
-          edf <- edf + private$comp_edf(X_obs_list[[i]], 
-                                        S_obs_list[[i]], 
-                                        smoopar_obs[k])
-          k <- k + 1 
-        }
-      }
-      return(df + edf)
-    }, 
-    
+      
+      return(edf)
+    },
 
     # Model fitting -----------------------------------------------------------
 
@@ -1621,7 +1626,16 @@ HMM <- R6Class(
     }, 
     
     # AIC methods (for simulation experiments) --------------------------------
-    #' @description Marginal AIC
+    #' Marginal Akaike Information Criterion
+    #' 
+    #' The marginal AIC is for example defined by 
+    #' Wood (2017), as AIC = - 2L + 2k where L is the
+    #' maximum marginal log-likelihood (of fixed 
+    #' effects), and k is the number of degrees
+    #' of freedom of the fixed effect component of
+    #' the model
+    #' 
+    #' @return Marginal AIC
     AIC_marginal = function() {
       llk <- -self$out()$value
       npar <- nrow(self$obs()$coeff_fe()) + 
@@ -1634,14 +1648,21 @@ HMM <- R6Class(
       return(aic)
     },
     
-    tmb_obj_joint = function() {return(private$tmb_obj_joint_)},
-    
-    #' @description Conditional AIC
+    #' Conditional Akaike Information Criterion
+    #' 
+    #' The conditional AIC is for example defined by 
+    #' Wood (2017), as AIC = - 2L + 2k where L is the
+    #' maximum joint log-likelihood (of fixed and random
+    #' effects), and k is the number of effective degrees
+    #' of freedom of the model (accounting for flexibility
+    #' in non-parametric terms implied by smoothing)
+    #' 
+    #' @return Conditional AIC
     AIC_conditional = function() {
       # Get all estimated parameters (fixed and random)
       par_all <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
       
-      llk <- - private$tmb_obj_joint_$fn(par_all)
+      llk <- - self$tmb_obj_joint()$fn(par_all)
       npar <- self$edf()
       
       aic <- - 2 * llk + 2 * npar
