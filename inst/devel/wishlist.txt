@@ -1,5 +1,5 @@
 Wishlist 
 ==============
 
-- Re-formulate gamma to have mean, sd rather than shape, scale? 
 - Non-parametric state-dependent distributions a la Langrock et al. (2015)
+- Hierarchical HMMs 
