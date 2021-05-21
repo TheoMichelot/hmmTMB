@@ -387,6 +387,37 @@ dist_gamma <- Dist$new(
   }
 )
 
+# AltGamma ========================================
+dist_altgamma <- Dist$new(
+  name = "altgamma", 
+  pdf = function(x, mean, sd, log = FALSE) {
+    scale <- sd^2 / mean 
+    shape <- mean / scale 
+    l <- dgamma(x, shape = shape, scale = scale, log = log)
+    return(l)
+  },
+  rng = function(n, mean, sd) {
+    scale <- sd^2 / mean 
+    shape <- mean / scale 
+    return(rgamma(n, shape = shape, scale = scale))
+  },
+  link = list(mean = log, sd = log),
+  invlink = list(mean = exp, sd = exp),
+  npar = 2, 
+  parnames = c("mean", "sd"), 
+  parapprox = function(x) {
+    # use log-moment estimators 
+    n <- length(x)
+    lx <- log(x)
+    tmp <- n * sum(x * lx) - sum(lx) * sum(x)
+    shape <- n * sum(x) / tmp
+    scale <- tmp / n^2 
+    mean <- shape * scale 
+    sd <- sqrt(shape) * scale  
+    return(c(mean, sd))
+  }
+)
+
 # Weibull ========================================
 dist_weibull <- Dist$new(
   name = "weibull", 
@@ -494,22 +525,7 @@ dist_vm <- Dist$new(
   link = list(mu = function(x) qlogis((x + pi) / (2 * pi)),
               kappa = log),
   invlink = list(mu = function(x) 2 * pi * plogis(x) - pi,
-                 kappa = exp),
-  # link = function(x, n_states) {
-  #   # View mean and concentration as polar coordinates for a point in R^2,
-  #   # and use corresponding Cartesian coordinates as working parameters
-  #   xmat <- matrix(unlist(x), nrow = n_states)
-  #   coord1 <- xmat[,2] * cos(xmat[,1])
-  #   coord2 <- xmat[,2] * sin(xmat[,1])
-  #   return(c(coord1, coord2))
-  # },
-  # invlink = function(x, n_states) {
-  #   # Transform back to polar coordinates
-  #   xmat <- matrix(x, nrow = n_states)
-  #   mu <- atan2(xmat[,2], xmat[,1])
-  #   kappa <- sqrt(xmat[,1]^2 + xmat[,2]^2)
-  #   return(c(mu, kappa))
-  # },
+                 kappa = exp), 
   npar = 2, 
   parnames = c("mu", "kappa"), 
   parapprox = function(x) {
@@ -525,6 +541,8 @@ dist_vm <- Dist$new(
     return(c(mu, kappa))
   }
 )
+
+
 
 # Multivariate distributions ----------------------------------------------
 
@@ -643,4 +661,5 @@ dist_list <- list(pois = dist_pois,
                   t = dist_t, 
                   tweedie = dist_tweedie, 
                   mvnorm = dist_mvnorm, 
-                  dir = dist_dir)
+                  dir = dist_dir, 
+                  altgamma = dist_altgamma)

@@ -488,6 +488,34 @@ public:
 };
 
 template<class Type> 
+class AltGamma : public Dist<Type> {
+public:
+  // Constructor
+  AltGamma() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    wpar = log(par); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); // mean 
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // sd 
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type scale = par(1) * par(1) / par(0);
+    Type shape = par(0) / scale; 
+    Type val = dgamma(x, shape, scale, logpdf);
+    return(val); 
+  }
+};
+
+template<class Type> 
 class Weibull : public Dist<Type> {
 public:
   // Constructor

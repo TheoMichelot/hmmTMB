@@ -56,6 +56,8 @@ std::unique_ptr<Dist<Type>> dist_generator(const int& code) {
     return(std::unique_ptr<Dist<Type>>(new MultivariateNormal<Type>)); 
   case 21: 
     return(std::unique_ptr<Dist<Type>>(new Dirichlet<Type>));
+  case 22: 
+    return(std::unique_ptr<Dist<Type>>(new AltGamma<Type>));
   default: 
     return(std::unique_ptr<Dist<Type>>(new Poisson<Type>)); 
   }
