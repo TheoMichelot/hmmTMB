@@ -46,6 +46,7 @@ Type objective_function<Type>::operator() ()
   DATA_SPARSE_MATRIX(X_re_hid); // design matrix for random effects
   DATA_SPARSE_MATRIX(S_hid); // penalty matrix
   DATA_IMATRIX(ncol_re_hid); // number of columns of S and X_re for each random effect
+  DATA_INTEGER(include_smooths); // > 0 = include penalty in likelihood evaluation
   // prior information 
   DATA_MATRIX(coeff_fe_obs_prior); // means, sds for prior on fixed effects for obs 
   DATA_MATRIX(coeff_fe_hid_prior); // means, sds for prior on fixed effects for hidden 
@@ -245,7 +246,7 @@ Type objective_function<Type>::operator() ()
   // Smoothing penalty //
   //===================//
   // Are there smooths in the observation model?
-  if(ncol_re_obs(0, 0) > -1) {
+  if(include_smooths > 0 & ncol_re_obs(0, 0) > -1) {
     // Index in matrix S
     int S_start = 0;
 
@@ -280,7 +281,7 @@ Type objective_function<Type>::operator() ()
   }
 
   // Are there smooths in the hidden state model?
-  if(ncol_re_hid(0, 0) > -1) {
+  if(include_smooths > 0 & ncol_re_hid(0, 0) > -1) {
     // Index in matrix S
     int S_start = 0;
 

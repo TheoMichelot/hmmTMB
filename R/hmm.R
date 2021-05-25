@@ -427,21 +427,23 @@ HMM <- R6Class(
         Q <- self$tmb_rep()$jointPrecision
         V <- prec_to_cov(Q)
         
+        # get Hessian
+        par_all <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
+        H <- self$tmb_obj_joint()$he(par_all)
+        
         # Extract covariance for random effect components
         ind_re_hid <- which(colnames(Q) == "coeff_re_hid")
         ind_re_obs <- which(colnames(Q) == "coeff_re_obs")
         V_re_hid <- V[ind_re_hid, ind_re_hid]
         V_re_obs <- V[ind_re_obs, ind_re_obs]
+        H_re_hid <- H[ind_re_hid, ind_re_hid]
+        H_re_obs <- H[ind_re_obs, ind_re_obs]
+        
+        edf_hid <- sum(diag(H_re_hid %*% V_re_hid))
+        edf_obs <- sum(diag(H_re_obs %*% V_re_obs))
         
         # Random effect EDF
-        mod_mat_hid <- self$hidden()$terms() 
-        X_re_hid <- as.matrix(mod_mat_hid$X_re)
-        I_re_hid <- t(X_re_hid) %*% X_re_hid 
-        mod_mat_obs <- self$obs()$terms()
-        X_re_obs <- as.matrix(mod_mat_obs$X_re)
-        I_re_obs <- t(X_re_obs) %*% X_re_obs 
-        edf <- edf + sum(diag(V_re_hid %*% I_re_hid)) +
-          sum(diag(V_re_obs %*% I_re_obs))
+        edf <- edf + edf_hid + edf_obs    
       }
       
       return(edf)
@@ -620,6 +622,7 @@ HMM <- R6Class(
                       X_re_hid = X_re_hid,
                       S_hid = S_hid,
                       ncol_re_hid = ncol_re_hid - 1, 
+                      include_smooths = 1, 
                       coeff_fe_obs_prior = priors$coeff_fe_obs, 
                       coeff_fe_hid_prior = priors$coeff_fe_hid, 
                       log_lambda_obs_prior = priors$log_lambda_obs, 
@@ -642,6 +645,7 @@ HMM <- R6Class(
       private$tmb_obj_ <- obj
       
       # Joint negative log-likelihood function
+      tmb_dat$include_smooths <- -1
       private$tmb_obj_joint_ <- MakeADFun(tmb_dat, tmb_par, dll = "hmmTMB", 
                                           map = map, silent = silent)
     },
