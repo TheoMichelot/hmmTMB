@@ -91,8 +91,8 @@ MarkovChain <- R6Class(
       
       # Initialise coeff_fe and coeff_re to 0
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
-      self$update_coeff_re(rep(0, sum(ncol_re))) 
-      self$update_lambda(rep(1, length(ncol_re)))
+      self$update_coeff_re(rep(0, ncol(mats$X_re)))
+      self$update_lambda(rep(1, ifelse(is.null(ncol_re), 0, ncol(ncol_re))))
       self$update_delta(rep(1 / n_states, n_states))
       
       # Initialise tpm

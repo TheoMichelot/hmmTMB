@@ -516,14 +516,14 @@ HMM <- R6Class(
         map <- c(map, list(coeff_re_obs = factor(NA),
                            log_lambda_obs = factor(NA)))
         S_obs <- as(matrix(0, 1, 1), "sparseMatrix")
-        ncol_re_obs <- 0
+        ncol_re_obs <- matrix(-1, nr = 1, nc = 1)
         X_re_obs <- as(rep(0, nrow(X_fe_obs)), "sparseMatrix")
       } else {
         # If there are random effects, 
         # set initial values for coeff_re and log_lambda
         random <- c(random, "coeff_re_obs")
-        tmb_par$coeff_re_obs <- rep(0, ncol(S_obs))
-        tmb_par$log_lambda_obs <- rep(0, length(ncol_re_obs))
+        tmb_par$coeff_re_obs <- rep(0, ncol(X_re_obs))
+        tmb_par$log_lambda_obs <- rep(0, ncol(ncol_re_obs))
       }
       
       # check if delta to be stationary (overrides custom map specified)
@@ -586,14 +586,14 @@ HMM <- R6Class(
         map <- c(map, list(coeff_re_hid = factor(NA),
                            log_lambda_hid = factor(NA)))
         S_hid <- as(matrix(0, 1, 1), "sparseMatrix")
-        ncol_re_hid <- 0
+        ncol_re_hid <- matrix(-1, nr = 1, nc = 1)
         X_re_hid <- as(rep(0, nrow(X_fe_hid)), "sparseMatrix")
       } else {
         # If there are random effects, 
         # set initial values for coeff_re and log_lambda
         random <- c(random, "coeff_re_hid")
-        tmb_par$coeff_re_hid <- rep(0, ncol(S_hid))
-        tmb_par$log_lambda_hid <- rep(0, length(ncol_re_hid))
+        tmb_par$coeff_re_hid <- rep(0, ncol(X_re_hid))
+        tmb_par$log_lambda_hid <- rep(0, ncol(ncol_re_hid))
       }
       
       # Get stored priors 
@@ -615,11 +615,11 @@ HMM <- R6Class(
                       X_fe_obs = X_fe_obs,
                       X_re_obs = X_re_obs,
                       S_obs = S_obs,
-                      ncol_re_obs = ncol_re_obs,
+                      ncol_re_obs = ncol_re_obs - 1,
                       X_fe_hid = X_fe_hid,
                       X_re_hid = X_re_hid,
                       S_hid = S_hid,
-                      ncol_re_hid = ncol_re_hid, 
+                      ncol_re_hid = ncol_re_hid - 1, 
                       coeff_fe_obs_prior = priors$coeff_fe_obs, 
                       coeff_fe_hid_prior = priors$coeff_fe_hid, 
                       log_lambda_obs_prior = priors$log_lambda_obs, 

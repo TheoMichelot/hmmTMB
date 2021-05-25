@@ -27,6 +27,7 @@ make_matrices = function(formulas, data, new_data = NULL) {
   names_fe <- NULL
   names_re <- NULL
   names_ncol_re <- NULL
+  start <- 1
   
   # Unlist formulas so that this function works both for Observation and MarkovChain
   forms <- unlist(formulas)
@@ -46,11 +47,14 @@ make_matrices = function(formulas, data, new_data = NULL) {
       term_names <- gam_setup$term.names
     } else {
       # Get design matrix for new data set
-      gam_setup <- gam(formula = update(form, dummy ~ .), 
+      gam_setup0 <- gam(formula = update(form, dummy ~ .), 
                        data = cbind(dummy = 1, data))
-      Xmat <- predict(gam_setup, newdata = new_data, type = "lpmatrix")
+      gam_setup <- gam(formula = update(form, dummy ~ .), 
+                        data = cbind(dummy = 1, data),
+                       fit = FALSE)
+      Xmat <- predict(gam_setup0, newdata = new_data, type = "lpmatrix")
       # Extract column names for design matrices
-      term_names <- names(gam_setup$coefficients)
+      term_names <- gam_setup$term.names
     }
     
     # Fixed effects design matrix
@@ -71,16 +75,25 @@ make_matrices = function(formulas, data, new_data = NULL) {
     # Number of columns for fixed effects
     ncol_fe <- c(ncol_fe, gam_setup$nsdf)
     
-    if(length(gam_setup$S) > 0) {
-      # Number of columns for each random effect
-      sub_ncol_re <- sapply(gam_setup$S, ncol)
-      ncol_re <- c(ncol_re, sub_ncol_re)
-      # Hacky way to get the names of smooth terms 
-      # (one for each column of ncol_re)
-      # regex from datascience.stackexchange.com/questions/8922
-      s_terms_i1 <- cumsum(c(1, sub_ncol_re[-length(sub_ncol_re)]))
-      s_terms <- gsub("(.*)\\..*", "\\1", subnames_re[s_terms_i1])
-      names_ncol_re <- c(names_ncol_re, s_terms)
+    if(length(gam_setup$smooth) > 0) {
+      sub_ncol_re <- matrix(1, nr = 2, nc = length(gam_setup$S))
+      colnames(sub_ncol_re) <- 1:ncol(sub_ncol_re)
+      start_s <- 1
+      for (s in 1:length(gam_setup$smooth)) {
+        # how many penalties for this smooth?
+        npen <- length(gam_setup$smooth[[s]]$S)
+        # how many parameters for this smooth? 
+        npar <- ncol(gam_setup$smooth[[s]]$S[[1]])
+        # where does this smooth's parameters start and end?
+        sub_ncol_re[, (start_s:(start_s + npen - 1))] <- c(start, start + npar - 1)
+        colnames(sub_ncol_re)[start_s:(start_s + npen - 1)] <- rep(gam_setup$smooth[[s]]$label, npen)
+        # get names of these parameters
+        s_terms <- gsub("(.*)\\..*", "\\1", subnames_re, sub_ncol_re[1, s], sub_ncol_re[2, s])
+        names_ncol_re <- c(names_ncol_re, rep(s_terms, npen))
+        start <- start + npar
+        start_s <- start_s + npen
+      }
+      ncol_re <- cbind(ncol_re, sub_ncol_re)
     }    
   }
   
@@ -90,9 +103,6 @@ make_matrices = function(formulas, data, new_data = NULL) {
   X_re <- bdiag_check(X_list_re)
   colnames(X_re) <- names_re
   S <- bdiag_check(S_list)
-  
-  # Name elements of ncol_re
-  names(ncol_re) <- names_ncol_re
   
   return(list(X_fe = X_fe, X_re = X_re, S = S, 
               X_list_fe = X_list_fe, X_list_re = X_list_re, S_list = S_list, 
