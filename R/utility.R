@@ -255,4 +255,27 @@ load_distnames <- function() {
   load(paste0(find.package("hmmTMB"), "/distnames.RData"))
 }
 
-
+#' Get covariance matrix from precision matrix
+#' 
+#' The covariance matrix is the inverse of the precision matrix. By default,
+#' the function \code{solve} is used for inversion. If it fails (e.g.,
+#' singular system), then \code{MASS::ginv} is used instead, and returns the
+#' Moore-Penrose generalised inverse of the precision matrix.
+#' 
+#' @param prec_mat Precision matrix (either of 'matrix' type
+#' or sparse matrix on which as.matrix can be used)
+#' 
+#' @return Precision matrix
+#' @export
+prec_to_cov <- function(prec_mat)
+{
+  cov_mat <- try(as.matrix(solve(prec_mat)), silent = TRUE)
+  if(inherits(cov_mat, "try-error")) {
+    message <- attr(cov_mat, 'condition')$message
+    cov_mat <- MASS::ginv(as.matrix(prec_mat))
+    warning(paste0("Inversion of precision matrix using 'solve' failed: ", 
+                   message, ". Using 'MASS::ginv' instead (uncertainty ",
+                   "estimates may be unreliable)."))
+  }
+  return(cov_mat)
+}
