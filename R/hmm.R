@@ -1596,7 +1596,8 @@ HMM <- R6Class(
           coord_cartesian(ylim = c(0, 1))
         if(is.factor(df$var)) {
           p <- p + geom_point(size = 0.7) +
-            geom_segment(aes(x = var, y = low, xend = var, yend = upp), alpha = 0.3)
+            geom_segment(aes(x = var, y = low, xend = var, yend = upp), alpha = 0.3) +
+            theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
         } else {
           p <- p + geom_line(size = 0.7) +
             geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3)
@@ -1623,7 +1624,8 @@ HMM <- R6Class(
         }
         if(is.factor(df$var)) {
           p <- p + geom_point(size = 0.7) +
-            geom_segment(aes(x = var, y = low, xend = var, yend = upp), alpha = 0.3)
+            geom_segment(aes(x = var, y = low, xend = var, yend = upp), alpha = 0.3) +
+            theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
         } else {
           p <- p + geom_line(size = 0.7) +
             geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3)
