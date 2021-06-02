@@ -155,7 +155,7 @@ cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid
 #' @export
 is_whole_number <- function(x, tol = 1e-10) {
   y <- floor(x)
-  return(all(abs(x - y) < tol))
+  return(all(abs(x - y) < tol, na.rm = TRUE))
 }
 
 #' Strip comments marked with a hash from a character vector 
