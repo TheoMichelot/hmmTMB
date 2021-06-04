@@ -496,7 +496,7 @@ Observation <- R6Class(
       
       # Initialise matrix of probabilities
       prob <- matrix(1, nrow = n, ncol = n_states)
-      for(i in which(!is.na(self$known_states()))) {
+      for(i in which(!is.na(self$known_states(mat = FALSE)))) {
         # Set other probabilities to zero if state is known
         prob[i,self$known_states()[i,] == 0] <- 0
       }
