@@ -125,25 +125,23 @@ Combining the MarkovChain and Observation object, we create an object of the HMM
 hmm <- HMM$new(obs = obs, hidden = hid)
 ```
 
-We fit the model with the method fit, and print the output of the optimiser with res. It contains the parameters estimates (fixed effects), the value of the objective function at the optimum, and diagnostics from the optimiser.
+We fit the model with the method `fit`, and print the output of the optimiser with `out`. It contains the parameters estimates (fixed effects), the value of the objective function at the optimum, and diagnostics from the optimiser.
 
 ```{r elk-fit}
-hmm$fit()
+hmm$fit(silent = TRUE)
 
 hmm$out()
 ```
 
-We can get confidence intervals for the estimated (working) parameters with the method CI_coeff By default, it returns 95\% confidence intervals, but the argument level can be specified for different confidence levels.
+We can get estimates of the HMM parameters using the `par` method. By default, when there are covariates, it only returns the value of the parameters for the first observation of the data.
 
-```{r elk-ci}
-hmm$CI_coeff()
+```{r elk-par}
+hmm$par()
 ```
 
-The methods predict_obspar and predict_tpm can also be used to obtain estimates and confidence intervals of the model parameters directly. For example, say that we want to predict the model parameters for `dist_water = 1000`,
-```{r elk-ci-2}
-new_data <- data.frame(dist_water = 1000)
-hmm$predict_obspar(new_data = new_data, CI = TRUE)
-hmm$predict_tpm(new_data = new_data, CI = TRUE)
+The method `predict` can be used to obtain confidence intervals of the model parameters. For example, say that we want 95% confidence intervals for the parameters of the observation process,
+```{r elk-ci}
+hmm$predict(name = "obspar", level = 0.95)
 ```
 
 The method viterbi implements the Viterbi algorithm, to estimate the most likely state sequence.
@@ -153,36 +151,39 @@ states <- hmm$viterbi()
 head(states)
 ```
 
-Various plotting functions are provided to visualise a fitted model. Using the method Observation\$plot_dist, we can plot histograms of the observed data, overlaid with the estimated state-dependent probability density functions.
+Various plotting functions are provided to visualise a fitted model. Using the method `plot_dist`, we can plot histograms of the observed data, overlaid with the estimated state-dependent probability density functions.
 
 ```{r elk-plot-dist, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
 # Proportion of states in Viterbi sequence, to weigh pdfs
 w <- table(states)/length(states)
-obs$plot_dist("step", weights = w)
-obs$plot_dist("angle", weights = w)
+hmm$plot_dist("step")
+hmm$plot_dist("angle")
 ```
 
 We can plot the data coloured by the Viterbi-decoded states. All plotting functions return ggplot objects, and can easily be edited using ggplot commands, e.g.\ to change axis labels or colours.
 
-```{r elk-plot-ts, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
+```{r elk-plot-ts, fig.width = 6, fig.height = 3, out.width="70%", fig.align="center"}
 hmm$plot_ts("step")
+```
+
+```{r els-plot-ts2, fig.width = 6, fig.height = 3, out.width = "70%", fig.align="center"}
 hmm$plot_ts("x", "y") + coord_equal() + geom_point(size = 0.5)
 ```
 
-The function plot_tpm creates graphs of the transition probabilities as functions of a covariate, here distance to water.
+The function `plot` creates graphs of the HMM parameters as functions of a covariate, here distance to water. For example, to obtain a plot of the transition probabilities:
 
 ```{r elk-plot-tpm, fig.width = 6, fig.height = 4, out.width="70%", fig.align="center"}
-hmm$plot_tpm("dist_water") + xlab("Distance to water (m)")
+hmm$plot(name = "tpm", var = "dist_water") + xlab("Distance to water (m)")
 ```
 
-With the function plot_stat_dist, we can visualise the stationary state probabilities as functions of the distance to water.
+With the same function, we can also visualise the stationary state probabilities as functions of the distance to water, using the option `name = "delta"`:
 
 ```{r elk-plot-stat, fig.width = 7, fig.height = 4, out.width="90%", fig.align="center"}
-hmm$plot_stat_dist("dist_water") + 
+hmm$plot(name = "delta", var = "dist_water") + 
   xlab("Distance to water (m)")
 ```
 
-We can simulate from the fitted model with the method simulate, for example to check how well the model captures features of the real data. Here, we simulate step lengths and turning angles from the model.
+We can simulate from the fitted model with the method `simulate`, for example to check how well the model captures features of the real data. Here, we simulate step lengths and turning angles from the model.
 
 ```{r elk-sim, results = 'hide'}
 # Number of simulated realisations
@@ -204,7 +205,7 @@ head(sim_data)
 
 We then derive the corresponding locations to visualise the simulated movement trajectory, and extract the states used in the simulation (stored as an attribute of the output of the `simulate` method).
 
-```{r elk-sim-3, results = 'hide', fig.width = 5, fig.height = 4, out.width="60%", fig.align="center"}
+```{r elk-sim-3, results = 'hide', fig.width = 6, fig.height = 4, out.width="70%", fig.align="center"}
 # Get locations from simulated step lengths and turning angles
 bearings <- cumsum(sim_data$angle)
 sim_dxy <- sim_data$step * cbind(cos(bearings), sin(bearings))
@@ -231,7 +232,7 @@ gof_fn <- function(data) {
 }
 
 # Run test
-gof_out <- hmm$gof(gof_fn)
+gof_out <- hmm$gof(gof_fn, silent = TRUE)
 ```
 
 # Example 2: wild haggis movement
@@ -284,14 +285,16 @@ obs <- Observation$new(data = data,
 We create the HMM object from the MarkovChain and Observation components, fit it using the fit method, and compute the most likely state sequence using the viterbi method,
 ```{r haggis-fit}
 hmm <- HMM$new(hidden = hid, obs = obs)
-hmm$fit()
+hmm$fit(silent = TRUE)
 data$state <- hmm$viterbi()
 ```
 
 We can plot the time series of step lengths, or the tracks, coloured by the estimated state sequence,
-```{r haggis-plot_ts, fig.width = 5, fig.height = 4, fig.show="hold", out.width="50%"}
+```{r haggis-plot_ts, fig.width = 5, fig.height = 4, out.width="50%", fig.align="center"}
 hmm$plot_ts("step")
+```
 
+```{r haggis-plot-ts2, , fig.width = 6, fig.height = 4, out.width="70%", fig.align="center"}
 hmm$plot_ts("x", "y") + 
     geom_point(size = 0.5) + 
     coord_equal()
@@ -299,19 +302,19 @@ hmm$plot_ts("x", "y") +
 
 These plots suggest that state 1 captured fast movement behaviour (long step lengths) and state 2 captured slow movement (short step lengths). This can also be seen from the estimated state-dependent distributions of step lengths,
 ```{r haggis-plot_dist, fig.width = 7, fig.height = 4, out.width="90%", fig.align="center"}
-obs$plot_dist("step", w = table(data$state)/nrow(data))
+hmm$plot_dist("step")
 ```
 
 To visualise the effect of slope on the behaviour of wild haggises, we plot the stationary state probabilities as functions of the slope,
 ```{r haggis-plot_stat, fig.width = 7, fig.height = 4, out.width="90%", fig.align="center"}
-hmm$plot_stat_dist("slope")
+hmm$plot(name = "delta", var = "slope")
 ```
 
-When there are several covariates, the plotting functions fix the other covariates to their mean value (for continuous covariates) or to their first level (for factor covariates), as shown at the top of the plot. This can be changed by specifying the argument "covs", a data frame with a single row and one named column for each covariate.
+When there are several covariates, the plotting functions fix the other covariates to their mean value (for continuous covariates) or to their first level (for factor covariates), as shown at the top of the plot. This can be changed by specifying the argument `covs`, a data frame with a single row and one named column for each covariate.
 
 We observe the same pattern found by @michelot2016: wild haggises tended to adopt the fast movement state at intermediate slopes (between 5 and 30 degrees), and the slow movement state on very flat or very steep terrains. @michelot2016 compared a linear and a quadratic effect of slope; the smoothing splines used here are more flexible, and the implementation automatically estimates the smoothness of the relationship during model fitting.
 
-A measure of inter-individual heterogeneity is given by the standard deviation of the distribution of random intercepts, and can be obtained using the vcomp method,
+A measure of inter-individual heterogeneity is given by the standard deviation of the distribution of random intercepts, and can be obtained using the `vcomp` method,
 ```{r haggis-vcomp}
 hid$vcomp()
 ```
