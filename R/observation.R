@@ -85,6 +85,17 @@ Observation <- R6Class(
         private$raw_formulas_ <- formulas 
       }
       
+      # Get names of all covariates
+      var_names <- unique(rapply(self$formulas(), all.vars))
+      # Remove pi from list of covariates if it is in the formulas
+      var_names <- var_names[which(var_names!="pi")]
+      if(length(var_names) > 0) {
+        # Remove NAs in covariates (replace by last non-NA value)
+        data[,var_names] <- lapply(data[,var_names, drop=FALSE], 
+                                   function(col) na_fill(col))
+        self$update_data(data)
+      }
+      
       # Save terms of model formulas
       mats <- self$make_mat()
       ncol_fe <- mats$ncol_fe
