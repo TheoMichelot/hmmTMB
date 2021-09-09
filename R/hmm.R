@@ -1606,14 +1606,14 @@ HMM <- R6Class(
         if (name == "delta") {
           p <- ggplot(df, aes(var, prob, group = state, col = state)) +
             scale_color_manual("", values = hmmTMB_cols) +
-            scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
+            scale_fill_manual(values = hmmTMB_cols, guide = "none") +
             xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
             theme_light() + 
             coord_cartesian(ylim = c(0, 1))
         } else if (name == "obspar") {
           p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
             scale_color_manual("", values = hmmTMB_cols) +
-            scale_fill_manual(values = hmmTMB_cols, guide = FALSE) +
+            scale_fill_manual(values = hmmTMB_cols, guide = "none") +
             facet_wrap(c("par"), scales = "free_y",
                        strip.position = "left",
                        labeller = label_bquote(.(par))) +
