@@ -1521,9 +1521,14 @@ HMM <- R6Class(
     #' @param j if plotting tpm then cols of tpm to plot, if plotting delta then
     #' ignored, if plotting obspar then indices of states to plot 
     #' @param n_grid coarseness of grid over x-axis to create 
+    #' @param n_post Number of posterior simulations to use when computing
+    #' confidence intervals; default: 1000. If set to 0, confidence intervals
+    #' are derived using the delta method rather than simulations. See 
+    #' \code{predict} function for more detail.
     #' 
     #' @return A ggplot object 
-    plot = function(name, var = NULL, covs = NULL, i = NULL, j = NULL, n_grid = 50) {
+    plot = function(name, var = NULL, covs = NULL, i = NULL, j = NULL, 
+                    n_grid = 50, n_post = 1000) {
       # Get relevant model component 
       comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
       # Get x-axis 
@@ -1538,7 +1543,8 @@ HMM <- R6Class(
       n_states <- self$hidden()$nstates()
       
       # Get predictions and uncertainty 
-      preds <- self$predict(name, t = "all", newdata = newdata, level = 0.95)
+      preds <- self$predict(name, t = "all", newdata = newdata, 
+                            level = 0.95, n_post = n_post)
       
       # Data frame for plot
       df <- as.data.frame.table(preds$mean)
