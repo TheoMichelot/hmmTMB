@@ -261,7 +261,7 @@ Type objective_function<Type>::operator() ()
       Eigen::SparseMatrix<Type> this_S = asSparseMatrix(this_S_dense);
 
       // Coefficients for this smooth
-      vector<Type> this_coeff_re = coeff_re_obs.segment(ncol_re_obs(0, i), Sn);
+      vector<Type> this_coeff_re = coeff_re_obs.segment(ncol_re_obs(0, i) - 1, Sn);
 
       // Get log-determinant of S^(-1) for additive constant
       Type log_det = 0;
@@ -296,7 +296,7 @@ Type objective_function<Type>::operator() ()
       Eigen::SparseMatrix<Type> this_S = asSparseMatrix(this_S_dense);
       
       // Coefficients for this smooth
-      vector<Type> this_coeff_re = coeff_re_hid.segment(ncol_re_hid(0, i), Sn);
+      vector<Type> this_coeff_re = coeff_re_hid.segment(ncol_re_hid(0, i) - 1, Sn);
 
       // Get log-determinant of S^(-1) for additive constant
       Type log_det = 0;
