@@ -1197,20 +1197,27 @@ HMM <- R6Class(
     
     #' @description Predict estimates from a fitted model
     #' 
-    #' @param name which estimates to predict? Options include 
+    #' @param name Which estimates to predict? Options include 
     #' transition probability matrices "tpm", 
     #' stationary distributions "delta", or 
     #' observation distribution parameters "obspar"
-    #' @param t time points to predict at 
-    #' @param ... other arguments to the respective functions for hidden$tpm, hidden$delta, obs$par
-    #' @param newdata new dataframe to use for prediction
-    #' @param level if greater than zero, then produce confidence intervals with this level, e.g. CI = 0.95
-    #'           will produce 95\% confidence intervals 
-    #' @param n_post if greater than zero then n_post posterior samples are produced 
-    #' @return named array of predictions and confidence interval, if requested
-    predict = function(name, t = 1, newdata = NULL, level = 0, n_post = 0) {
-      if (is.null(private$out_) & (level > 0 | n_post > 0)) stop("must fit model with fit() function first")
+    #' @param t Time points to predict at 
+    #' @param ... Other arguments to the respective functions 
+    #' for hidden$tpm, hidden$delta, obs$par
+    #' @param newdata New dataframe to use for prediction
+    #' @param level Level of the confidence intervals, e.g. CI = 0.95
+    #' will produce 95\% confidence intervals (default) 
+    #' @param n_post If greater than zero then n_post posterior 
+    #' samples are produced 
+    #' 
+    #' @return Named array of predictions and confidence interval, 
+    #' if requested
+    predict = function(name, t = 1, newdata = NULL, level = 0.95, n_post = 0) {
+      if (is.null(private$out_) & (level > 0 | n_post > 0)) {
+        stop("must fit model with fit() function first")
+      }
       if (!is.null(newdata)) {
+        # Save model matrices, then replace by matrices based on newdata
         old <- list(X_fe_obs = self$obs()$X_fe(), 
                     X_re_obs = self$obs()$X_re(), 
                     X_fe_hid = self$hidden()$X_fe(), 
@@ -1233,74 +1240,20 @@ HMM <- R6Class(
       # get appropriate model component 
       comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
       
-      # just return predicted means if no confidence intervals wanted 
-      # or posterior simulations 
-      if (level == 0 & n_post == 0) {
+      if (n_post == 0) {
+          # just return predicted means if no confidence intervals wanted 
         val <- fn(linpred = self[[comp]]()$linpred(), t = t)
+      } else {
+          # return means and confidence intervals
+          sim <- self$post_fn(fn = fn, 
+                              n_post = n_post, 
+                              comp = comp, 
+                              t = t,
+                              level = level)
+          val <- sim          
       }
-      
-      # do posterior sampling if asked for  
-      if (n_post > 0) {
-        
-        sim <- self$post_fn(fn = fn, 
-                            n_post = n_post, 
-                            comp = comp, 
-                            t = t,
-                            level = level)
-        val <- sim
-      }
-      
-      # delta method for CI 
-      if (level > 0 & n_post < 1e-10) {
-        oldpar <- list(obs_coeff_fe = self$obs()$coeff_fe(), 
-                       obs_coeff_re = self$obs()$coeff_re(), 
-                       hidden_coeff_fe = self$hidden()$coeff_fe(), 
-                       hidden_coeff_re = self$hidden()$coeff_re())
-        # get variance-covariance matrix of linear predictor 
-        lfn <- function(par, oldpar, ind_fe, ind_re, comp) {
-          new_par <- oldpar[[paste0(comp, "_coeff_fe")]]
-          new_par[!(rownames(new_par) %in% names(private$fixpar_[[comp]]))] <- par[ind_fe]
-          self[[comp]]()$update_coeff_fe(new_par)
-          if(!is.null(ind_re)) self[[comp]]()$update_coeff_re(par[ind_re])
-          return(self[[comp]]()$linpred())
-        }
-        # get variance-covariance of par 
-        if(is.null(self$tmb_rep()$jointPrecision)) {
-          par <- self$tmb_rep()$par.fixed
-          V <- self$tmb_rep()$cov.fixed
-        } else {
-          par <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
-          V <- prec_to_cov(self$tmb_rep()$jointPrecision)
-        }
-        ind_fe <- grepl(paste0("coeff_fe_", substr(comp, 1, 3)), names(par))
-        ind_re <- grepl(paste0("coeff_re_", substr(comp, 1, 3)), names(par))
-        # compute jacobian 
-        J <- numDeriv::jacobian(lfn, 
-                                par, 
-                                oldpar = oldpar, 
-                                ind_fe = ind_fe, 
-                                ind_re = ind_re, 
-                                comp = comp)
-        # compute variance-covariance for linear predictor
-        Vlinpred <- J %*% V %*% t(J)
-        sds <- sqrt(diag(Vlinpred))
-        # compute confidence bounds on linear predictor scale
-        mu <- self[[comp]]()$linpred()
-        z <- qnorm(1 - (1 - level) / 2)
-        lcl <- mu - z * sds 
-        ucl <- mu + z * sds 
-        # get results on response scale
-        mu <- fn(linpred = mu, t = t)
-        lcl <- fn(linpred = lcl, t = t)
-        ucl <- fn(linpred = ucl, t = t)
-        # reset parameters 
-        self$obs()$update_coeff_fe(oldpar$obs_coeff_fe)
-        self$obs()$update_coeff_re(oldpar$obs_coeff_re)
-        self$hidden()$update_coeff_fe(oldpar$hidden_coeff_fe)
-        self$hidden()$update_coeff_re(oldpar$hidden_coeff_re)
-        val <- list(mean = mu, lcl = lcl, ucl = ucl)
-      }
-      
+
+      # Reset to original model matrices
       if (!is.null(newdata)) {
         self$obs()$update_X_fe(old$X_fe_obs)
         self$hidden()$update_X_fe(old$X_fe_hid)
@@ -1309,7 +1262,6 @@ HMM <- R6Class(
       }
       
       return(val)
-      
     }, 
     
     # Simulation --------------------------------------------------------------
