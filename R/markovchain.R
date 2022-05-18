@@ -133,11 +133,21 @@ MarkovChain <- R6Class(
     tpm = function(t = 1, linpred = NULL) {
       n_states <- self$nstates()
       npar <- n_states * (n_states - 1)
-      if (is.null(linpred)) linpred <- self$linpred() 
-      T <- length(linpred) / npar
-      if (length(t) == 1) if (t == "all") t <- 1:T
-      ind <- as.vector(sapply(1:npar, function(i) {t + (i - 1) * T}))
+      if (is.null(linpred)) {
+        linpred <- self$linpred() 
+      }
+      n <- length(linpred) / npar
+      if (length(t) == 1) {
+        if (t == "all") {
+          t <- 1:n
+        }
+      }
+      
+      # Get the right entries of linpred for choice of t
+      ind <- as.vector(sapply(1:npar, function(i) {t + (i - 1) * n}))
       linpred <- matrix(linpred[ind], ncol = n_states * (n_states - 1))
+      
+      # Get transition probs from linear predictor
       val <- apply(linpred, 1, self$par2tpm)
       val <- array(val, dim = c(n_states, n_states, ncol(val)))
       rownames(val) <- paste0("state ", 1:n_states)
