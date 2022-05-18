@@ -11,17 +11,17 @@ HMM <- R6Class(
     # Constructor -------------------------------------------------------------
     #' @description Create new HMM object
     #' 
-    #' @param file path to specification file for HMM 
     #' @param obs Observation object
     #' @param hidden MarkovChain object
+    #' @param file path to specification file for HMM 
     #' @param init HMM object to initialize parameters with 
     #' @param fixpar a named list of parameters in coeff_fe that you want fixed 
     #' (set to NA) or pool into common values (using factor levels)
     #' 
     #' @return A new HMM object
-    initialize = function(file = NULL, 
-                          obs = NULL, 
-                          hidden = NULL, 
+    initialize = function(obs = NULL, 
+                          hidden = NULL,
+                          file = NULL,
                           init = NULL, 
                           fixpar = NULL) {
       # Decide how model has been specified 
