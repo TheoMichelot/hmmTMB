@@ -1638,15 +1638,42 @@ HMM <- R6Class(
     },
 
     # Print methods -----------------------------------------------------------
-    #' @description Print model formulation
+    #' @description Print observation parameters at t = 1
+    print_obspar = function() {
+      if(is.null(private$out_)) {
+        cat("> Initial observation parameters (t = 1):\n")
+      } else {
+        cat("> Estimated observation parameters (t = 1):\n")
+      }
+      par <- self$par(t = 1)
+      print(round(par$obspar[,,1], 3))
+      cat("\n")
+    },
+    
+    #' @description Print observation parameters at t = 1
+    print_tpm = function() {
+      if(is.null(private$out_)) {
+        cat("> Initial transition probabilities (t = 1):\n")
+      } else {
+        cat("> Estimated transition probabilities (t = 1):\n")
+      }
+      par <- self$par(t = 1)
+      print(round(par$tpm[,,1], 3))
+      cat("\n")
+    },
+
+    #' @description Print model formulation    
     formulation = function() {
       self$obs()$formulation()
       self$hidden()$formulation()
-    }, 
-    
+    },
+        
     #' @description Print HMM object
     print = function() {
-      self$formulation()
+      self$obs()$formulation()
+      self$print_obspar()
+      self$hidden()$formulation()
+      self$print_tpm()
     }
   ),
   
