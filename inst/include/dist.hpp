@@ -60,6 +60,10 @@ std::unique_ptr<Dist<Type>> dist_generator(const int& code) {
     return(std::unique_ptr<Dist<Type>>(new AltGamma<Type>));
   case 23: 
     return(std::unique_ptr<Dist<Type>>(new WrpCauchy<Type>));
+  case 24: 
+    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedGamma<Type>));
+  case 25: 
+    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedGamma2<Type>));
   default: 
     return(std::unique_ptr<Dist<Type>>(new Poisson<Type>)); 
   }

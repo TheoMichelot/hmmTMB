@@ -418,6 +418,74 @@ dist_altgamma <- Dist$new(
   }
 )
 
+# Zero-inflated gamma (shape, scale) ===================================
+dist_zigamma <- Dist$new(
+    name = "zigamma", 
+    pdf = function(x, shape, scale, z, log = FALSE) {
+        zero <- x < 1e-10 
+        l <- z * zero + (1 - z) * dgamma(x, shape = shape, scale = scale)
+        if (log) l <- log(l)
+        return(l)
+    }, 
+    rng = function(n, shape, scale, z) {
+        zero <- rbinom(n, 1, z)
+        y <- rgamma(n, shape = shape, scale = scale)
+        y[zero == 1] <- 0
+        return(y)},
+    link = list(shape = log, scale = log, z = qlogis), 
+    invlink = list(shape = exp, scale = exp, z = plogis), 
+    npar = 3, 
+    parnames = c("shape", "scale", "z"), 
+    parapprox = function(x) {
+        z <- length(which(x < 1e-10))/length(x)
+        y <- x[which(x > 1e-10)]
+        # use log-moment estimators 
+        n <- length(y)
+        ly <- log(y)
+        tmp <- n * sum(y * ly) - sum(ly) * sum(y)
+        shape <- n * sum(y) / tmp
+        scale <- tmp / n^2 
+        return(c(shape, scale, z))
+    }
+)
+
+# Zero-inflated gamma (mean, sd) ===================================
+dist_zigamma2 <- Dist$new(
+  name = "zigamma2", 
+  pdf = function(x, mean, sd, z, log = FALSE) {
+    shape <- mean^2 / sd^2
+    scale <- sd^2 / mean
+    zero <- x < 1e-10 
+    l <- z * zero + (1 - z) * dgamma(x, shape = shape, scale = scale)
+    if (log) l <- log(l)
+    return(l)
+  }, 
+  rng = function(n, mean, sd, z) {
+    shape <- mean^2 / sd^2
+    scale <- sd^2 / mean
+    zero <- rbinom(n, 1, z)
+    y <- rgamma(n, shape = shape, scale = scale)
+    y[zero == 1] <- 0
+    return(y)},
+  link = list(mean = log, sd = log, z = qlogis), 
+  invlink = list(mean = exp, sd = exp, z = plogis), 
+  npar = 3, 
+  parnames = c("mean", "sd", "z"), 
+  parapprox = function(x) {
+    z <- length(which(x < 1e-10))/length(x)
+    y <- x[which(x > 1e-10)]
+    # use log-moment estimators 
+    n <- length(y)
+    ly <- log(y)
+    tmp <- n * sum(y * ly) - sum(ly) * sum(y)
+    shape <- n * sum(y) / tmp
+    scale <- tmp / n^2
+    mean <- shape * scale
+    sd <- shape * scale^2
+    return(c(mean, sd, z))
+  }
+)
+
 # Weibull ========================================
 dist_weibull <- Dist$new(
   name = "weibull", 
@@ -690,4 +758,6 @@ dist_list <- list(pois = dist_pois,
                   mvnorm = dist_mvnorm, 
                   dir = dist_dir, 
                   altgamma = dist_altgamma,
-                  wrpcauchy = dist_wrpcauchy)
+                  wrpcauchy = dist_wrpcauchy,
+                  zigamma = dist_zigamma,
+                  zigamma2 = dist_zigamma2)

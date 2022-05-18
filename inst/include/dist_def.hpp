@@ -516,6 +516,90 @@ public:
 };
 
 template<class Type> 
+class ZeroInflatedGamma : public Dist<Type> {
+public:
+    // Constructor
+    ZeroInflatedGamma() {}; 
+    // Link function 
+    vector<Type> link(const vector<Type>& par, const int& n_states) {
+        vector<Type> wpar(par.size()); 
+        for (int i = 0; i < 2 * n_states; ++i) 
+            wpar(i) = log(par(i));
+        for (int i = 2 * n_states; i < 3 * n_states; ++i) 
+            wpar(i) = log(par(i) / (1.0 - par(i))); 
+        return(wpar); 
+    } 
+    // Inverse link function 
+    matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+        int n_par = wpar.size()/n_states;
+        matrix<Type> par(n_states, n_par);
+        for(int i = 0; i < n_states; ++i) 
+            par(i, 0) = exp(wpar(i)); 
+        for(int i = 0; i < n_states; ++i) 
+            par(i, 1) = exp(wpar(i + n_states)); 
+        for(int i = 0; i < n_states; ++i) 
+            par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2*n_states)));
+        return(par); 
+    }
+    // Probability density/mass function
+    Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+        Type val = 0.0;
+        if(x == Type(0)) {
+            val = par(2);
+        } else {
+            val = (1 - par(2)) * dgamma(x, par(0), par(1), 0);
+        }
+        if(logpdf) {
+          val = log(val);
+        }
+        return(val); 
+    }
+};
+
+template<class Type> 
+class ZeroInflatedGamma2 : public Dist<Type> {
+public:
+  // Constructor
+  ZeroInflatedGamma2() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    for (int i = 0; i < 2 * n_states; ++i) 
+      wpar(i) = log(par(i));
+    for (int i = 2 * n_states; i < 3 * n_states; ++i) 
+      wpar(i) = log(par(i) / (1.0 - par(i))); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    for(int i = 0; i < n_states; ++i) 
+      par(i, 0) = exp(wpar(i)); 
+    for(int i = 0; i < n_states; ++i) 
+      par(i, 1) = exp(wpar(i + n_states)); 
+    for(int i = 0; i < n_states; ++i) 
+      par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2*n_states)));
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = 0.0;
+    Type shape = par(0) * par(0) / (par(1) * par(1));
+    Type scale = par(1) * par(1) / par(0);
+    if(x == Type(0)) {
+      val = par(2);
+    } else {
+      val = (1 - par(2)) * dgamma(x, shape, scale, 0);
+    }
+    if(logpdf) {
+      val = log(val);
+    }
+    return(val); 
+  }
+};
+
+template<class Type> 
 class Weibull : public Dist<Type> {
 public:
   // Constructor
