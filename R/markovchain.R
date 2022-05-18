@@ -140,6 +140,8 @@ MarkovChain <- R6Class(
       linpred <- matrix(linpred[ind], ncol = n_states * (n_states - 1))
       val <- apply(linpred, 1, self$par2tpm)
       val <- array(val, dim = c(n_states, n_states, ncol(val)))
+      rownames(val) <- paste0("state ", 1:n_states)
+      colnames(val) <- paste0("state ", 1:n_states)
       return(val)
     },
     
