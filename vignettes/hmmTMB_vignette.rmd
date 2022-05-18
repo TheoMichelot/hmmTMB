@@ -115,7 +115,7 @@ formula <- ~ s(dist_water, k = 5, bs = "ts")
 
 # Create MarkovChain object
 hid <- MarkovChain$new(n_states = n_states, 
-                       structure = formula,
+                       formula = formula,
                        data = tracks)
 ```
 
@@ -260,7 +260,7 @@ We define the hidden state process as a 2-state Markov chain, with a smooth effe
 ```{r haggis-hid}
 n_states <- 2
 hid <- MarkovChain$new(n_states = n_states,
-                       structure = ~s(ID, bs = "re") + s(slope, k = 5, bs = "ts"),
+                       formula = ~s(ID, bs = "re") + s(slope, k = 5, bs = "ts"),
                        data = data)
 ```
 

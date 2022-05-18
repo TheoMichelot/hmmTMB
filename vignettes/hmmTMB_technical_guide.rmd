@@ -262,10 +262,10 @@ obs_process$plot_dist(name = "y")
 The state process model is defined with the `MarkovChain` class, which includes the number of states and covariate formulas for the transition probabilities. In the following example, we create a 2-state Markov chain with a linear relationship between $\gamma_{12}$ and the covariate $x$, and a smooth relationships between $\gamma_{21}$ and $x$ (using a cubic spline with 5 basis functions).
 
 ```{r hid-create}
-structure <- matrix(c(".", "~x",
+formula <- matrix(c(".", "~x",
                       "~s(x, k=5, bs=\"cr\")", "."),
                     nrow = 2, byrow = TRUE)
-hid_process <- MarkovChain$new(n_states = 2, structure = structure, data = data)
+hid_process <- MarkovChain$new(n_states = 2, formula = formula, data = data)
 ```
 
 If they are not specified, the parameters of the Markov chain are initialised such that all effects are zero and the diagonal elements of the transition probability matrix are 0.9.

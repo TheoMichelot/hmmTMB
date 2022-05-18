@@ -5,7 +5,7 @@ context("MarkovChain class")
 n <- 100
 data <- data.frame(x1 = rnorm(n), x2 = rnorm(n))
 f <- ~ x1 + s(x2, k = 5, bs = "cs")
-mc <- MarkovChain$new(n_states = 2, structure = f, data = data)
+mc <- MarkovChain$new(n_states = 2, formula = f, data = data)
 
 test_that("Parameter transformation functions cancel out", {
     tpm <- matrix(c(0.9, 0.1,
@@ -70,7 +70,7 @@ test_that("Update methods work", {
     expect_equal(mc$tpm()[,,1], new_tpm)
     
     # Re-initialise object
-    mc <- MarkovChain$new(n_states = 2, structure = f, data = data)
+    mc <- MarkovChain$new(n_states = 2, formula = f, data = data)
     
     # Test update of coeff_fe/re
     new_fe <- 1:4
@@ -86,7 +86,7 @@ test_that("Update methods work", {
     expect_equal(c(mc$lambda()), new_lambda)
     
     # Re-initialise object
-    mc <- MarkovChain$new(n_states = 2, structure = f, data = data)
+    mc <- MarkovChain$new(n_states = 2, formula = f, data = data)
 })
 
 test_that("delta is computed correctly", {
@@ -111,5 +111,5 @@ test_that("delta is computed correctly", {
     expect_error(mc$delta(), "singular system")
     
     # Re-initialise object
-    mc <- MarkovChain$new(n_states = 2, structure = f, data = data)
+    mc <- MarkovChain$new(n_states = 2, formula = f, data = data)
 })

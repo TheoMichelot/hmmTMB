@@ -28,7 +28,7 @@ struct <- matrix(c(".", "~ x1 + x2",
                    "~ x2", "."), 
                  ncol = 2, byrow = TRUE)
 par_hid0 <- c(-1.5, 0.2, -0.3, -3, 0.5)
-hid <- MarkovChain$new(n_states = 2, structure = struct, 
+hid <- MarkovChain$new(n_states = 2, formula = struct, 
                        data = covs)
 hid$update_coeff_fe(par_hid0)
 
@@ -46,7 +46,7 @@ par0 <- list(step = list(shape = c(0.5, 2),
 obs2 <- Observation$new(data = sim, dists = dists, 
                         n_states = n_states, par = par)
 
-hid2 <- MarkovChain$new(n_states = 2, structure = struct, data = sim)
+hid2 <- MarkovChain$new(n_states = 2, formula = struct, data = sim)
 
 mod2 <- HMM$new(obs = obs2, hidden = hid2)
 

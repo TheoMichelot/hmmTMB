@@ -38,7 +38,7 @@ HMM <- R6Class(
                                par = spec$par, 
                                formulas = spec$forms)
         hidden <- MarkovChain$new(n_states = spec$nstates, 
-                                  structure = spec$tpm, 
+                                  formula = spec$tpm, 
                                   data = spec$data, 
                                   stationary = is.null(spec$delta))
         if(!is.null(spec$delta)) hidden$update_delta(spec$delta)
@@ -553,7 +553,7 @@ HMM <- R6Class(
       
       # check for transitions that have fixed probabilities 
       # find transitions that are fixed 
-      ls_form_char <- as.list(t(self$hidden()$structure())[!diag(self$hidden()$nstates())])
+      ls_form_char <- as.list(t(self$hidden()$formula())[!diag(self$hidden()$nstates())])
       which_fixed <- sapply(ls_form_char, function(x) {x == "."})
       getnms <- rownames(self$hidden()$coeff_fe())[which_fixed]
       oldnms <- names(private$fixpar_$hid)
@@ -1706,7 +1706,7 @@ HMM <- R6Class(
     ##   \item{\code{nstates}}{Number of states}
     ##   \item{\code{dists}}{List of observation distributions}
     ##   \item{\code{forms}}{Formulas for observation model}
-    ##   \item{\code{tpm}}{Structure of hidden state model}
+    ##   \item{\code{tpm}}{Formulas of hidden state model}
     ##   \item{\code{par}}{Initial parameters for observation model}
     ##   \item{\code{tpm0}}{Initial transition probability matrix}
     ##   \item{\code{fixed}}{Fixed parameters}

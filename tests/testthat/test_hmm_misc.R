@@ -37,7 +37,7 @@ test_that("edf works in case with no smooth", {
     f <- ~ x1*x2 + I(x2^2)
     obs <- Observation$new(data = data, dists = list(z = "norm"), n_states = 2, 
                            par = par, formulas = list(z = list(mean = ~1, sd = f)))
-    hid <- MarkovChain$new(n_states = 2, data = data, structure = f)
+    hid <- MarkovChain$new(n_states = 2, data = data, formula = f)
     hmm <- HMM$new(obs = obs, hidden = hid)
     expect_equal(hmm$edf(), length(hid$coeff_fe()) + length(obs$coeff_fe()))
 })
@@ -45,7 +45,7 @@ test_that("edf works in case with no smooth", {
 # Create dummy data
 data <- data.frame(z = rnorm(100), x1 = rnorm(100), x2 = rnorm(100))
 # MarkovChain object
-hid <- MarkovChain$new(n_states = 2, structure = ~x1, data = data)
+hid <- MarkovChain$new(n_states = 2, formula = ~x1, data = data)
 # Observation object
 dists <- list(z = "norm")
 par <- list(z = list(mean = c(0, 1), sd = c(0.5, 2)))
@@ -60,8 +60,8 @@ test_that("update.HMM modifies formulas correctly", {
     hmm2 <- update(hmm, type = "hidden", i = 2, j = 1, 
                    change = ~ . + I(x2^2), fit = FALSE)
     
-    expect_equal(hmm2$hidden()$structure()[1,2], "~x1")
-    expect_equal(hmm2$hidden()$structure()[2,1], "~x1 + I(x2^2)")
+    expect_equal(hmm2$hidden()$formula()[1,2], "~x1")
+    expect_equal(hmm2$hidden()$formula()[2,1], "~x1 + I(x2^2)")
     expect_equal(hmm2$hidden()$formulas()[[1]], ~x1)
     expect_equal(hmm2$hidden()$formulas()[[2]], ~x1 + I(x2^2))
     

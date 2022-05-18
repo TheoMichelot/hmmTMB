@@ -12,12 +12,11 @@ MarkovChain <- R6Class(
     #' @description Create new MarkovChain object
     #' 
     #' @param data Data frame, needed to create model matrices
-    #' @param structure Either (1) matrix with an entry of "." on diagonal, a "0" for 
-    #' transitions that are not allowed (not implemented yet), and a formula "~1" 
-    #' for covariates affecting transitions that are to be estimated, or (2) single
-    #' formula, assumed for all transition probabilities. (Default: no covariate
-    #' dependence.)
-    #' @param n_states Number of states. If not specified, then \code{structure} 
+    #' @param formula Either (2) R formula, used for all transition probabilities, 
+    #' or (2) matrix of character strings, with an entry of "." on diagonal, 
+    #' a "0" for transitions that are not allowed (not implemented yet), 
+    #' or an R formula. (Default: no covariate dependence.)
+    #' @param n_states Number of states. If not specified, then \code{formula} 
     #' needs to be provided as a matrix, and n_states is deduced from its dimensions.
     #' @param tpm Optional transition probability matrix, to initialise the model
     #' parameters (intercepts in model with covariates). If not provided, the default 
@@ -28,32 +27,32 @@ MarkovChain <- R6Class(
     #' 
     #' @return A new MarkovChain object
     initialize = function(data,
-                          structure = NULL, 
+                          formula = NULL, 
                           n_states = NULL,
                           tpm = NULL,
                           stationary = FALSE) {
       # Check arguments
       private$check_args(n_states = n_states, 
-                         structure = structure, 
+                         formula = formula, 
                          stationary = stationary, 
                          data = data)
       
-      # Define 'structure' as matrix
-      if(is.null(structure)) {
+      # Define 'formula' as matrix
+      if(is.null(formula)) {
         # No covariate effects
-        structure <- matrix("~1", nrow = n_states, ncol = n_states)
-        diag(structure) <- "."
+        formula <- matrix("~1", nrow = n_states, ncol = n_states)
+        diag(formula) <- "."
         private$nstates_ <- n_states
       } else {
         # Covariate effects
-        if(length(structure) == 1 | inherits(structure, "formula")) {
+        if(length(formula) == 1 | inherits(formula, "formula")) {
           # Same formula for all transitions
-          structure <- matrix(format(structure), 
+          formula <- matrix(format(formula), 
                               nrow = n_states, 
                               ncol = n_states)
-          diag(structure) <- "."
+          diag(formula) <- "."
         } else {
-          n_states <- nrow(structure)
+          n_states <- nrow(formula)
         }
         
         private$nstates_ <- n_states
@@ -62,9 +61,9 @@ MarkovChain <- R6Class(
       # set whether delta to be stationary or not
       private$stationary_ <- stationary 
       
-      # Create list of formulas  ('structure' is transposed to get 
+      # Create list of formulas  ('formula' is transposed to get 
       # the formulas in the order 1>2, 1>3, ..., 2>1, 2>3, ...)
-      ls_form_char <- as.list(t(structure)[!diag(self$nstates())])
+      ls_form_char <- as.list(t(formula)[!diag(self$nstates())])
       ls_form <- lapply(ls_form_char, function(form_char) {
         if(form_char == ".")
           return(as.formula("~1"))
@@ -77,8 +76,8 @@ MarkovChain <- R6Class(
                          ">S", rep(1:n_states, n_states))
       names(ls_form) <- tr_names[-which(diag(n_states) == 1)]
       
-      # Set structure and formulas attributes
-      private$structure_ <- structure
+      # Set formula and formulas attributes
+      private$formula_ <- formula
       private$formulas_ <- ls_form
       
       # Get names of all covariates
@@ -117,8 +116,8 @@ MarkovChain <- R6Class(
 
     # Accessors ---------------------------------------------------------------
 
-    #' @description Structure of MarkovChain model
-    structure = function() {return(private$structure_)},
+    #' @description Formula of MarkovChain model
+    formula = function() {return(private$formula_)},
     
     #' @description List of formulas for MarkovChain model
     formulas = function() {return(private$formulas_)},
@@ -457,7 +456,7 @@ MarkovChain <- R6Class(
       cat("## State process model ##\n")
       cat("#########################\n")
       # Data frame of formulas on transition probabilities
-      hid_forms <- as.data.frame(self$structure())
+      hid_forms <- as.data.frame(self$formula())
       n_states <- self$nstates()
       rownames(hid_forms) <- paste0("state ", 1:n_states)
       colnames(hid_forms) <- paste0("state ", 1:n_states)
@@ -475,7 +474,7 @@ MarkovChain <- R6Class(
 
     # Private data members ----------------------------------------------------
     
-    structure_ = NULL,
+    formula_ = NULL,
     stationary_ = NULL, 
     formulas_ = NULL,
     coeff_fe_ = NULL,
@@ -487,29 +486,29 @@ MarkovChain <- R6Class(
     
     #' Check constructor arguments ##
     # (For argument description, see constructor)
-    check_args = function(n_states, structure, stationary, data) {
+    check_args = function(n_states, formula, stationary, data) {
       if(!is.null(n_states)) {
         if(!is.numeric(n_states) | n_states < 1) {
           stop("'n_states' should be a numeric >= 1")
         }        
       }
       
-      if(!is.null(structure)) {
-        if(is.matrix(structure)) {
-          if(nrow(structure) != ncol(structure)) {
-            stop("'structure' should be a square matrix")
+      if(!is.null(formula)) {
+        if(is.matrix(formula)) {
+          if(nrow(formula) != ncol(formula)) {
+            stop("'formula' should be a square matrix")
           }
           
-          if(!all(is.character(as.vector(structure)))) {
-            stop("'structure' should be a matrix of character strings")
+          if(!all(is.character(as.vector(formula)))) {
+            stop("'formula' should be a matrix of character strings")
           }
           
-          if (!all(diag(structure) == ".")) {
-            stop("Diagonal of structure should be '.'")
+          if (!all(diag(formula) == ".")) {
+            stop("Diagonal of formula should be '.'")
           }
           
-        } else if(!inherits(structure, "formula")) {
-          stop("'structure' should be either a matrix or a formula")
+        } else if(!inherits(formula, "formula")) {
+          stop("'formula' should be either a matrix or a formula")
         }
       }
       
