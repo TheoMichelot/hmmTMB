@@ -897,8 +897,10 @@ HMM <- R6Class(
     #' @return Matrix of pseudo-residuals, with one row for each response variable
     #' and one column for each observation
     pseudores = function() {
-      n <- nrow(self$obs()$data())  
+      n <- nrow(self$obs()$data())
+      cat("Computing conditional CDFs... ")
       cond <- self$cond(silent = TRUE)
+      cat("DONE\n")
       pdfs <- cond$pdfs
       grids <- cond$grids
       vars <- self$obs()$obs_var()
@@ -914,6 +916,7 @@ HMM <- R6Class(
       r <- matrix(0, nr = nvars, nc = n)
       rownames(r) <- varnms 
       for (v in 1:nvars) {
+        cat("Computing residuals for", varnms[v], "... ")
         for (i in 1:length(vars[,v])) {
           if (is.na(vars[i, v])) {
             r[v, i] <- NA
@@ -930,6 +933,7 @@ HMM <- R6Class(
           val <- (val + cdfs[[v]][i, wh2]) / 2
           r[v, i] <- qnorm(val - 1e-16)
         }
+        cat("DONE\n")
       }
       return(r)
     }, 
