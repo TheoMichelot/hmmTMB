@@ -154,7 +154,7 @@ cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid
 #' @return TRUE if it is a whole number within tolerance 
 #' @export
 is_whole_number <- function(x, tol = 1e-10) {
-  y <- floor(x)
+  y <- round(x)
   return(all(abs(x - y) < tol, na.rm = TRUE))
 }
 
