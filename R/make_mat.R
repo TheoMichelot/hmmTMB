@@ -87,15 +87,17 @@ make_matrices = function(formulas, data, new_data = NULL) {
         # where does this smooth's parameters start and end?
         sub_ncol_re[, (start_s:(start_s + npen - 1))] <- c(start, start + npar - 1)
         colnames(sub_ncol_re)[start_s:(start_s + npen - 1)] <- rep(gam_setup$smooth[[s]]$label, npen)
-        # get names of these parameters
-        s_terms <- gsub("(.*)\\..*", "\\1", subnames_re, sub_ncol_re[1, s], sub_ncol_re[2, s])
-        names_ncol_re <- c(names_ncol_re, rep(s_terms, npen))
+        # get names of smooth terms
+        # regex from datascience.stackexchange.com/questions/8922
+        s_terms <- gsub("(.*)\\..*", "\\1", names_re[sub_ncol_re[1, s]:sub_ncol_re[2, s]])
+        names_ncol_re <- c(names_ncol_re, rep(unique(s_terms), npen))
         start <- start + npar
         start_s <- start_s + npen
       }
       ncol_re <- cbind(ncol_re, sub_ncol_re)
     }    
   }
+  colnames(ncol_re) <- names_ncol_re
   
   # Store as block diagonal matrices
   X_fe <- bdiag_check(X_list_fe)
