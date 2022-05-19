@@ -96,7 +96,7 @@ MarkovChain <- R6Class(
       ncol_re <- mats$ncol_re       
       private$terms_ <- c(mats, list(names_fe = colnames(mats$X_fe),
                                      names_re_all = colnames(mats$X_re),
-                                     names_re = names(ncol_re)))
+                                     names_re = colnames(ncol_re)))
       
       # Initialise coeff_fe and coeff_re to 0
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
