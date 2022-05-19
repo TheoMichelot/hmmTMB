@@ -7,7 +7,7 @@ HMM <- R6Class(
   classname = "HMM",
   
   public = list(
-
+    
     # Constructor -------------------------------------------------------------
     #' @description Create new HMM object
     #' 
@@ -51,7 +51,7 @@ HMM <- R6Class(
       
       # Get names of all covariates
       var_names <- unique(c(rapply(hidden$formulas(), all.vars), 
-                          rapply(obs$formulas(), all.vars)))
+                            rapply(obs$formulas(), all.vars)))
       # Remove pi from list of covariates if it is in the formulas
       var_names <- var_names[which(var_names!="pi")]
       if(length(var_names) > 0) {
@@ -73,22 +73,22 @@ HMM <- R6Class(
       # initialize model parameters if init provided 
       if (!is.null(init)) {
         private$obs_$update_coeff_fe(private$initialize_submodel(private$obs_$coeff_fe(), 
-                                                         init$obs()$coeff_fe()))
+                                                                 init$obs()$coeff_fe()))
         private$obs_$update_coeff_re(private$initialize_submodel(private$obs_$coeff_re(), 
-                                                         init$obs()$coeff_re()))
+                                                                 init$obs()$coeff_re()))
         private$hidden_$update_coeff_fe(private$initialize_submodel(private$hidden_$coeff_fe(), 
-                                                         init$hidden()$coeff_fe()))
+                                                                    init$hidden()$coeff_fe()))
         private$hidden_$update_coeff_re(private$initialize_submodel(private$hidden_$coeff_re(), 
-                                                            init$hidden()$coeff_re()))
+                                                                    init$hidden()$coeff_re()))
       }
       
       # initialize priors 
       self$set_priors()
     },
     
-
+    
     # Accessors ---------------------------------------------------------------
-
+    
     #' @description Observation object for this model
     obs = function() {return(private$obs_)},
     
@@ -350,9 +350,9 @@ HMM <- R6Class(
         log_lambda_hid_prior <- matrix(NA, nr = length(lam$hidden), nc = 2)
       }
       private$priors_ <- list(coeff_fe_obs = coeff_fe_obs_prior, 
-                     coeff_fe_hid = coeff_fe_hid_prior, 
-                     log_lambda_obs = log_lambda_obs_prior, 
-                     log_lambda_hid = log_lambda_hid_prior)
+                              coeff_fe_hid = coeff_fe_hid_prior, 
+                              log_lambda_obs = log_lambda_obs_prior, 
+                              log_lambda_hid = log_lambda_hid_prior)
       # Setup if necessary
       if(!is.null(private$tmb_obj_)) {
         self$setup(silent = TRUE)
@@ -448,9 +448,9 @@ HMM <- R6Class(
       
       return(edf)
     },
-
+    
     # Model fitting -----------------------------------------------------------
-
+    
     #' @description TMB setup
     #' 
     #' This creates an attribute \code{tmb_obj}, which can be used to 
@@ -580,7 +580,7 @@ HMM <- R6Class(
           map <- c(map, ls)
         }
       }
-
+      
       # Setup random effects in hidden state model
       if(is.null(S_hid)) {
         # If there are no random effects, 
@@ -777,7 +777,7 @@ HMM <- R6Class(
       return(par_list)
     }, 
     
-
+    
     # Forward-backward probabilities ------------------------------------------
     
     #' @description Forward-backward algorithm 
@@ -822,9 +822,9 @@ HMM <- R6Class(
       }
       return(list(logforward = lforw, logbackward = lback))
     }, 
-  
+    
     # Conditional distributions -----------------------------------------------
-
+    
     #' @description Compute conditional cumulative distribution functions 
     #' 
     #' @param ngrid how many cells on the grid that CDF is computed on 
@@ -887,7 +887,7 @@ HMM <- R6Class(
     }, 
     
     # Pseudo-residuals --------------------------------------------------------
-
+    
     #' @description Pseudo-residuals
     #' 
     #' @details Compute pseudo-residuals for the fitted model. If the fitted model
@@ -933,7 +933,7 @@ HMM <- R6Class(
       }
       return(r)
     }, 
-  
+    
     # State estimation --------------------------------------------------------
     
     #' @description Viterbi algorithm
@@ -1006,11 +1006,11 @@ HMM <- R6Class(
     #' @description Sample posterior state sequences using forward-filtering
     #' backward-sampling 
     #' 
-    #' @param nsamp number of samples to produce 
-    #' @param full if TRUE and model fit by mcmc then parameter estimates are 
+    #' @param nsamp Number of samples to produce 
+    #' @param full If TRUE and model fit by mcmc then parameter estimates are 
     #' sampled from the posterior samples before simulating each sequence 
     #' 
-    #' @return matrix where each column is a different sample of state sequences 
+    #' @return Matrix where each column is a different sample of state sequences 
     sample_states = function(nsamp = 1, full = FALSE) {
       if (full & is.null(private$mcmc_)) stop("must fit model with $mcmc first")
       if (full) {
@@ -1023,41 +1023,50 @@ HMM <- R6Class(
       actual_samps <- max(n_full_samp, nsamp)
       n <- nrow(self$obs()$data())
       states <- matrix(0, nr = n, nc = actual_samps)
+      
+      # Loop over posterior draws if full = TRUE
       for (k in 1:n_full_samp) {
-        # sample a parameter iteration at random, if FULL asked for 
-        if (full) self$update_par(iter = sample(1:nrow(mod$iters()), size = 1))
-        # get forward-backward probabilities 
+        if (full) {
+          # Sample a parameter iteration at random
+          self$update_par(iter = sample(1:nrow(mod$iters()), size = 1))
+        }
+        
+        # Get forward-backward probabilities 
         fb <- self$forward_backward()
-        # get tpms 
+        # Get tpms 
         tpms <- self$hidden()$tpm(t = "all")
-        # get observation probabilities
+        # Get observation probabilities
         obsprobs <- self$obs()$obs_probs()
-        # get number of observations per individual 
+        # Get number of observations per individual 
         ni <- as.numeric(table(self$obs()$data()$ID))
         cumn <- cumsum(ni)
+        
+        # Loop over time series / individuals
         for (ind in 1:length(ni)) {
           m <- cumn[ind]
-          # sample last state
+          
+          # Sample last state
           L <- logsumexp(fb$logforward[,m])
           prob <- exp(fb$logforward[,m] - L)
           prob <- prob / sum(prob)
           if (full) {
-            states[m,k] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
+            states[m,k] <- sample(1:nstates, prob = prob, 
+                                  size = nsamp, replace = TRUE)
           } else {
-            states[m,] <- sample(1:nstates, prob = prob, size = nsamp, replace = TRUE)
+            states[m,] <- sample(1:nstates, prob = prob, 
+                                 size = nsamp, replace = TRUE)
           }
-          # sample backward
+          
+          # Sample backward
           for (s in 1:nsamp) {
             for (i in 1:(ni[ind] - 1)) {
-              lprob <- fb$logforward[, m - i] + log(tpms[, states[m - i + 1, s], m - i]) + 
-                log(obsprobs[m - i + 1, states[m - i + 1, s]]) + fb$logbackward[states[m - i + 1, s], m - i + 1] - L 
+              lprob <- fb$logforward[, m - i] + 
+                log(tpms[, states[m - i + 1, s], m - i]) + 
+                log(obsprobs[m - i + 1, states[m - i + 1, s]]) + 
+                fb$logbackward[states[m - i + 1, s], m - i + 1] - L 
               lprob <- lprob - logsumexp(lprob)
               prob <- exp(lprob)
-              if (full) {
-                index <- k
-              } else {
-                index <- s 
-              }
+              index <- ifelse(full, k, s)
               states[m - i, index] <- sample(1:nstates, prob = prob, size = 1)
             }
           }
@@ -1135,7 +1144,7 @@ HMM <- R6Class(
       hidpars_fe <- pars[,which(colnames(pars) == "coeff_fe_hid")]
       obspars_re <- pars[,which(colnames(pars) == "coeff_re_obs")]
       hidpars_re <- pars[,which(colnames(pars) == "coeff_re_hid")]
-    
+      
       lp <- NULL
       lp$obs <- matrix(0, nr = n_post, nc = nrow(self$obs()$X_fe()))
       lp$hidden <- matrix(0, nr = n_post, nc = nrow(self$hidden()$X_fe()))
@@ -1241,18 +1250,18 @@ HMM <- R6Class(
       comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
       
       if (n_post == 0) {
-          # just return predicted means if no confidence intervals wanted 
+        # just return predicted means if no confidence intervals wanted 
         val <- fn(linpred = self[[comp]]()$linpred(), t = t)
       } else {
-          # return means and confidence intervals
-          sim <- self$post_fn(fn = fn, 
-                              n_post = n_post, 
-                              comp = comp, 
-                              t = t,
-                              level = level)
-          val <- sim          
+        # return means and confidence intervals
+        sim <- self$post_fn(fn = fn, 
+                            n_post = n_post, 
+                            comp = comp, 
+                            t = t,
+                            level = level)
+        val <- sim          
       }
-
+      
       # Reset to original model matrices
       if (!is.null(newdata)) {
         self$obs()$update_X_fe(old$X_fe_obs)
@@ -1403,7 +1412,7 @@ HMM <- R6Class(
       return(list(obs_stat = obs_stat, stats = stats, plot = p))
     }, 
     
-
+    
     # Plotting ----------------------------------------------------------------
     
     #' @description Time series plot coloured by states
@@ -1636,7 +1645,7 @@ HMM <- R6Class(
       
       return(aic)
     },
-
+    
     # Print methods -----------------------------------------------------------
     #' @description Print observation parameters at t = 1
     print_obspar = function() {
@@ -1661,13 +1670,13 @@ HMM <- R6Class(
       print(round(par$tpm[,,1], 3))
       cat("\n")
     },
-
+    
     #' @description Print model formulation    
     formulation = function() {
       self$obs()$formulation()
       self$hidden()$formulation()
     },
-        
+    
     #' @description Print HMM object
     print = function() {
       self$obs()$formulation()
@@ -1678,7 +1687,7 @@ HMM <- R6Class(
   ),
   
   private = list(
-
+    
     # Private data members ----------------------------------------------------
     obs_ = NULL,
     hidden_ = NULL,
@@ -1737,7 +1746,7 @@ HMM <- R6Class(
       } else {
         stop("DATA block is missing from model specification")
       }
-        
+      
       # DISTS 
       if ("DISTRIBUTION" %in% read_nms) {
         dist_block <- private$read_block("DISTRIBUTION", wh_blocks, spec)
@@ -1764,7 +1773,7 @@ HMM <- R6Class(
       } else {
         tpm <- NULL
       }
-        
+      
       # INITIAL
       if ("INITIAL" %in% read_nms) {
         ini_block <- private$read_block("INITIAL", wh_blocks, spec)
