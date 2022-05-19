@@ -1010,7 +1010,14 @@ HMM <- R6Class(
     #' @param full If TRUE and model fit by mcmc then parameter estimates are 
     #' sampled from the posterior samples before simulating each sequence 
     #' 
-    #' @return Matrix where each column is a different sample of state sequences 
+    #' @details The forward-filtering backward-sampling algorithm returns a
+    #' sequence of states, similarly to the Viterbi algorithm, but it generates
+    #' it from the posterior distribution of state sequences, i.e., accounting
+    #' for uncertainty in the state classification. Multiple generated sequences
+    #' will therefore generally not be the same.
+    #' 
+    #' @return Matrix where each column is a different sample of state sequences,
+    #' and each row is a time of observation
     sample_states = function(nsamp = 1, full = FALSE) {
       if (full & is.null(private$mcmc_)) stop("must fit model with $mcmc first")
       if (full) {
