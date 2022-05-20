@@ -271,34 +271,37 @@ HMM <- R6Class(
       return(list(obspar = obspar, tpm = tpm))
     },
     
-    #' @description Suggest initial parameters for the model based on kmeans
-    #' clustering 
+    #' @description Suggest initial observation parameters
     #' 
-    #' @return list of initial parameters for each observation variable 
+    #' The K-means algorithm is used to define clusters of observations
+    #' (supposed to approximate the HMM states). Then, for each cluster,
+    #' the \code{parapprox} function of the relevant \code{Dist} object
+    #' is used to obtain parameter values.
+    #' 
+    #' @return List of initial parameters for each observation variable 
     suggest_initial = function() {
-      # remove NAs and do clustering
+      n_states <- self$hidden()$nstates()
+      
+      # Remove NAs and do clustering
       var_noNA <- na.omit(self$obs()$obs_var(expand = TRUE))
       wh_noNA <- attr(var_noNA, "row.names")
-      cluster <- kmeans(var_noNA, centers = self$hidden()$nstates())
+      cluster <- kmeans(var_noNA, centers = n_states, nstart = 100)
       states <- cluster$cluster
       
-      # get current parameters 
-      current_par <- self$obs()$par(t = 1, full_names = FALSE)[,,1]
-      # handle one parameter case
-      if (is.null(dim(current_par))) {
-        current_par <- matrix(current_par, nc = length(current_par))
-      }
-      par_count <- 1 
+      # Get current parameters 
+      current_par <- matrix(self$obs()$par(t = 1, full_names = FALSE)[,,1],
+                            ncol = n_states)
       
-      # initial observation parameters 
+      # Initialise list of suggested parameters 
       par <- vector(mode = "list", length = ncol(self$obs()$obs_var()))
       names(par) <- colnames(self$obs()$obs_var())
       
-      # loop over observed variables 
+      # Loop over observed variables 
+      par_count <- 1 
       for (i in 1:length(self$obs()$dists())) {
         var <- self$obs()$obs_var()[wh_noNA, i]
         
-        # possibly pass fixed parameters to parapprox function within dist
+        # Possibly pass fixed parameters to parapprox function within dist
         par_ind <- par_count:(par_count + self$obs()$dists()[[i]]$npar() - 1)
         sub_current_par <- current_par[par_ind,,drop=FALSE]
         sub_current_par <- sub_current_par[self$obs()$dists()[[i]]$fixed(),,
@@ -306,10 +309,13 @@ HMM <- R6Class(
         npar <- self$obs()$dists()[[i]]$npar()
         subpar <- vector(mode = "list", length = npar)
         
-        for (j in 1:self$hidden()$nstates()) {
+        # For each state, use parapprox() to suggest parameters
+        for (j in 1:n_states) {
           args <- c(list(x = var[states == j]), as.list(sub_current_par[,j]))
           approx <- do.call(self$obs()$dists()[[i]]$parapprox(), args)
-          for (k in 1:npar) subpar[[k]] <- c(subpar[[k]], approx[k])
+          for (k in 1:npar) {
+            subpar[[k]] <- c(subpar[[k]], approx[k])
+          }
         }
         
         par_count <- par_count + self$obs()$dists()[[i]]$npar()
