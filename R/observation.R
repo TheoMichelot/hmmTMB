@@ -571,7 +571,7 @@ Observation <- R6Class(
       # Matrix of parameters
       par <- matrix(unlist(self$par(t = t, as_list = TRUE)[[1]][[name]]), 
                     nrow = self$nstates())
-      colnames(par) <- names(self$dists()[[name]]$link())
+      colnames(par) <- self$dists()[[name]]$parnames()
       
       # Weights for each state-dependent distribution
       if(is.null(weights)) weights <- rep(1, self$nstates())
