@@ -57,7 +57,7 @@ std::unique_ptr<Dist<Type>> dist_generator(const int& code) {
   case 21: 
     return(std::unique_ptr<Dist<Type>>(new Dirichlet<Type>));
   case 22: 
-    return(std::unique_ptr<Dist<Type>>(new AltGamma<Type>));
+    return(std::unique_ptr<Dist<Type>>(new Gamma2<Type>));
   case 23: 
     return(std::unique_ptr<Dist<Type>>(new WrpCauchy<Type>));
   case 24: 

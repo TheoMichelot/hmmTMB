@@ -488,10 +488,10 @@ public:
 };
 
 template<class Type> 
-class AltGamma : public Dist<Type> {
+class Gamma2 : public Dist<Type> {
 public:
   // Constructor
-  AltGamma() {}; 
+  Gamma2() {}; 
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 

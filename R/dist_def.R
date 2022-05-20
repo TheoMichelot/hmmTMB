@@ -367,7 +367,7 @@ dist_lnorm <- Dist$new(
   }
 )
 
-# Gamma ========================================
+# Gamma (shape, scale) ========================================
 dist_gamma <- Dist$new(
   name = "gamma", 
   pdf = dgamma,
@@ -377,19 +377,18 @@ dist_gamma <- Dist$new(
   npar = 2, 
   parnames = c("shape", "scale"), 
   parapprox = function(x) {
-    # use log-moment estimators 
-    n <- length(x)
-    lx <- log(x)
-    tmp <- n * sum(x * lx) - sum(lx) * sum(x)
-    shape <- n * sum(x) / tmp
-    scale <- tmp / n^2 
+    # method of moments estimators
+    mean <- mean(x)
+    sd <- sd(x)
+    scale <- sd^2 / mean 
+    shape <- mean / scale 
     return(c(shape, scale))
   }
 )
 
-# AltGamma ========================================
-dist_altgamma <- Dist$new(
-  name = "altgamma", 
+# Gamma (mean, sd) ========================================
+dist_gamma2 <- Dist$new(
+  name = "gamma2", 
   pdf = function(x, mean, sd, log = FALSE) {
     scale <- sd^2 / mean 
     shape <- mean / scale 
@@ -406,14 +405,9 @@ dist_altgamma <- Dist$new(
   npar = 2, 
   parnames = c("mean", "sd"), 
   parapprox = function(x) {
-    # use log-moment estimators 
-    n <- length(x)
-    lx <- log(x)
-    tmp <- n * sum(x * lx) - sum(lx) * sum(x)
-    shape <- n * sum(x) / tmp
-    scale <- tmp / n^2 
-    mean <- shape * scale 
-    sd <- sqrt(shape) * scale  
+    # method of moments estimators
+    mean <- mean(x)
+    sd <- sd(x)
     return(c(mean, sd))
   }
 )
@@ -439,12 +433,11 @@ dist_zigamma <- Dist$new(
     parapprox = function(x) {
         z <- length(which(x < 1e-10))/length(x)
         y <- x[which(x > 1e-10)]
-        # use log-moment estimators 
-        n <- length(y)
-        ly <- log(y)
-        tmp <- n * sum(y * ly) - sum(ly) * sum(y)
-        shape <- n * sum(y) / tmp
-        scale <- tmp / n^2 
+        # method of moments estimators
+        mean <- mean(y)
+        sd <- sd(y)
+        scale <- sd^2 / mean 
+        shape <- mean / scale 
         return(c(shape, scale, z))
     }
 )
@@ -474,14 +467,9 @@ dist_zigamma2 <- Dist$new(
   parapprox = function(x) {
     z <- length(which(x < 1e-10))/length(x)
     y <- x[which(x > 1e-10)]
-    # use log-moment estimators 
-    n <- length(y)
-    ly <- log(y)
-    tmp <- n * sum(y * ly) - sum(ly) * sum(y)
-    shape <- n * sum(y) / tmp
-    scale <- tmp / n^2
-    mean <- shape * scale
-    sd <- shape * scale^2
+    # method of moments estimators
+    mean <- mean(y)
+    sd <- sd(y)
     return(c(mean, sd, z))
   }
 )
@@ -757,7 +745,7 @@ dist_list <- list(pois = dist_pois,
                   tweedie = dist_tweedie, 
                   mvnorm = dist_mvnorm, 
                   dir = dist_dir, 
-                  altgamma = dist_altgamma,
+                  gamma2 = dist_gamma2,
                   wrpcauchy = dist_wrpcauchy,
                   zigamma = dist_zigamma,
                   zigamma2 = dist_zigamma2)
