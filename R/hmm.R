@@ -1470,14 +1470,24 @@ HMM <- R6Class(
       return(p)
     },
     
-    #' Wrapped for obs$plot_dist that weights by initial distribution 
+    #' Plot observation distributions weighted by frequency in Viterbi 
     #'
-    #' @param name data stream 
+    #' @param name Name of data variable
+    #' 
+    #' @details This is a wrapper around Observation$plot_dist, where the
+    #' distribution for each state is weighted by the proportion of time
+    #' spent in that state (according to the Viterbi state sequence).
     #'
-    #' @return plot of distribution with data underneath 
+    #' @return Plot of distribution with data histogram 
     #' @export
     plot_dist = function(name) {
-      return(self$obs()$plot_dist(name, weights = self$hidden()$delta()))
+      if(is.null(private$states_)) {
+        self$viterbi()
+      }
+      # Proportion of time spent in each state
+      weights <- sapply(1:self$hidden()$nstates(), function(s) 
+        length(which(self$states() == s))/length(self$states()))
+      return(self$obs()$plot_dist(name, weights = weights))
     },
     
     #' @description Plot a model component 
