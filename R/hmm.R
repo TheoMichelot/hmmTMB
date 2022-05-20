@@ -890,7 +890,7 @@ HMM <- R6Class(
     
     #' @description Pseudo-residuals
     #' 
-    #' @details Compute pseudo-residuals for the fitted model. If the fitted model
+    #' Compute pseudo-residuals for the fitted model. If the fitted model
     #' is the "true" model, the pseudo-residuals follow a standard normal distribution.
     #' Deviations from normality suggest lack of fit.
     #' 
@@ -1438,6 +1438,10 @@ HMM <- R6Class(
     #' 
     #' @return A ggplot object
     plot_ts = function(var1, var2 = NULL) {
+      if(is.null(private$states_)) {
+        self$viterbi()
+      }
+      
       # Data frame for plot
       data <- self$obs()$data()
       # State sequence as factor
