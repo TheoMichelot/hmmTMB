@@ -243,18 +243,21 @@ HMM <- R6Class(
       }
     }, 
     
-    #' @description Variance components of smooth terms
+    #' @description Standard deviation of smooth terms (or random effects)
     #' 
     #' This function transforms the smoothness parameter of
     #' each smooth term into a standard deviation, given by 
     #' SD = 1/sqrt(lambda). It is particularly helpful to get the
     #' standard deviations of independent normal random effects.
-    vcomp = function() {
+    #' 
+    #' @return List of standard deviations for observation model and
+    #' hidden state model.
+    sd_re = function() {
       if(is.null(private$tmb_rep_)) {
         stop("fit model first")
       }
-      return(list(obs = self$obs()$vcomp(),
-                  hidden = self$hidden()$vcomp()))
+      return(list(obs = self$obs()$sd_re(),
+                  hidden = self$hidden()$sd_re()))
     },
     
     #' @description Model parameters
