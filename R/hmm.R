@@ -69,7 +69,7 @@ HMM <- R6Class(
       
       # store fixed parameter 
       private$fixpar_user_ <- private$fixpar_ <- fixpar 
-    
+      
       if (!is.null(init)) {
         # Copy parameters with matching names from 'init' model
         private$obs_$update_coeff_fe(
@@ -1759,7 +1759,7 @@ HMM <- R6Class(
     
     ## @description Read model specification files
     ## 
-    ## @param file file location 
+    ## @param file File location 
     ## 
     ## @return List with elements:
     ## \itemize{
@@ -1773,17 +1773,20 @@ HMM <- R6Class(
     ##   \item{\code{fixed}}{Fixed parameters}
     ## }
     read_file = function(file) {
-      if (!file.exists(file)) stop("model specification file does not exist in this location:", file)
-      spec <- scan(file = file, 
+      if (!file.exists(file)) {
+        stop("model specification file does not exist:", file)
+      }
+      # Vector with one element for each line of 'file'
+      spec <- scan(file = file,
                    character(), 
                    sep = "\n", 
                    strip.white = TRUE, 
                    quiet = TRUE)
-      # remove comments
+      # Remove comments
       spec <- strip_comments(spec)
-      # block names 
+      # Block names 
       blocknms <- c("DATA", "DISTRIBUTION", "FORMULA", "TPM", "INITIAL", "FIXED")
-      # find blocks
+      # Find blocks
       wh_blocks <- sapply(blocknms, FUN = function(b) {grep(b, spec)})
       wh_blocks <- unlist(wh_blocks[sapply(wh_blocks, length) > 0])
       wh_blocks <- sort(wh_blocks)
@@ -1863,6 +1866,9 @@ HMM <- R6Class(
     }, 
     
     ## @description Read a specified block in a model specification file 
+    ## 
+    ## Subset specification file, passed as vector with one string
+    ## for each line, to only keep lines corresponding to specified block.
     read_block = function(name, wh_blocks, spec) {
       find <- which(names(wh_blocks) == name)
       start_block <- wh_blocks[find] + 1 
@@ -1872,8 +1878,8 @@ HMM <- R6Class(
     }, 
     
     ## @description Separate left hand side and right hand side variables from a equation 
-    ## @param x character vector of equations 
-    ## @return list of left hand sides (lhs) and right hand sides (rhs)
+    ## @param x Character vector of equations 
+    ## @return List of left hand sides (lhs) and right hand sides (rhs)
     read_equals = function(x) {
       rhs <- str_trim(gsub(".*=", "", x))
       lhs <- str_trim(gsub("=.*", "", x))
@@ -1881,8 +1887,8 @@ HMM <- R6Class(
     }, 
     
     ## @description Read distribution block 
-    ## @param dist character vector of distribtion block 
-    ## @return list of distributions 
+    ## @param dist Character vector of distribution block 
+    ## @return List of distributions 
     read_dists = function(dists) {
       ds <- strsplit(dists, "\n")
       terms <- sapply(ds, FUN = function(x) {all.vars(as.formula(x))})
@@ -1892,49 +1898,57 @@ HMM <- R6Class(
     }, 
     
     ## @description Read both formula and initial blocks 
-    ## @param forms character vector of block to read
-    ## @param ini if TRUE then read as if it is initial block otherwise assume it
+    ## @param forms Character vector of block to read
+    ## @param ini If TRUE then read as if it is initial block otherwise assume it
     ## is the formula block 
     read_forms = function(forms, ini = FALSE, nstates = NULL) {
-      # find variables 
-      wh_vars <- grep(":", forms)
-      vars <- str_trim(gsub(":", "", forms[wh_vars]))
       par <- NULL
       tpm0 <- NULL
       delta <- NULL
+      
+      # Find variables 
+      wh_vars <- grep(":", forms)
+      vars <- str_trim(gsub(":", "", forms[wh_vars]))
+      
+      # Loop over variables
       for (i in 1:length(vars)){
-        # find sub-block of formula/initial values for that variable 
+        # Find sub-block of formula/initial values for that variable 
         if (i < length(vars)) {
           end <- wh_vars[i + 1] - 1
         } else {
           end <- length(forms)
         }
         subforms <- forms[(wh_vars[i] + 1):end]
+        
         if (str_trim(vars[i]) == "tpm") {
+          # Read transition probability matrix
           nstates <- length(subforms)
           tpm0 <- matrix(0, nr = nstates, nstates)
           for (s in 1:nstates) {
             tpm0[s,] <- as.numeric(strsplit(subforms[s], ",")[[1]])
           }
         } else if (str_trim(vars[i]) == "delta") {
+          # Read initial distribution
           delta <- as.numeric(strsplit(subforms, ",")[[1]])
         } else {
+          # Read observation parameters
           subpar <- NULL
           subparnms <- NULL
+          
+          # Loop over parameters
           for (j in 1:length(subforms)) {
-            # get parameter name 
-            if (ini) {
-              par_name <- str_trim(gsub("\\=.*", "", subforms[j]))
-            } else{
-              par_name <- str_trim(gsub("\\~.*", "", subforms[j]))
-            }
-            # get rhs of formula or initial values 
+            # Get parameter name
+            pattern <- ifelse(ini, "\\=.*", "\\~.*")
+            par_name <- str_trim(gsub(pattern, "", subforms[j]))
+            
+            # Get rhs of formula or initial values 
             if (ini){
               par_ini <- as.numeric(str_split(sub(".*\\=", "", subforms[j]), ",")[[1]])
               if (length(par_ini) == 1) par_ini <- rep(par_ini, nstates)
             } else {
               par_ini <- as.formula(paste0("~", gsub(".*\\~", "", subforms[j])))
             }
+            
             subparnms <- c(subparnms, par_name)
             subpar <- c(subpar, list(par_ini))
           }
@@ -1942,6 +1956,7 @@ HMM <- R6Class(
           par <- c(par, list(subpar))
         }
       }
+      
       names(par) <- vars[!(vars %in% c("tpm", "delta"))]
       if (ini) {
         res <- list(par = par, tpm0 = tpm0, delta = delta)
