@@ -782,44 +782,62 @@ HMM <- R6Class(
     
     #' @description Forward-backward algorithm 
     #' 
-    #' @return log-forward and log-backward probabilities 
+    #' The forward probability for time step t and state j 
+    #' is the joint pdf/pmf of observations up to time t and of being in
+    #' state j at time t, p(Z[1], Z[2], ..., Z[t], S[t] = j).
+    #' The backward probability for time t and state j is the
+    #' conditional pdf/pmf of observations between time t + 1 and n,
+    #' given state j at time t, p(Z[t+1], Z[t+2], ..., Z[n] | S[t] = j).
+    #' This function returns their logarithm, for use in other methods
+    #' \code{state_probs}, and \code{sample_states}
+    #' 
+    #' @return Log-forward and log-backward probabilities 
     forward_backward = function() {
       delta <- self$hidden()$delta() 
       n <- nrow(self$obs()$data())
-      ni <- as.numeric(table(self$obs()$data()$ID))
-      lforw <- lback <- matrix(0, nr = self$hidden()$nstates(), nc = n)
-      # get observation probabilities 
+      n_by_ID <- as.numeric(table(self$obs()$data()$ID))
+      
+      # State-dependent probabilities 
       obsprobs <- self$obs()$obs_probs()
-      # get tpms 
+      # Transition probability matrices 
       tpms <- self$hidden()$tpm(t = "all")
-      # forward algorithm 
+      
+      # Initialise log-forward/backward probabilities
+      lforw <- matrix(0, nr = self$hidden()$nstates(), nc = n)
+      lback <- matrix(0, nr = self$hidden()$nstates(), nc = n)
+      
+      # Loop over ID (time series)
       k <- 1 
-      for (ind in 1:length(ni)) {
+      for (ind in 1:length(n_by_ID)) {
+        # Forward algorithm 
         p <- delta * obsprobs[k,]
         psum <- sum(p)
         llk <- log(psum)
         p <- p / psum
         lforw[, k] <- log(p) + llk
-        for (i in 2:ni[ind]) {
+        for (i in 2:n_by_ID[ind]) {
           p <- p %*% tpms[, , k + i - 2] * obsprobs[k + i - 1, ]
           psum <- sum(p)
           llk <- llk + log(psum)
           p <- p / psum
           lforw[, k + i - 1] <- log(p) + llk 
         }
-        # backward algorithm
-        lback[, k + ni[ind] - 1] <- rep(0, self$hidden()$nstates())
+        
+        # Backward algorithm
+        lback[, k + n_by_ID[ind] - 1] <- rep(0, self$hidden()$nstates())
         p <- rep(1 / self$hidden()$nstates(), self$hidden()$nstates())
         llk <- log(self$hidden()$nstates())
-        for (i in (ni[ind] - 1):1) {
+        for (i in (n_by_ID[ind] - 1):1) {
           p <- tpms[, , k + i - 1] %*% (obsprobs[k + i, ] * p)
           lback[, k + i - 1] <- log(p) + llk
           psum <- sum(p)
           p <- p / psum
           llk <- llk + log(psum)
         }
-        k <- k + ni[ind]
+        
+        k <- k + n_by_ID[ind]
       }
+      
       return(list(logforward = lforw, logbackward = lback))
     }, 
     
@@ -1049,11 +1067,11 @@ HMM <- R6Class(
         # Get observation probabilities
         obsprobs <- self$obs()$obs_probs()
         # Get number of observations per individual 
-        ni <- as.numeric(table(self$obs()$data()$ID))
-        cumn <- cumsum(ni)
+        n_by_ID <- as.numeric(table(self$obs()$data()$ID))
+        cumn <- cumsum(n_by_ID)
         
         # Loop over time series / individuals
-        for (ind in 1:length(ni)) {
+        for (ind in 1:length(n_by_ID)) {
           m <- cumn[ind]
           
           # Sample last state
@@ -1070,7 +1088,7 @@ HMM <- R6Class(
           
           # Sample backward
           for (s in 1:nsamp) {
-            for (i in 1:(ni[ind] - 1)) {
+            for (i in 1:(n_by_ID[ind] - 1)) {
               lprob <- fb$logforward[, m - i] + 
                 log(tpms[, states[m - i + 1, s], m - i]) + 
                 log(obsprobs[m - i + 1, states[m - i + 1, s]]) + 
@@ -1093,17 +1111,17 @@ HMM <- R6Class(
       delta <- self$hidden()$delta
       n <- nrow(self$obs()$data())
       nstates <- self$hidden()$nstates()
-      ni <- as.numeric(table(self$obs()$data()$ID))
-      cn <- cumsum(ni)
+      n_by_ID <- as.numeric(table(self$obs()$data()$ID))
+      cn <- cumsum(n_by_ID)
       fb <- self$forward_backward()
       pr_state <- matrix(0, nr = n, nc = nstates)
       k <- 0 
-      for (ind in 1:length(ni)) {
+      for (ind in 1:length(n_by_ID)) {
         llk <- logsumexp(fb$logforward[,cn[ind]])
-        for (i in 1:ni[ind]) {
+        for (i in 1:n_by_ID[ind]) {
           pr_state[k + i,] <- exp(fb$logforward[, k + i] + fb$logbackward[,k + i] - llk)
         }
-        k <- k + ni[ind]
+        k <- k + n_by_ID[ind]
       }
       return(pr_state)
     }, 
