@@ -69,17 +69,17 @@ HMM <- R6Class(
       
       # store fixed parameter 
       private$fixpar_user_ <- private$fixpar_ <- fixpar 
-      
-      # initialize model parameters if init provided 
+    
       if (!is.null(init)) {
-        private$obs_$update_coeff_fe(private$initialize_submodel(private$obs_$coeff_fe(), 
-                                                                 init$obs()$coeff_fe()))
-        private$obs_$update_coeff_re(private$initialize_submodel(private$obs_$coeff_re(), 
-                                                                 init$obs()$coeff_re()))
-        private$hidden_$update_coeff_fe(private$initialize_submodel(private$hidden_$coeff_fe(), 
-                                                                    init$hidden()$coeff_fe()))
-        private$hidden_$update_coeff_re(private$initialize_submodel(private$hidden_$coeff_re(), 
-                                                                    init$hidden()$coeff_re()))
+        # Copy parameters with matching names from 'init' model
+        private$obs_$update_coeff_fe(
+          private$initialize_submodel(private$obs_$coeff_fe(), init$obs()$coeff_fe()))
+        private$obs_$update_coeff_re(
+          private$initialize_submodel(private$obs_$coeff_re(), init$obs()$coeff_re()))
+        private$hidden_$update_coeff_fe(
+          private$initialize_submodel(private$hidden_$coeff_fe(), init$hidden()$coeff_fe()))
+        private$hidden_$update_coeff_re(
+          private$initialize_submodel(private$hidden_$coeff_re(), init$hidden()$coeff_re()))
       }
       
       # initialize priors 
@@ -789,7 +789,7 @@ HMM <- R6Class(
     #' conditional pdf/pmf of observations between time t + 1 and n,
     #' given state j at time t, p(Z[t+1], Z[t+2], ..., Z[n] | S[t] = j).
     #' This function returns their logarithm, for use in other methods
-    #' \code{state_probs}, and \code{sample_states}
+    #' \code{state_probs}, and \code{sample_states}.
     #' 
     #' @return Log-forward and log-backward probabilities 
     forward_backward = function() {
@@ -1964,15 +1964,16 @@ HMM <- R6Class(
       return(sum(diag(F)))
     }, 
     
-    ## Initialize submodel component 
+    ## Initialize submodel component
+    ## This is used to initialise parameters based on a previous model
     initialize_submodel = function(par, initpar) {
-      # find which parts of initializing model occur in current model
+      # Find which parameters of initializing model occur in current model
       wh <- match(rownames(initpar), rownames(par))
-      # find which parts of initializing model do not occur in current model
+      # Find which parameters of initializing model do not occur in current model
       wh2 <- 1:nrow(initpar)
       wh2 <- wh2[!is.na(wh)]
       wh <- wh[!is.na(wh)]
-      # copy over communal part 
+      # Copy over shared part 
       if (length(wh) > 0) {
         par[wh, 1] <- initpar[wh2, 1]
       }
