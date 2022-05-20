@@ -25,7 +25,7 @@ extern "C" {
     {NULL, NULL, 0}
   };
   
-  void R_init_CTMCdive(DllInfo *dll)
+  void R_init_hmmTMB(DllInfo *dll)
   {
     R_registerRoutines(dll, NULL, R_CallDef, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
