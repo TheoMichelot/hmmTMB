@@ -190,7 +190,7 @@ HMM <- R6Class(
       if (!is.null(iter)) {
         # update to MCMC iteration 
         if (is.null(private$iters_)) {
-          stop("Must run mcmc() before using iterations")
+          stop("Must run fit_stan() before using iterations")
         }
         if (is.numeric(iter)) {
           if (iter > dim(private$iters_)[1]) {
@@ -381,7 +381,7 @@ HMM <- R6Class(
     #' @return see output of as.matrix in stan 
     iters = function(type = "response") {
       if (is.null(private$iters_)) {
-        stop("must run mcmc before extracting iterations")
+        stop("must run fit_stan before extracting iterations")
       }
       if (type == "response") {
         return(private$par_iters_)
@@ -395,11 +395,11 @@ HMM <- R6Class(
     #' @description fitted stan object from MCMC fit 
     #' 
     #' @return the stanfit object 
-    stan = function() {
+    out_stan = function() {
       if (is.null(private$iters_)) {
-        stop("must run mcmc before extracting stan fitted object")
+        stop("must run fit_stan before extracting stan fitted object")
       }
-      return(private$mcmc_)
+      return(private$out_stan_)
     }, 
     
     #' @description Log-likelihood at current parameters
@@ -661,9 +661,14 @@ HMM <- R6Class(
     
     #' @description Fit model using tmbstan
     #' 
+    #' Consult documentation of the tmbstan package for more information.
+    #' After this method has been called, the Stan output can be accessed
+    #' using the method \code{out_stan()}. This Stan output can for example 
+    #' be visualised using functions from the rstan package.
+    #'
     #' @param ... Arguments passed to tmbstan
     #' @param silent Logical. If FALSE, all tracing outputs are shown (default).
-    mcmc = function(..., silent = FALSE) {
+    fit_stan = function(..., silent = FALSE) {
       self$formulation()
       
       if (!requireNamespace("rstan", quietly = TRUE)) {
@@ -680,10 +685,10 @@ HMM <- R6Class(
       }
       
       # do stan MCMC 
-      private$mcmc_ <- tmbstan::tmbstan(private$tmb_obj_, ...)
+      private$out_stan_ <- tmbstan::tmbstan(private$tmb_obj_, ...)
       
       # store iterations 
-      private$iters_ <- as.matrix(private$mcmc_)
+      private$iters_ <- as.matrix(private$out_stan_)
       
       # store iterations on response scale 
       npar <- length(unlist(self$par()))
@@ -1038,7 +1043,7 @@ HMM <- R6Class(
     #' backward-sampling 
     #' 
     #' @param nsamp Number of samples to produce 
-    #' @param full If TRUE and model fit by mcmc then parameter estimates are 
+    #' @param full If TRUE and model fit by fit_stan then parameter estimates are 
     #' sampled from the posterior samples before simulating each sequence 
     #' 
     #' @details The forward-filtering backward-sampling algorithm returns a
@@ -1050,7 +1055,9 @@ HMM <- R6Class(
     #' @return Matrix where each column is a different sample of state sequences,
     #' and each row is a time of observation
     sample_states = function(nsamp = 1, full = FALSE) {
-      if (full & is.null(private$mcmc_)) stop("must fit model with $mcmc first")
+      if (full & is.null(private$out_stan_)) {
+        stop("must fit model with $fit_stan first")
+      }
       if (full) {
         n_full_samp <- nsamp
         nsamp <- 1 
@@ -1408,7 +1415,7 @@ HMM <- R6Class(
         if (!silent) cat("Simulating", sim, " / ", nsims, "\r")
         
         # if full and mcmc then sample parameter
-        if (full & !is.null(private$mcmc_)) {
+        if (full & !is.null(private$out_stan_)) {
           self$update_par(iter = sample(1:nrow(self$iters()), size = 1))
         }
         
@@ -1748,7 +1755,7 @@ HMM <- R6Class(
     tmb_obj_joint_ = NULL,
     tmb_rep_ = NULL,
     priors_ = NULL, 
-    mcmc_ = NULL, 
+    out_stan_ = NULL, 
     iters_= NULL,
     par_iters_ = NULL, 
     fixpar_ = NULL,
