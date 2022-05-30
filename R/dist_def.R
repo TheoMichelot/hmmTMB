@@ -546,7 +546,7 @@ dist_tweedie <- Dist$new(
     return(l)
   }, 
   rng = function(n, mean, p, phi) {
-    return(rTweedie(rep(mean, n), p + 1, phi))
+    return(mgcv::rTweedie(rep(mean, n), p + 1, phi))
   }, 
   link = list(mean = identity, p = qlogis, phi = log), 
   invlink = list(mean = identity, p = plogis, phi = exp), 
