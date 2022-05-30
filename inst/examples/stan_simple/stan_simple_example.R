@@ -55,18 +55,18 @@ mod$priors()
 
 # using stan MCMC and default stan arguments / random initial values
 # but setting chains to 1 and iters to 100 as this is just an example 
-mod$mcmc(chains = 1, iter = 100)
+mod$fit_stan(chains = 1, iter = 100)
 
 # Inference ---------------------------------------------------------------
 
 # the fitted stan object can be accessed: 
-mod$stan()
+mod$out_stan()
 
 # and so you can use all the functions available to stan objects
 # if you look the rstan package or equivalent
 library(rstan)
-stan_trace(mod$stan())
-stan_dens(mod$stan())
+stan_trace(mod$out_stan())
+stan_dens(mod$out_stan())
 
 # Alternatively, you can use the mod object 
 # which by default has set all parameters to their posterior means 
