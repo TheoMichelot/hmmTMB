@@ -664,7 +664,10 @@ HMM <- R6Class(
     #' Consult documentation of the tmbstan package for more information.
     #' After this method has been called, the Stan output can be accessed
     #' using the method \code{out_stan()}. This Stan output can for example 
-    #' be visualised using functions from the rstan package.
+    #' be visualised using functions from the rstan package. The parameters
+    #' stored in this HMM object are automatically updated to the mean 
+    #' posterior estimate, although this can be changed using 
+    #' \code{update_par()}.
     #'
     #' @param ... Arguments passed to tmbstan
     #' @param silent Logical. If FALSE, all tracing outputs are shown (default).
