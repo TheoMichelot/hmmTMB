@@ -15,44 +15,44 @@ the observation model from a hidden Markov model.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{Observation$new()}}
-\item \href{#method-data}{\code{Observation$data()}}
-\item \href{#method-dists}{\code{Observation$dists()}}
-\item \href{#method-nstates}{\code{Observation$nstates()}}
-\item \href{#method-par}{\code{Observation$par()}}
-\item \href{#method-inipar}{\code{Observation$inipar()}}
-\item \href{#method-coeff_fe}{\code{Observation$coeff_fe()}}
-\item \href{#method-coeff_re}{\code{Observation$coeff_re()}}
-\item \href{#method-X_fe}{\code{Observation$X_fe()}}
-\item \href{#method-X_re}{\code{Observation$X_re()}}
-\item \href{#method-lambda}{\code{Observation$lambda()}}
-\item \href{#method-vcomp}{\code{Observation$vcomp()}}
-\item \href{#method-formulas}{\code{Observation$formulas()}}
-\item \href{#method-terms}{\code{Observation$terms()}}
-\item \href{#method-obs_var}{\code{Observation$obs_var()}}
-\item \href{#method-known_states}{\code{Observation$known_states()}}
-\item \href{#method-update_par}{\code{Observation$update_par()}}
-\item \href{#method-update_coeff_fe}{\code{Observation$update_coeff_fe()}}
-\item \href{#method-update_coeff_re}{\code{Observation$update_coeff_re()}}
-\item \href{#method-update_X_fe}{\code{Observation$update_X_fe()}}
-\item \href{#method-update_X_re}{\code{Observation$update_X_re()}}
-\item \href{#method-update_lambda}{\code{Observation$update_lambda()}}
-\item \href{#method-update_data}{\code{Observation$update_data()}}
-\item \href{#method-make_mat}{\code{Observation$make_mat()}}
-\item \href{#method-make_newdata_grid}{\code{Observation$make_newdata_grid()}}
-\item \href{#method-n2w}{\code{Observation$n2w()}}
-\item \href{#method-w2n}{\code{Observation$w2n()}}
-\item \href{#method-linpred}{\code{Observation$linpred()}}
-\item \href{#method-obs_probs}{\code{Observation$obs_probs()}}
-\item \href{#method-plot_dist}{\code{Observation$plot_dist()}}
-\item \href{#method-formulation}{\code{Observation$formulation()}}
-\item \href{#method-print}{\code{Observation$print()}}
-\item \href{#method-clone}{\code{Observation$clone()}}
+\item \href{#method-Observation-new}{\code{Observation$new()}}
+\item \href{#method-Observation-data}{\code{Observation$data()}}
+\item \href{#method-Observation-dists}{\code{Observation$dists()}}
+\item \href{#method-Observation-nstates}{\code{Observation$nstates()}}
+\item \href{#method-Observation-par}{\code{Observation$par()}}
+\item \href{#method-Observation-inipar}{\code{Observation$inipar()}}
+\item \href{#method-Observation-coeff_fe}{\code{Observation$coeff_fe()}}
+\item \href{#method-Observation-coeff_re}{\code{Observation$coeff_re()}}
+\item \href{#method-Observation-X_fe}{\code{Observation$X_fe()}}
+\item \href{#method-Observation-X_re}{\code{Observation$X_re()}}
+\item \href{#method-Observation-lambda}{\code{Observation$lambda()}}
+\item \href{#method-Observation-sd_re}{\code{Observation$sd_re()}}
+\item \href{#method-Observation-formulas}{\code{Observation$formulas()}}
+\item \href{#method-Observation-terms}{\code{Observation$terms()}}
+\item \href{#method-Observation-obs_var}{\code{Observation$obs_var()}}
+\item \href{#method-Observation-known_states}{\code{Observation$known_states()}}
+\item \href{#method-Observation-update_par}{\code{Observation$update_par()}}
+\item \href{#method-Observation-update_coeff_fe}{\code{Observation$update_coeff_fe()}}
+\item \href{#method-Observation-update_coeff_re}{\code{Observation$update_coeff_re()}}
+\item \href{#method-Observation-update_X_fe}{\code{Observation$update_X_fe()}}
+\item \href{#method-Observation-update_X_re}{\code{Observation$update_X_re()}}
+\item \href{#method-Observation-update_lambda}{\code{Observation$update_lambda()}}
+\item \href{#method-Observation-update_data}{\code{Observation$update_data()}}
+\item \href{#method-Observation-make_mat}{\code{Observation$make_mat()}}
+\item \href{#method-Observation-make_newdata_grid}{\code{Observation$make_newdata_grid()}}
+\item \href{#method-Observation-n2w}{\code{Observation$n2w()}}
+\item \href{#method-Observation-w2n}{\code{Observation$w2n()}}
+\item \href{#method-Observation-linpred}{\code{Observation$linpred()}}
+\item \href{#method-Observation-obs_probs}{\code{Observation$obs_probs()}}
+\item \href{#method-Observation-plot_dist}{\code{Observation$plot_dist()}}
+\item \href{#method-Observation-formulation}{\code{Observation$formulation()}}
+\item \href{#method-Observation-print}{\code{Observation$print()}}
+\item \href{#method-Observation-clone}{\code{Observation$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-Observation-new"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-new}{}}}
 \subsection{Method \code{new()}}{
 Create new Observation object
 \subsection{Usage}{
@@ -79,8 +79,8 @@ A new Observation object
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-data"></a>}}
-\if{latex}{\out{\hypertarget{method-data}{}}}
+\if{html}{\out{<a id="method-Observation-data"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-data}{}}}
 \subsection{Method \code{data()}}{
 Data frame
 \subsection{Usage}{
@@ -89,8 +89,8 @@ Data frame
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-dists"></a>}}
-\if{latex}{\out{\hypertarget{method-dists}{}}}
+\if{html}{\out{<a id="method-Observation-dists"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-dists}{}}}
 \subsection{Method \code{dists()}}{
 List of distributions
 \subsection{Usage}{
@@ -99,8 +99,8 @@ List of distributions
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-nstates"></a>}}
-\if{latex}{\out{\hypertarget{method-nstates}{}}}
+\if{html}{\out{<a id="method-Observation-nstates"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-nstates}{}}}
 \subsection{Method \code{nstates()}}{
 Number of states
 \subsection{Usage}{
@@ -109,8 +109,8 @@ Number of states
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-par"></a>}}
-\if{latex}{\out{\hypertarget{method-par}{}}}
+\if{html}{\out{<a id="method-Observation-par"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-par}{}}}
 \subsection{Method \code{par()}}{
 Parameters on natural scale
 \subsection{Usage}{
@@ -145,8 +145,8 @@ argument for alternative output format.)
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-inipar"></a>}}
-\if{latex}{\out{\hypertarget{method-inipar}{}}}
+\if{html}{\out{<a id="method-Observation-inipar"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-inipar}{}}}
 \subsection{Method \code{inipar()}}{
 Return initial parameter values supplied
 \subsection{Usage}{
@@ -155,8 +155,8 @@ Return initial parameter values supplied
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-coeff_fe"></a>}}
-\if{latex}{\out{\hypertarget{method-coeff_fe}{}}}
+\if{html}{\out{<a id="method-Observation-coeff_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-coeff_fe}{}}}
 \subsection{Method \code{coeff_fe()}}{
 Fixed effect parameters on working scale
 \subsection{Usage}{
@@ -165,8 +165,8 @@ Fixed effect parameters on working scale
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-coeff_re"></a>}}
-\if{latex}{\out{\hypertarget{method-coeff_re}{}}}
+\if{html}{\out{<a id="method-Observation-coeff_re"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-coeff_re}{}}}
 \subsection{Method \code{coeff_re()}}{
 Random effect parameters
 \subsection{Usage}{
@@ -175,8 +175,8 @@ Random effect parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-X_fe"></a>}}
-\if{latex}{\out{\hypertarget{method-X_fe}{}}}
+\if{html}{\out{<a id="method-Observation-X_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-X_fe}{}}}
 \subsection{Method \code{X_fe()}}{
 Fixed effect design matrix
 \subsection{Usage}{
@@ -185,8 +185,8 @@ Fixed effect design matrix
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-X_re"></a>}}
-\if{latex}{\out{\hypertarget{method-X_re}{}}}
+\if{html}{\out{<a id="method-Observation-X_re"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-X_re}{}}}
 \subsection{Method \code{X_re()}}{
 Random effect design matrix
 \subsection{Usage}{
@@ -195,8 +195,8 @@ Random effect design matrix
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-lambda"></a>}}
-\if{latex}{\out{\hypertarget{method-lambda}{}}}
+\if{html}{\out{<a id="method-Observation-lambda"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-lambda}{}}}
 \subsection{Method \code{lambda()}}{
 Smoothness parameters
 \subsection{Usage}{
@@ -205,23 +205,23 @@ Smoothness parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-vcomp"></a>}}
-\if{latex}{\out{\hypertarget{method-vcomp}{}}}
-\subsection{Method \code{vcomp()}}{
-Variance components of smooth terms
+\if{html}{\out{<a id="method-Observation-sd_re"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-sd_re}{}}}
+\subsection{Method \code{sd_re()}}{
+Standard deviation of smooth terms
 
 This function transforms the smoothness parameter of
 each smooth term into a standard deviation, given by 
 SD = 1/sqrt(lambda). It is particularly helpful to get the
 standard deviations of independent normal random effects.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$vcomp()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$sd_re()}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-formulas"></a>}}
-\if{latex}{\out{\hypertarget{method-formulas}{}}}
+\if{html}{\out{<a id="method-Observation-formulas"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-formulas}{}}}
 \subsection{Method \code{formulas()}}{
 List of model formulas for observation model
 \subsection{Usage}{
@@ -238,8 +238,8 @@ make_formulas (default). If TRUE, returns formulas passed as input.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-terms"></a>}}
-\if{latex}{\out{\hypertarget{method-terms}{}}}
+\if{html}{\out{<a id="method-Observation-terms"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-terms}{}}}
 \subsection{Method \code{terms()}}{
 Terms of model formulas
 \subsection{Usage}{
@@ -248,8 +248,8 @@ Terms of model formulas
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-obs_var"></a>}}
-\if{latex}{\out{\hypertarget{method-obs_var}{}}}
+\if{html}{\out{<a id="method-Observation-obs_var"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-obs_var}{}}}
 \subsection{Method \code{obs_var()}}{
 Data frame of response variables
 \subsection{Usage}{
@@ -266,18 +266,18 @@ to be univariate, creating extra columns}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-known_states"></a>}}
-\if{latex}{\out{\hypertarget{method-known_states}{}}}
+\if{html}{\out{<a id="method-Observation-known_states"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-known_states}{}}}
 \subsection{Method \code{known_states()}}{
 Vector of known states
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$known_states()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$known_states(mat = TRUE)}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_par"></a>}}
-\if{latex}{\out{\hypertarget{method-update_par}{}}}
+\if{html}{\out{<a id="method-Observation-update_par"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-update_par}{}}}
 \subsection{Method \code{update_par()}}{
 Update parameters
 
@@ -297,8 +297,8 @@ the list passed as input
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_coeff_fe"></a>}}
-\if{latex}{\out{\hypertarget{method-update_coeff_fe}{}}}
+\if{html}{\out{<a id="method-Observation-update_coeff_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-update_coeff_fe}{}}}
 \subsection{Method \code{update_coeff_fe()}}{
 Update coefficients for fixed effect parameters
 \subsection{Usage}{
@@ -315,8 +315,8 @@ parameters}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_coeff_re"></a>}}
-\if{latex}{\out{\hypertarget{method-update_coeff_re}{}}}
+\if{html}{\out{<a id="method-Observation-update_coeff_re"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-update_coeff_re}{}}}
 \subsection{Method \code{update_coeff_re()}}{
 Update random effect parameters
 \subsection{Usage}{
@@ -333,8 +333,8 @@ parameters}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_X_fe"></a>}}
-\if{latex}{\out{\hypertarget{method-update_X_fe}{}}}
+\if{html}{\out{<a id="method-Observation-update_X_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-update_X_fe}{}}}
 \subsection{Method \code{update_X_fe()}}{
 Update fixed effect design matrix
 \subsection{Usage}{
@@ -350,8 +350,8 @@ Update fixed effect design matrix
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_X_re"></a>}}
-\if{latex}{\out{\hypertarget{method-update_X_re}{}}}
+\if{html}{\out{<a id="method-Observation-update_X_re"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-update_X_re}{}}}
 \subsection{Method \code{update_X_re()}}{
 Update random effect design matrix
 \subsection{Usage}{
@@ -367,8 +367,8 @@ Update random effect design matrix
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_lambda"></a>}}
-\if{latex}{\out{\hypertarget{method-update_lambda}{}}}
+\if{html}{\out{<a id="method-Observation-update_lambda"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-update_lambda}{}}}
 \subsection{Method \code{update_lambda()}}{
 Update smoothness parameters
 \subsection{Usage}{
@@ -384,8 +384,8 @@ Update smoothness parameters
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_data"></a>}}
-\if{latex}{\out{\hypertarget{method-update_data}{}}}
+\if{html}{\out{<a id="method-Observation-update_data"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-update_data}{}}}
 \subsection{Method \code{update_data()}}{
 Update data
 \subsection{Usage}{
@@ -401,8 +401,8 @@ Update data
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-make_mat"></a>}}
-\if{latex}{\out{\hypertarget{method-make_mat}{}}}
+\if{html}{\out{<a id="method-Observation-make_mat"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-make_mat}{}}}
 \subsection{Method \code{make_mat()}}{
 Make model matrices
 \subsection{Usage}{
@@ -431,8 +431,8 @@ Design matrices for grid of covariates
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-make_newdata_grid"></a>}}
-\if{latex}{\out{\hypertarget{method-make_newdata_grid}{}}}
+\if{html}{\out{<a id="method-Observation-make_newdata_grid"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-make_newdata_grid}{}}}
 \subsection{Method \code{make_newdata_grid()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$make_newdata_grid(var, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
@@ -458,8 +458,8 @@ plus a data frame of covariates values.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-n2w"></a>}}
-\if{latex}{\out{\hypertarget{method-n2w}{}}}
+\if{html}{\out{<a id="method-Observation-n2w"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-n2w}{}}}
 \subsection{Method \code{n2w()}}{
 Natural to working parameter transformation
 
@@ -482,8 +482,8 @@ Vector of parameters on working scale
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-w2n"></a>}}
-\if{latex}{\out{\hypertarget{method-w2n}{}}}
+\if{html}{\out{<a id="method-Observation-w2n"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-w2n}{}}}
 \subsection{Method \code{w2n()}}{
 Working to natural parameter transformation
 
@@ -506,8 +506,8 @@ List of parameters on natural scale
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-linpred"></a>}}
-\if{latex}{\out{\hypertarget{method-linpred}{}}}
+\if{html}{\out{<a id="method-Observation-linpred"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-linpred}{}}}
 \subsection{Method \code{linpred()}}{
 Compute linear predictor
 \subsection{Usage}{
@@ -516,8 +516,8 @@ Compute linear predictor
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-obs_probs"></a>}}
-\if{latex}{\out{\hypertarget{method-obs_probs}{}}}
+\if{html}{\out{<a id="method-Observation-obs_probs"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-obs_probs}{}}}
 \subsection{Method \code{obs_probs()}}{
 Observation likelihoods
 \subsection{Usage}{
@@ -541,8 +541,8 @@ time step, and one column for each state.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plot_dist"></a>}}
-\if{latex}{\out{\hypertarget{method-plot_dist}{}}}
+\if{html}{\out{<a id="method-Observation-plot_dist"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-plot_dist}{}}}
 \subsection{Method \code{plot_dist()}}{
 Plot histogram of data and pdfs
 
@@ -573,8 +573,8 @@ A ggplot object
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-formulation"></a>}}
-\if{latex}{\out{\hypertarget{method-formulation}{}}}
+\if{html}{\out{<a id="method-Observation-formulation"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-formulation}{}}}
 \subsection{Method \code{formulation()}}{
 Print model formulation
 \subsection{Usage}{
@@ -583,8 +583,8 @@ Print model formulation
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-print"></a>}}
-\if{latex}{\out{\hypertarget{method-print}{}}}
+\if{html}{\out{<a id="method-Observation-print"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-print}{}}}
 \subsection{Method \code{print()}}{
 Print Observation object
 Check constructor arguments
@@ -594,8 +594,8 @@ Check constructor arguments
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-Observation-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

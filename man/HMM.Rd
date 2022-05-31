@@ -12,77 +12,87 @@ R6 class for hidden Markov model
 Encapsulates the observation and hidden state models for a hidden
 Markov model.
 
-Compute pseudo-residuals for the fitted model. If the fitted model
-is the "true" model, the pseudo-residuals follow a standard normal distribution.
-Deviations from normality suggest lack of fit.
-}
-\references{
-Wood (2017). Generalized additive models: an introduction with R. 
-CRC press.
+The forward-filtering backward-sampling algorithm returns a
+sequence of states, similarly to the Viterbi algorithm, but it generates
+it from the posterior distribution of state sequences, i.e., accounting
+for uncertainty in the state classification. Multiple generated sequences
+will therefore generally not be the same.
+
+
+This is a wrapper around Observation$plot_dist, where the
+distribution for each state is weighted by the proportion of time
+spent in that state (according to the Viterbi state sequence).
 }
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{HMM$new()}}
-\item \href{#method-obs}{\code{HMM$obs()}}
-\item \href{#method-hidden}{\code{HMM$hidden()}}
-\item \href{#method-out}{\code{HMM$out()}}
-\item \href{#method-tmb_obj}{\code{HMM$tmb_obj()}}
-\item \href{#method-tmb_rep}{\code{HMM$tmb_rep()}}
-\item \href{#method-states}{\code{HMM$states()}}
-\item \href{#method-coeff_fe}{\code{HMM$coeff_fe()}}
-\item \href{#method-coeff_re}{\code{HMM$coeff_re()}}
-\item \href{#method-lambda}{\code{HMM$lambda()}}
-\item \href{#method-update_par}{\code{HMM$update_par()}}
-\item \href{#method-vcomp}{\code{HMM$vcomp()}}
-\item \href{#method-par}{\code{HMM$par()}}
-\item \href{#method-suggest_initial}{\code{HMM$suggest_initial()}}
-\item \href{#method-set_priors}{\code{HMM$set_priors()}}
-\item \href{#method-priors}{\code{HMM$priors()}}
-\item \href{#method-iters}{\code{HMM$iters()}}
-\item \href{#method-stan}{\code{HMM$stan()}}
-\item \href{#method-llk}{\code{HMM$llk()}}
-\item \href{#method-edf}{\code{HMM$edf()}}
-\item \href{#method-setup}{\code{HMM$setup()}}
-\item \href{#method-mcmc}{\code{HMM$mcmc()}}
-\item \href{#method-fit}{\code{HMM$fit()}}
-\item \href{#method-mle}{\code{HMM$mle()}}
-\item \href{#method-forward_backward}{\code{HMM$forward_backward()}}
-\item \href{#method-cond}{\code{HMM$cond()}}
-\item \href{#method-pseudores}{\code{HMM$pseudores()}}
-\item \href{#method-viterbi}{\code{HMM$viterbi()}}
-\item \href{#method-sample_states}{\code{HMM$sample_states()}}
-\item \href{#method-state_probs}{\code{HMM$state_probs()}}
-\item \href{#method-post_coeff}{\code{HMM$post_coeff()}}
-\item \href{#method-post_linpred}{\code{HMM$post_linpred()}}
-\item \href{#method-post_fn}{\code{HMM$post_fn()}}
-\item \href{#method-predict}{\code{HMM$predict()}}
-\item \href{#method-simulate}{\code{HMM$simulate()}}
-\item \href{#method-gof}{\code{HMM$gof()}}
-\item \href{#method-plot_ts}{\code{HMM$plot_ts()}}
-\item \href{#method-plot}{\code{HMM$plot()}}
-\item \href{#method-formulation}{\code{HMM$formulation()}}
-\item \href{#method-print}{\code{HMM$print()}}
-\item \href{#method-clone}{\code{HMM$clone()}}
+\item \href{#method-HMM-new}{\code{HMM$new()}}
+\item \href{#method-HMM-obs}{\code{HMM$obs()}}
+\item \href{#method-HMM-hidden}{\code{HMM$hidden()}}
+\item \href{#method-HMM-out}{\code{HMM$out()}}
+\item \href{#method-HMM-tmb_obj}{\code{HMM$tmb_obj()}}
+\item \href{#method-HMM-tmb_obj_joint}{\code{HMM$tmb_obj_joint()}}
+\item \href{#method-HMM-tmb_rep}{\code{HMM$tmb_rep()}}
+\item \href{#method-HMM-states}{\code{HMM$states()}}
+\item \href{#method-HMM-coeff_fe}{\code{HMM$coeff_fe()}}
+\item \href{#method-HMM-coeff_re}{\code{HMM$coeff_re()}}
+\item \href{#method-HMM-fixpar}{\code{HMM$fixpar()}}
+\item \href{#method-HMM-lambda}{\code{HMM$lambda()}}
+\item \href{#method-HMM-update_par}{\code{HMM$update_par()}}
+\item \href{#method-HMM-sd_re}{\code{HMM$sd_re()}}
+\item \href{#method-HMM-par}{\code{HMM$par()}}
+\item \href{#method-HMM-suggest_initial}{\code{HMM$suggest_initial()}}
+\item \href{#method-HMM-set_priors}{\code{HMM$set_priors()}}
+\item \href{#method-HMM-priors}{\code{HMM$priors()}}
+\item \href{#method-HMM-iters}{\code{HMM$iters()}}
+\item \href{#method-HMM-out_stan}{\code{HMM$out_stan()}}
+\item \href{#method-HMM-llk}{\code{HMM$llk()}}
+\item \href{#method-HMM-edf}{\code{HMM$edf()}}
+\item \href{#method-HMM-setup}{\code{HMM$setup()}}
+\item \href{#method-HMM-fit_stan}{\code{HMM$fit_stan()}}
+\item \href{#method-HMM-fit}{\code{HMM$fit()}}
+\item \href{#method-HMM-mle}{\code{HMM$mle()}}
+\item \href{#method-HMM-forward_backward}{\code{HMM$forward_backward()}}
+\item \href{#method-HMM-cond}{\code{HMM$cond()}}
+\item \href{#method-HMM-pseudores}{\code{HMM$pseudores()}}
+\item \href{#method-HMM-viterbi}{\code{HMM$viterbi()}}
+\item \href{#method-HMM-sample_states}{\code{HMM$sample_states()}}
+\item \href{#method-HMM-state_probs}{\code{HMM$state_probs()}}
+\item \href{#method-HMM-post_coeff}{\code{HMM$post_coeff()}}
+\item \href{#method-HMM-post_linpred}{\code{HMM$post_linpred()}}
+\item \href{#method-HMM-post_fn}{\code{HMM$post_fn()}}
+\item \href{#method-HMM-predict}{\code{HMM$predict()}}
+\item \href{#method-HMM-simulate}{\code{HMM$simulate()}}
+\item \href{#method-HMM-gof}{\code{HMM$gof()}}
+\item \href{#method-HMM-plot_ts}{\code{HMM$plot_ts()}}
+\item \href{#method-HMM-plot_dist}{\code{HMM$plot_dist()}}
+\item \href{#method-HMM-plot}{\code{HMM$plot()}}
+\item \href{#method-HMM-AIC_marginal}{\code{HMM$AIC_marginal()}}
+\item \href{#method-HMM-AIC_conditional}{\code{HMM$AIC_conditional()}}
+\item \href{#method-HMM-print_obspar}{\code{HMM$print_obspar()}}
+\item \href{#method-HMM-print_tpm}{\code{HMM$print_tpm()}}
+\item \href{#method-HMM-formulation}{\code{HMM$formulation()}}
+\item \href{#method-HMM-print}{\code{HMM$print()}}
+\item \href{#method-HMM-clone}{\code{HMM$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-HMM-new"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-new}{}}}
 \subsection{Method \code{new()}}{
 Create new HMM object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$new(file = NULL, obs = NULL, hidden = NULL, init = NULL, fixpar = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$new(obs = NULL, hidden = NULL, file = NULL, init = NULL, fixpar = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{file}}{path to specification file for HMM}
-
 \item{\code{obs}}{Observation object}
 
 \item{\code{hidden}}{MarkovChain object}
+
+\item{\code{file}}{path to specification file for HMM}
 
 \item{\code{init}}{HMM object to initialize parameters with}
 
@@ -96,8 +106,8 @@ A new HMM object
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-obs"></a>}}
-\if{latex}{\out{\hypertarget{method-obs}{}}}
+\if{html}{\out{<a id="method-HMM-obs"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-obs}{}}}
 \subsection{Method \code{obs()}}{
 Observation object for this model
 \subsection{Usage}{
@@ -106,8 +116,8 @@ Observation object for this model
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-hidden"></a>}}
-\if{latex}{\out{\hypertarget{method-hidden}{}}}
+\if{html}{\out{<a id="method-HMM-hidden"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-hidden}{}}}
 \subsection{Method \code{hidden()}}{
 MarkovChain object for this model
 \subsection{Usage}{
@@ -116,8 +126,8 @@ MarkovChain object for this model
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-out"></a>}}
-\if{latex}{\out{\hypertarget{method-out}{}}}
+\if{html}{\out{<a id="method-HMM-out"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-out}{}}}
 \subsection{Method \code{out()}}{
 Output of optimiser after model fitting
 \subsection{Usage}{
@@ -126,8 +136,8 @@ Output of optimiser after model fitting
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-tmb_obj"></a>}}
-\if{latex}{\out{\hypertarget{method-tmb_obj}{}}}
+\if{html}{\out{<a id="method-HMM-tmb_obj"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-tmb_obj}{}}}
 \subsection{Method \code{tmb_obj()}}{
 Model object created by TMB. This is the output of 
 the TMB function \code{MakeADFun}, and it is a list including elements
@@ -142,8 +152,25 @@ the TMB function \code{MakeADFun}, and it is a list including elements
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-tmb_rep"></a>}}
-\if{latex}{\out{\hypertarget{method-tmb_rep}{}}}
+\if{html}{\out{<a id="method-HMM-tmb_obj_joint"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-tmb_obj_joint}{}}}
+\subsection{Method \code{tmb_obj_joint()}}{
+Model object created by TMB for the joint likelihood of
+the fixed and random effects. This is the output of the TMB function 
+\code{MakeADFun}, and it is a list including elements
+\itemize{
+  \item{\code{fn}}{Objective function}
+  \item{\code{gr}}{Gradient function of fn}
+  \item{\code{par}}{Vector of initial parameters on working scale}
+}
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$tmb_obj_joint()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-tmb_rep"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-tmb_rep}{}}}
 \subsection{Method \code{tmb_rep()}}{
 Output of the TMB function \code{sdreport}, which includes 
 estimates and standard errors for all model parameters.
@@ -153,8 +180,8 @@ estimates and standard errors for all model parameters.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-states"></a>}}
-\if{latex}{\out{\hypertarget{method-states}{}}}
+\if{html}{\out{<a id="method-HMM-states"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-states}{}}}
 \subsection{Method \code{states()}}{
 Vector of estimated states, after \code{viterbi} has
 been run
@@ -164,8 +191,8 @@ been run
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-coeff_fe"></a>}}
-\if{latex}{\out{\hypertarget{method-coeff_fe}{}}}
+\if{html}{\out{<a id="method-HMM-coeff_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-coeff_fe}{}}}
 \subsection{Method \code{coeff_fe()}}{
 Coefficients for fixed effect parameters
 \subsection{Usage}{
@@ -174,8 +201,8 @@ Coefficients for fixed effect parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-coeff_re"></a>}}
-\if{latex}{\out{\hypertarget{method-coeff_re}{}}}
+\if{html}{\out{<a id="method-HMM-coeff_re"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-coeff_re}{}}}
 \subsection{Method \code{coeff_re()}}{
 Coefficients for random effect parameters
 \subsection{Usage}{
@@ -184,8 +211,17 @@ Coefficients for random effect parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-lambda"></a>}}
-\if{latex}{\out{\hypertarget{method-lambda}{}}}
+\if{html}{\out{<a id="method-HMM-fixpar"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-fixpar}{}}}
+\subsection{Method \code{fixpar()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$fixpar()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-lambda"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-lambda}{}}}
 \subsection{Method \code{lambda()}}{
 Smoothness parameters
 \subsection{Usage}{
@@ -194,8 +230,8 @@ Smoothness parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_par"></a>}}
-\if{latex}{\out{\hypertarget{method-update_par}{}}}
+\if{html}{\out{<a id="method-HMM-update_par"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-update_par}{}}}
 \subsection{Method \code{update_par()}}{
 Update parameters stored inside model object
 \subsection{Usage}{
@@ -216,23 +252,27 @@ or "mean" if the posterior mean should be used.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-vcomp"></a>}}
-\if{latex}{\out{\hypertarget{method-vcomp}{}}}
-\subsection{Method \code{vcomp()}}{
-Variance components of smooth terms
+\if{html}{\out{<a id="method-HMM-sd_re"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-sd_re}{}}}
+\subsection{Method \code{sd_re()}}{
+Standard deviation of smooth terms (or random effects)
 
 This function transforms the smoothness parameter of
 each smooth term into a standard deviation, given by 
 SD = 1/sqrt(lambda). It is particularly helpful to get the
 standard deviations of independent normal random effects.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$vcomp()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$sd_re()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+List of standard deviations for observation model and
+hidden state model.
+}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-par"></a>}}
-\if{latex}{\out{\hypertarget{method-par}{}}}
+\if{html}{\out{<a id="method-HMM-par"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-par}{}}}
 \subsection{Method \code{par()}}{
 Model parameters
 \subsection{Usage}{
@@ -255,22 +295,26 @@ A list with elements:
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-suggest_initial"></a>}}
-\if{latex}{\out{\hypertarget{method-suggest_initial}{}}}
+\if{html}{\out{<a id="method-HMM-suggest_initial"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-suggest_initial}{}}}
 \subsection{Method \code{suggest_initial()}}{
-Suggest initial parameters for the model based on kmeans
-clustering
+Suggest initial observation parameters
+
+The K-means algorithm is used to define clusters of observations
+(supposed to approximate the HMM states). Then, for each cluster,
+the \code{parapprox} function of the relevant \code{Dist} object
+is used to obtain parameter values.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$suggest_initial()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-list of initial parameters for each observation variable
+List of initial parameters for each observation variable
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_priors"></a>}}
-\if{latex}{\out{\hypertarget{method-set_priors}{}}}
+\if{html}{\out{<a id="method-HMM-set_priors"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-set_priors}{}}}
 \subsection{Method \code{set_priors()}}{
 Set priors for coefficients
 \subsection{Usage}{
@@ -289,8 +333,8 @@ specifying parameters for Normal priors}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-priors"></a>}}
-\if{latex}{\out{\hypertarget{method-priors}{}}}
+\if{html}{\out{<a id="method-HMM-priors"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-priors}{}}}
 \subsection{Method \code{priors()}}{
 Extract stored priors
 \subsection{Usage}{
@@ -299,8 +343,8 @@ Extract stored priors
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-iters"></a>}}
-\if{latex}{\out{\hypertarget{method-iters}{}}}
+\if{html}{\out{<a id="method-HMM-iters"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-iters}{}}}
 \subsection{Method \code{iters()}}{
 Iterations from stan MCMC fit
 \subsection{Usage}{
@@ -320,12 +364,12 @@ see output of as.matrix in stan
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-stan"></a>}}
-\if{latex}{\out{\hypertarget{method-stan}{}}}
-\subsection{Method \code{stan()}}{
+\if{html}{\out{<a id="method-HMM-out_stan"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-out_stan}{}}}
+\subsection{Method \code{out_stan()}}{
 fitted stan object from MCMC fit
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$stan()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$out_stan()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
@@ -333,8 +377,8 @@ the stanfit object
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-llk"></a>}}
-\if{latex}{\out{\hypertarget{method-llk}{}}}
+\if{html}{\out{<a id="method-HMM-llk"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-llk}{}}}
 \subsection{Method \code{llk()}}{
 Log-likelihood at current parameters
 \subsection{Usage}{
@@ -346,23 +390,23 @@ Log-likelihood
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-edf"></a>}}
-\if{latex}{\out{\hypertarget{method-edf}{}}}
+\if{html}{\out{<a id="method-HMM-edf"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-edf}{}}}
 \subsection{Method \code{edf()}}{
-Compute effective degrees of freedom 
-
-The degrees of freedom of the fixed effects are obtained as the number of
-fixed effect parameters. The effective degrees of freedom of the random 
-effects are computed in the comp_edf private method, based on the formula 
-from Section 5.4.2 from Wood (2017).
+Effective degrees of freedom
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$edf()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Number of effective degrees of freedom
+(accounting for flexibility in non-parametric 
+terms implied by smoothing)
+}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-setup"></a>}}
-\if{latex}{\out{\hypertarget{method-setup}{}}}
+\if{html}{\out{<a id="method-HMM-setup"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-setup}{}}}
 \subsection{Method \code{setup()}}{
 TMB setup
 
@@ -381,12 +425,20 @@ evaluate the negative log-likelihood function.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-mcmc"></a>}}
-\if{latex}{\out{\hypertarget{method-mcmc}{}}}
-\subsection{Method \code{mcmc()}}{
+\if{html}{\out{<a id="method-HMM-fit_stan"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-fit_stan}{}}}
+\subsection{Method \code{fit_stan()}}{
 Fit model using tmbstan
+
+Consult documentation of the tmbstan package for more information.
+After this method has been called, the Stan output can be accessed
+using the method \code{out_stan()}. This Stan output can for example 
+be visualised using functions from the rstan package. The parameters
+stored in this HMM object are automatically updated to the mean 
+posterior estimate, although this can be changed using 
+\code{update_par()}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$mcmc(..., silent = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$fit_stan(..., silent = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -400,8 +452,8 @@ Fit model using tmbstan
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fit"></a>}}
-\if{latex}{\out{\hypertarget{method-fit}{}}}
+\if{html}{\out{<a id="method-HMM-fit"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-fit}{}}}
 \subsection{Method \code{fit()}}{
 Model fitting
 
@@ -427,8 +479,8 @@ see ?optimx}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-mle"></a>}}
-\if{latex}{\out{\hypertarget{method-mle}{}}}
+\if{html}{\out{<a id="method-HMM-mle"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-mle}{}}}
 \subsection{Method \code{mle()}}{
 Get maximum likelihood estimates once model fitted
 \subsection{Usage}{
@@ -441,25 +493,34 @@ input for the function update_par()
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-forward_backward"></a>}}
-\if{latex}{\out{\hypertarget{method-forward_backward}{}}}
+\if{html}{\out{<a id="method-HMM-forward_backward"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-forward_backward}{}}}
 \subsection{Method \code{forward_backward()}}{
-Forward-backward algorithm
+Forward-backward algorithm 
+
+The forward probability for time step t and state j 
+is the joint pdf/pmf of observations up to time t and of being in
+state j at time t, p(Z[1], Z[2], ..., Z[t], S[t] = j).
+The backward probability for time t and state j is the
+conditional pdf/pmf of observations between time t + 1 and n,
+given state j at time t, p(Z[t+1], Z[t+2], ..., Z[n] | S[t] = j).
+This function returns their logarithm, for use in other methods
+\code{state_probs}, and \code{sample_states}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$forward_backward()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-log-forward and log-backward probabilities
+Log-forward and log-backward probabilities
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-cond"></a>}}
-\if{latex}{\out{\hypertarget{method-cond}{}}}
+\if{html}{\out{<a id="method-HMM-cond"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-cond}{}}}
 \subsection{Method \code{cond()}}{
 Compute conditional cumulative distribution functions
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$cond(ngrid = 100, silent = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$cond(ngrid = 1000, silent = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -476,10 +537,14 @@ cdfs on grid for each variable
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pseudores"></a>}}
-\if{latex}{\out{\hypertarget{method-pseudores}{}}}
+\if{html}{\out{<a id="method-HMM-pseudores"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-pseudores}{}}}
 \subsection{Method \code{pseudores()}}{
 Pseudo-residuals
+
+Compute pseudo-residuals for the fitted model. If the fitted model
+is the "true" model, the pseudo-residuals follow a standard normal distribution.
+Deviations from normality suggest lack of fit.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$pseudores()}\if{html}{\out{</div>}}
 }
@@ -490,8 +555,8 @@ and one column for each observation
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-viterbi"></a>}}
-\if{latex}{\out{\hypertarget{method-viterbi}{}}}
+\if{html}{\out{<a id="method-HMM-viterbi"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-viterbi}{}}}
 \subsection{Method \code{viterbi()}}{
 Viterbi algorithm
 \subsection{Usage}{
@@ -503,8 +568,8 @@ Most likely state sequence
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-sample_states"></a>}}
-\if{latex}{\out{\hypertarget{method-sample_states}{}}}
+\if{html}{\out{<a id="method-HMM-sample_states"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-sample_states}{}}}
 \subsection{Method \code{sample_states()}}{
 Sample posterior state sequences using forward-filtering
 backward-sampling
@@ -515,20 +580,21 @@ backward-sampling
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{nsamp}}{number of samples to produce}
+\item{\code{nsamp}}{Number of samples to produce}
 
-\item{\code{full}}{if TRUE and model fit by mcmc then parameter estimates are 
+\item{\code{full}}{If TRUE and model fit by fit_stan then parameter estimates are 
 sampled from the posterior samples before simulating each sequence}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-matrix where each column is a different sample of state sequences
+Matrix where each column is a different sample of state sequences,
+and each row is a time of observation
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-state_probs"></a>}}
-\if{latex}{\out{\hypertarget{method-state_probs}{}}}
+\if{html}{\out{<a id="method-HMM-state_probs"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-state_probs}{}}}
 \subsection{Method \code{state_probs()}}{
 Compute posterior probability of being in each state
 \subsection{Usage}{
@@ -540,8 +606,8 @@ matrix with a row for each observation and a column for each state
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-post_coeff"></a>}}
-\if{latex}{\out{\hypertarget{method-post_coeff}{}}}
+\if{html}{\out{<a id="method-HMM-post_coeff"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-post_coeff}{}}}
 \subsection{Method \code{post_coeff()}}{
 Posterior sampling for model coefficients
 \subsection{Usage}{
@@ -561,8 +627,8 @@ for each posterior draw
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-post_linpred"></a>}}
-\if{latex}{\out{\hypertarget{method-post_linpred}{}}}
+\if{html}{\out{<a id="method-HMM-post_linpred"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-post_linpred}{}}}
 \subsection{Method \code{post_linpred()}}{
 Posterior sampling for linear predictor
 \subsection{Usage}{
@@ -582,8 +648,8 @@ for each posterior draw
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-post_fn"></a>}}
-\if{latex}{\out{\hypertarget{method-post_fn}{}}}
+\if{html}{\out{<a id="method-HMM-post_fn"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-post_fn}{}}}
 \subsection{Method \code{post_fn()}}{
 Create posterior simulations of a function of a model component
 \subsection{Usage}{
@@ -613,42 +679,45 @@ with a column for each simulation
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predict"></a>}}
-\if{latex}{\out{\hypertarget{method-predict}{}}}
+\if{html}{\out{<a id="method-HMM-predict"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-predict}{}}}
 \subsection{Method \code{predict()}}{
 Predict estimates from a fitted model
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$predict(name, t = 1, newdata = NULL, level = 0, n_post = 0)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$predict(name, t = 1, newdata = NULL, level = 0.95, n_post = 0)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{name}}{which estimates to predict? Options include 
+\item{\code{name}}{Which estimates to predict? Options include 
 transition probability matrices "tpm", 
 stationary distributions "delta", or 
 observation distribution parameters "obspar"}
 
-\item{\code{t}}{time points to predict at}
+\item{\code{t}}{Time points to predict at}
 
-\item{\code{newdata}}{new dataframe to use for prediction}
+\item{\code{newdata}}{New dataframe to use for prediction}
 
-\item{\code{level}}{if greater than zero, then produce confidence intervals with this level, e.g. CI = 0.95
-will produce 95\% confidence intervals}
+\item{\code{level}}{Level of the confidence intervals, e.g. CI = 0.95
+will produce 95\% confidence intervals (default)}
 
-\item{\code{n_post}}{if greater than zero then n_post posterior samples are produced}
+\item{\code{n_post}}{If greater than zero then n_post posterior 
+samples are produced}
 
-\item{\code{...}}{other arguments to the respective functions for hidden$tpm, hidden$delta, obs$par}
+\item{\code{...}}{Other arguments to the respective functions 
+for hidden$tpm, hidden$delta, obs$par}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-named array of predictions and confidence interval, if requested
+Named array of predictions and confidence interval, 
+if requested
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-simulate"></a>}}
-\if{latex}{\out{\hypertarget{method-simulate}{}}}
+\if{html}{\out{<a id="method-HMM-simulate"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-simulate}{}}}
 \subsection{Method \code{simulate()}}{
 Simulate from hidden Markov model
 \subsection{Usage}{
@@ -672,8 +741,8 @@ data variables
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-gof"></a>}}
-\if{latex}{\out{\hypertarget{method-gof}{}}}
+\if{html}{\out{<a id="method-HMM-gof"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-gof}{}}}
 \subsection{Method \code{gof()}}{
 Compute goodness-of-fit statistics using simulation
 \subsection{Usage}{
@@ -709,8 +778,8 @@ List with elements:
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plot_ts"></a>}}
-\if{latex}{\out{\hypertarget{method-plot_ts}{}}}
+\if{html}{\out{<a id="method-HMM-plot_ts"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-plot_ts}{}}}
 \subsection{Method \code{plot_ts()}}{
 Time series plot coloured by states
 
@@ -733,15 +802,43 @@ are plotted against each other.
 }
 \subsection{Returns}{
 A ggplot object
+Plot observation distributions weighted by frequency in Viterbi
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-plot"></a>}}
-\if{latex}{\out{\hypertarget{method-plot}{}}}
+\if{html}{\out{<a id="method-HMM-plot_dist"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-plot_dist}{}}}
+\subsection{Method \code{plot_dist()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_dist(name)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{name}}{Name of data variable}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Plot of distribution with data histogram
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-plot"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-plot}{}}}
 \subsection{Method \code{plot()}}{
 Plot a model component
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$plot(name, var = NULL, covs = NULL, i = NULL, j = NULL, n_grid = 50)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot(
+  name,
+  var = NULL,
+  covs = NULL,
+  i = NULL,
+  j = NULL,
+  n_grid = 50,
+  n_post = 1000
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -763,16 +860,81 @@ if plotting obspar then indices of parameter to plot}
 ignored, if plotting obspar then indices of states to plot}
 
 \item{\code{n_grid}}{coarseness of grid over x-axis to create}
+
+\item{\code{n_post}}{Number of posterior simulations to use when computing
+confidence intervals; default: 1000. If set to 0, confidence intervals
+are derived using the delta method rather than simulations. See 
+\code{predict} function for more detail.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A ggplot object
+A ggplot object 
+Marginal Akaike Information Criterion
+
+The marginal AIC is for example defined by 
+Wood (2017), as AIC = - 2L + 2k where L is the
+maximum marginal log-likelihood (of fixed 
+effects), and k is the number of degrees
+of freedom of the fixed effect component of
+the model
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-formulation"></a>}}
-\if{latex}{\out{\hypertarget{method-formulation}{}}}
+\if{html}{\out{<a id="method-HMM-AIC_marginal"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-AIC_marginal}{}}}
+\subsection{Method \code{AIC_marginal()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$AIC_marginal()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Marginal AIC
+Conditional Akaike Information Criterion
+
+The conditional AIC is for example defined by 
+Wood (2017), as AIC = - 2L + 2k where L is the
+maximum joint log-likelihood (of fixed and random
+effects), and k is the number of effective degrees
+of freedom of the model (accounting for flexibility
+in non-parametric terms implied by smoothing)
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-AIC_conditional"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-AIC_conditional}{}}}
+\subsection{Method \code{AIC_conditional()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$AIC_conditional()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Conditional AIC
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-print_obspar"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-print_obspar}{}}}
+\subsection{Method \code{print_obspar()}}{
+Print observation parameters at t = 1
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$print_obspar()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-print_tpm"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-print_tpm}{}}}
+\subsection{Method \code{print_tpm()}}{
+Print observation parameters at t = 1
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$print_tpm()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-formulation"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-formulation}{}}}
 \subsection{Method \code{formulation()}}{
 Print model formulation
 \subsection{Usage}{
@@ -781,8 +943,8 @@ Print model formulation
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-print"></a>}}
-\if{latex}{\out{\hypertarget{method-print}{}}}
+\if{html}{\out{<a id="method-HMM-print"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-print}{}}}
 \subsection{Method \code{print()}}{
 Print HMM object
 \subsection{Usage}{
@@ -791,8 +953,8 @@ Print HMM object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-HMM-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

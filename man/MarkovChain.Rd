@@ -14,47 +14,47 @@ Contains the parameters and model formulas for the hidden process model.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{MarkovChain$new()}}
-\item \href{#method-structure}{\code{MarkovChain$structure()}}
-\item \href{#method-formulas}{\code{MarkovChain$formulas()}}
-\item \href{#method-tpm}{\code{MarkovChain$tpm()}}
-\item \href{#method-coeff_fe}{\code{MarkovChain$coeff_fe()}}
-\item \href{#method-delta}{\code{MarkovChain$delta()}}
-\item \href{#method-stationary}{\code{MarkovChain$stationary()}}
-\item \href{#method-coeff_re}{\code{MarkovChain$coeff_re()}}
-\item \href{#method-X_fe}{\code{MarkovChain$X_fe()}}
-\item \href{#method-X_re}{\code{MarkovChain$X_re()}}
-\item \href{#method-lambda}{\code{MarkovChain$lambda()}}
-\item \href{#method-vcomp}{\code{MarkovChain$vcomp()}}
-\item \href{#method-nstates}{\code{MarkovChain$nstates()}}
-\item \href{#method-terms}{\code{MarkovChain$terms()}}
-\item \href{#method-update_tpm}{\code{MarkovChain$update_tpm()}}
-\item \href{#method-update_coeff_fe}{\code{MarkovChain$update_coeff_fe()}}
-\item \href{#method-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
-\item \href{#method-update_X_fe}{\code{MarkovChain$update_X_fe()}}
-\item \href{#method-update_X_re}{\code{MarkovChain$update_X_re()}}
-\item \href{#method-update_delta}{\code{MarkovChain$update_delta()}}
-\item \href{#method-update_lambda}{\code{MarkovChain$update_lambda()}}
-\item \href{#method-make_mat}{\code{MarkovChain$make_mat()}}
-\item \href{#method-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
-\item \href{#method-tpm2par}{\code{MarkovChain$tpm2par()}}
-\item \href{#method-par2tpm}{\code{MarkovChain$par2tpm()}}
-\item \href{#method-linpred}{\code{MarkovChain$linpred()}}
-\item \href{#method-simulate}{\code{MarkovChain$simulate()}}
-\item \href{#method-formulation}{\code{MarkovChain$formulation()}}
-\item \href{#method-print}{\code{MarkovChain$print()}}
-\item \href{#method-clone}{\code{MarkovChain$clone()}}
+\item \href{#method-MarkovChain-new}{\code{MarkovChain$new()}}
+\item \href{#method-MarkovChain-formula}{\code{MarkovChain$formula()}}
+\item \href{#method-MarkovChain-formulas}{\code{MarkovChain$formulas()}}
+\item \href{#method-MarkovChain-tpm}{\code{MarkovChain$tpm()}}
+\item \href{#method-MarkovChain-coeff_fe}{\code{MarkovChain$coeff_fe()}}
+\item \href{#method-MarkovChain-delta}{\code{MarkovChain$delta()}}
+\item \href{#method-MarkovChain-stationary}{\code{MarkovChain$stationary()}}
+\item \href{#method-MarkovChain-coeff_re}{\code{MarkovChain$coeff_re()}}
+\item \href{#method-MarkovChain-X_fe}{\code{MarkovChain$X_fe()}}
+\item \href{#method-MarkovChain-X_re}{\code{MarkovChain$X_re()}}
+\item \href{#method-MarkovChain-lambda}{\code{MarkovChain$lambda()}}
+\item \href{#method-MarkovChain-sd_re}{\code{MarkovChain$sd_re()}}
+\item \href{#method-MarkovChain-nstates}{\code{MarkovChain$nstates()}}
+\item \href{#method-MarkovChain-terms}{\code{MarkovChain$terms()}}
+\item \href{#method-MarkovChain-update_tpm}{\code{MarkovChain$update_tpm()}}
+\item \href{#method-MarkovChain-update_coeff_fe}{\code{MarkovChain$update_coeff_fe()}}
+\item \href{#method-MarkovChain-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
+\item \href{#method-MarkovChain-update_X_fe}{\code{MarkovChain$update_X_fe()}}
+\item \href{#method-MarkovChain-update_X_re}{\code{MarkovChain$update_X_re()}}
+\item \href{#method-MarkovChain-update_delta}{\code{MarkovChain$update_delta()}}
+\item \href{#method-MarkovChain-update_lambda}{\code{MarkovChain$update_lambda()}}
+\item \href{#method-MarkovChain-make_mat}{\code{MarkovChain$make_mat()}}
+\item \href{#method-MarkovChain-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
+\item \href{#method-MarkovChain-tpm2par}{\code{MarkovChain$tpm2par()}}
+\item \href{#method-MarkovChain-par2tpm}{\code{MarkovChain$par2tpm()}}
+\item \href{#method-MarkovChain-linpred}{\code{MarkovChain$linpred()}}
+\item \href{#method-MarkovChain-simulate}{\code{MarkovChain$simulate()}}
+\item \href{#method-MarkovChain-formulation}{\code{MarkovChain$formulation()}}
+\item \href{#method-MarkovChain-print}{\code{MarkovChain$print()}}
+\item \href{#method-MarkovChain-clone}{\code{MarkovChain$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-MarkovChain-new"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-new}{}}}
 \subsection{Method \code{new()}}{
 Create new MarkovChain object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$new(
   data,
-  structure = NULL,
+  formula = NULL,
   n_states = NULL,
   tpm = NULL,
   stationary = FALSE
@@ -66,13 +66,12 @@ Create new MarkovChain object
 \describe{
 \item{\code{data}}{Data frame, needed to create model matrices}
 
-\item{\code{structure}}{Either (1) matrix with an entry of "." on diagonal, a "0" for 
-transitions that are not allowed (not implemented yet), and a formula "~1" 
-for covariates affecting transitions that are to be estimated, or (2) single
-formula, assumed for all transition probabilities. (Default: no covariate
-dependence.)}
+\item{\code{formula}}{Either (2) R formula, used for all transition probabilities, 
+or (2) matrix of character strings, with an entry of "." on diagonal, 
+a "0" for transitions that are not allowed (not implemented yet), 
+or an R formula. (Default: no covariate dependence.)}
 
-\item{\code{n_states}}{Number of states. If not specified, then \code{structure} 
+\item{\code{n_states}}{Number of states. If not specified, then \code{formula} 
 needs to be provided as a matrix, and n_states is deduced from its dimensions.}
 
 \item{\code{tpm}}{Optional transition probability matrix, to initialise the model
@@ -90,18 +89,18 @@ A new MarkovChain object
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-structure"></a>}}
-\if{latex}{\out{\hypertarget{method-structure}{}}}
-\subsection{Method \code{structure()}}{
-Structure of MarkovChain model
+\if{html}{\out{<a id="method-MarkovChain-formula"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-formula}{}}}
+\subsection{Method \code{formula()}}{
+Formula of MarkovChain model
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$structure()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$formula()}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-formulas"></a>}}
-\if{latex}{\out{\hypertarget{method-formulas}{}}}
+\if{html}{\out{<a id="method-MarkovChain-formulas"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-formulas}{}}}
 \subsection{Method \code{formulas()}}{
 List of formulas for MarkovChain model
 \subsection{Usage}{
@@ -110,8 +109,8 @@ List of formulas for MarkovChain model
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-tpm"></a>}}
-\if{latex}{\out{\hypertarget{method-tpm}{}}}
+\if{html}{\out{<a id="method-MarkovChain-tpm"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-tpm}{}}}
 \subsection{Method \code{tpm()}}{
 Get transition probability matrices
 \subsection{Usage}{
@@ -133,8 +132,8 @@ Array with one slice for each transition probability matrix
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-coeff_fe"></a>}}
-\if{latex}{\out{\hypertarget{method-coeff_fe}{}}}
+\if{html}{\out{<a id="method-MarkovChain-coeff_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-coeff_fe}{}}}
 \subsection{Method \code{coeff_fe()}}{
 Current parameter estimates (fixed effects)
 \subsection{Usage}{
@@ -143,12 +142,12 @@ Current parameter estimates (fixed effects)
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-delta"></a>}}
-\if{latex}{\out{\hypertarget{method-delta}{}}}
+\if{html}{\out{<a id="method-MarkovChain-delta"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-delta}{}}}
 \subsection{Method \code{delta()}}{
 Stationary distributions
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$delta(t = 1, linpred = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$delta(t = NULL, linpred = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -167,8 +166,8 @@ a row of the design matrices, and each column corresponds to a state.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-stationary"></a>}}
-\if{latex}{\out{\hypertarget{method-stationary}{}}}
+\if{html}{\out{<a id="method-MarkovChain-stationary"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-stationary}{}}}
 \subsection{Method \code{stationary()}}{
 Use stationary distribution as initial distribution?
 \subsection{Usage}{
@@ -177,8 +176,8 @@ Use stationary distribution as initial distribution?
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-coeff_re"></a>}}
-\if{latex}{\out{\hypertarget{method-coeff_re}{}}}
+\if{html}{\out{<a id="method-MarkovChain-coeff_re"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-coeff_re}{}}}
 \subsection{Method \code{coeff_re()}}{
 Current parameter estimates (random effects)
 \subsection{Usage}{
@@ -187,8 +186,8 @@ Current parameter estimates (random effects)
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-X_fe"></a>}}
-\if{latex}{\out{\hypertarget{method-X_fe}{}}}
+\if{html}{\out{<a id="method-MarkovChain-X_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-X_fe}{}}}
 \subsection{Method \code{X_fe()}}{
 Fixed effect design matrix
 \subsection{Usage}{
@@ -197,8 +196,8 @@ Fixed effect design matrix
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-X_re"></a>}}
-\if{latex}{\out{\hypertarget{method-X_re}{}}}
+\if{html}{\out{<a id="method-MarkovChain-X_re"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-X_re}{}}}
 \subsection{Method \code{X_re()}}{
 Random effect design matrix
 \subsection{Usage}{
@@ -207,8 +206,8 @@ Random effect design matrix
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-lambda"></a>}}
-\if{latex}{\out{\hypertarget{method-lambda}{}}}
+\if{html}{\out{<a id="method-MarkovChain-lambda"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-lambda}{}}}
 \subsection{Method \code{lambda()}}{
 Smoothness parameters
 \subsection{Usage}{
@@ -217,23 +216,23 @@ Smoothness parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-vcomp"></a>}}
-\if{latex}{\out{\hypertarget{method-vcomp}{}}}
-\subsection{Method \code{vcomp()}}{
-Variance components of smooth terms
+\if{html}{\out{<a id="method-MarkovChain-sd_re"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-sd_re}{}}}
+\subsection{Method \code{sd_re()}}{
+Standard deviation of smooth terms
 
 This function transforms the smoothness parameter of
 each smooth term into a standard deviation, given by 
 SD = 1/sqrt(lambda). It is particularly helpful to get the
 standard deviations of independent normal random effects.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$vcomp()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$sd_re()}\if{html}{\out{</div>}}
 }
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-nstates"></a>}}
-\if{latex}{\out{\hypertarget{method-nstates}{}}}
+\if{html}{\out{<a id="method-MarkovChain-nstates"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-nstates}{}}}
 \subsection{Method \code{nstates()}}{
 Number of states
 \subsection{Usage}{
@@ -242,8 +241,8 @@ Number of states
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-terms"></a>}}
-\if{latex}{\out{\hypertarget{method-terms}{}}}
+\if{html}{\out{<a id="method-MarkovChain-terms"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-terms}{}}}
 \subsection{Method \code{terms()}}{
 Terms of model formulas
 \subsection{Usage}{
@@ -252,8 +251,8 @@ Terms of model formulas
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_tpm"></a>}}
-\if{latex}{\out{\hypertarget{method-update_tpm}{}}}
+\if{html}{\out{<a id="method-MarkovChain-update_tpm"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-update_tpm}{}}}
 \subsection{Method \code{update_tpm()}}{
 Update transition probability matrix
 \subsection{Usage}{
@@ -269,8 +268,8 @@ Update transition probability matrix
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_coeff_fe"></a>}}
-\if{latex}{\out{\hypertarget{method-update_coeff_fe}{}}}
+\if{html}{\out{<a id="method-MarkovChain-update_coeff_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-update_coeff_fe}{}}}
 \subsection{Method \code{update_coeff_fe()}}{
 Update coefficients for fixed effect parameters
 \subsection{Usage}{
@@ -286,8 +285,8 @@ Update coefficients for fixed effect parameters
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_coeff_re"></a>}}
-\if{latex}{\out{\hypertarget{method-update_coeff_re}{}}}
+\if{html}{\out{<a id="method-MarkovChain-update_coeff_re"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-update_coeff_re}{}}}
 \subsection{Method \code{update_coeff_re()}}{
 Update coefficients for random effect parameters
 \subsection{Usage}{
@@ -303,8 +302,8 @@ Update coefficients for random effect parameters
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_X_fe"></a>}}
-\if{latex}{\out{\hypertarget{method-update_X_fe}{}}}
+\if{html}{\out{<a id="method-MarkovChain-update_X_fe"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-update_X_fe}{}}}
 \subsection{Method \code{update_X_fe()}}{
 Update design matrix for fixed effects
 \subsection{Usage}{
@@ -320,8 +319,8 @@ Update design matrix for fixed effects
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_X_re"></a>}}
-\if{latex}{\out{\hypertarget{method-update_X_re}{}}}
+\if{html}{\out{<a id="method-MarkovChain-update_X_re"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-update_X_re}{}}}
 \subsection{Method \code{update_X_re()}}{
 Update design matrix for random effects
 \subsection{Usage}{
@@ -337,8 +336,8 @@ Update design matrix for random effects
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_delta"></a>}}
-\if{latex}{\out{\hypertarget{method-update_delta}{}}}
+\if{html}{\out{<a id="method-MarkovChain-update_delta"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-update_delta}{}}}
 \subsection{Method \code{update_delta()}}{
 Update delta coefficients
 \subsection{Usage}{
@@ -354,8 +353,8 @@ Update delta coefficients
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-update_lambda"></a>}}
-\if{latex}{\out{\hypertarget{method-update_lambda}{}}}
+\if{html}{\out{<a id="method-MarkovChain-update_lambda"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-update_lambda}{}}}
 \subsection{Method \code{update_lambda()}}{
 Update smoothness parameters
 \subsection{Usage}{
@@ -371,8 +370,8 @@ Update smoothness parameters
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-make_mat"></a>}}
-\if{latex}{\out{\hypertarget{method-make_mat}{}}}
+\if{html}{\out{<a id="method-MarkovChain-make_mat"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-make_mat}{}}}
 \subsection{Method \code{make_mat()}}{
 Make model matrices
 \subsection{Usage}{
@@ -404,8 +403,8 @@ A list with elements:
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-make_mat_grid"></a>}}
-\if{latex}{\out{\hypertarget{method-make_mat_grid}{}}}
+\if{html}{\out{<a id="method-MarkovChain-make_mat_grid"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-make_mat_grid}{}}}
 \subsection{Method \code{make_mat_grid()}}{
 Design matrices for grid of covariates
 
@@ -436,8 +435,8 @@ plus a data frame of covariates values.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-tpm2par"></a>}}
-\if{latex}{\out{\hypertarget{method-tpm2par}{}}}
+\if{html}{\out{<a id="method-MarkovChain-tpm2par"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-tpm2par}{}}}
 \subsection{Method \code{tpm2par()}}{
 Transform transition probabilities to working scale
 
@@ -459,8 +458,8 @@ Vector of parameters on linear predictor scale
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-par2tpm"></a>}}
-\if{latex}{\out{\hypertarget{method-par2tpm}{}}}
+\if{html}{\out{<a id="method-MarkovChain-par2tpm"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-par2tpm}{}}}
 \subsection{Method \code{par2tpm()}}{
 Transform working parameters to transition probabilities
 
@@ -483,8 +482,8 @@ Transition probability matrix
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-linpred"></a>}}
-\if{latex}{\out{\hypertarget{method-linpred}{}}}
+\if{html}{\out{<a id="method-MarkovChain-linpred"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-linpred}{}}}
 \subsection{Method \code{linpred()}}{
 Linear predictor for transition probabilities
 \subsection{Usage}{
@@ -493,8 +492,8 @@ Linear predictor for transition probabilities
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-simulate"></a>}}
-\if{latex}{\out{\hypertarget{method-simulate}{}}}
+\if{html}{\out{<a id="method-MarkovChain-simulate"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-simulate}{}}}
 \subsection{Method \code{simulate()}}{
 Simulate from Markov chain
 \subsection{Usage}{
@@ -523,8 +522,8 @@ Sequence of states of simulated chain
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-formulation"></a>}}
-\if{latex}{\out{\hypertarget{method-formulation}{}}}
+\if{html}{\out{<a id="method-MarkovChain-formulation"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-formulation}{}}}
 \subsection{Method \code{formulation()}}{
 Print model formulation
 \subsection{Usage}{
@@ -533,8 +532,8 @@ Print model formulation
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-print"></a>}}
-\if{latex}{\out{\hypertarget{method-print}{}}}
+\if{html}{\out{<a id="method-MarkovChain-print"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-print}{}}}
 \subsection{Method \code{print()}}{
 Print MarkovChain object
 Check constructor arguments ##
@@ -544,8 +543,8 @@ Check constructor arguments ##
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-MarkovChain-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

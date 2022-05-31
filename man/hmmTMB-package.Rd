@@ -6,9 +6,7 @@
 \alias{hmmTMB-package}
 \title{hmmTMB: Fit hidden Markov models using template model builder}
 \description{
-Fitting hidden Markov models with template model builder allows 
-  for models to be fitted using automatic differentiation and Laplace approximation: 
-  faster inference and more flexible random effect / smoothing spline structures.
+Fitting hidden Markov models with template model builder allows for models to be fitted using automatic differentiation and Laplace approximation: faster inference and more flexible random effect / smoothing spline structures.
 }
 \details{
 The package hmmTMB is based on three main classes (i.e., types of objects):

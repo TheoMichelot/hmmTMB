@@ -15,29 +15,29 @@ functions for a probability distribution.
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{Dist$new()}}
-\item \href{#method-name}{\code{Dist$name()}}
-\item \href{#method-pdf}{\code{Dist$pdf()}}
-\item \href{#method-rng}{\code{Dist$rng()}}
-\item \href{#method-link}{\code{Dist$link()}}
-\item \href{#method-invlink}{\code{Dist$invlink()}}
-\item \href{#method-npar}{\code{Dist$npar()}}
-\item \href{#method-parnames}{\code{Dist$parnames()}}
-\item \href{#method-parapprox}{\code{Dist$parapprox()}}
-\item \href{#method-fixed}{\code{Dist$fixed()}}
-\item \href{#method-code}{\code{Dist$code()}}
-\item \href{#method-set_npar}{\code{Dist$set_npar()}}
-\item \href{#method-set_parnames}{\code{Dist$set_parnames()}}
-\item \href{#method-pdf_apply}{\code{Dist$pdf_apply()}}
-\item \href{#method-rng_apply}{\code{Dist$rng_apply()}}
-\item \href{#method-n2w}{\code{Dist$n2w()}}
-\item \href{#method-w2n}{\code{Dist$w2n()}}
-\item \href{#method-clone}{\code{Dist$clone()}}
+\item \href{#method-Dist-new}{\code{Dist$new()}}
+\item \href{#method-Dist-name}{\code{Dist$name()}}
+\item \href{#method-Dist-pdf}{\code{Dist$pdf()}}
+\item \href{#method-Dist-rng}{\code{Dist$rng()}}
+\item \href{#method-Dist-link}{\code{Dist$link()}}
+\item \href{#method-Dist-invlink}{\code{Dist$invlink()}}
+\item \href{#method-Dist-npar}{\code{Dist$npar()}}
+\item \href{#method-Dist-parnames}{\code{Dist$parnames()}}
+\item \href{#method-Dist-parapprox}{\code{Dist$parapprox()}}
+\item \href{#method-Dist-fixed}{\code{Dist$fixed()}}
+\item \href{#method-Dist-code}{\code{Dist$code()}}
+\item \href{#method-Dist-set_npar}{\code{Dist$set_npar()}}
+\item \href{#method-Dist-set_parnames}{\code{Dist$set_parnames()}}
+\item \href{#method-Dist-pdf_apply}{\code{Dist$pdf_apply()}}
+\item \href{#method-Dist-rng_apply}{\code{Dist$rng_apply()}}
+\item \href{#method-Dist-n2w}{\code{Dist$n2w()}}
+\item \href{#method-Dist-w2n}{\code{Dist$w2n()}}
+\item \href{#method-Dist-clone}{\code{Dist$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-Dist-new"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-new}{}}}
 \subsection{Method \code{new()}}{
 Create a Dist object
 \subsection{Usage}{
@@ -91,8 +91,8 @@ A new Dist object
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-name"></a>}}
-\if{latex}{\out{\hypertarget{method-name}{}}}
+\if{html}{\out{<a id="method-Dist-name"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-name}{}}}
 \subsection{Method \code{name()}}{
 Return name of Dist object
 \subsection{Usage}{
@@ -101,8 +101,8 @@ Return name of Dist object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pdf"></a>}}
-\if{latex}{\out{\hypertarget{method-pdf}{}}}
+\if{html}{\out{<a id="method-Dist-pdf"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-pdf}{}}}
 \subsection{Method \code{pdf()}}{
 Return pdf of Dist object
 \subsection{Usage}{
@@ -111,8 +111,8 @@ Return pdf of Dist object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-rng"></a>}}
-\if{latex}{\out{\hypertarget{method-rng}{}}}
+\if{html}{\out{<a id="method-Dist-rng"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-rng}{}}}
 \subsection{Method \code{rng()}}{
 Return random generator function of Dist object
 \subsection{Usage}{
@@ -121,8 +121,8 @@ Return random generator function of Dist object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-link"></a>}}
-\if{latex}{\out{\hypertarget{method-link}{}}}
+\if{html}{\out{<a id="method-Dist-link"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-link}{}}}
 \subsection{Method \code{link()}}{
 Return link function of Dist object
 \subsection{Usage}{
@@ -131,8 +131,8 @@ Return link function of Dist object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-invlink"></a>}}
-\if{latex}{\out{\hypertarget{method-invlink}{}}}
+\if{html}{\out{<a id="method-Dist-invlink"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-invlink}{}}}
 \subsection{Method \code{invlink()}}{
 Return inverse link function of Dist object
 \subsection{Usage}{
@@ -141,8 +141,8 @@ Return inverse link function of Dist object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-npar"></a>}}
-\if{latex}{\out{\hypertarget{method-npar}{}}}
+\if{html}{\out{<a id="method-Dist-npar"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-npar}{}}}
 \subsection{Method \code{npar()}}{
 Return number of parameters of Dist object
 \subsection{Usage}{
@@ -151,8 +151,8 @@ Return number of parameters of Dist object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-parnames"></a>}}
-\if{latex}{\out{\hypertarget{method-parnames}{}}}
+\if{html}{\out{<a id="method-Dist-parnames"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-parnames}{}}}
 \subsection{Method \code{parnames()}}{
 Return names of parameters
 \subsection{Usage}{
@@ -161,8 +161,8 @@ Return names of parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-parapprox"></a>}}
-\if{latex}{\out{\hypertarget{method-parapprox}{}}}
+\if{html}{\out{<a id="method-Dist-parapprox"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-parapprox}{}}}
 \subsection{Method \code{parapprox()}}{
 Return function that approximates parameters
 \subsection{Usage}{
@@ -171,8 +171,8 @@ Return function that approximates parameters
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-fixed"></a>}}
-\if{latex}{\out{\hypertarget{method-fixed}{}}}
+\if{html}{\out{<a id="method-Dist-fixed"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-fixed}{}}}
 \subsection{Method \code{fixed()}}{
 Return which parameters are fixed
 \subsection{Usage}{
@@ -181,8 +181,8 @@ Return which parameters are fixed
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-code"></a>}}
-\if{latex}{\out{\hypertarget{method-code}{}}}
+\if{html}{\out{<a id="method-Dist-code"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-code}{}}}
 \subsection{Method \code{code()}}{
 Return code of Dist object
 \subsection{Usage}{
@@ -191,8 +191,8 @@ Return code of Dist object
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_npar"></a>}}
-\if{latex}{\out{\hypertarget{method-set_npar}{}}}
+\if{html}{\out{<a id="method-Dist-set_npar"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-set_npar}{}}}
 \subsection{Method \code{set_npar()}}{
 Set number of parameters this distribution has
 \subsection{Usage}{
@@ -208,8 +208,8 @@ Set number of parameters this distribution has
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-set_parnames"></a>}}
-\if{latex}{\out{\hypertarget{method-set_parnames}{}}}
+\if{html}{\out{<a id="method-Dist-set_parnames"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-set_parnames}{}}}
 \subsection{Method \code{set_parnames()}}{
 Set parameter names
 \subsection{Usage}{
@@ -225,8 +225,8 @@ Set parameter names
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-pdf_apply"></a>}}
-\if{latex}{\out{\hypertarget{method-pdf_apply}{}}}
+\if{html}{\out{<a id="method-Dist-pdf_apply"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-pdf_apply}{}}}
 \subsection{Method \code{pdf_apply()}}{
 Evaluate probability density/mass function
 
@@ -256,8 +256,8 @@ parameters par
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-rng_apply"></a>}}
-\if{latex}{\out{\hypertarget{method-rng_apply}{}}}
+\if{html}{\out{<a id="method-Dist-rng_apply"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-rng_apply}{}}}
 \subsection{Method \code{rng_apply()}}{
 Random number generator
 
@@ -283,8 +283,8 @@ Vector of \code{n} realisations of this distribution
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-n2w"></a>}}
-\if{latex}{\out{\hypertarget{method-n2w}{}}}
+\if{html}{\out{<a id="method-Dist-n2w"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-n2w}{}}}
 \subsection{Method \code{n2w()}}{
 Natural to working parameter transformation
 
@@ -307,8 +307,8 @@ Vector of parameters on the working scale
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-w2n"></a>}}
-\if{latex}{\out{\hypertarget{method-w2n}{}}}
+\if{html}{\out{<a id="method-Dist-w2n"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-w2n}{}}}
 \subsection{Method \code{w2n()}}{
 Working to natural parameter transformation
 
@@ -336,8 +336,8 @@ List or matrix of parameters on natural scale
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-Dist-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{
