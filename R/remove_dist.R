@@ -29,11 +29,11 @@ remove_dist <- function(name, compile_cpp = TRUE) {
   # recompile package
   if (compile_cpp) {
     # create a dummy compilation file 
-    cat('#include "hmm_tmb.hpp"\n', file = paste0(root, "/include/hmm_tmb.cpp"))
+    cat('#include "hmmTMB.hpp"\n', file = paste0(root, "/include/hmmTMB.cpp"))
     # compile using dummy file 
-    comp <- tryCatch(TMB::compile(paste0(root, "/include/hmm_tmb.cpp")))
+    comp <- tryCatch(TMB::compile(paste0(root, "/include/hmmTMB.cpp")))
     # copy compiled library to lib folder
-    file.copy(from = paste0(root, "/include/hmm_tmb.so"), to = paste0(root, "/libs/"), overwrite = TRUE)
+    file.copy(from = paste0(root, "/include/hmmTMB.so"), to = paste0(root, "/libs/"), overwrite = TRUE)
     # restart R 
     if (exists(".rs.restartR")){
       .rs.restartR() 

@@ -101,15 +101,15 @@ Dist <- R6Class(
             distnames$code <- as.numeric(distnames$code)
             save(distnames, file = paste0(root, "/distnames.RData"))
             # create a dummy compilation file 
-            cat('#include "hmm_tmb.hpp"\n', file = paste0(root, "/include/hmm_tmb.cpp"))
+            cat('#include "hmmTMB.hpp"\n', file = paste0(root, "/include/hmmTMB.cpp"))
             # compile using dummy file 
-            comp <- tryCatch(TMB::compile(paste0(root, "/include/hmm_tmb.cpp"), flags = "-Wno-ignored-attributes"))
+            comp <- tryCatch(TMB::compile(paste0(root, "/include/hmmTMB.cpp"), flags = "-Wno-ignored-attributes"))
             if ("try-error" %in% class(comp)) {
               cat(new_dist_file, file = paste0(root, "/include/added_dists.hpp"), sep = "\n")
               cat(new_dist_file, file = paste0(root, "/include/dist.hpp"), sep = "\n")
             }
             # copy compiled library to lib folder
-            file.copy(from = paste0(root, "/include/hmm_tmb.so"), to = paste0(root, "/libs/"), overwrite = TRUE)
+            file.copy(from = paste0(root, "/include/hmmTMB.so"), to = paste0(root, "/libs/"), overwrite = TRUE)
             # restart R 
             if (exists(".rs.restartR")){
               .rs.restartR() 
