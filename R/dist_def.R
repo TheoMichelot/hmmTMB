@@ -634,11 +634,14 @@ dist_mvnorm <- Dist$new(
   name = "mvnorm", 
   pdf = function(x, ...,  log = FALSE) {
     par <- c(...)
+    # Dimension
     m <- quad_pos_solve(1, 3, - 2 * length(par))
     y <- do.call(cbind, as.matrix(x))
+    # Unpack parameters
     mu <- par[1:m]
     sds <- par[(m + 1) : (2 * m)]
     corr <- par[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
+    # Create covariance matrix
     V <- diag(m)
     V[lower.tri(V)] <- corr 
     V[upper.tri(V)] <- t(V)[upper.tri(V)]
@@ -652,10 +655,13 @@ dist_mvnorm <- Dist$new(
   }, 
   rng = function(n, ...) {
     par <- c(...)
+    # Dimension
     m <- quad_pos_solve(1, 3, - 2 * length(par))
+    # Unpack parameters
     mu <- par[1:m]
     sds <- par[(m + 1) : (2 * m)]
     corr <- par[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
+    # Create covariance matrix
     V <- diag(m)
     V[lower.tri(V)] <- corr 
     V[upper.tri(V)] <- t(V)[upper.tri(V)]
