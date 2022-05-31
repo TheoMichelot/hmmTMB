@@ -189,8 +189,9 @@ HMM <- R6Class(
     
     #' @description Update parameters stored inside model object
     #' 
-    #' @param par_list a list for coeff_f(r)e_obs, coeff_f(r)e_hid, log_delta, 
-    #'                   log_lambda_hid log_lambda_obs
+    #' @param par_list List with elements for coeff_fe_obs, 
+    #' coeff_fe_hid, coeff_re_obs, coeff_re_hid, log_delta, 
+    #' log_lambda_hid, and log_lambda_obs
     #' @param iter Optional argument to update model parameters based on MCMC
     #' iterations (if using rstan). Either the index of the iteration to use,
     #' or "mean" if the posterior mean should be used.
@@ -216,10 +217,9 @@ HMM <- R6Class(
         } else {
           stop("invalid iter to update_par()")
         }
-        nms <- names(samp)
-        nms <- gsub("\\[[^][]*\\]", "", nms)
+        nms <- gsub("\\[[^][]*\\]", "", names(samp))
         names(samp) <- NULL
-        par_list <- split(samp,nms)
+        par_list <- split(samp, nms)
       }
       # Update observation parameters
       self$obs()$update_coeff_fe(coeff_fe = par_list$coeff_fe_obs)
@@ -1194,8 +1194,8 @@ HMM <- R6Class(
     #' 
     #' @param n_post Number of posterior samples
     #' 
-    #' @return Matrix with one column for each predictor and one row
-    #' for each posterior draw
+    #' @return List with elements obs and hidden, where each is a matrix 
+    #' with one column for each predictor and one row for each posterior draw
     post_linpred = function(n_post) {
       # save current parameters 
       coeff_fe_old <- self$coeff_fe() 
@@ -1230,26 +1230,40 @@ HMM <- R6Class(
     
     #' @description Create posterior simulations of a function of a model component 
     #' 
-    #' @param fn the function which takes a vector of linear predictors as input
-    #'           and produces either a scalar or vector output 
-    #' @param comp is "obs" for observation model linear predictor, "hidden" for
-    #'             hidden model linear predictor 
-    #' @param n_post number of posterior simulations 
-    #' @param ... arguments passed to fn
-    #' @param level confidence interval level, default is 95\% 
+    #' @param fn Function which takes a vector of linear predictors as input
+    #' and produces either a scalar or vector output 
+    #' @param n_post Number of posterior simulations 
+    #' @param comp Either "obs" for observation model linear predictor, or
+    #' "hidden" for hidden model linear predictor 
+    #' @param ... Arguments passed to fn
+    #' @param level Confidence interval level if required (e.g., 0.95 for 95%
+    #' confidence intervals). Default is 0, i.e., confidence intervals are not
+    #' returned. 
     #' 
-    #' @return a vector (for scalar outputs of fn) or a matrix (for vector outputs)
-    #' with a column for each simulation 
+    #' @return A list with elements:
+    #' \itemize{
+    #'   \item{samp}{Vector (for scalar outputs of fn) or matrix (for vector outputs)
+    #'   with a column for each simulation }
+    #'   \item{mean}{Mean over posterior samples}
+    #'   \item{lcl}{Lower confidence interval bound (if level !=0)}
+    #'   \item{ucl}{Upper confidence interval bound (if level !=0)}
+    #' }
+    #' 
     post_fn = function(fn, n_post, comp = NULL, ..., level = 0) {
-      # get linear predictors
+      # Get linear predictors
       lp <- self$post_linpred(n_post)
-      # output
+      # Output list
       res <- NULL
-      # compute function of linear predictor
-      res$samp <- lapply(1:nrow(lp[[comp]]), FUN = function(i) {fn(linpred = lp[[comp]][i,], ...)})
-      # compute means 
+      
+      # Compute function of linear predictor
+      res$samp <- lapply(1:nrow(lp[[comp]]), FUN = function(i) {
+        fn(linpred = lp[[comp]][i,], ...)
+      })
+      
+      # Compute means 
       res$mean <- Reduce("+", res$samp) / length(res$samp)
-      # compute confidence interval
+      
+      # Compute confidence interval
       if (level > 0) {
         alp <- (1 - level) / 2
         arr <- simplify2array(res$samp)
@@ -1263,6 +1277,7 @@ HMM <- R6Class(
         res$lcl <- lcl
         res$ucl <- ucl
       }
+      
       return(res)
     }, 
     
