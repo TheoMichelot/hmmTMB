@@ -2,6 +2,8 @@
 #' R6 class for HMM hidden process model
 #'
 #' Contains the parameters and model formulas for the hidden process model.
+#' 
+#' @export
 MarkovChain <- R6Class(
   classname = "MarkovChain",
   

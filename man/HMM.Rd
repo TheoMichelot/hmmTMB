@@ -214,6 +214,7 @@ Coefficients for random effect parameters
 \if{html}{\out{<a id="method-HMM-fixpar"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-fixpar}{}}}
 \subsection{Method \code{fixpar()}}{
+Fixed parameters
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$fixpar()}\if{html}{\out{</div>}}
 }

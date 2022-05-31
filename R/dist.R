@@ -3,6 +3,8 @@
 #' 
 #' Contains the probability density/mass function, and the link and inverse link 
 #' functions for a probability distribution.
+#' 
+#' @export
 Dist <- R6Class(
   classname = "Dist",
   

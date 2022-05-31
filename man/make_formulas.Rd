@@ -31,3 +31,13 @@ different states, using special functions of the form "state1", "state2", etc.
 This method processes the list of formulas passed by the user to extract the 
 state-specific formulas. Missing formulas are assumed to be intercept-only ~1.
 }
+\examples{
+input_forms <- list(step = list(shape = ~ state1(x1) + x2,
+                                scale = ~ x1),
+                    count = list(lambda = ~ state1(x1) + state2(s(x2, bs = "cs"))))
+
+make_formulas(input_forms = input_forms, 
+              var_names = names(input_forms), 
+              par_names = lapply(input_forms, names), 
+              n_states = 2)
+}

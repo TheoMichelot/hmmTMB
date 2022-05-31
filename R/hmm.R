@@ -3,6 +3,19 @@
 #'
 #' Encapsulates the observation and hidden state models for a hidden
 #' Markov model.
+#' 
+#' @importFrom R6 R6Class
+#' @importFrom mgcv gam rmvn dmvn
+#' @importFrom ggplot2 ggplot aes theme_light geom_line theme scale_colour_manual
+#' facet_wrap label_bquote xlab ylab ggtitle element_blank element_text geom_point
+#' geom_ribbon scale_size_manual geom_histogram geom_vline
+#' @importFrom TMB MakeADFun sdreport
+#' @importFrom stringr str_trim str_split str_split_fixed
+#' @importFrom optimx optimx
+#' 
+#' @useDynLib hmmTMB, .registration = TRUE
+#' 
+#' @export
 HMM <- R6Class(
   classname = "HMM",
   
@@ -163,6 +176,7 @@ HMM <- R6Class(
                   hidden = self$hidden()$coeff_re()))
     },
     
+    #' @description Fixed parameters
     fixpar = function() {
       return(private$fixpar_user_)
     }, 

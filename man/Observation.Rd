@@ -274,6 +274,13 @@ Vector of known states
 \if{html}{\out{<div class="r">}}\preformatted{Observation$known_states(mat = TRUE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{mat}}{Logical.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_par"></a>}}
@@ -527,11 +534,7 @@ Observation likelihoods
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{optional dataframe to include in form of obs_var() output}
-
-\item{\code{X_fe}}{Design matrix for fixed effects}
-
-\item{\code{X_re}}{Design matrix for random effects}
+\item{\code{data}}{Optional dataframe to include in form of obs_var() output}
 }
 \if{html}{\out{</div>}}
 }

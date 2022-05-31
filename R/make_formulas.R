@@ -17,7 +17,7 @@
 #' @return Nested list of formulas, with three levels: observed variable,
 #' parameter of the observation distribution, and state.
 #' 
-#' @example 
+#' @examples
 #' input_forms <- list(step = list(shape = ~ state1(x1) + x2,
 #'                                 scale = ~ x1),
 #'                     count = list(lambda = ~ state1(x1) + state2(s(x2, bs = "cs"))))

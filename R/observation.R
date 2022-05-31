@@ -3,6 +3,8 @@
 #'
 #' Contains the data, distributions, parameters, and formulas for
 #' the observation model from a hidden Markov model.
+#' 
+#' @export
 Observation <- R6Class(
   classname = "Observation",
   
@@ -298,6 +300,8 @@ Observation <- R6Class(
     },
     
     #' @description Vector of known states 
+    #' 
+    #' @param mat Logical.
     known_states = function(mat = TRUE) {
       if (mat) {
         return(private$known_states_)
@@ -476,9 +480,7 @@ Observation <- R6Class(
     
     #' @description Observation likelihoods
     #' 
-    #' @param X_fe Design matrix for fixed effects
-    #' @param X_re Design matrix for random effects
-    #' @param data optional dataframe to include in form of obs_var() output 
+    #' @param data Optional dataframe to include in form of obs_var() output 
     #' 
     #' @return Matrix of likelihoods of observations, with one row for each 
     #' time step, and one column for each state.
