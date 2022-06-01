@@ -20,21 +20,21 @@ dist_pois <- Dist$new(
 # Zero-Inflated Poisson ========================
 dist_zip <- Dist$new(
   name = "zip", 
-  pdf = function(x, z, lambda, log = FALSE) {
+  pdf = function(x, lambda, z, log = FALSE) {
     zero <- x < 1e-10 
     l <- z * zero + (1 - z) * dpois(x, lambda)
     if (log) l <- log(l)
     return(l)
   }, 
-  rng = function(n, z, lambda) {
+  rng = function(n, lambda, z) {
     zero <- rbinom(n, 1, z)
     y <- rpois(n, lambda)
     y[zero == 1] <- 0
     return(y)}, 
-  link = list(z = qlogis, lambda = log), 
-  invlink = list(z = plogis, lambda = exp), 
+  link = list(lambda = log, z = qlogis), 
+  invlink = list(lambda = exp, z = plogis), 
   npar = 2, 
-  parnames = c("z", "lambda"), 
+  parnames = c("lambda", "z"), 
   parapprox = function(x) {
     # Beckett, S., Jee, J., Ncube, T., Pompilus, S., Washington, Q., Singh, A., & Pal, N. (2014). 
     # Zero-inflated Poisson (ZIP) distribution: parameter estimation and applications to model data 
@@ -48,7 +48,7 @@ dist_zip <- Dist$new(
       lambda <- mu + s2 / mu - 1 
       z <- s2 / mu - 1 / lambda 
     }
-    return(c(z, lambda))
+    return(c(lambda, z))
   }
 )
 
@@ -98,23 +98,23 @@ dist_binom <- Dist$new(
 # Zero-inflated Binomial =======================
 dist_zib <- Dist$new(
   name = "zib", 
-  pdf = function(x, z, size, prob, log = FALSE) {
+  pdf = function(x, size, prob, z, log = FALSE) {
     zero <- x < 1e-10 
     l <- z * zero + (1 - z) * dbinom(x, size, prob)
     if (log) l <- log(l)
     return(l)
   }, 
-  rng = function(n, z, size, prob) {
+  rng = function(n, size, prob, z) {
     zero <- rbinom(n, 1, z)
     y <- rbinom(n, size, prob)
     y[zero == 1] <- 0
     return(y)
   }, 
-  link = list(z = qlogis, size = identity, prob = qlogis), 
-  invlink = list(z = plogis, size = identity, prob = plogis), 
+  link = list(size = identity, prob = qlogis, z = qlogis), 
+  invlink = list(size = identity, prob = plogis, z = plogis), 
   npar = 3, 
-  parnames = c("z", "size", "prob"), 
-  fixed = c(z = FALSE, size = TRUE, prob = FALSE), 
+  parnames = c("size", "prob", "z"), 
+  fixed = c(size = TRUE, prob = FALSE, z = FALSE), 
   parapprox = function(x, size = 1) {
     # approximates Binomial with Poisson 
     mu <- mean(x)
@@ -127,7 +127,7 @@ dist_zib <- Dist$new(
       z <- s2 / mu - 1 / lambda 
     }
     prob <- lambda / size 
-    return(c(z, size, prob))
+    return(c(size, prob, z))
   }
 )
 
@@ -193,22 +193,22 @@ dist_cat <- Dist$new(
 # Zero-inflated Negative-Binomial ==============
 dist_zinb <- Dist$new(
   name = "zinb", 
-  pdf = function(x, z, size, prob, log = FALSE) {
+  pdf = function(x, size, prob, z, log = FALSE) {
     zero <- x < 1e-10 
     l <- z * zero + (1 - z) * dnbinom(x, size, prob)
     if (log) l <- log(l)
     return(l)
   }, 
-  rng = function(n, z, size, prob) {
+  rng = function(n, size, prob, z) {
     zero <- rbinom(n, 1, z)
     y <- rnbinom(n, size, prob)
     y[zero == 1] <- 0
     return(y)
   }, 
-  link = list(z = qlogis, size = log, prob = qlogis), 
-  invlink = list(z = plogis, size = exp, prob = plogis), 
+  link = list(size = log, prob = qlogis, z = qlogis), 
+  invlink = list(size = exp, prob = plogis, z = plogis), 
   npar = 3, 
-  parnames = c("z", "size", "prob"), 
+  parnames = c("size", "prob", "z"), 
   parapprox = function(x, size = 1) {
     # approximates Negative binomial with Poisson 
     mu <- mean(x)
@@ -224,7 +224,7 @@ dist_zinb <- Dist$new(
     n <- length(x)
     k <- lambda * n
     prob <- (n * size - 1) / (n * size + k - 1)
-    return(c(z, size, prob))
+    return(c(size, prob, z))
   }
 )
 

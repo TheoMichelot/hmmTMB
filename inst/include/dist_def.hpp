@@ -69,21 +69,21 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
-    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
-    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(wpar(i)); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i));
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i))); 
     return(wpar); 
   } 
   // Inverse link function 
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for(int i = 0; i < n_states; ++i) par(i, 0) = 1.0 / (1.0 + exp(-wpar(i)));
-    for(int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); 
+    for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i+ n_states))); 
     return(par); 
   }
   // Probability density/mass function
   Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
-    Type val = dzipois(x, par(1), par(0), logpdf);
+    Type val = dzipois(x, par(0), par(1), logpdf);
     return(val); 
   }
 };
@@ -150,8 +150,8 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
-    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
-    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = par(i); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i))); 
     for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
     return(wpar); 
   } 
@@ -159,16 +159,16 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for(int i = 0; i < n_states; ++i) par(i, 0) = 1.0 / (1.0 + exp(-wpar(i)));
-    for(int i = 0; i < n_states; ++i) par(i, 1) = wpar(i + n_states); 
+    for(int i = 0; i < n_states; ++i) par(i, 0) = wpar(i);
+    for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states))); 
     for(int i = 0; i < n_states; ++i) par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2 * n_states))); 
     return(par); 
   }
   // Probability density/mass function
   Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
     Type val;
-    if (x == Type(0)) val = par(0) + (1 - par(0)) * dbinom(x, par(1), par(2)); 
-    else val = (1 - par(0)) * dbinom(x, par(1), par(2)); 
+    if (x == Type(0)) val = par(2) + (1 - par(2)) * dbinom(x, par(0), par(1)); 
+    else val = (1 - par(2)) * dbinom(x, par(0), par(1)); 
     if (logpdf) val = log(val); 
     return(val); 
   }
@@ -182,8 +182,8 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
-    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
-    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+    for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i));
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i))); 
     for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
     return(wpar); 
   } 
@@ -191,16 +191,16 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for(int i = 0; i < n_states; ++i) par(i, 0) = 1.0 / (1.0 + exp(-wpar(i)));
-    for(int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); 
+    for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states))); 
     for(int i = 0; i < n_states; ++i) par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2 * n_states))); 
     return(par); 
   }
   // Probability density/mass function
   Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
     Type val;
-    if (x == Type(0)) val = par(0) + (1 - par(0)) * dnbinom(x, par(1), par(2)); 
-    else val = (1 - par(0)) * dnbinom(x, par(1), par(2)); 
+    if (x == Type(0)) val = par(2) + (1 - par(2)) * dnbinom(x, par(0), par(1)); 
+    else val = (1 - par(2)) * dnbinom(x, par(0), par(1)); 
     if (logpdf) val = log(val); 
     return(val); 
   }
