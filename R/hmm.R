@@ -1242,31 +1242,32 @@ HMM <- R6Class(
     #' 
     #' @return A list with elements:
     #' \itemize{
-    #'   \item{samp}{Vector (for scalar outputs of fn) or matrix (for vector outputs)
-    #'   with a column for each simulation }
+    #'   \item{post}{If return_post = TRUE, this is a vector (for scalar 
+    #'   outputs of fn) or matrix (for vector outputs) with a column for 
+    #'   each simulation}
     #'   \item{mean}{Mean over posterior samples}
     #'   \item{lcl}{Lower confidence interval bound (if level !=0)}
     #'   \item{ucl}{Upper confidence interval bound (if level !=0)}
     #' }
     #' 
-    post_fn = function(fn, n_post, comp = NULL, ..., level = 0) {
+    post_fn = function(fn, n_post, comp = NULL, ..., level = 0, return_post = FALSE) {
       # Get linear predictors
       lp <- self$post_linpred(n_post)
       # Output list
       res <- NULL
       
       # Compute function of linear predictor
-      res$samp <- lapply(1:nrow(lp[[comp]]), FUN = function(i) {
+      res$post <- lapply(1:nrow(lp[[comp]]), FUN = function(i) {
         fn(linpred = lp[[comp]][i,], ...)
       })
       
       # Compute means 
-      res$mean <- Reduce("+", res$samp) / length(res$samp)
+      res$mean <- Reduce("+", res$post) / length(res$post)
       
       # Compute confidence interval
       if (level > 0) {
         alp <- (1 - level) / 2
-        arr <- simplify2array(res$samp)
+        arr <- simplify2array(res$post)
         ci <- apply(arr, 1:(length(dim(arr)) - 1), quantile, prob = c(0.025, 0.975))
         nci <- length(dim(ci))
         ci <- aperm(ci, c(2:nci, 1))
@@ -1276,6 +1277,10 @@ HMM <- R6Class(
         dim(lcl) <- dim(ucl) <- dim(ci)[-nci]
         res$lcl <- lcl
         res$ucl <- ucl
+      }
+      
+      if(!return_post) {
+        res$post <- NULL
       }
       
       return(res)
@@ -1294,11 +1299,14 @@ HMM <- R6Class(
     #' @param level Level of the confidence intervals, e.g. CI = 0.95
     #' will produce 95\% confidence intervals (default) 
     #' @param n_post If greater than zero then n_post posterior 
-    #' samples are produced 
+    #' samples are produced
+    #' @param return_post Logical. If TRUE, a list of posterior samples
+    #' is returned. 
     #' 
     #' @return Named array of predictions and confidence interval, 
     #' if requested
-    predict = function(name, t = 1, newdata = NULL, level = 0.95, n_post = 0) {
+    predict = function(name, t = 1, newdata = NULL, level = 0.95, n_post = 0,
+                       return_post = FALSE) {
       if (is.null(private$out_) & (level > 0 | n_post > 0)) {
         stop("must fit model with fit() function first")
       }
@@ -1331,12 +1339,12 @@ HMM <- R6Class(
         val <- fn(linpred = self[[comp]]()$linpred(), t = t)
       } else {
         # return means and confidence intervals
-        sim <- self$post_fn(fn = fn, 
+        val <- self$post_fn(fn = fn, 
                             n_post = n_post, 
                             comp = comp, 
                             t = t,
-                            level = level)
-        val <- sim          
+                            level = level,
+                            return_post = return_post)
       }
       
       # Reset to original model matrices
