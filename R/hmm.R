@@ -719,9 +719,11 @@ HMM <- R6Class(
       private$iters_ <- as.matrix(private$out_stan_)
       
       # store iterations on response scale 
-      npar <- length(unlist(self$par()))
+      par <- unlist(self$par())
+      npar <- length(par)
       niter <- nrow(private$iters_)
-      par_iters <- matrix(0, nr = niter, nc = npar)
+      par_iters <- matrix(0, nrow = niter, ncol = npar)
+      colnames(par_iters) <- names(par)
       for (i in 1:niter) {
         self$update_par(iter = i)
         par_iters[i,] <- unlist(self$par())
