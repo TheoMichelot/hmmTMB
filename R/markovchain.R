@@ -159,10 +159,14 @@ MarkovChain <- R6Class(
     #' @description Current parameter estimates (fixed effects)
     coeff_fe = function() {return(private$coeff_fe_)},
     
-    #' @description Stationary distributions
-    #' @param t time point, default is 1; if t = "all" then 
-    #' all deltas are returned otherwise deltas for time points in t are returned 
-    #' @param linpred custom linear predictor 
+    #' @description Stationary distribution
+    #' 
+    #' @param t Time point(s) for which stationary distribution should be returned. 
+    #' If t = "all", all deltas are returned; else this should be a vector of
+    #' time indices. If NULL (default), the stationary distribution for the first
+    #' time step, which is stored in the object, is returned. 
+    #' @param linpred Optional custom linear predictor 
+    #' 
     #' @return Matrix of stationary distributions. Each row corresponds to
     #' a row of the design matrices, and each column corresponds to a state.
     delta = function(t = NULL, linpred = NULL) {
@@ -184,6 +188,8 @@ MarkovChain <- R6Class(
                      "for these covariate values (singular system)."))
         })
       } else {
+        # By default, return the stationary distribution stored in the object,
+        # which is set to the stationary distribution for t = 1
         stat_dists <- private$delta_
       }
       return(stat_dists)
