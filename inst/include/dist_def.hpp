@@ -44,6 +44,7 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // lambda
     wpar = log(par); 
     return(wpar); 
   } 
@@ -51,6 +52,7 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
+    // lambda
     for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
     return(par); 
   }
@@ -69,7 +71,9 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // lambda
     for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i));
+    // z
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i))); 
     return(wpar); 
   } 
@@ -77,7 +81,9 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
+    // lambda
     for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    // z
     for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i+ n_states))); 
     return(par); 
   }
@@ -96,6 +102,7 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // lambda
     wpar = log(par); 
     return(wpar); 
   } 
@@ -103,6 +110,7 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
+    // lambda
     for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
     return(par); 
   }
@@ -122,7 +130,9 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size());
+    // size
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i); 
+    // prob
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
     return(wpar); 
   } 
@@ -130,7 +140,9 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
+    // size
     for(int i = 0; i < n_states; ++i) par(i, 0) = wpar(i);
+    // prob
     for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states)));
     return(par); 
   }
@@ -150,8 +162,11 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // size
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    // prob
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i))); 
+    // z
     for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
     return(wpar); 
   } 
@@ -159,8 +174,11 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
+    // size
     for(int i = 0; i < n_states; ++i) par(i, 0) = wpar(i);
+    // prob
     for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states))); 
+    // z
     for(int i = 0; i < n_states; ++i) par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2 * n_states))); 
     return(par); 
   }
@@ -182,8 +200,11 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // size
     for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i));
+    // prob
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i))); 
+    // z
     for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
     return(wpar); 
   } 
@@ -191,8 +212,11 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
+    // size
     for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    // prob
     for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states))); 
+    // z
     for(int i = 0; i < n_states; ++i) par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2 * n_states))); 
     return(par); 
   }
@@ -214,7 +238,9 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size());
+    // size
     for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i)); 
+    // prob
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
     return(wpar); 
   } 
@@ -222,7 +248,9 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
+    // size
     for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    // prob
     for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states)));
     return(par); 
   }
@@ -242,7 +270,9 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size());
+    // size
     for (int i = 0; i < n_states; ++i) wpar(i) = log(par(i)); 
+    // prob
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i)));
     return(wpar); 
   } 
@@ -250,7 +280,9 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
+    // size
     for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    // prob
     for(int i = 0; i < n_states; ++i) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states)));
     return(par); 
   }
@@ -324,7 +356,9 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // mean
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    // sd
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
     return(wpar); 
   } 
@@ -332,8 +366,10 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // sd
+    // mean
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i);
+    // sd
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
     return(par); 
   }
   // Probability density/mass function
@@ -351,9 +387,13 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // mean
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    // sd
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+    // min
     for (int i = n_states * 2; i < 3 * n_states; ++i) wpar(i) = par(i);
+    // max
     for (int i = n_states * 3; i < 4 * n_states; ++i) wpar(i) = par(i);
     return(wpar); 
   } 
@@ -361,10 +401,14 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // sd
-    for (int i = 0; i < n_states; ++i) par(i, 2) = wpar(i + 2 * n_states); // min
-    for (int i = 0; i < n_states; ++i) par(i, 3) = wpar(i + 3 * n_states); // max
+    // mean
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i);
+    // sd
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
+    // min
+    for (int i = 0; i < n_states; ++i) par(i, 2) = wpar(i + 2 * n_states);
+    // max
+    for (int i = 0; i < n_states; ++i) par(i, 3) = wpar(i + 3 * n_states);
     return(par); 
   }
   // Probability density/mass function
@@ -385,7 +429,9 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // mean
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    // sd
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
     return(wpar); 
   } 
@@ -393,8 +439,10 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // sd
+    // mean
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); 
+    // sd
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
     return(par); 
   }
   // Probability density/mass function
@@ -413,7 +461,9 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // mean
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    // scale
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); ; 
     return(wpar); 
   } 
@@ -421,8 +471,10 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // scale
+    // mean
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i);
+    // scale
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
     return(par); 
   }
   // Probability density/mass function
@@ -442,7 +494,9 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // lmean
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    // lsd
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
     return(wpar); 
   } 
@@ -450,8 +504,10 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // lmean 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // lsd
+    // lmean
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i);  
+    // lsd
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); 
     return(par); 
   }
   // Probability density/mass function
@@ -469,6 +525,7 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // shape and scale
     wpar = log(par); 
     return(wpar); 
   } 
@@ -476,8 +533,10 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); // shape 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // scale 
+    // shape 
+    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); 
+    // scale
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));  
     return(par); 
   }
   // Probability density/mass function
@@ -495,6 +554,7 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // mean and sd
     wpar = log(par); 
     return(wpar); 
   } 
@@ -502,8 +562,10 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); // mean 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // sd 
+    // mean 
+    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); 
+    // sd 
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); 
     return(par); 
   }
   // Probability density/mass function
@@ -518,42 +580,42 @@ public:
 template<class Type> 
 class ZeroInflatedGamma : public Dist<Type> {
 public:
-    // Constructor
-    ZeroInflatedGamma() {}; 
-    // Link function 
-    vector<Type> link(const vector<Type>& par, const int& n_states) {
-        vector<Type> wpar(par.size()); 
-        for (int i = 0; i < 2 * n_states; ++i) 
-            wpar(i) = log(par(i));
-        for (int i = 2 * n_states; i < 3 * n_states; ++i) 
-            wpar(i) = log(par(i) / (1.0 - par(i))); 
-        return(wpar); 
-    } 
-    // Inverse link function 
-    matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
-        int n_par = wpar.size()/n_states;
-        matrix<Type> par(n_states, n_par);
-        for(int i = 0; i < n_states; ++i) 
-            par(i, 0) = exp(wpar(i)); 
-        for(int i = 0; i < n_states; ++i) 
-            par(i, 1) = exp(wpar(i + n_states)); 
-        for(int i = 0; i < n_states; ++i) 
-            par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2*n_states)));
-        return(par); 
+  // Constructor
+  ZeroInflatedGamma() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    // shape and scale
+    for(int i = 0; i < 2 * n_states; ++i) wpar(i) = log(par(i));
+    // z
+    for(int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i))); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    // shape
+    for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); 
+    // scale
+    for(int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); 
+    // z
+    for(int i = 0; i < n_states; ++i) par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2*n_states)));
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = 0.0;
+    if(x == Type(0)) {
+      val = par(2);
+    } else {
+      val = (1 - par(2)) * dgamma(x, par(0), par(1), 0);
     }
-    // Probability density/mass function
-    Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
-        Type val = 0.0;
-        if(x == Type(0)) {
-            val = par(2);
-        } else {
-            val = (1 - par(2)) * dgamma(x, par(0), par(1), 0);
-        }
-        if(logpdf) {
-          val = log(val);
-        }
-        return(val); 
+    if(logpdf) {
+      val = log(val);
     }
+    return(val); 
+  }
 };
 
 template<class Type> 
@@ -564,22 +626,22 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
-    for (int i = 0; i < 2 * n_states; ++i) 
-      wpar(i) = log(par(i));
-    for (int i = 2 * n_states; i < 3 * n_states; ++i) 
-      wpar(i) = log(par(i) / (1.0 - par(i))); 
+    // mean and sd
+    for(int i = 0; i < 2 * n_states; ++i) wpar(i) = log(par(i));
+    // z
+    for(int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i) / (1.0 - par(i))); 
     return(wpar); 
   } 
   // Inverse link function 
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for(int i = 0; i < n_states; ++i) 
-      par(i, 0) = exp(wpar(i)); 
-    for(int i = 0; i < n_states; ++i) 
-      par(i, 1) = exp(wpar(i + n_states)); 
-    for(int i = 0; i < n_states; ++i) 
-      par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2*n_states)));
+    // mean
+    for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); 
+    // sd
+    for(int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); 
+    // z
+    for(int i = 0; i < n_states; ++i) par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2*n_states)));
     return(par); 
   }
   // Probability density/mass function
@@ -607,6 +669,7 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // shape and scale
     wpar = log(par); 
     return(wpar); 
   } 
@@ -614,8 +677,10 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); // shape 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // scale 
+    // shape
+    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    // scale
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
     return(par); 
   }
   // Probability density/mass function
@@ -633,6 +698,7 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // rate
     wpar = log(par); 
     return(wpar); 
   } 
@@ -640,7 +706,8 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); // rate 
+    // rate 
+    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); 
     return(par); 
   }
   // Probability density/mass function
@@ -658,6 +725,7 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // shape and scale
     wpar = log(par); 
     return(wpar); 
   } 
@@ -665,8 +733,10 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i)); // shape 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)); // scale 
+    // shape 
+    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    // scale
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
     return(par); 
   }
   // Probability density/mass function
@@ -686,8 +756,11 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
+    // mean
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
+    // power
     for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) / (1 - par(i))); 
+    // dispersion
     for (int i = 2 * n_states; i < 3 * n_states; ++i) wpar(i) = log(par(i)); 
     return(wpar); 
   } 
@@ -695,9 +768,12 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); // mean 
-    for (int i = 0; i < n_states; ++i) par(i, 1) = 1 / (1 + exp(-wpar(i + n_states))); // power
-    for (int i = 0; i < n_states; ++i) par(i, 2) = exp(wpar(i + 2 * n_states)); // dispersion 
+    // mean 
+    for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i); 
+    // power
+    for (int i = 0; i < n_states; ++i) par(i, 1) = 1 / (1 + exp(-wpar(i + n_states)));
+    // dispersion 
+    for (int i = 0; i < n_states; ++i) par(i, 2) = exp(wpar(i + 2 * n_states)); 
     return(par); 
   }
   // Probability density/mass function
@@ -716,24 +792,20 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
-    // Mean in (-pi, pi]
-    for(int i = 0; i < n_states; i++)
-      wpar(i) = logit((par(i) + M_PI) / (2 * M_PI));
-    // Concentration > 0
-    for(int i = n_states; i < 2*n_states; i++)
-      wpar(i) = log(par(i));
+    // mean in (-pi, pi]
+    for(int i = 0; i < n_states; i++) wpar(i) = logit((par(i) + M_PI) / (2 * M_PI));
+    // concentration > 0
+    for(int i = n_states; i < 2*n_states; i++) wpar(i) = log(par(i));
     return(wpar); 
   } 
   // Inverse link function 
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    // Mean
-    for (int i = 0; i < n_states; i++) 
-      par(i, 0) = 2 * M_PI * invlogit(wpar(i)) - M_PI; 
-    // Concentration
-    for (int i = 0; i < n_states; i++) 
-      par(i, 1) = exp(wpar(i + n_states));
+    // mean
+    for (int i = 0; i < n_states; i++) par(i, 0) = 2 * M_PI * invlogit(wpar(i)) - M_PI; 
+    // concentration
+    for (int i = 0; i < n_states; i++) par(i, 1) = exp(wpar(i + n_states));
     return(par); 
   }
   // Probability density/mass function
@@ -756,24 +828,20 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
-    // Mean in (-pi, pi]
-    for(int i = 0; i < n_states; i++)
-      wpar(i) = logit((par(i) + M_PI) / (2 * M_PI));
-    // 0 < Concentration < 1
-    for(int i = n_states; i < 2*n_states; i++)
-      wpar(i) = log(par(i) / (1.0 - par(i)));
+    // mean in (-pi, pi]
+    for(int i = 0; i < n_states; i++) wpar(i) = logit((par(i) + M_PI) / (2 * M_PI));
+    // 0 < concentration < 1
+    for(int i = n_states; i < 2*n_states; i++) wpar(i) = log(par(i) / (1.0 - par(i)));
     return(wpar); 
   } 
   // Inverse link function 
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    // Mean
-    for (int i = 0; i < n_states; i++) 
-      par(i, 0) = 2 * M_PI * invlogit(wpar(i)) - M_PI; 
-    // Concentration
-    for (int i = 0; i < n_states; i++) 
-      par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states)));
+    // mean
+    for (int i = 0; i < n_states; i++) par(i, 0) = 2 * M_PI * invlogit(wpar(i)) - M_PI; 
+    // concentration
+    for (int i = 0; i < n_states; i++) par(i, 1) = 1.0 / (1.0 + exp(-wpar(i + n_states)));
     return(par); 
   }
   // Probability density/mass function
@@ -798,7 +866,6 @@ public:
     int dim = this->dim(n_par); 
     int k = 0; 
     // means
-    // means
     for (int d = 0; d < dim; ++d) {
       for (int i = 0; i < n_states; ++i) {
         wpar(k) = par(k); 
@@ -815,8 +882,8 @@ public:
     // corr 
     for (int d = 0; d < 0.5*(dim * dim - dim); ++d) {
       for (int i = 0; i < n_states; ++i) {
-       Type tmp = 0.5 * (par(k) + 1); 
-       wpar(k) = log(tmp / (1 - tmp)); 
+        Type tmp = 0.5 * (par(k) + 1); 
+        wpar(k) = log(tmp / (1 - tmp)); 
         ++k; 
       }
     }
@@ -922,8 +989,8 @@ public:
     }
     return(par); 
   }
-
-    // Multivariate Probability density function 
+  
+  // Multivariate Probability density function 
   Type pdf(const vector<Type>& x, const vector<Type>& par, const bool& logpdf) {
     Type val = 0; 
     for (int i = 0; i < x.size(); ++i) {
@@ -934,6 +1001,6 @@ public:
     if (!logpdf) val = exp(val); 
     return(val); 
   }
-
+  
 };
 #endif
