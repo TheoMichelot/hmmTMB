@@ -372,6 +372,17 @@ HMM <- R6Class(
       } else {
         log_lambda_hid_prior <- matrix(NA, nr = length(lam$hidden), nc = 2)
       }
+      
+      # Name rows and columns for readability
+      rownames(coeff_fe_obs_prior) <- rownames(fe$obs)
+      rownames(coeff_fe_hid_prior) <- rownames(fe$hidden)
+      rownames(log_lambda_obs_prior) <- rownames(lam$obs)
+      rownames(log_lambda_hid_prior) <- rownames(lam$hidden)
+      colnames(coeff_fe_obs_prior) <- c("mean", "sd")
+      colnames(coeff_fe_hid_prior) <- c("mean", "sd")
+      colnames(log_lambda_obs_prior) <- c("mean", "sd")
+      colnames(log_lambda_hid_prior) <- c("mean", "sd")
+      
       private$priors_ <- list(coeff_fe_obs = coeff_fe_obs_prior, 
                               coeff_fe_hid = coeff_fe_hid_prior, 
                               log_lambda_obs = log_lambda_obs_prior, 
