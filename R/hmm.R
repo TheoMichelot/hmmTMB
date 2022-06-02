@@ -1333,6 +1333,9 @@ HMM <- R6Class(
         stop("must fit model with fit() function first")
       }
       if (!is.null(newdata)) {
+        # Return predictions for all rows of newdata if provided
+        t <- "all"
+        
         # Save model matrices, then replace by matrices based on newdata
         old <- list(X_fe_obs = self$obs()$X_fe(), 
                     X_re_obs = self$obs()$X_re(), 
