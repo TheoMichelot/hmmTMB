@@ -1770,7 +1770,7 @@ HMM <- R6Class(
     # Print methods -----------------------------------------------------------
     #' @description Print observation parameters at t = 1
     print_obspar = function() {
-      if(is.null(private$out_)) {
+      if(is.null(private$out_) & is.null(private$out_stan_)) {
         cat("> Initial observation parameters (t = 1):\n")
       } else {
         cat("> Estimated observation parameters (t = 1):\n")
@@ -1782,7 +1782,7 @@ HMM <- R6Class(
     
     #' @description Print observation parameters at t = 1
     print_tpm = function() {
-      if(is.null(private$out_)) {
+      if(is.null(private$out_) & is.null(private$out_stan_)) {
         cat("> Initial transition probabilities (t = 1):\n")
       } else {
         cat("> Estimated transition probabilities (t = 1):\n")
