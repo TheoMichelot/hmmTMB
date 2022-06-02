@@ -712,23 +712,32 @@ HMM <- R6Class(
         self$setup(silent = silent)
       }
       
-      # do stan MCMC 
+      # Run stan MCMC 
       private$out_stan_ <- tmbstan::tmbstan(private$tmb_obj_, ...)
       
-      # store iterations 
+      # Store iterations 
       private$iters_ <- as.matrix(private$out_stan_)
       
-      # store iterations on response scale 
-      par <- unlist(self$par())
-      npar <- length(par)
+      # Get iterations on response scale 
+      # (only obs parameters and transition probs)
+      npar <- length(unlist(self$par()))
       niter <- nrow(private$iters_)
       par_iters <- matrix(0, nrow = niter, ncol = npar)
-      colnames(par_iters) <- names(par)
       for (i in 1:niter) {
         self$update_par(iter = i)
-        par_iters[i,] <- unlist(self$par())
+        par <- self$par()
+        # Parameter matrices are transposed for best column order in par_iters
+        par_iters[i,] <- unlist(lapply(par, function(pararray) 
+          t(pararray[,,1])))
       }
-      private$par_iters_ <- par_iters 
+      
+      # Name columns for readability
+      obspar_names <- names(unlist(self$obs()$formulas()))
+      n_states <- self$hidden()$nstates()
+      tr_names <- paste0(paste0("S", rep(1:n_states, each = n_states), 
+                                ">S", rep(1:n_states, n_states)))
+      colnames(par_iters) <- c(obspar_names, tr_names)
+      private$par_iters_ <- par_iters
       
       # set coefficients to posterior means 
       self$update_par(iter = "mean")
