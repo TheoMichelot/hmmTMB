@@ -177,8 +177,16 @@ HMM <- R6Class(
     },
     
     #' @description Fixed parameters
-    fixpar = function() {
-      return(private$fixpar_user_)
+    #' 
+    #' @param all Logical. If FALSE, only user-specified fixed
+    #' parameters are returned, but not parameters that are fixed
+    #' by definition (e.g., size of binomial distribution).
+    fixpar = function(all = FALSE) {
+      if(all) {
+        return(private$fixpar_)
+      } else {
+        return(private$fixpar_user_)        
+      }
     }, 
     
     #' @description Smoothness parameters
