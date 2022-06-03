@@ -189,6 +189,10 @@ HMM <- R6Class(
       }
     }, 
     
+    par_array = function() {
+      return(private$par_array_)
+    },
+    
     #' @description Smoothness parameters
     lambda = function() {
       return(list(obs = self$obs()$lambda(),
@@ -263,6 +267,16 @@ HMM <- R6Class(
           self$hidden()$update_delta(delta)
         }
       }
+      
+      # Update par_array
+      par_list <- list(coeff_fe_obs = self$obs()$coeff_fe(),
+                       log_lambda_obs = self$obs()$lambda(), 
+                       coeff_fe_hid = self$hidden()$coeff_fe(), 
+                       log_lambda_hid = self$hidden()$lambda(), 
+                       log_delta = par_list$log_delta, 
+                       coeff_re_obs = self$obs()$coeff_re(), 
+                       coeff_re_hid = self$hidden()$coeff_re())
+      private$par_array_["value",] <- unlist(par_list, use.names = FALSE)
     }, 
     
     #' @description Standard deviation of smooth terms (or random effects)
@@ -567,7 +581,7 @@ HMM <- R6Class(
         # set initial values for coeff_re and log_lambda
         random <- c(random, "coeff_re_obs")
         tmb_par$coeff_re_obs <- rep(0, ncol(X_re_obs))
-        tmb_par$log_lambda_obs <- rep(0, ncol(ncol_re_obs))
+        tmb_par$log_lambda_obs <- log(self$lambda()$obs)
       }
       
       # check if delta to be stationary (overrides custom map specified)
@@ -602,27 +616,6 @@ HMM <- R6Class(
       private$fixpar_$hid <- c(private$fixpar_$hid, rep(NA, length(getnms)))
       names(private$fixpar_$hid) <- c(oldnms, getnms)
       
-      # add custom mapping effects
-      usernms <- c("obs", "hid", "lambda", "delta")
-      comps <- c("coeff_fe_obs", "coeff_fe_hid", "log_lambda", "log_delta")
-      for (i in seq_along(usernms)) {
-        if (!is.null(private$fixpar_[[usernms[i]]])) {
-          v <- tmb_par[[comps[i]]]
-          tmp <- 1:length(v)
-          if (is.matrix(v)) {
-            nms <- rownames(v)
-          } else {
-            nms <- names(v)
-          }
-          tmp[nms %in% names(private$fixpar_[[usernms[i]]])] <- 
-            as.numeric(private$fixpar_[[usernms[i]]])
-          tmp <- factor(as.vector(tmp))
-          ls <- list(tmp)
-          names(ls) <- comps[i]
-          map <- c(map, ls)
-        }
-      }
-      
       # Setup random effects in hidden state model
       if(is.null(S_hid)) {
         # If there are no random effects, 
@@ -637,8 +630,56 @@ HMM <- R6Class(
         # set initial values for coeff_re and log_lambda
         random <- c(random, "coeff_re_hid")
         tmb_par$coeff_re_hid <- rep(0, ncol(X_re_hid))
-        tmb_par$log_lambda_hid <- rep(0, ncol(ncol_re_hid))
+        tmb_par$log_lambda_hid <- log(self$lambda()$hidden)
       }
+
+      # Add custom mapping effects, i.e., add them to the map argument
+      # for TMB, and create a vector of 0/1 to record which parameters
+      # are estimated and which are not (used e.g. in post_coeff)
+      par_list <- list(coeff_fe_obs = self$obs()$coeff_fe(),
+                       log_lambda_obs = self$obs()$lambda(), 
+                       coeff_fe_hid = self$hidden()$coeff_fe(), 
+                       log_lambda_hid = self$hidden()$lambda(), 
+                       log_delta = ldelta, 
+                       coeff_re_obs = self$obs()$coeff_re(), 
+                       coeff_re_hid = self$hidden()$coeff_re())
+      usernms <- c("obs", "lambda_obs", "hid", 
+                   "lambda_hid", "delta", NA, NA)
+      par_names <- names(par_list)
+      fixpar_vec <- NULL
+      # Loop over model components
+      for (i in seq_along(par_list)) {
+        # Vector of parameters
+        v <- par_list[[par_names[i]]]
+        fix_or_not <- rep(0, length(v))
+        names(fix_or_not) <- rep(par_names[i], length(v))
+        
+        # Check if user-specified constraint
+        fixed <- private$fixpar_[[usernms[i]]]
+        if (!is.null(fixed)) {
+          # Map vector for TMB
+          tmp <- 1:length(v)
+          if(is.matrix(v)) {
+            nms <- rownames(v)
+          } else {
+            nms <- names(v)
+          }
+          # Set map to user input
+          tmp[nms %in% names(fixed)] <- as.numeric(fixed)
+          tmp <- factor(as.vector(tmp))
+          ls <- list(tmp)
+          names(ls) <- par_names[i]
+          map <- c(map, ls)
+          # Which parameters are fixed
+          if(any(is.na(tmp))) {
+            fix_or_not[which(is.na(tmp))] <- 1
+          }
+        }
+        fixpar_vec <- c(fixpar_vec, fix_or_not)
+      }
+      par_array <- rbind(fixpar_vec, unlist(par_list, use.names = FALSE))
+      rownames(par_array) <- c("fixed", "value")
+      private$par_array_ <- par_array
       
       # Get stored priors 
       priors <- self$priors() 
@@ -1211,13 +1252,16 @@ HMM <- R6Class(
       # Generate samples from MVN estimator distribution
       post <- rmvn(n = n_post, mu = par, V = V)
       
-      # ensure it is a matrix
-      post <- matrix(post, nc = length(par), nr = n_post)
+      # Matrix filled with estimates
+      npar <- ncol(self$par_array())
+      post_all <- matrix(rep(self$par_array()["value",], each = n_post), 
+                         nrow = n_post, ncol = npar)
+      colnames(post_all) <- colnames(self$par_array())
       
-      # parameter names
-      colnames(post) <- names(par)
+      # Fill non-fixed columns with posterior samples
+      post_all[,which(self$par_array()["fixed",] == 0)] <- post
       
-      return(post)
+      return(post_all)
     },
     
     #' @description Posterior sampling for linear predictor 
@@ -1833,6 +1877,7 @@ HMM <- R6Class(
     par_iters_ = NULL, 
     fixpar_ = NULL,
     fixpar_user_ = NULL, 
+    par_array_ = NULL,
     states_ = NULL,
     
     # Reading from spec file --------------------------------------------------
