@@ -1197,7 +1197,7 @@ HMM <- R6Class(
         V <- rep$cov.fixed
       } else {
         par <- c(rep$par.fixed, rep$par.random)
-        V <- solve(rep$jointPrecision)
+        V <- prec_to_cov(rep$jointPrecision)
       }
       
       # Generate samples from MVN estimator distribution
