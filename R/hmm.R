@@ -176,6 +176,22 @@ HMM <- R6Class(
                   hidden = self$hidden()$coeff_re()))
     },
     
+    #' @description List of all model coefficients
+    #' 
+    #' These are the parameters estimated by the model, including
+    #' fixed and random effect parameters for the observation parameters
+    #' and the transition probabilities, (transformed) initial
+    #' probabilities, and smoothness parameters.
+    coeff_list = function() {
+      list(coeff_fe_obs = self$obs()$coeff_fe(),
+           log_lambda_obs = self$obs()$lambda(), 
+           coeff_fe_hid = self$hidden()$coeff_fe(), 
+           log_lambda_hid = self$hidden()$lambda(), 
+           log_delta0 = self$hidden()$delta0(log = TRUE), 
+           coeff_re_obs = self$obs()$coeff_re(), 
+           coeff_re_hid = self$hidden()$coeff_re())
+    },
+    
     #' @description Fixed parameters
     #' 
     #' @param all Logical. If FALSE, only user-specified fixed
@@ -189,8 +205,8 @@ HMM <- R6Class(
       }
     }, 
     
-    par_array = function() {
-      return(private$par_array_)
+    coeff_array = function() {
+      return(private$coeff_array_)
     },
     
     #' @description Smoothness parameters
@@ -268,15 +284,8 @@ HMM <- R6Class(
         }
       }
       
-      # Update par_array
-      par_list <- list(coeff_fe_obs = self$obs()$coeff_fe(),
-                       log_lambda_obs = self$obs()$lambda(), 
-                       coeff_fe_hid = self$hidden()$coeff_fe(), 
-                       log_lambda_hid = self$hidden()$lambda(), 
-                       log_delta0 = par_list$log_delta0, 
-                       coeff_re_obs = self$obs()$coeff_re(), 
-                       coeff_re_hid = self$hidden()$coeff_re())
-      private$par_array_["value",] <- unlist(par_list, use.names = FALSE)
+      # Update coeff_array
+      private$coeff_array_[,"value"] <- unlist(self$coeff_list(), use.names = FALSE)
     }, 
     
     #' @description Standard deviation of smooth terms (or random effects)
@@ -630,19 +639,17 @@ HMM <- R6Class(
         tmb_par$coeff_re_hid <- rep(0, ncol(X_re_hid))
         tmb_par$log_lambda_hid <- log(self$lambda()$hidden)
       }
-
+      
       # Add custom mapping effects, i.e., add them to the map argument
       # for TMB, and create a vector of 0/1 to record which parameters
       # are estimated and which are not (used e.g. in post_coeff)
-      par_list <- list(coeff_fe_obs = self$obs()$coeff_fe(),
-                       log_lambda_obs = self$obs()$lambda(), 
-                       coeff_fe_hid = self$hidden()$coeff_fe(), 
-                       log_lambda_hid = self$hidden()$lambda(), 
-                       log_delta0 = ldelta0, 
-                       coeff_re_obs = self$obs()$coeff_re(), 
-                       coeff_re_hid = self$hidden()$coeff_re())
-      usernms <- c("obs", "lambda_obs", "hid", 
-                   "lambda_hid", "delta0", NA, NA)
+      par_list <- self$coeff_list()
+      if (!is.null(private$fixpar_$delta0)) {
+        # if it is fixed, don't transform it to working scale 
+        # as it may be common to have fixed values of zero 
+        par_list$delta0 <- self$hidden()$delta0()[-n_states]
+      }
+      usernms <- c("obs", "lambda_obs", "hid", "lambda_hid", "delta0", NA, NA)
       par_names <- names(par_list)
       fixpar_vec <- NULL
       # Loop over model components
@@ -675,9 +682,9 @@ HMM <- R6Class(
         }
         fixpar_vec <- c(fixpar_vec, fix_or_not)
       }
-      par_array <- rbind(fixpar_vec, unlist(par_list, use.names = FALSE))
-      rownames(par_array) <- c("fixed", "value")
-      private$par_array_ <- par_array
+      coeff_array <- cbind(fixpar_vec, unlist(par_list, use.names = FALSE))
+      colnames(coeff_array) <- c("fixed", "value")
+      private$coeff_array_ <- coeff_array
       
       # Get stored priors 
       priors <- self$priors() 
@@ -1250,13 +1257,13 @@ HMM <- R6Class(
       post <- rmvn(n = n_post, mu = par, V = V)
       
       # Matrix filled with estimates
-      npar <- ncol(self$par_array())
-      post_all <- matrix(rep(self$par_array()["value",], each = n_post), 
+      npar <- nrow(self$coeff_array())
+      post_all <- matrix(rep(self$coeff_array()[,"value"], each = n_post), 
                          nrow = n_post, ncol = npar)
-      colnames(post_all) <- colnames(self$par_array())
+      colnames(post_all) <- rownames(self$coeff_array())
       
       # Fill non-fixed columns with posterior samples
-      post_all[,which(self$par_array()["fixed",] == 0)] <- post
+      post_all[,which(self$coeff_array()[,"fixed"] == 0)] <- post
       
       return(post_all)
     },
@@ -1873,7 +1880,7 @@ HMM <- R6Class(
     par_iters_ = NULL, 
     fixpar_ = NULL,
     fixpar_user_ = NULL, 
-    par_array_ = NULL,
+    coeff_array_ = NULL,
     states_ = NULL,
     
     # Reading from spec file --------------------------------------------------
