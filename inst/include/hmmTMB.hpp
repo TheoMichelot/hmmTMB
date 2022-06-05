@@ -58,7 +58,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(log_lambda_obs); // smoothness parameters
   PARAMETER_VECTOR(coeff_fe_hid); // state process parameters (fixed effects)
   PARAMETER_VECTOR(log_lambda_hid); // smoothness parameters
-  PARAMETER_VECTOR(log_delta); // initial distribution
+  PARAMETER_VECTOR(log_delta0); // initial distribution
   PARAMETER_VECTOR(coeff_re_obs); // observation parameters (random effects)
   PARAMETER_VECTOR(coeff_re_hid); // state process parameters (random effects)
 
@@ -107,7 +107,7 @@ Type objective_function<Type>::operator() ()
   }
   
   // Initial distribution
-  matrix<Type> delta(1, n_states); 
+  matrix<Type> delta0(1, n_states); 
   if (statdist == 1) {
     matrix<Type> I = matrix<Type>::Identity(n_states, n_states);
     matrix<Type> tpminv = I; 
@@ -117,20 +117,20 @@ Type objective_function<Type>::operator() ()
     // if tpm is ill-conditioned then just use uniform initial distribution 
     try {
       tpminv = tpminv.inverse();
-      delta = ivec * tpminv;
+      delta0 = ivec * tpminv;
     } catch(...) {
-      for (int i = 0; i < n_states; ++i) delta(0, i) = 1.0 / n_states; 
+      for (int i = 0; i < n_states; ++i) delta0(0, i) = 1.0 / n_states; 
     }
   } else if (statdist == 0) {
-    delta.setOnes();
+    delta0.setOnes();
     for(int i = 0; i < n_states - 1; i++)
-      delta(0, i) = exp(log_delta(i));
-    delta = delta/delta.sum();
+      delta0(0, i) = exp(log_delta0(i));
+    delta0 = delta0/delta0.sum();
   } else {
-    delta.setZero(); 
+    delta0.setZero(); 
     for (int i = 0; i < n_states - 1; i++) 
-      delta(0, i) = log_delta(i); 
-    delta(0, n_states - 1) = 1.0 - delta.sum(); 
+      delta0(0, i) = log_delta0(i); 
+    delta0(0, n_states - 1) = 1.0 - delta0.sum(); 
   }
 
   //===================================//  
@@ -223,14 +223,14 @@ Type objective_function<Type>::operator() ()
   // Compute log-likelihood //
   //========================//
   // Initialise log-likelihood
-  matrix<Type> phi(delta);
+  matrix<Type> phi(delta0);
   Type sumphi = 0;
   
   // Forward algorithm
   for (int i = 0; i < n; ++i) {
     // Re-initialise phi at first observation of each time series
     if(i == 0 || ID(i-1) != ID(i)) {
-      phi = delta;
+      phi = delta0;
     }
     phi = (phi.array() * prob.row(i).array()).matrix();
     phi = phi * tpm_array(i);

@@ -53,8 +53,8 @@ HMM <- R6Class(
         hidden <- MarkovChain$new(n_states = spec$nstates, 
                                   formula = spec$tpm, 
                                   data = spec$data, 
-                                  stationary = is.null(spec$delta))
-        if(!is.null(spec$delta)) hidden$update_delta(spec$delta)
+                                  stationary = is.null(spec$delta0))
+        if(!is.null(spec$delta0)) hidden$update_delta0(spec$delta0)
         if (!is.null(spec$fixed)) fixpar <- spec$fixed 
         if (!is.null(spec$tpm0))  hidden$update_tpm(spec$tpm0)
       }
@@ -202,7 +202,7 @@ HMM <- R6Class(
     #' @description Update parameters stored inside model object
     #' 
     #' @param par_list List with elements for coeff_fe_obs, 
-    #' coeff_fe_hid, coeff_re_obs, coeff_re_hid, log_delta, 
+    #' coeff_fe_hid, coeff_re_obs, coeff_re_hid, log_delta0, 
     #' log_lambda_hid, and log_lambda_obs
     #' @param iter Optional argument to update model parameters based on MCMC
     #' iterations (if using rstan). Either the index of the iteration to use,
@@ -249,22 +249,22 @@ HMM <- R6Class(
         self$hidden()$update_lambda(exp(par_list$log_lambda_hid))
       }
       
-      # Update delta parameters 
+      # Update initial distribution delta0
       if (self$hidden()$stationary()) {
         tpms <- self$hidden()$tpm(t = "all")
         nstates <- self$hidden()$nstates()
-        delta <- solve(t(diag(nstates) - tpms[,,1] + 1), rep(1, nstates))
-        self$hidden()$update_delta(delta)
+        delta0 <- solve(t(diag(nstates) - tpms[,,1] + 1), rep(1, nstates))
+        self$hidden()$update_delta0(delta0)
       } else {
-        if (!is.null(private$fixpar_$delta)) {
-          delta <- par_list$log_delta
-          delta <- c(delta, 1 - sum(delta))
-          self$hidden()$update_delta(delta)
+        if (!is.null(private$fixpar_$delta0)) {
+          delta0 <- par_list$log_delta0
+          delta0 <- c(delta0, 1 - sum(delta0))
+          self$hidden()$update_delta0(delta0)
         } else {
-          ldelta <- par_list$log_delta 
-          delta <- c(exp(ldelta), 1)
-          delta <- delta / sum(delta)
-          self$hidden()$update_delta(delta)
+          ldelta0 <- par_list$log_delta0 
+          delta0 <- c(exp(ldelta0), 1)
+          delta0 <- delta0 / sum(delta0)
+          self$hidden()$update_delta0(delta0)
         }
       }
       
@@ -273,7 +273,7 @@ HMM <- R6Class(
                        log_lambda_obs = self$obs()$lambda(), 
                        coeff_fe_hid = self$hidden()$coeff_fe(), 
                        log_lambda_hid = self$hidden()$lambda(), 
-                       log_delta = par_list$log_delta, 
+                       log_delta0 = par_list$log_delta0, 
                        coeff_re_obs = self$obs()$coeff_re(), 
                        coeff_re_hid = self$hidden()$coeff_re())
       private$par_array_["value",] <- unlist(par_list, use.names = FALSE)
@@ -458,13 +458,13 @@ HMM <- R6Class(
         self$setup(silent = TRUE)
       }
       # set parameter vector to current values 
-      delta <- self$hidden()$delta() 
-      ldelta <- log(delta[-length(delta)] / delta[length(delta)])
+      delta0 <- self$hidden()$delta0() 
+      ldelta0 <- log(delta0[-length(delta0)] / delta0[length(delta0)])
       par <- c(self$obs()$coeff_fe(), 
                self$obs()$lambda(), 
                self$hidden()$coeff_fe(), 
                self$hidden()$lambda(), 
-               ldelta)
+               ldelta0)
       # compute log-likelihood
       return(-self$tmb_obj()$fn(par))
     },
@@ -544,14 +544,13 @@ HMM <- R6Class(
       S_hid <- mod_mat_hid$S
       ncol_re_hid <- mod_mat_hid$ncol_re
       
-      # Prepare delta initial parameter
-      delta <- self$hidden()$delta() 
-      if (!is.null(private$fixpar_$delta)) {
+      # Prepare initial distribution delta0
+      if (!is.null(private$fixpar_$delta0)) {
         # if it is fixed, don't transform it to working scale 
         # as it may be common to have fixed values of zero 
-        ldelta <- delta[-length(delta)]
+        ldelta0 <- self$hidden()$delta0()[-n_states]
       } else {
-        ldelta <- log(delta[-length(delta)] / delta[length(delta)])
+        ldelta0 <- self$hidden()$delta0(log = TRUE)
       }
       
       # Setup TMB parameters
@@ -559,7 +558,7 @@ HMM <- R6Class(
                       log_lambda_obs = 0,
                       coeff_fe_hid = self$hidden()$coeff_fe(),
                       log_lambda_hid = 0,
-                      log_delta = ldelta,
+                      log_delta0 = ldelta0,
                       coeff_re_obs = 0,
                       coeff_re_hid = 0)
       
@@ -584,17 +583,17 @@ HMM <- R6Class(
         tmb_par$log_lambda_obs <- log(self$lambda()$obs)
       }
       
-      # check if delta to be stationary (overrides custom map specified)
+      # Check if delta0 should be stationary (overrides custom map specified)
       statdist <- 0 
-      if (!is.null(private$fixpar_$delta)) {
+      if (!is.null(private$fixpar_$delta0)) {
         statdist <- -1
       } else if (self$hidden()$stationary()) {
-        private$fixpar_$log_delta <- rep(NA, self$hidden()$nstates() - 1)
+        private$fixpar_$log_delta0 <- rep(NA, self$hidden()$nstates() - 1)
         statdist <- 1 
       } 
       
-      # check for parameters that must always be fixed (identified by having
-      # a fixed = TRUE in dist)
+      # Check for parameters that must always be fixed (identified by having
+      # a fixed = TRUE in dist; e.g., size of binomial)
       fixed <- unlist(lapply(self$obs()$dists(), function(d) d$fixed()))
       if (any(fixed)) {
         nms <- names(fixed)[fixed == TRUE]
@@ -607,8 +606,7 @@ HMM <- R6Class(
         }
       }
       
-      # check for transitions that have fixed probabilities 
-      # find transitions that are fixed 
+      # Check for transitions that have fixed probabilities 
       ls_form_char <- as.list(t(self$hidden()$formula())[!diag(self$hidden()$nstates())])
       which_fixed <- sapply(ls_form_char, function(x) {x == "."})
       getnms <- rownames(self$hidden()$coeff_fe())[which_fixed]
@@ -640,11 +638,11 @@ HMM <- R6Class(
                        log_lambda_obs = self$obs()$lambda(), 
                        coeff_fe_hid = self$hidden()$coeff_fe(), 
                        log_lambda_hid = self$hidden()$lambda(), 
-                       log_delta = ldelta, 
+                       log_delta0 = ldelta0, 
                        coeff_re_obs = self$obs()$coeff_re(), 
                        coeff_re_hid = self$hidden()$coeff_re())
       usernms <- c("obs", "lambda_obs", "hid", 
-                   "lambda_hid", "delta", NA, NA)
+                   "lambda_hid", "delta0", NA, NA)
       par_names <- names(par_list)
       fixpar_vec <- NULL
       # Loop over model components
@@ -895,7 +893,7 @@ HMM <- R6Class(
     #' 
     #' @return Log-forward and log-backward probabilities 
     forward_backward = function() {
-      delta <- self$hidden()$delta() 
+      delta0 <- self$hidden()$delta0() 
       n <- nrow(self$obs()$data())
       n_by_ID <- as.numeric(table(self$obs()$data()$ID))
       
@@ -912,7 +910,7 @@ HMM <- R6Class(
       k <- 1 
       for (ind in 1:length(n_by_ID)) {
         # Forward algorithm 
-        p <- delta * obsprobs[k,]
+        p <- delta0 * obsprobs[k,]
         psum <- sum(p)
         llk <- log(psum)
         p <- p / psum
@@ -952,7 +950,7 @@ HMM <- R6Class(
     #' 
     #' @return cdfs on grid for each variable 
     cond = function(ngrid = 1000, silent = FALSE) {
-      delta <- t(self$hidden()$delta())
+      delta0 <- t(self$hidden()$delta0())
       vars <- self$obs()$obs_var()
       nvars <- ncol(vars)
       n <- nrow(self$obs()$data())
@@ -973,7 +971,7 @@ HMM <- R6Class(
       cond <- matrix(0, nr = n, nc = self$hidden()$nstates()) 
       for (i in 1:n) {
         if (i == 1 || (self$obs()$data()$ID[i] != self$obs()$data()$ID[i - 1])) {
-          f <- log(delta)
+          f <- log(delta0)
         } else {
           f <- lforw[,i]
         }
@@ -1089,7 +1087,7 @@ HMM <- R6Class(
       all_states <- NULL
       
       # Initial distribution
-      delta <- self$hidden()$delta() 
+      delta0 <- self$hidden()$delta0() 
       
       # Loop over IDs
       for(id in 1:n_id) {
@@ -1103,7 +1101,7 @@ HMM <- R6Class(
         
         # Forward iterations
         xi <- matrix(NA, n_this_id, n_states)
-        v <- delta * sub_obs_probs[1,]
+        v <- delta0 * sub_obs_probs[1,]
         xi[1,] <- v/sum(v)
         for(i in 2:n_this_id) {
           v <- apply(xi[i-1,] * sub_tpm_all[,,i], 2, max) * sub_obs_probs[i,]
@@ -1212,7 +1210,6 @@ HMM <- R6Class(
     #' 
     #' @return matrix with a row for each observation and a column for each state 
     state_probs = function() {
-      delta <- self$hidden()$delta
       n <- nrow(self$obs()$data())
       nstates <- self$hidden()$nstates()
       n_by_ID <- as.numeric(table(self$obs()$data()$ID))
@@ -1659,9 +1656,8 @@ HMM <- R6Class(
     #' ignored, if plotting obspar then indices of states to plot 
     #' @param n_grid coarseness of grid over x-axis to create 
     #' @param n_post Number of posterior simulations to use when computing
-    #' confidence intervals; default: 1000. If set to 0, confidence intervals
-    #' are derived using the delta method rather than simulations. See 
-    #' \code{predict} function for more detail.
+    #' confidence intervals; default: 1000. See \code{predict} function for 
+    #' more detail.
     #' 
     #' @return A ggplot object 
     plot = function(name, var = NULL, covs = NULL, i = NULL, j = NULL, 
@@ -1967,13 +1963,13 @@ HMM <- R6Class(
         fixed_block <- private$read_block("FIXED", wh_blocks, spec)
         len <- length(fixed_block)
         fixed <- NULL
-        if ("delta" %in% fixed_block) {
-          fixed$delta <- rep(NA, nstates - 1)
-          names(fixed$delta) <- paste0("state", 1:(nstates - 1))
+        if ("delta0" %in% fixed_block) {
+          fixed$delta0 <- rep(NA, nstates - 1)
+          names(fixed$delta0) <- paste0("state", 1:(nstates - 1))
           len <- len - 1
         }
         fixed$obs <- rep(NA, len)
-        names(fixed$obs) <- fixed_block[fixed_block != "delta"]
+        names(fixed$obs) <- fixed_block[fixed_block != "delta0"]
       } else {
         fixed <- NULL
       }
@@ -1985,7 +1981,7 @@ HMM <- R6Class(
                   tpm = tpm, 
                   par = ini$par, 
                   tpm0 = ini$tpm0,
-                  delta = ini$delta, 
+                  delta0 = ini$delta0, 
                   fixed = fixed))
       
     }, 
@@ -2029,7 +2025,7 @@ HMM <- R6Class(
     read_forms = function(forms, ini = FALSE, nstates = NULL) {
       par <- NULL
       tpm0 <- NULL
-      delta <- NULL
+      delta0 <- NULL
       
       # Find variables 
       wh_vars <- grep(":", forms)
@@ -2052,9 +2048,9 @@ HMM <- R6Class(
           for (s in 1:nstates) {
             tpm0[s,] <- as.numeric(strsplit(subforms[s], ",")[[1]])
           }
-        } else if (str_trim(vars[i]) == "delta") {
+        } else if (str_trim(vars[i]) == "delta0") {
           # Read initial distribution
-          delta <- as.numeric(strsplit(subforms, ",")[[1]])
+          delta0 <- as.numeric(strsplit(subforms, ",")[[1]])
         } else {
           # Read observation parameters
           subpar <- NULL
@@ -2082,9 +2078,9 @@ HMM <- R6Class(
         }
       }
       
-      names(par) <- vars[!(vars %in% c("tpm", "delta"))]
+      names(par) <- vars[!(vars %in% c("tpm", "delta0"))]
       if (ini) {
-        res <- list(par = par, tpm0 = tpm0, delta = delta)
+        res <- list(par = par, tpm0 = tpm0, delta0 = delta0)
       } else {
         res <- par 
       }

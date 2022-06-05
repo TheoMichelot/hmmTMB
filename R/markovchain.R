@@ -8,7 +8,7 @@ MarkovChain <- R6Class(
   classname = "MarkovChain",
   
   public = list(
-
+    
     # Constructor -------------------------------------------------------------
     
     #' @description Create new MarkovChain object
@@ -50,8 +50,8 @@ MarkovChain <- R6Class(
         if(length(formula) == 1 | inherits(formula, "formula")) {
           # Same formula for all transitions
           formula <- matrix(format(formula), 
-                              nrow = n_states, 
-                              ncol = n_states)
+                            nrow = n_states, 
+                            ncol = n_states)
           diag(formula) <- "."
         } else {
           n_states <- nrow(formula)
@@ -60,7 +60,7 @@ MarkovChain <- R6Class(
         private$nstates_ <- n_states
       }
       
-      # set whether delta to be stationary or not
+      # Should initial distribution delta0 be stationary?
       private$stationary_ <- stationary 
       
       # Create list of formulas  ('formula' is transposed to get 
@@ -104,7 +104,7 @@ MarkovChain <- R6Class(
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
       self$update_coeff_re(rep(0, ncol(mats$X_re)))
       self$update_lambda(rep(1, ifelse(is.null(ncol_re), 0, ncol(ncol_re))))
-      self$update_delta(rep(1 / n_states, n_states))
+      self$update_delta0(rep(1 / n_states, n_states))
       
       # Initialise tpm
       if(is.null(tpm)) {
@@ -115,9 +115,9 @@ MarkovChain <- R6Class(
       self$update_tpm(tpm)
     },
     
-
+    
     # Accessors ---------------------------------------------------------------
-
+    
     #' @description Formula of MarkovChain model
     formula = function() {return(private$formula_)},
     
@@ -164,36 +164,53 @@ MarkovChain <- R6Class(
     #' @param t Time point(s) for which stationary distribution should be returned. 
     #' If t = "all", all deltas are returned; else this should be a vector of
     #' time indices. If NULL (default), the stationary distribution for the first
-    #' time step, which is stored in the object, is returned. 
+    #' time step is returned. 
     #' @param linpred Optional custom linear predictor 
     #' 
     #' @return Matrix of stationary distributions. Each row corresponds to
     #' a row of the design matrices, and each column corresponds to a state.
     delta = function(t = NULL, linpred = NULL) {
-      if (!is.null(t)) {
-        # Number of states
-        n_states <- self$nstates()
-        
-        # Derive transition probability matrices
-        tpms <- self$tpm(t = t, linpred = linpred)
-        
-        tryCatch({
-          # For each transition matrix, get corresponding stationary distribution
-          stat_dists <- apply(tpms, 3, function(tpm)
-            solve(t(diag(n_states) - tpm + 1), rep(1, n_states)))
-          stat_dists <- t(stat_dists)
-        },
-        error = function(e) {
-          stop(paste("The stationary distributions cannot be calculated",
-                     "for these covariate values (singular system)."))
-        })
-      } else {
-        # By default, return the stationary distribution stored in the object,
-        # which is set to the stationary distribution for t = 1
-        stat_dists <- private$delta_
+      if(is.null(t)) {
+        if(is.null(linpred)) {
+          t <- 1
+        } else {
+          t <- "all"
+        }
       }
+      
+      # Number of states
+      n_states <- self$nstates()
+      
+      # Derive transition probability matrices
+      tpms <- self$tpm(t = t, linpred = linpred)
+      
+      tryCatch({
+        # For each transition matrix, get corresponding stationary distribution
+        stat_dists <- apply(tpms, 3, function(tpm)
+          solve(t(diag(n_states) - tpm + 1), rep(1, n_states)))
+        stat_dists <- t(stat_dists)
+      },
+      error = function(e) {
+        stop(paste("The stationary distributions cannot be calculated",
+                   "for these covariate values (singular system)."))
+      })
+      
       return(stat_dists)
     }, 
+    
+    #' @description Initial distribution
+    #' 
+    #' Vector of length the number of states, with i-th element the probability
+    #' Pr(S[1] = i)
+    delta0 = function(log = FALSE) {
+      d0 <- private$delta0_
+      if(!log) {
+        return(d0)
+      } else {
+        log_d0 <- log(d0[-length(d0)] / d0[length(d0)])
+        return(log_d0)
+      }
+    },
     
     #' @description Use stationary distribution as initial distribution? 
     stationary = function() {return(private$stationary_)}, 
@@ -224,9 +241,9 @@ MarkovChain <- R6Class(
     #' @description Terms of model formulas
     terms = function() {return(private$terms_)},
     
-
+    
     # Mutators ----------------------------------------------------------------
-
+    
     #' @description Update transition probability matrix
     #' 
     #' @param tpm New transition probability matrix
@@ -288,12 +305,13 @@ MarkovChain <- R6Class(
       private$terms_$X_re <- X_re
     }, 
     
-    #' @description Update delta coefficients 
+    #' @description Update initial distribution 
     #' 
-    #' @param delta Vector of delta coefficients
-    update_delta = function(delta) {
-      private$delta_ <- delta
-      names(private$delta_) <- paste0("state", 1:length(delta))
+    #' @param delta0 Vector of initial distribution, i.e., where
+    #' the i-th element is Pr(S[1] = i)
+    update_delta0 = function(delta0) {
+      private$delta0_ <- delta0
+      names(private$delta0_) <- paste0("state", 1:length(delta0))
     }, 
     
     #' @description Update smoothness parameters
@@ -304,9 +322,9 @@ MarkovChain <- R6Class(
       rownames(private$lambda_) <- self$terms()$names_re
     },
     
-
+    
     # Other methods -----------------------------------------------------------
-
+    
     #' @description Make model matrices
     #' 
     #' @param data Data frame containing all needed covariates
@@ -395,7 +413,7 @@ MarkovChain <- R6Class(
       linpred <- self$X_fe() %*% self$coeff_fe() + self$X_re() %*% self$coeff_re()
       return(linpred[,1])
     }, 
-  
+    
     #' @description Simulate from Markov chain
     #' 
     #' @param n Number of time steps to simulate
@@ -432,19 +450,19 @@ MarkovChain <- R6Class(
       self$update_X_re(mats_hid$X_re)
       tpms <- self$tpm(t = "all")
       
-      # Uniform initial distribution for now
-      delta <- rep(1/n_states, n_states) 
+      # Initial distribution
+      delta0 <- self$delta0()
       
       # Simulate state process      
       S <- rep(NA, n)
-      S[1] <- sample(1:n_states, size = 1, prob = delta)
+      S[1] <- sample(1:n_states, size = 1, prob = delta0)
       for(i in 2:n) {
         if(!silent & round(i/n*100)%%10 == 0) {
           cat("\rSimulating states... ", round(i/n*100), "%", sep = "")        
         }
         
         if(ID[i] != ID[i-1]) {
-          S[i] <- sample(1:n_states, size = 1, prob = delta)
+          S[i] <- sample(1:n_states, size = 1, prob = delta0)
         } else {
           S[i] <- sample(1:n_states, size = 1, prob = tpms[S[i-1], , i-1])          
         }
@@ -479,7 +497,7 @@ MarkovChain <- R6Class(
   ),
   
   private = list(
-
+    
     # Private data members ----------------------------------------------------
     
     formula_ = NULL,
@@ -487,7 +505,7 @@ MarkovChain <- R6Class(
     formulas_ = NULL,
     coeff_fe_ = NULL,
     coeff_re_ = NULL,
-    delta_ = NULL, 
+    delta0_ = NULL,
     lambda_ = NULL,
     nstates_ = NULL,
     terms_ = NULL,
