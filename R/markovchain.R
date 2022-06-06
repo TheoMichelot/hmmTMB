@@ -310,9 +310,9 @@ MarkovChain <- R6Class(
     #' @param delta0 Vector of initial distribution, i.e., where
     #' the i-th element is Pr(S[1] = i)
     update_delta0 = function(delta0) {
-      if(sum(delta0) != 1) {
+      if(abs(sum(delta0) - 1) > 1e-10) {
         wng <- paste0("Entries of delta0 don't sum to 1 (sum = ",
-                      sum(delta0), "). Normalising probabilities.")
+                      round(sum(delta0), 2), "). Normalising probabilities.")
         warning(wng)
         delta0 <- delta0/sum(delta0)
       }
