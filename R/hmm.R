@@ -647,7 +647,7 @@ HMM <- R6Class(
       if (!is.null(private$fixpar_$delta0)) {
         # if it is fixed, don't transform it to working scale 
         # as it may be common to have fixed values of zero 
-        par_list$delta0 <- self$hidden()$delta0()[-n_states]
+        par_list$log_delta0 <- self$hidden()$delta0()[-n_states]
       }
       usernms <- c("obs", "lambda_obs", "hid", "lambda_hid", "delta0", NA, NA)
       par_names <- names(par_list)
