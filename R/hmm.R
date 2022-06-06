@@ -267,22 +267,18 @@ HMM <- R6Class(
       
       # Update initial distribution delta0
       if (self$hidden()$stationary()) {
-        tpms <- self$hidden()$tpm(t = "all")
-        nstates <- self$hidden()$nstates()
-        delta0 <- solve(t(diag(nstates) - tpms[,,1] + 1), rep(1, nstates))
-        self$hidden()$update_delta0(delta0)
+        delta0 <- self$hidden()$delta(t = 1)
       } else {
         if (!is.null(private$fixpar_$delta0)) {
           delta0 <- par_list$log_delta0
           delta0 <- c(delta0, 1 - sum(delta0))
-          self$hidden()$update_delta0(delta0)
         } else {
           ldelta0 <- par_list$log_delta0 
           delta0 <- c(exp(ldelta0), 1)
           delta0 <- delta0 / sum(delta0)
-          self$hidden()$update_delta0(delta0)
         }
       }
+      self$hidden()$update_delta0(delta0)
       
       # Update coeff_array
       private$coeff_array_[,"value"] <- unlist(self$coeff_list(), use.names = FALSE)
