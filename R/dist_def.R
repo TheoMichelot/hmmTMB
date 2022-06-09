@@ -6,6 +6,7 @@
 # Poisson ======================================
 dist_pois <- Dist$new(
   name = "pois", 
+  name_long = "Poisson", 
   pdf = dpois,
   rng = rpois,
   link = list(lambda = log),
@@ -20,6 +21,7 @@ dist_pois <- Dist$new(
 # Zero-Inflated Poisson ========================
 dist_zip <- Dist$new(
   name = "zip", 
+  name_long = "zero-inflated Poisson",
   pdf = function(x, lambda, z, log = FALSE) {
     zero <- x < 1e-10 
     l <- z * zero + (1 - z) * dpois(x, lambda)
@@ -55,6 +57,7 @@ dist_zip <- Dist$new(
 # Zero-Truncated Poisson ========================
 dist_ztp <- Dist$new(
   name = "ztp", 
+  name_long = "zero-truncated Poisson",
   pdf = function(x, lambda, log = FALSE) {
     l <- dpois(x, lambda) / (1 - dpois(0, lambda))
     if (log) l <- log(l)
@@ -82,6 +85,7 @@ dist_ztp <- Dist$new(
 # Binomial ===================================== 
 dist_binom <- Dist$new(
   name = "binom", 
+  name_long = "binomial",
   pdf = dbinom, 
   rng = rbinom, 
   link = list(size = identity, prob = qlogis), 
@@ -98,6 +102,7 @@ dist_binom <- Dist$new(
 # Zero-inflated Binomial =======================
 dist_zib <- Dist$new(
   name = "zib", 
+  name_long = "zero-inflated binomial",
   pdf = function(x, size, prob, z, log = FALSE) {
     zero <- x < 1e-10 
     l <- z * zero + (1 - z) * dbinom(x, size, prob)
@@ -134,6 +139,7 @@ dist_zib <- Dist$new(
 # Negative-binomial ============================
 dist_nbinom <- Dist$new(
   name = "nbinom", 
+  name_long = "negative binomial",
   pdf = dnbinom, 
   rng = rnbinom, 
   link = list(size = log, prob = qlogis), 
@@ -152,6 +158,7 @@ dist_nbinom <- Dist$new(
 # Categorical ============================
 dist_cat <- Dist$new(
   name = "cat", 
+  name_long = "categorical",
   pdf = function(x, ..., log = TRUE) {
     # get class probabilities
     p <- c(...) 
@@ -193,6 +200,7 @@ dist_cat <- Dist$new(
 # Zero-inflated Negative-Binomial ==============
 dist_zinb <- Dist$new(
   name = "zinb", 
+  name_long = "zero-inflated negative binomial",
   pdf = function(x, size, prob, z, log = FALSE) {
     zero <- x < 1e-10 
     l <- z * zero + (1 - z) * dnbinom(x, size, prob)
@@ -230,7 +238,8 @@ dist_zinb <- Dist$new(
 
 # Zero-Truncated Negative-Binomial ========================
 dist_ztnb <- Dist$new(
-  name = "ztnb", 
+  name = "ztnb",
+  name_long = "zero-truncated negative binomial",
   pdf = function(x, size, prob, log = FALSE) {
     l <- dnbinom(x, size, prob) / (1 - dnbinom(0, size, prob))
     if (log) l <- log(l)
@@ -263,6 +272,7 @@ dist_ztnb <- Dist$new(
 # Normal =======================================
 dist_norm <- Dist$new(
   name = "norm", 
+  name_long = "normal",
   pdf = dnorm,
   rng = rnorm,
   link = list(mean = identity, sd = log),
@@ -278,6 +288,7 @@ dist_norm <- Dist$new(
 # Truncated Normal =============================
 dist_truncnorm <- Dist$new(
   name = "truncnorm", 
+  name_long = "truncated normal",
   pdf = function(x, mean, sd, min = -Inf, max = Inf, log = FALSE) {
     left <- pnorm((min - mean) / sd)
     right <- pnorm((max - mean) / sd)
@@ -309,6 +320,7 @@ dist_truncnorm <- Dist$new(
 # Folded Normal ================================
 dist_foldednorm <- Dist$new(
   name = "foldednorm", 
+  name_long = "folded normal",
   pdf = function(x, mean, sd, log = FALSE) {
     p <- dnorm(x, mean, sd) + dnorm(-x, mean, sd)
     if (log) p <- log(p)
@@ -333,6 +345,7 @@ dist_foldednorm <- Dist$new(
 dist_t <- Dist$new(
   # assumes that degrees of freedom > 2 (so mean and variance are finite)
   name = "t", 
+  name_long = "Student's t",
   pdf = function(x, mean, scale, log = FALSE) {
     y <- x - mean
     df <- 2 * scale^2 / (scale^2 - 1)
@@ -356,6 +369,7 @@ dist_t <- Dist$new(
 # Log-Normal ===================================
 dist_lnorm <- Dist$new(
   name = "lnorm", 
+  name_long = "log-normal",
   pdf = dlnorm,
   rng = rlnorm,
   link = list(meanlog = identity, sdlog = log),
@@ -369,7 +383,7 @@ dist_lnorm <- Dist$new(
 
 # Gamma (shape, scale) ========================================
 dist_gamma <- Dist$new(
-  name = "gamma", 
+  name = "gamma",
   pdf = dgamma,
   rng = rgamma,
   link = list(shape = log, scale = log),
@@ -415,6 +429,7 @@ dist_gamma2 <- Dist$new(
 # Zero-inflated gamma (shape, scale) ===================================
 dist_zigamma <- Dist$new(
     name = "zigamma", 
+    name_long = "zero-inflated gamma",
     pdf = function(x, shape, scale, z, log = FALSE) {
         zero <- x < 1e-10 
         l <- z * zero + (1 - z) * dgamma(x, shape = shape, scale = scale)
@@ -445,6 +460,7 @@ dist_zigamma <- Dist$new(
 # Zero-inflated gamma (mean, sd) ===================================
 dist_zigamma2 <- Dist$new(
   name = "zigamma2", 
+  name_long = "zero-inflated gamma2",
   pdf = function(x, mean, sd, z, log = FALSE) {
     shape <- mean^2 / sd^2
     scale <- sd^2 / mean
@@ -477,6 +493,7 @@ dist_zigamma2 <- Dist$new(
 # Weibull ========================================
 dist_weibull <- Dist$new(
   name = "weibull", 
+  name_long = "Weibull",
   pdf = dweibull,
   rng = rweibull,
   link = list(shape = log, scale = log),
@@ -500,6 +517,7 @@ dist_weibull <- Dist$new(
 # Exponential ==================================
 dist_exp <- Dist$new(
   name = "exp", 
+  name_long = "exponential",
   pdf = dexp, 
   rng = rexp, 
   link = list(rate = log), 
@@ -540,6 +558,7 @@ dist_beta <- Dist$new(
 # Tweedie ======================================
 dist_tweedie <- Dist$new(
   name = "tweedie", 
+  name_long = "Tweedie",
   pdf = function(x, mean, p, phi, log = FALSE) {
     l <- mgcv::ldTweedie(x, mu = mean, p = p + 1, phi = phi)[1,1]
     if (!log) l <- exp(l)
@@ -565,6 +584,7 @@ dist_tweedie <- Dist$new(
 # Von Mises ====================================
 dist_vm <- Dist$new(
   name = "vm",
+  name_long = "von Mises",
   pdf = function(x, mu = 0, kappa = 1, log = FALSE) {
     b <- besselI(kappa, 0)
     if(!log)
@@ -601,6 +621,7 @@ dist_vm <- Dist$new(
 # Wrapped Cauchy ====================================
 dist_wrpcauchy <- Dist$new(
   name = "wrpcauchy",
+  name_long = "wrapped Cauchy",
   pdf = CircStats::dwrpcauchy,
   rng = function(n, mu, rho) {
     samp <- CircStats::rwrpcauchy(n, mu, rho)
@@ -632,6 +653,7 @@ dist_wrpcauchy <- Dist$new(
 # Multivariate Normal ========================== 
 dist_mvnorm <- Dist$new(
   name = "mvnorm", 
+  name_long = "multivariate normal",
   pdf = function(x, ...,  log = FALSE) {
     par <- c(...)
     # Dimension
@@ -698,6 +720,7 @@ dist_mvnorm <- Dist$new(
 # Dirichlet Distribution =======================
 dist_dir <- Dist$new(
   name = "dir", 
+  name_long = "Dirichlet",
   pdf = function(x, ...,  log = FALSE) {
     alpha <- c(...)
     y <- do.call(cbind, as.matrix(x))

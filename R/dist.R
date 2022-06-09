@@ -23,10 +23,15 @@ Dist <- R6Class(
     #' parameters
     #' @param npar Number of parameters of the distribution
     #' @param parnames character vector with name of each parameter 
-    #' @param parapprox Function that takes a sample and produces approximate values for the unknown parameters
-    #' @param fixed vector with element for each parameter which is TRUE if parameter is fixed
+    #' @param parapprox Function that takes a sample and produces approximate 
+    #' values for the unknown parameters
+    #' @param fixed vector with element for each parameter which is TRUE if 
+    #' parameter is fixed
+    #' @param name_long Long version of the name of the distribution, possibly 
+    #' more user-readable than name.
     #' @param cpp location of C++ TMB definition of distribution
-    #' @param compile_cpp if FALSE then distribution code in cpp is added but not compiled into package
+    #' @param compile_cpp if FALSE then distribution code in cpp is added but 
+    #' not compiled into package
     #' 
     #' @return A new Dist object
     initialize = function(name, 
@@ -38,6 +43,7 @@ Dist <- R6Class(
                           parnames, 
                           parapprox = NULL, 
                           fixed = NULL, 
+                          name_long = name,
                           cpp = NULL, 
                           compile_cpp = TRUE) {
       # Check arguments
@@ -59,6 +65,7 @@ Dist <- R6Class(
       private$parnames_ <- parnames 
       private$parapprox_ <- parapprox 
       private$fixed_ <- fixed
+      private$name_long_ <- name_long
       
       # All parameters are unfixed by default
       if (is.null(fixed)) private$fixed_ <- rep(FALSE, npar)
@@ -158,6 +165,9 @@ Dist <- R6Class(
     #' @description Return code of Dist object
     code = function() {return(private$code_)},
   
+    #' @description Human-readable name of Dist object
+    name_long = function() {return(private$name_long_)},
+    
     # Mutators ----------------------------------------------------------------
 
     #' @description Set number of parameters this distribution has
@@ -291,6 +301,7 @@ Dist <- R6Class(
     parapprox_ = NULL,  # function to compute approximate parameters from sample
     fixed_ = NULL,  # TRUE/FALSE for each parameter on whether it is fixed or estimated
     code_ = NULL, # unique distribution code
+    name_long_ = NULL, # human-readable name of distribution 
   
     # (For argument description, see constructor)
     check_args = function(name, pdf, rng, link, invlink, npar, parnames) {
