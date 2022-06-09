@@ -1649,28 +1649,30 @@ HMM <- R6Class(
     
     #' @description Plot a model component 
     #' 
-    #' @param name name of model component: tpm, delta, or obspar 
-    #' @param var name of covariate to plot on x-axis 
+    #' @param what Name of model component to plot: should be one of "tpm"
+    #' (transition probabilities), "delta" (stationary state probabilities), 
+    #' or "obspar" (state-dependent observation parameters) 
+    #' @param var Name of covariate to plot on x-axis 
     #' @param covs Optional named list for values of covariates (other than 'var') 
     #' that should be used in the plot (or dataframe with single row). If this is
     #' not specified, the mean value is used for numeric variables, and the
     #' first level for factor variables.
-    #' @param i if plotting tpm then rows of tpm, if plotting delta then state, 
-    #' if plotting obspar then indices of parameter to plot 
-    #' @param j if plotting tpm then cols of tpm to plot, if plotting delta then
-    #' ignored, if plotting obspar then indices of states to plot 
-    #' @param n_grid coarseness of grid over x-axis to create 
+    #' @param i If plotting tpm then rows of tpm; if plotting delta then indices
+    #' of states to plot; if plotting obspar then full names of parameters 
+    #' to plot (e.g., obsvar.mean) 
+    #' @param j If plotting tpm then columnss of tpm to plot; if plotting delta 
+    #' then this is ignored,; if plotting obspar then indices of states to plot 
+    #' @param n_grid Number of points in grid over x-axis (default: 50) 
     #' @param n_post Number of posterior simulations to use when computing
     #' confidence intervals; default: 1000. See \code{predict} function for 
     #' more detail.
     #' 
     #' @return A ggplot object 
-    plot = function(name, var = NULL, covs = NULL, i = NULL, j = NULL, 
+    plot = function(what, var = NULL, covs = NULL, i = NULL, j = NULL, 
                     n_grid = 50, n_post = 1000) {
       # Get relevant model component 
-      comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
+      comp <- switch(what, tpm = "hidden", delta = "hidden", obspar = "obs")
       # Get x-axis 
-      # get newdata over a grid 
       newdata <- cov_grid(var = var, 
                           obj = self, 
                           covs = covs, 
