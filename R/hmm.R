@@ -593,7 +593,9 @@ HMM <- R6Class(
       if (!is.null(private$fixpar_$delta0)) {
         statdist <- -1
       } else if (self$hidden()$stationary()) {
-        private$fixpar_$log_delta0 <- rep(NA, self$hidden()$nstates() - 1)
+        private$fixpar_$delta0 <- rep(NA, self$hidden()$nstates() - 1)
+        names(private$fixpar_$delta0) <- 
+          paste0("state", 1:(self$hidden()$nstates() - 1))
         statdist <- 1 
       } 
       
