@@ -1507,11 +1507,18 @@ HMM <- R6Class(
     
     #' @description Compute goodness-of-fit statistics using simulation
     #' 
-    #' @param gof_fn goodness-of-fit function which accepts "data" as input
-    #'               and returns a statistic: either a vector or a single number. 
-    #' @param nsims number of simulations to perform 
-    #' @param full if model fit with MCMC then full set to TRUE will sample from
-    #' posterior for each simulation 
+    #' Many time series are simulated from the fitted model, and the
+    #' statistic(s) of interest are calculated for each. A histogram of 
+    #' those values can for example be used to compare to the observed
+    #' value of the statistic. An observation far in the tails of the
+    #' distribution of simulated statistics suggests lack of fit.
+    #' 
+    #' @param check_fn Goodness-of-fit function which accepts "data" as input
+    #' and returns a statistic (either a vector or a single number) to be
+    #' compared between observed data and simulations. 
+    #' @param nsims Number of simulations to perform 
+    #' @param full If model fitted with `fit_stan`, then full = TRUE
+    #'  will sample from posterior for each simulation 
     #' @param silent Logical. If FALSE, simulation progress is shown. 
     #' (Default: TRUE)
     #' 
@@ -1524,9 +1531,9 @@ HMM <- R6Class(
     #'   simulation)}
     #'   \item{plot}{ggplot object}
     #' }
-    gof = function(gof_fn, nsims = 100, full = FALSE, silent = FALSE) {
+    check = function(check_fn, nsims = 100, full = FALSE, silent = FALSE) {
       # Evaluate statistics for observed data
-      obs_stat <- gof_fn(self$obs()$data())
+      obs_stat <- check_fn(self$obs()$data())
       
       # Simulate from model and evaluate statistics for simulated data
       stats <- matrix(0, nc = nsims, nr = length(obs_stat))
@@ -1543,7 +1550,7 @@ HMM <- R6Class(
                                 data = self$obs()$data(),
                                 silent = TRUE) 
         # compute statistics
-        stats[,sim] <- gof_fn(newdat)
+        stats[,sim] <- check_fn(newdat)
       }
       
       # Get names of statistics
