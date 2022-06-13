@@ -1364,7 +1364,7 @@ HMM <- R6Class(
     
     #' @description Predict estimates from a fitted model
     #' 
-    #' @param name Which estimates to predict? Options include 
+    #' @param what Which estimates to predict? Options include 
     #' transition probability matrices "tpm", 
     #' stationary distributions "delta", or 
     #' observation distribution parameters "obspar"
@@ -1381,7 +1381,7 @@ HMM <- R6Class(
     #' 
     #' @return Named array of predictions and confidence interval, 
     #' if requested
-    predict = function(name, t = 1, newdata = NULL, level = 0.95, n_post = 0,
+    predict = function(what, t = 1, newdata = NULL, level = 0.95, n_post = 0,
                        return_post = FALSE) {
       if (is.null(private$out_) & (level > 0 | n_post > 0)) {
         stop("must fit model with fit() function first")
@@ -1405,13 +1405,13 @@ HMM <- R6Class(
       }
       
       # get appropriate prediction function 
-      fn <- switch(name, 
+      fn <- switch(what, 
                    tpm = self$hidden()$tpm,
                    delta = self$hidden()$delta,
                    obspar = self$obs()$par)
       
       # get appropriate model component 
-      comp <- switch(name, tpm = "hidden", delta = "hidden", obspar = "obs")
+      comp <- switch(what, tpm = "hidden", delta = "hidden", obspar = "obs")
       
       if (n_post == 0) {
         # just return predicted means if no confidence intervals wanted 
@@ -1690,26 +1690,26 @@ HMM <- R6Class(
       n_states <- self$hidden()$nstates()
       
       # Get predictions and uncertainty 
-      preds <- self$predict(name, t = "all", newdata = newdata, 
+      preds <- self$predict(what = what, t = "all", newdata = newdata, 
                             level = 0.95, n_post = n_post)
       
       # Data frame for plot
       df <- as.data.frame.table(preds$mean)
       df$low <- as.vector(preds$lcl)
       df$upp <- as.vector(preds$ucl)
-      if (name == "tpm") {
+      if (what == "tpm") {
         colnames(df) <- c("from", "to", "var", "prob", "low", "upp")
         levels(df$from) <- paste("State", 1:n_states)
         levels(df$to) <- paste("State", 1:n_states)
         df$var <- rep(newdata[, var], each = n_states * n_states)
         if (!is.null(i)) df <- df[df$from == paste0("State ", i),]
         if (!is.null(j)) df <- df[df$to == paste0("State ", j),]
-      } else if (name == "delta") {
+      } else if (what == "delta") {
         colnames(df) <- c("var", "state", "prob", "low", "upp")
         levels(df$state) <- paste("State", 1:n_states)
         df$var <- rep(newdata[, var], n_states)
         if (!is.null(i)) df <- df[df$state == paste0("State ", i),]
-      } else if (name == "obspar") {
+      } else if (what == "obspar") {
         colnames(df) <- c("par", "state", "var", "val", "low", "upp")
         levels(df$state) <- paste("State", 1:n_states)
         df$var <- rep(newdata[, var], each = nrow(df)/nrow(newdata))
@@ -1734,7 +1734,7 @@ HMM <- R6Class(
                           collapse = ", ")
       }
       
-      if (name == "tpm") {
+      if (what == "tpm") {
         p <- ggplot(df, aes(var, prob)) + 
           geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
           geom_line() + 
@@ -1756,14 +1756,14 @@ HMM <- R6Class(
             geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3)
         }
       } else {
-        if (name == "delta") {
+        if (what == "delta") {
           p <- ggplot(df, aes(var, prob, group = state, col = state)) +
             scale_color_manual("", values = hmmTMB_cols) +
             scale_fill_manual(values = hmmTMB_cols, guide = "none") +
             xlab(var) + ylab("State probabilities") + ggtitle(plot_txt) +
             theme_light() + 
             coord_cartesian(ylim = c(0, 1))
-        } else if (name == "obspar") {
+        } else if (what == "obspar") {
           p <- ggplot(df, aes(var, val, col = state)) + theme_light() +
             scale_color_manual("", values = hmmTMB_cols) +
             scale_fill_manual(values = hmmTMB_cols, guide = "none") +
