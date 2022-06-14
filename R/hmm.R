@@ -1364,6 +1364,10 @@ HMM <- R6Class(
     
     #' @description Predict estimates from a fitted model
     #' 
+    #' By default, this returns point estimates of the HMM parameters
+    #' for a new data frame of covariates. See the argument `n_post`
+    #' to also get confidence intervals.
+    #' 
     #' @param what Which estimates to predict? Options include 
     #' transition probability matrices "tpm", 
     #' stationary distributions "delta", or 
@@ -1372,18 +1376,18 @@ HMM <- R6Class(
     #' @param ... Other arguments to the respective functions 
     #' for hidden$tpm, hidden$delta, obs$par
     #' @param newdata New dataframe to use for prediction
+    #' @param n_post If greater than zero then n_post posterior 
+    #' samples are produced, and used to create confidence intervals.
     #' @param level Level of the confidence intervals, e.g. CI = 0.95
     #' will produce 95\% confidence intervals (default) 
-    #' @param n_post If greater than zero then n_post posterior 
-    #' samples are produced
     #' @param return_post Logical. If TRUE, a list of posterior samples
     #' is returned. 
     #' 
-    #' @return Named array of predictions and confidence interval, 
+    #' @return Named array of predictions and confidence intervals, 
     #' if requested
-    predict = function(what, t = 1, newdata = NULL, level = 0.95, n_post = 0,
+    predict = function(what, t = 1, newdata = NULL, n_post = 0, level = 0.95, 
                        return_post = FALSE) {
-      if (is.null(private$out_) & (level > 0 | n_post > 0)) {
+      if (is.null(private$out_) & n_post > 0) {
         stop("must fit model with fit() function first")
       }
       if (!is.null(newdata)) {
