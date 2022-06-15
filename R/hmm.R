@@ -662,6 +662,8 @@ HMM <- R6Class(
         if (!is.null(fixed)) {
           # Map vector for TMB
           tmp <- 1:length(v)
+          # Increase fixed to make sure it's not between 1:length(v)
+          fixed <- fixed + length(v)
           if(is.matrix(v)) {
             nms <- rownames(v)
           } else {
