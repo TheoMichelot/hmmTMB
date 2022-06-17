@@ -1599,11 +1599,11 @@ HMM <- R6Class(
     #' as input, it is plotted against time. If two variables are passed, they
     #' are plotted against each other. 
     #' 
-    #' @param var1 Name of the variable to plot.
+    #' @param var Name of the variable to plot.
     #' @param var2 Optional name of a second variable, for 2-d plot.
     #' 
     #' @return A ggplot object
-    plot_ts = function(var1, var2 = NULL) {
+    plot_ts = function(var, var2 = NULL) {
       if(is.null(private$states_)) {
         self$viterbi()
       }
@@ -1619,18 +1619,18 @@ HMM <- R6Class(
         # 1d time series plot
         df <- data.frame(ID = ID,
                          index = 1:nrow(data),
-                         x = data[[var1]])
+                         x = data[[var]])
         
         p <- ggplot(data = df, mapping = aes(index, x, col = state, group = ID)) +
-          geom_line() + xlab("time") + ylab(var1)
+          geom_line() + xlab("time") + ylab(var)
       } else {
         # 2d plot
         df <- data.frame(ID = ID,
-                         x = data[[var1]],
+                         x = data[[var]],
                          y = data[[var2]])
         
         p <- ggplot(data = df, mapping = aes(x, y, col = state, group = ID)) +
-          geom_path() + xlab(var1) + ylab(var2)
+          geom_path() + xlab(var) + ylab(var2)
       }
       
       p <- p + 
@@ -1642,7 +1642,7 @@ HMM <- R6Class(
     
     #' Plot observation distributions weighted by frequency in Viterbi 
     #'
-    #' @param name Name of data variable
+    #' @param var Name of data variable
     #' 
     #' @details This is a wrapper around Observation$plot_dist, where the
     #' distribution for each state is weighted by the proportion of time
@@ -1650,14 +1650,14 @@ HMM <- R6Class(
     #'
     #' @return Plot of distribution with data histogram 
     #' @export
-    plot_dist = function(name) {
+    plot_dist = function(var) {
       if(is.null(private$states_)) {
         self$viterbi()
       }
       # Proportion of time spent in each state
       weights <- sapply(1:self$hidden()$nstates(), function(s) 
         length(which(self$states() == s))/length(self$states()))
-      return(self$obs()$plot_dist(name, weights = weights))
+      return(self$obs()$plot_dist(var, weights = weights))
     },
     
     #' @description Plot a model component 

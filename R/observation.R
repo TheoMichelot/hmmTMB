@@ -561,7 +561,7 @@ Observation <- R6Class(
     #' Helpful to select initial parameter values for model fitting, or to visualise 
     #' fitted state-dependent distributions.
     #' 
-    #' @param name Name of response variable for which the histogram
+    #' @param var Name of response variable for which the histogram
     #' and pdfs should be plotted.
     #' @param weights Optional vector of length the number of pdfs that are
     #' plotted. Useful to visualise a mixture of distributions weighted by the
@@ -569,14 +569,14 @@ Observation <- R6Class(
     #' @param t Index of time step to use for covariates (default: 1).
     #' 
     #' @return A ggplot object
-    plot_dist = function(name, weights = NULL, t = 1) {
+    plot_dist = function(var, weights = NULL, t = 1) {
       # Extract observed values for relevant variable
-      obs <- data.frame(val = self$data()[[name]])
+      obs <- data.frame(val = self$data()[[var]])
       
       # Matrix of parameters
-      par <- matrix(unlist(self$par(t = t, as_list = TRUE)[[1]][[name]]), 
+      par <- matrix(unlist(self$par(t = t, as_list = TRUE)[[1]][[var]]), 
                     nrow = self$nstates())
-      colnames(par) <- self$dists()[[name]]$parnames()
+      colnames(par) <- self$dists()[[var]]$parnames()
       
       # Weights for each state-dependent distribution
       if(is.null(weights)) weights <- rep(1, self$nstates())
@@ -599,7 +599,7 @@ Observation <- R6Class(
         args <- c(args, par[state,])
         
         # Compute state-dependent pdf
-        vals[,state] <- weights[state] * do.call(self$dists()[[name]]$pdf(), args)
+        vals[,state] <- weights[state] * do.call(self$dists()[[var]]$pdf(), args)
       }
       # Weighted sum of state-dependent pdfs
       vals[, self$nstates() + 1] <- rowSums(vals[, 1:self$nstates()])
@@ -615,7 +615,7 @@ Observation <- R6Class(
       h <- hist(obs$val, breaks = breaks, plot = FALSE)
       
       # Create ggplot histogram
-      p <- ggplot(obs, aes(x = val)) + xlab(name) +
+      p <- ggplot(obs, aes(x = val)) + xlab(var) +
         geom_histogram(breaks = breaks, aes(y=..density..), 
                        col = "white", bg = "lightgrey", na.rm = TRUE) + 
         geom_line(aes(grid, val, col = state, linetype = state), 
