@@ -120,7 +120,10 @@ Observation <- R6Class(
         for (i in 1:n_var) {
           subvars <- self$dists()[[i]]$parnames()
           if (!all(subvars %in% names(par[[varnm[i]]]))) {
-            stop("parameters for variable ", varnm[i], " are missing or have wrong name")
+            msg <- paste0("Parameters for variable ", varnm[i], " are missing",
+                          " or have wrong name. These should be: ",
+                          paste0(subvars, collapse = ", "), ".")
+            stop(msg)
           }
           subpar <- vector(mode = "list", length = length(subvars))
           for (j in 1:length(subvars)) {
