@@ -42,9 +42,9 @@ dist_zip <- Dist$new(
   npar = 2, 
   parnames = c("rate", "z"), 
   parapprox = function(x) {
-    # Beckett, S., Jee, J., Ncube, T., Pompilus, S., Washington, Q., Singh, A., & Pal, N. (2014). 
-    # Zero-inflated Poisson (ZIP) distribution: parameter estimation and applications to model data 
-    # from natural calamities. Involve, a Journal of Mathematics, 7(6), 751-767.
+    # Beckett et al. (2014). Zero-inflated Poisson (ZIP) distribution: 
+    # parameter estimation and applications to model data from natural 
+    # calamities. Involve, a Journal of Mathematics, 7(6), 751-767.
     mu <- mean(x)
     s2 <- var(x)
     if (mu > s2) {
@@ -52,7 +52,7 @@ dist_zip <- Dist$new(
       rate <- mu 
     } else {
       rate <- mu + s2 / mu - 1 
-      z <- s2 / mu - 1 / rate 
+      z <- (s2 - mu)/(mu^2 + s2 - mu)
     }
     return(c(rate, z))
   }
