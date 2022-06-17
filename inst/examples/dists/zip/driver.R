@@ -20,6 +20,8 @@ dat <- true_mod$simulate(n)
 # create model to fit 
 mod <- HMM$new(file = "mod.hmm")
 
+mod$suggest_initial()
+
 # fit model
 mod$fit()
 
