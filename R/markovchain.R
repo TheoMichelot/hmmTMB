@@ -49,7 +49,8 @@ MarkovChain <- R6Class(
         # Covariate effects
         if(length(formula) == 1 | inherits(formula, "formula")) {
           # Same formula for all transitions
-          formula <- matrix(format(formula), 
+          # Use deparse to transform to string without linebreaks
+          formula <- matrix(deparse(formula, width.cutoff = 500), 
                             nrow = n_states, 
                             ncol = n_states)
           diag(formula) <- "."
