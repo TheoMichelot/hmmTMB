@@ -548,10 +548,12 @@ dist_beta <- Dist$new(
     s2 <- var(x)
     tmp <- mu * (1 - mu) / s2 - 1
     if (tmp < 1e-10) {
-      shape1 <- shape2 <- 1e-3
+      shape1 <- 1e-3
+      shape2 <- 1e-3
+    } else {
+      shape1 <- mu * tmp
+      shape2 <- (1 - mu) * tmp      
     }
-    shape1 <- mu * tmp
-    shape2 <- (1 - mu) * tmp
     return(c(shape1, shape2))
   }
 )
