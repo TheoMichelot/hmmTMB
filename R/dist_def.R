@@ -23,7 +23,7 @@ dist_zip <- Dist$new(
   name = "zip", 
   name_long = "zero-inflated Poisson",
   pdf = function(x, lambda, z, log = FALSE) {
-    zero <- x < 1e-10 
+    zero <- x == 0 
     l <- z * zero + (1 - z) * dpois(x, lambda)
     if (log) l <- log(l)
     return(l)
@@ -104,7 +104,7 @@ dist_zib <- Dist$new(
   name = "zib", 
   name_long = "zero-inflated binomial",
   pdf = function(x, size, prob, z, log = FALSE) {
-    zero <- x < 1e-10 
+    zero <- x == 0 
     l <- z * zero + (1 - z) * dbinom(x, size, prob)
     if (log) l <- log(l)
     return(l)
@@ -202,7 +202,7 @@ dist_zinb <- Dist$new(
   name = "zinb", 
   name_long = "zero-inflated negative binomial",
   pdf = function(x, size, prob, z, log = FALSE) {
-    zero <- x < 1e-10 
+    zero <- x == 0 
     l <- z * zero + (1 - z) * dnbinom(x, size, prob)
     if (log) l <- log(l)
     return(l)
@@ -431,7 +431,7 @@ dist_zigamma <- Dist$new(
     name = "zigamma", 
     name_long = "zero-inflated gamma",
     pdf = function(x, shape, scale, z, log = FALSE) {
-        zero <- x < 1e-10 
+        zero <- x == 0 
         l <- z * zero + (1 - z) * dgamma(x, shape = shape, scale = scale)
         if (log) l <- log(l)
         return(l)
@@ -464,7 +464,7 @@ dist_zigamma2 <- Dist$new(
   pdf = function(x, mean, sd, z, log = FALSE) {
     shape <- mean^2 / sd^2
     scale <- sd^2 / mean
-    zero <- x < 1e-10 
+    zero <- x == 0 
     l <- z * zero + (1 - z) * dgamma(x, shape = shape, scale = scale)
     if (log) l <- log(l)
     return(l)
@@ -635,7 +635,7 @@ dist_wrpcauchy <- Dist$new(
   npar = 2, 
   parnames = c("mu", "rho"), 
   parapprox = function(x) {
-    # approximate Von-Mises with Wrapped Normal
+    # approximate Wrp Cauchy with Wrapped Normal
     mcosx <- mean(cos(x))
     msinx <- mean(sin(x))
     mu <- atan2(msinx, mcosx)
