@@ -1443,6 +1443,62 @@ HMM <- R6Class(
       return(val)
     }, 
     
+    #' Confidence intervals for working parameters
+    #' 
+    #' This function computes standard errors for all fixed effect model
+    #' parameters based on the diagonal of the inverse of the Hessian matrix,
+    #' and then derives Wald-type confidence intervals.
+    #' 
+    #' @param level Level of confidence intervals. Defaults to 0.95, i.e., 95\%
+    #' confidence intervals.
+    #' 
+    #' @return List of matrices with three columns: mle (maximum likelihood 
+    #' estimate), lcl (lower confidence limit), and ucl (upper confidence
+    #' limit). One such matrix is produced for the working parameters of the
+    #' observation model, the working parameters of the hidden state model,
+    #' the smoothness parameters of the observation model, and the smoothness
+    #' parameters of the hidden state model.
+    confint = function(level = 0.95) {
+      # Get standard errors from covariance matrix
+      rep <- self$tmb_rep()
+      par <- rep$par.fixed
+      if(is.null(rep$jointPrecision)) {
+        V <- rep$cov.fixed
+      } else {
+        V <- prec_to_cov(rep$jointPrecision)
+      }
+      se <- sqrt(diag(V)[1:length(par)])
+      
+      # Unpack model components
+      obspar_se <- se[which(names(se) == "coeff_fe_obs")]
+      hidpar_se <- se[which(names(se) == "coeff_fe_hid")]
+      obslam_se <- se[which(names(se) == "log_lambda_obs")]
+      hidlam_se <- se[which(names(se) == "log_lambda_hid")]
+      
+      # Get Wald-type confidence intervals
+      quant <- qnorm(1 - (1 - level)/2)
+      obspar_ci <- cbind(self$coeff_fe()$obs,
+                         self$coeff_fe()$obs - quant * obspar_se,
+                         self$coeff_fe()$obs + quant * obspar_se)
+      hidpar_ci <- cbind(self$coeff_fe()$hidden,
+                         self$coeff_fe()$hidden - quant * hidpar_se,
+                         self$coeff_fe()$hidden + quant * hidpar_se)
+      obslam_ci <- cbind(self$lambda()$obs,
+                         self$lambda()$obs - quant * obslam_se,
+                         self$lambda()$obs + quant * obslam_se)
+      hidlam_ci <- cbind(self$lambda()$hidden,
+                         self$lambda()$hidden - quant * hidlam_se,
+                         self$lambda()$hidden + quant * hidlam_se)
+      colnames(obspar_ci) <- c("mle", "lcl", "ucl")
+      colnames(hidpar_ci) <- c("mle", "lcl", "ucl")
+      colnames(obslam_ci) <- c("mle", "lcl", "ucl")
+      colnames(hidlam_ci) <- c("mle", "lcl", "ucl")
+      
+      out <- list(coeff_fe = list(obs = obspar_ci, hidden = hidpar_ci),
+                  lambda = list(obs = obslam_ci, hidden = hidlam_ci)) 
+      return(out)
+    },
+    
     # Simulation --------------------------------------------------------------
     
     #' @description Simulate from hidden Markov model
