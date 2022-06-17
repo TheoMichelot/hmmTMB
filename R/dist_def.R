@@ -7,12 +7,16 @@
 dist_pois <- Dist$new(
   name = "pois", 
   name_long = "Poisson", 
-  pdf = dpois,
-  rng = rpois,
-  link = list(lambda = log),
-  invlink = list(lambda = exp),
+  pdf = function(x, rate, log = FALSE) {
+    dpois(x = x, lambda = rate, log = log)
+  },
+  rng = function(n, rate) {
+    rpois(n = n, lambda = rate)
+  },
+  link = list(rate = log),
+  invlink = list(rate = exp),
   npar = 1, 
-  parnames = c("lambda"), 
+  parnames = c("rate"), 
   parapprox = function(x) {
     return(mean(x))
   }
@@ -22,21 +26,21 @@ dist_pois <- Dist$new(
 dist_zip <- Dist$new(
   name = "zip", 
   name_long = "zero-inflated Poisson",
-  pdf = function(x, lambda, z, log = FALSE) {
+  pdf = function(x, rate, z, log = FALSE) {
     zero <- x == 0 
-    l <- z * zero + (1 - z) * dpois(x, lambda)
+    l <- z * zero + (1 - z) * dpois(x, rate)
     if (log) l <- log(l)
     return(l)
   }, 
-  rng = function(n, lambda, z) {
+  rng = function(n, rate, z) {
     zero <- rbinom(n, 1, z)
-    y <- rpois(n, lambda)
+    y <- rpois(n, rate)
     y[zero == 1] <- 0
     return(y)}, 
-  link = list(lambda = log, z = qlogis), 
-  invlink = list(lambda = exp, z = plogis), 
+  link = list(rate = log, z = qlogis), 
+  invlink = list(rate = exp, z = plogis), 
   npar = 2, 
-  parnames = c("lambda", "z"), 
+  parnames = c("rate", "z"), 
   parapprox = function(x) {
     # Beckett, S., Jee, J., Ncube, T., Pompilus, S., Washington, Q., Singh, A., & Pal, N. (2014). 
     # Zero-inflated Poisson (ZIP) distribution: parameter estimation and applications to model data 
@@ -45,12 +49,12 @@ dist_zip <- Dist$new(
     s2 <- var(x)
     if (mu > s2) {
       z <- 1e-3
-      lambda <- mu 
+      rate <- mu 
     } else {
-      lambda <- mu + s2 / mu - 1 
-      z <- s2 / mu - 1 / lambda 
+      rate <- mu + s2 / mu - 1 
+      z <- s2 / mu - 1 / rate 
     }
-    return(c(lambda, z))
+    return(c(rate, z))
   }
 )
 
@@ -58,23 +62,23 @@ dist_zip <- Dist$new(
 dist_ztp <- Dist$new(
   name = "ztp", 
   name_long = "zero-truncated Poisson",
-  pdf = function(x, lambda, log = FALSE) {
-    l <- dpois(x, lambda) / (1 - dpois(0, lambda))
+  pdf = function(x, rate, log = FALSE) {
+    l <- dpois(x, rate) / (1 - dpois(0, rate))
     if (log) l <- log(l)
     return(l)
   }, 
-  rng = function(n, lambda) {
+  rng = function(n, rate) {
     y <- NULL 
     while (length(y) < n) {
-      z <- rpois(n, lambda)
+      z <- rpois(n, rate)
       y <- c(y, z[z > 1e-10])
     }
     return(y)
   }, 
-  link = list(lambda = log), 
-  invlink = list(lambda = exp), 
+  link = list(rate = log), 
+  invlink = list(rate = exp), 
   npar = 1, 
-  parnames = c("lambda"), 
+  parnames = c("rate"), 
   parapprox = function(x) {
     warning("approximating parameters ignores zero truncation")
     return(mean(x))
@@ -126,12 +130,12 @@ dist_zib <- Dist$new(
     s2 <- var(x)
     if (mu > s2) {
       z <- 1e-3
-      lambda <- mu 
+      rate <- mu 
     } else {
-      lambda <- mu + s2 / mu - 1 
-      z <- s2 / mu - 1 / lambda 
+      rate <- mu + s2 / mu - 1 
+      z <- s2 / mu - 1 / rate 
     }
-    prob <- lambda / size 
+    prob <- rate / size 
     return(c(size, prob, z))
   }
 )
@@ -223,14 +227,14 @@ dist_zinb <- Dist$new(
     s2 <- var(x)
     if (mu > s2) {
       z <- 1e-3
-      lambda <- mu 
+      rate <- mu 
     } else {
-      lambda <- mu + s2 / mu - 1 
-      z <- s2 / mu - 1 / lambda 
+      rate <- mu + s2 / mu - 1 
+      z <- s2 / mu - 1 / rate 
     }
     # use minimum variance unbiased estimate of p
     n <- length(x)
-    k <- lambda * n
+    k <- rate * n
     prob <- (n * size - 1) / (n * size + k - 1)
     return(c(size, prob, z))
   }
