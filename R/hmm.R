@@ -1701,22 +1701,22 @@ HMM <- R6Class(
       
       # Data frame for plot
       df <- as.data.frame.table(preds$mean)
-      df$low <- as.vector(preds$lcl)
-      df$upp <- as.vector(preds$ucl)
+      df$lcl <- as.vector(preds$lcl)
+      df$ucl <- as.vector(preds$ucl)
       if (what == "tpm") {
-        colnames(df) <- c("from", "to", "var", "prob", "low", "upp")
+        colnames(df) <- c("from", "to", "var", "prob", "lcl", "ucl")
         levels(df$from) <- paste("State", 1:n_states)
         levels(df$to) <- paste("State", 1:n_states)
         df$var <- rep(newdata[, var], each = n_states * n_states)
         if (!is.null(i)) df <- df[df$from == paste0("State ", i),]
         if (!is.null(j)) df <- df[df$to == paste0("State ", j),]
       } else if (what == "delta") {
-        colnames(df) <- c("var", "state", "prob", "low", "upp")
+        colnames(df) <- c("var", "state", "prob", "lcl", "ucl")
         levels(df$state) <- paste("State", 1:n_states)
         df$var <- rep(newdata[, var], n_states)
         if (!is.null(i)) df <- df[df$state == paste0("State ", i),]
       } else if (what == "obspar") {
-        colnames(df) <- c("par", "state", "var", "val", "low", "upp")
+        colnames(df) <- c("par", "state", "var", "val", "lcl", "ucl")
         levels(df$state) <- paste("State", 1:n_states)
         df$var <- rep(newdata[, var], each = nrow(df)/nrow(newdata))
         if (!is.null(i)) df <- df[df$par == i,]
@@ -1742,7 +1742,7 @@ HMM <- R6Class(
       
       if (what == "tpm") {
         p <- ggplot(df, aes(var, prob)) + 
-          geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3) +
+          geom_ribbon(aes(ymin = lcl, ymax = ucl), alpha = 0.3) +
           geom_line() + 
           facet_wrap(c("from", "to"), 
                      strip.position = "left",
@@ -1755,11 +1755,11 @@ HMM <- R6Class(
           coord_cartesian(ylim = c(0, 1))
         if(is.factor(df$var)) {
           p <- p + geom_point(size = 0.7) +
-            geom_segment(aes(x = var, y = low, xend = var, yend = upp), alpha = 0.3) +
+            geom_segment(aes(x = var, y = lcl, xend = var, yend = ucl), alpha = 0.3) +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
         } else {
           p <- p + geom_line(size = 0.7) +
-            geom_ribbon(aes(ymin = low, ymax = upp), alpha = 0.3)
+            geom_ribbon(aes(ymin = lcl, ymax = ucl), alpha = 0.3)
         }
       } else {
         if (what == "delta") {
@@ -1783,11 +1783,11 @@ HMM <- R6Class(
         }
         if(is.factor(df$var)) {
           p <- p + geom_point(size = 0.7) +
-            geom_segment(aes(x = var, y = low, xend = var, yend = upp), alpha = 0.3) +
+            geom_segment(aes(x = var, y = lcl, xend = var, yend = ucl), alpha = 0.3) +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
         } else {
           p <- p + geom_line(size = 0.7) +
-            geom_ribbon(aes(ymin = low, ymax = upp, fill = state), col = NA, alpha = 0.3)
+            geom_ribbon(aes(ymin = lcl, ymax = ucl, fill = state), col = NA, alpha = 0.3)
         }
       }
       return(p)
