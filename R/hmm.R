@@ -1470,10 +1470,10 @@ HMM <- R6Class(
       se <- sqrt(diag(V)[1:length(par)])
       
       # Unpack model components
-      obspar_se <- se[which(names(se) == "coeff_fe_obs")]
-      hidpar_se <- se[which(names(se) == "coeff_fe_hid")]
-      obslam_se <- se[which(names(se) == "log_lambda_obs")]
-      hidlam_se <- se[which(names(se) == "log_lambda_hid")]
+      obspar_se <- se[which(names(par) == "coeff_fe_obs")]
+      hidpar_se <- se[which(names(par) == "coeff_fe_hid")]
+      obslam_se <- se[which(names(par) == "log_lambda_obs")]
+      hidlam_se <- se[which(names(par) == "log_lambda_hid")]
       
       # Get Wald-type confidence intervals
       quant <- qnorm(1 - (1 - level)/2)
