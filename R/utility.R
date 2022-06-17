@@ -279,3 +279,28 @@ prec_to_cov <- function(prec_mat)
   }
   return(cov_mat)
 }
+
+#' Find s(, bs = "re") terms in formula
+#' 
+#' This function is used to identify the variables "x" which are 
+#' included as s(x, bs = "re") in the formula, in particular to
+#' check that they are factors.
+#' 
+#' @param form Model formula
+#' 
+#' @return Vector of names of variables for which a random
+#' effect term is included in the model.
+find_re <- function(form) {
+  term_labs <- attr(terms(form), "term.labels")
+  # Regex description:
+  # ^: start of string
+  # s\\(: s followed by opening bracket
+  # (.*): this part can be captured by gsub
+  # , bs = "re"\\): the rest of the string
+  # $: end of string
+  pattern <- '^s\\((.*), bs = "re"\\)$'
+  var_names <- gsub(pattern = pattern, "\\1", term_labs)
+  which_re <- grep(pattern = pattern, term_labs)
+  var_re <- var_names[which_re]
+  return(var_re)
+}

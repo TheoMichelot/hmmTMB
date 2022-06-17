@@ -37,6 +37,16 @@ make_matrices = function(formulas, data, new_data = NULL) {
   for(k in seq_along(forms)) {
     form <- forms[[k]]
     
+    # Check that random effect variables are factors
+    var_re <- find_re(form)
+    for(var in var_re) {
+      if(!inherits(data[[var]], "factor")) {
+        data[[var]] <- factor(data[[var]])
+        warning(paste0("'", var, "' is included as a random effect but is ",
+                       "not a factor - changing to factor."))
+      }
+    }
+    
     # Create matrices based on this formula
     if(is.null(new_data)) {
       gam_setup <- gam(formula = update(form, dummy ~ .), 
