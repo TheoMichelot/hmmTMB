@@ -239,6 +239,14 @@ Dist <- R6Class(
         wpar_list <- Map(function(fn, arg) {fn(arg)}, self$link(), par)
         wpar <- unlist(wpar_list)
       }
+      if(any(is.nan(wpar))) {
+        wh_nan <- which(is.nan(wpar))
+        msg <- paste0("Some parameters of the '", self$name_long(), 
+                      "' distribution seem to be outside of their",
+                      " domain of definition (", 
+                      paste0(names(wpar)[wh_nan], collapse = ", "), ")")
+        warning(msg)
+      }
       return(wpar)
     },
     
