@@ -228,8 +228,8 @@ mvnorm_invlink = function(x) {
 #' Log of sum of exponentials 
 #' @export 
 logsumexp <- function(x) {
-  xmin <- min(x)
-  val <- xmin + log(sum(exp(x - xmin)))
+  xmax <- max(x)
+  val <- xmax + log(sum(exp(x - xmax)))
   return(val)
 }
 
