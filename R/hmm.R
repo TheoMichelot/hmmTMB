@@ -1231,6 +1231,7 @@ HMM <- R6Class(
         }
         k <- k + n_by_ID[ind]
       }
+      colnames(pr_state) <- paste0("state", 1:nstates)
       return(pr_state)
     }, 
     
