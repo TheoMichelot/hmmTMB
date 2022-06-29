@@ -1,0 +1,512 @@
+---
+title: "Analysing time series data with hidden Markov models in hmmTMB"
+author: "Théo Michelot"
+output: 
+    pdf_document:
+        number_sections: true
+        toc: false
+header-includes:
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, error = FALSE, warning = FALSE,
+  comment = NA
+)
+```
+
+\tableofcontents
+
+```{r load-stuff}
+# Load packages and color palette
+library(ggplot2)
+theme_set(theme_bw())
+library(hmmTMB)
+pal <- hmmTMB:::hmmTMB_cols
+```
+
+\newpage
+This vignette is a good starting point to learn about hmmTMB. It describes the main features of the package through one detailed example: the analysis of a data set of energy prices in Spain.
+
+# Data preparation
+
+In hmmTMB, the data set to analyse must be passed as a data frame that contains the following variables:
+
+- `ID` is the only reserved column name, for the identifier of the time series (in cases where there are several time series in the data). If the data only consists of one time series, like in the following example, then this can be omitted.
+
+- one column for each response variable ("data stream") that will be included in the model. There should be at least one of these.
+
+- one column for each covariate that will be included in the model, if any.
+
+In this vignette, we will use the data set shown below, which is taken from MSwM R package (@sanchez2021). The column `Price` is the response variable that we want to model with an HMM, representing the price of energy in Spain (in cents/kWh) over 1784 working days from Jan 1, 2002 to Oct 31, 2008. All other columns are covariates related to the prices of raw matrials (`Oil`, `Gas`, `Coal`), to energy demand (`Demand`), and to the state of the financial market (`EurDol` and `Ibex35`). See `?MSwM::energy` for more detail about each variable.
+
+```{r head-data}
+data(energy, package = "MSwM")
+head(energy)
+```
+
+We add a column for the date, to make time series plots.
+
+```{r add-date, fig.width = 6, fig.height = 3, out.width="60%", fig.align = "center"}
+# Create a grid of days that excludes weekends
+day1 <- as.POSIXct("2002/01/01", format = "%Y/%m/%d")
+day2 <- as.POSIXct("2008/10/31", format = "%Y/%m/%d")
+days_with_we <- seq(day1, day2, by = "1 day")
+which_we <- which(format(days_with_we, '%u') %in% 6:7)
+days <- days_with_we[-which_we]
+energy$Day <- days
+
+ggplot(energy, aes(Day, Price)) + geom_line()
+```
+
+# Model specification
+
+There are many good references presenting the mathematical formulation of HMMs in more or less detail; see for example @rabiner1989 for a seminal introduction, @stamp2004 for a computer scientist's introduction, @mcclintock2020 for a fairly non-technical description (with a focus on ecological applications), and @zucchini2017 for a monograph. We will only provide some superficial description of the model formulation in this document.
+
+An HMM is based on the assumption that the distribution of some observed variable(s) is driven by an unobserved state, i.e., each state gives rise to a different distribution for the observed variable. There are therefore two model components: 
+
+1. a model for the hidden state process $(S_t)$, which is typically assumed to be a first-order Markov process;
+
+2. a model for the observation process $(Z_t)$, which may be multivariate. This model describes the distribution of the observation, conditional on the state process.
+
+## The R6 approach
+
+hmmTMB uses R6 classes to implement model objects (@chang2021), the most important being `MarkovChain`, `Observation`, and `HMM`. With R6, we first need to create an object using the syntax 
+```{r r6-1, eval = FALSE}
+object <- Class$new(...)
+```
+where `Class` should be replaced by the class of the object that we create, and where the brackets contain arguments needed to create the object. (The details are described below.) Then, we can interact with the object using "methods", i.e., functions specific to that class. The syntax for this is slightly different from most R code, and looks something like
+```{r r6-2, eval = FALSE}
+object$method(...)
+```
+
+## Hidden state process
+
+The hidden state process is stored as a `MarkovChain` object in hmmTMB. The main modelling decision required at this stage is the number of states of the model, i.e., the number of values that the hidden process $S_t$ can take. Here, we choose $N = 2$ states, assuming that the observed energy price arises from one of two distributions, depending on the underlying state. We could also include covariates on the dynamics of the Markov chain, as illustrated later in this document, using the `formula` argument.
+
+```{r create-hid1}
+hid1 <- MarkovChain$new(data = energy, n_states = 2)
+```
+
+## Observation model
+
+The observation model, which defines the conditional distribution of the observations (given the state), is stored in an `Observation` object. Here, the response variable `Price` is strictly positive, and so we choose to use a gamma distribution in each state. That is, we assume
+$$
+Z_t \vert \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j),
+$$
+where $\mu_j > 0$ and $\sigma_j > 0$ are the mean and standard deviation of the distribution of price $Z_t$ in state $j \in \{1, 2\}$. We use this non-standard parameterisation of the gamma distribution (rather than the more usual shape/scale) because these parameters are easy to interpret. In hmmTMB, `"gamma2"` refers to the gamma distribution with mean and standard deviation, whereas `"gamma"` has a shape and scale. The distributions are passed in a named list, with one element for each response variable; here, there is only one.
+
+In addition to the family of distribution, we need to choose initial parameter values for the observation process. This is because the model is fitted by numerical optimisation of the likelihood function, and the optimiser requires a starting point. The general idea is to pick values that are plausible given the data and the way we expect the states to be defined. We might for example use some quantiles of the observed prices for the mean parameter. These are also provided to the `Observation` object as a list, with the following structure:
+
+- each element of the list corresponds to a response variable (here there is only one: `Price`), and is itself a list;
+
+- each element of the inner list corresponds to a parameter (here, `mean` and `sd`), and is a vector of length the number of states.
+
+We provide two initial means and two initial standard deviations (one for each state), for the price variable.
+
+```{r create-obs1}
+# List observation distribution(s)
+dists <- list(Price = "gamma2")
+# List of initial parameter values
+par0_2s <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
+# Create observation model object
+obs1 <- Observation$new(data = energy, n_states = 2, dists = dists, par = par0_2s)
+```
+
+## Hidden Markov model
+
+An HMM is the combination of the hidden state and the observation model, and so we create an `HMM` object using the two components.
+
+```{r create-hmm1}
+hmm1 <- HMM$new(obs = obs1, hidden = hid1)
+
+hmm1
+```
+
+# Model fitting
+
+Model fitting consists in estimating all model parameters, in particular the transition probabilities of the state process, and the state-dependent observation parameters. Fitting this simple model takes less than a second on a laptop. 
+
+Once it has been fitted, the model stores the estimated parameters. Here, we find
+\begin{align*}
+\mu_1 = 3.4,\quad \mu_2 = 6.0 \\
+\sigma_1 = 0.9,\quad \sigma_2 = 1.1\\
+\Gamma =
+\begin{pmatrix}
+0.99 & 0.01 \\
+0.01 & 0.99
+\end{pmatrix}
+\end{align*}
+
+The first state therefore captures periods with lower energy prices (with a mean of 3.4 cents/kWh), and the second state captures higher prices (mean = 6 cents/kWh).
+
+```{r fit-hmm1}
+hmm1$fit(silent = TRUE)
+
+hmm1
+```
+
+# Model interpretation
+
+## State inference
+
+It is often of interest to make inferences about the unobserved state process. In this example, we might want to know which time periods were more likely to be in the "high energy price" state. There are a few different functions for this purpose in hmmTMB.
+
+- `viterbi()` can be used for "global decoding", i.e., to obtain the most likely state sequence over the whole data set. This is done using the so-called Viterbi algortihm. It returns a vector of same length as the data set, where each element is the state for the corresponding time step. This may for example be useful to plot the time series, coloured by most likely state.
+
+- `state_probs()` can be used for "local decoding", and returns a matrix of probabilities of being in each state at each time step. This gives a little more information than the Viterbi algorithm, and provides a measure of the uncertainty in the state classification. Note that, although the state probabilities and the Viterbi algorithm usually agree, they are not guaranteed to (see @zucchini2017 for a discussion of the difference between local and global decoding).
+
+- `sample_states()` implements the forward-filtering backward-sampling algorithm, and returns posterior samples of the state sequence. This is similar to the output of the Viterbi algorithm, but accounts for the uncertainty in the classification.
+
+We create a new data set, for plotting, which includes the data variables and two other columns: one for the Viterbi state sequence, and one for the probability of being in state 2 (high price state).
+
+```{r viterbi-hmm1, fig.width = 5, fig.height = 3, out.width="49%", fig.align = "center", fig.show = "hold"}
+data_plot <- energy
+
+# Coloured by most likely state sequence
+data_plot$state <- factor(paste0("State ", hmm1$viterbi()))
+ggplot(data_plot, aes(Day, Price, col = state)) +
+  geom_point() +
+  scale_color_manual(values = pal, name = NULL)
+
+# Coloured by state probability
+data_plot$pr_s2 <- hmm1$state_probs()[,2]
+ggplot(data_plot, aes(Day, Price, col = pr_s2)) +
+  geom_point() +
+  scico::scale_color_scico(palette = "berlin", 
+                           name = expression("Pr("~S[t]~"= 2)"))
+```
+The second plot suggests that most time steps are classified with high probability of being in either state 1 or state 2, but there is high uncertainty (i.e., $\Pr(S_t = 1) \approx \Pr(S_t = 2) \approx 0.5$) for observations that have intermediate values.
+
+## Model visualisation
+
+There are several built-in functions to create plots of a fitted model in hmmTMB. For example, `hmm1$plot_ts("Price")` produces a time series plot of the `Price` variable, coloured by the most likely state sequence (similar to the one we made manually above).
+
+To help interpreting the states, or to assess goodness-of-fit, it is often useful to plot the estimated state-dependent observations distributions. This is what the function `plot_dist()` does. More specifically, it shows a histogram of the observations, overlaid with curves of the estimated distributions, weighted by the proportion of time spent in each state (measured from Viterbi sequence). From this plot, it is clear that state 1 tends to capture smaller prices, and state 2 higher prices, but there is some overlap between the two states for values around 5 cents/kWh.
+
+```{r plot-dist-hmm1, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center"}
+hmm1$plot_dist("Price")
+```
+
+In models that include covariates, the function `plot()` can be used to visualise the relevant model parameters as functions of covariates (e.g., transition probabilities, or observation parameters). This first model does not have covariates, but we will add some later so, for the sake of comparison, we show a plot of the mean of the price distribution in each state, as a function of the `EurDol` exchange rate variable. In that plot, we also include the observations, coloured by the Viterbi sequence.
+
+```{r plot-hmm1, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center"}
+hmm1$plot("obspar", "EurDol", i = "Price.mean") + 
+  geom_point(aes(x = EurDol, y = Price, fill = state, col = state), 
+             data = data_plot, alpha = 0.3)
+```
+
+# Model checking
+
+## Pseudo-residuals
+
+Pseudo-residuals are one method to assess goodness-of-fit of the observation distributions in an HMM (@zucchini2017). Similarly to residuals in linear models, pseudo-residuals should be independent and normally distributed if the model assumptions were satisfied. Deviations from these properties suggest lack of fit. We compute the pseudo-residuals for `Price` using the `pseudores()` function, and investigate the two properties (normal distribution and independence) separately, using a quantile-quantile plot and an autocorrelation function (ACF) plot, respectively.
+
+```{r pseudores-hmm1, fig.width = 5, fig.height = 4, out.width="49%", fig.align = "center", fig.show = "hold"}
+# Get pseudo-residuals in a matrix (one row for each response variable)
+pr <- hmm1$pseudores()
+
+# Check normality; should be along 1:1 diagonal
+qqnorm(pr["Price",])
+abline(0, 1)
+
+# Check independence; should decay to zero
+acf(pr["Price",])
+```
+
+There is some slight deviation from the 1:1 diagonal in the upper part of the quantile-quantile plot, but the fit seems adequate overall, suggesting that a mixture of 2 gamma distributions works well for this data set. On the other hand, the ACF plot indicates that there is strong residual autocorrelation; i.e., much of the autocorrelation in the data was not captured by the model. This is clearly apparent from the time series plots shown above: successive prices within each state are not independent. There is no single remedy for this problem, but several approaches could be considered, including increasing the number of states, or including covariates to account for this autocorrelation.
+
+## Posterior predictive checks
+
+Another strategy to check goodness-of-fit is to generate simulated data from the fitted model, and then compare those to the observed data. Some relevant summary statistics can be compared between the true and simulated data sets using the `check()` function in hmmTMB. It takes as an argument a goodness-of-fit function, which itself takes a dataset as input and return the statistic(s) to use for comparison of observed and simulated data.
+
+We choose the following statistics:
+
+- the 0%, 25%, 50%, 75%, and 100% quantiles (i.e., min, median, max, and quartiles);
+
+- the autocorrelation of the observation process, measured as the correlation between $Z_{t-1}$ and $Z_t$.
+
+```{r check-hmm1, fig.width = 6, fig.height = 4, out.width="100%", fig.align = "center"}
+# This function returns the statistics that we want to compare,
+# in a named vector
+gof <- function(data) {
+  s <- c(quantile(data$Price, seq(0, 1, by = 0.25)),
+         autocor = cor(data$Price[-1], data$Price[-nrow(data)]))
+}
+
+# Run posterior predictive checks
+checks <- hmm1$check(check_fn = gof, silent = TRUE)
+
+checks$plot
+```
+
+The observed values of the 25%, 50%, 75%, and 100% quantiles are well within the range of simulated values, suggesting that those features are well captured by the model. The 0% quantile (i.e., the minimum) is always larger in the simulations than in the real data, which means that the model underestimates how long the lower tail is. The autocorrelation is also captured poorly, as we also saw from the pseudo-residuals. Here, the distribution of simulated autocorrelations are between 0.55 and 0.65, whereas the true value is around 0.95.
+
+# Changing the number of states
+
+Using a different number of states requires very little changes in the code shown above. Consider that we now want to use $N = 3$ states. We need to specify `n_states = 3` when creating the `MarkovChain` and `Observation` components of the model. We also need to change the initial values, as we now need three values of each parameter. Everything else is identical.
+
+```{r hmm2, fig.width = 4, fig.height = 3, out.width="49%", fig.align = "center", fig.show = "hold"}
+# Hidden state process
+hid2 <- MarkovChain$new(data = energy, n_states = 3)
+
+# Observation model
+par0_3s <- list(Price = list(mean = c(2.5, 4, 6), sd = c(0.5, 0.5, 1)))
+obs2 <- Observation$new(data = energy, n_states = 3, 
+                        dists = dists, par = par0_3s)
+
+# Create and fit HMM
+hmm2 <- HMM$new(obs = obs2, hidden = hid2)
+hmm2$fit(silent = TRUE)
+
+# Show parameters
+hmm2
+
+# Plot state-dependent distributions
+hmm2$plot_dist("Price")
+
+# Time series plot coloured by most likely state sequence
+hmm2$plot_ts("Price")
+
+# Plot prices against euro-dollar exchange rate, 
+# with estimated state-specific means
+data_plot$state <- factor(paste0("State ", hmm2$viterbi()))
+hmm2$plot("obspar", "EurDol", i = "Price.mean") + 
+  geom_point(aes(x = EurDol, y = Price, fill = state, col = state), 
+             data = data_plot, alpha = 0.3)
+```
+
+There is now one state for lower prices (state 1), one state for higher prices (state 3), and another state for intermediate prices (state 2). Choosing the number of states requires a trade-off between flexibility and interpretability: a model with more states is able to capture more detailed features of the data-generating process, but fewer states are typically easier to interpret. This issue is for example discussed by @pohle2017.
+
+# Including covariates in an HMM
+
+One of the main functionalities of hmmTMB, compared to other R packages for hidden Markov modelling, is to allow for flexible covariate models on most model parameters. In particular, these can include linear and nonlinear relationships (the latter modelled using splines), and random effects. We showcase how covariates can be included in the two model components: the state process, or the observation model.
+
+## Covariates on transition probabilities
+
+A popular extension of HMMs is to include the effects of covariates on the transition probabilities of the state process. This addresses questions of the type "Is the probability of switching from state 1 to state 2 affected by some covariate?", or "Is the probability of being in state 1 affected by some covariate?".
+
+We investigate the effect of oil prices on the transition probabilities. Intuitively, we expect an effect because higher oil prices would likely lead to higher energy prices. The covariate dependence is specified through the argument `formula` when creating a `MarkovChain` object. This can either be an R formula (like in the example below), or a matrix of character strings where each element is the formula for the corresponding transition probability matrix. In the latter case, the diagonal should be filled with `"."` because the diagonal transition probabilities are not modelled directly. In this example, we assume the same formula for all transition probabilities: a linear relationship with `Oil`. Model specification is otherwise unchanged.
+
+```{r hmm3}
+# State process model
+f <- ~ Oil
+hid3 <- MarkovChain$new(data = energy, n_states = 2, formula = f)
+
+# Observation model
+obs3 <- Observation$new(data = energy, n_states = 2, 
+                        dists = dists, par = par0_2s)
+
+# Fit HMM
+hmm3 <- HMM$new(obs = obs3, hidden = hid3)
+hmm3$fit(silent = TRUE)
+```
+
+The regression coefficients which describe the relationship between the covariate and the transition probabilities can be printed using the `coeff_fe()` function. The estimated coefficients suggest that oil price has a positive effect on $\Pr(S_{t+1} = 2 \vert S_t = 1)$ (coeff = 0.06), and a negative effect on $\Pr(S_{t+1} = 1 \vert S_t = 2)$ (coeff = -0.07). That is, the process is more likely to transition to state 2 and to stay in state 2 when oil is expensive, which is consistent with our intuition.
+
+```{r print-hmm3}
+hmm3$coeff_fe()
+```
+
+Confidence intervals on the estimated model parameters can also be derived using `confint()`, with an optional argument for the level of the interval (default: 0.95 for 95% confidence interval). The 95% confidence intervals for the effect of oil on the two transition probabilities don't overlap with zero.
+
+```{r confint-hmm3}
+round(hmm3$confint(level = 0.95)$coeff_fe$hidden, 2)
+```
+
+The relationship can also be visualised (with confidence bands), by plotting the transition probabilities as functions of the covariate. We can also plot the stationary state probabilities, which measure the probability of being in each state in the long run, over a grid of covariate values. The latter option can sometimes help with interpretation, like in this example: in the second plot, it is clear that the probability of being in state 2 increases with oil price.
+
+```{r plot-hmm3, fig.width = 4, fig.height = 3, out.width="49%", fig.align = "center", fig.show = 'hold'}
+# Plot transition probabilities as functions of oil price
+hmm3$plot("tpm", var = "Oil")
+
+# Plot stationary state probabilities as functions of oil price
+hmm3$plot("delta", var = "Oil")
+```
+
+We used the formula `~Oil` to include a linear effect of oil price. We could include a nonlinear effect with a formula like `~ s(Oil, k = 5, bs = "cs")`. We illustrate spline models below, when including covariates on the observation parameters.
+
+## Covariates on observation parameters
+
+Another option to include covariates in an HMM is to assume an effect on the parameters of the state-dependent observation distributions. The question of interest is then "In each state, does the distribution of observations depend on some covariate?". This is a powerful tool which, as we will see below, can be used to implement state-switching regression models. However, note that interpretation can become difficult in such models. For example, if the mean energy price depends not only on the currently active state, but also on some covariate, what is the interpretation of each state? What if the mean is sometimes higher in state 1 and sometimes higher in state 2 (depending on the covariate)?
+
+In the following, we consider an analysis similar to that of @langrock2017, where the effect of the euro-dollar exhange rate is included as a covariate.
+
+### Linear model
+
+We now assume that the mean energy price in each state is a linear function of the euro-dollar exchange rate. This corresponds to the Markov-switching generalised linear model, an extension of Markov-switching regression:
+\begin{align*}
+  Z_t \vert \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j) \\
+  \log(\mu_j) = \beta_0^{(j)} + \beta_1^{(j)} x_{1t},
+\end{align*}
+where $\beta_0^{(j)}$ is the intercept, and $\beta_1^{(j)}$ the slope for the exchange rate covariate $x_{1t}$ in state $j \in \{1, 2\}$.
+
+We specify this model using the `formulas` attribute of the `Observation` object. This is defined as a nested list, with one element for each parameter of each observed variable.
+
+```{r hmm4}
+# State process
+hid4 <- MarkovChain$new(data = energy, n_states = 2)
+
+# Observation model
+f <- list(Price = list(mean = ~ EurDol))
+obs4 <- Observation$new(data = energy, n_states = 2, dists = dists, 
+                        par = par0_2s, formulas = f)
+
+# Fit HMM
+hmm4 <- HMM$new(obs = obs4, hidden = hid4)
+hmm4$fit(silent = TRUE)
+
+# Look at regression coefficients
+hmm4$coeff_fe()
+```
+
+The estimated coefficients are $\hat\beta_1^{(1)} = -2.3$ and $\hat\beta_1^{(1)} = -0.9$, suggesting that the euro-dollar exchange rate has a negative effect on mean energy price in each state. We can visualise this relationship with the `plot` function.
+
+```{r plot-hmm4, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center"}
+data_plot$state <- factor(paste0("State ", hmm4$viterbi()))
+hmm4$plot("obspar", "EurDol", i = "Price.mean") + 
+  geom_point(aes(x = EurDol, y = Price, fill = state, col = state), 
+             data = data_plot, alpha = 0.3)
+```
+
+### Nonlinear model
+
+The plot of `Price` against `EurDol` shown above indicates that the relationship between those two variables is quite complex, and probably nonlinear. Nonlinear models can be fitted in hmmTMB, using some model specification functionalities from the R package mgcv, which implements generalised additive models. This gives great flexibility to capture complex covariate effects. 
+
+To estimate the effect of the euro-dollar exchange rate on mean price, we adapt the linear model shown above to
+\begin{align*}
+  Z_t \vert \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j) \\
+  \log(\mu_j) = \beta_0^{(j)} + f_1^{(j)}(x_{1t}),
+\end{align*}
+where $f_1^{(j)}$ is a smooth function, modelled using splines. This defines a Markov-switching generalised additive model, as described for example by @langrock2017. For more details about spline-based models, see for example @wood2017. 
+
+We update the linear formula passed to the `Observation` object, following the mgcv syntax, to `~ s(EurDol, k = 8, bs = "cs")`. This indicates that we want to use a cubic spline basis of dimension 8. We can create and fit the model as before. This takes longer than the linear model, because the formulation is much more flexible, and more parameters need to be estimated. In particular, similarly to generalised additive models, the smoothness of the relationship is estimated from the data, rather than assumed, which can be computational.
+
+```{r hmm5, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center"}
+hid5 <- MarkovChain$new(data = energy, n_states = 2)
+f <- list(Price = list(mean = ~s(EurDol, k = 10, bs = "cs")))
+obs5 <- Observation$new(data = energy, n_states = 2, dists = dists,
+                        par = par0_2s, formulas = f)
+hmm5 <- HMM$new(obs = obs5, hidden = hid5)
+
+hmm5$fit(silent = TRUE)
+
+data_plot$state <- factor(paste0("State ", hmm5$viterbi()))
+hmm5$plot("obspar", "EurDol", i = "Price.mean") +
+  geom_point(aes(x = EurDol, y = Price, fill = state, col = state),
+             data = data_plot, alpha = 0.3)
+```
+
+These results illustrate both the flexibility of non-parametric models to capture complex relationships between HMM parameters and covariates, and the challenge of interpreting the results. The definition of states 1 and 2 is not clear any more, as the mean is sometimes larger in state 1 and sometimes larger in state 2. This might be an argument in favour of using a simpler linear model.
+
+We can compare the most likely state sequences in the two models, which are somewhat different.
+
+```{r plot-ts-hmm4-hmm5, fig.width = 5, fig.height = 4, out.width="49%", fig.align = "center", fig.show = "hold"}
+hmm4$plot_ts("Price")
+hmm5$plot_ts("Price")
+```
+
+## Random effects
+
+Using the convenient mgcv syntax, it is also possible to specify random effects on the transition probabilities or the observation parameters. This may be particularly useful in studies where there are multiple time series, which should be pooled into a common model, while accounting for heterogeneity between them. 
+
+In the energy example, we only have one time series, so we (rather artificially) use the year as the group variable for a random effect on the mean parameter of the price in each state. That is, we consider the model
+\begin{align*}
+  Z_t \vert \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j) \\
+  \log(\mu_j) = \beta_0^{(j)} + \gamma_k^{(j)}
+\end{align*}
+where $k \in \{ 2002, 2003, \dots, 2008 \}$ is the index for the year, and where the year-specific intercepts are assumed to be independent and identically distributed in each state, as
+$$
+\gamma_k^{(j)} \sim N(0, s_j^2)
+$$
+In this model, the observation process has six parameters to estimate:
+
+- the standard deviation of price in each state, $\sigma_1$ and $\sigma_2$;
+
+- the shared intercept in each state, $\beta_0^{(1)}$ and $\beta_0^{(2)}$;
+
+- the variance of the random intercepts in each state, $s_1^2$ and $s_2^2$.
+
+For the analysis, we first extract the year for each row of the `energy` data set. Note that we treat is as a factor (categorical) variable here, rather than a continuous variable.
+
+```{r re-prep}
+energy$Year <- factor(format(energy$Day, "%Y"))
+head(energy$Year)
+```
+
+To implement the model described above, we need to include `Year` as a random effect on the state-dependent observation parameters. More specifically, it should affect the mean of the price variable in each state. To indicate that it is a random effect, we use the mgcv syntax `s(Year, bs = "re")`. Model fitting takes a little longer than in model with fixed covariate effects, because TMB needs to integrate over the random effects in this example.
+
+```{r re-fit}
+# Formula for RE of year on mean price
+f <- list(Price = list(mean = ~ s(Year, bs = "re")))
+# Create Observation object with RE formula
+obs6 <- Observation$new(data = energy, n_states = 2,
+                        dists = dists, par = par0_2s, 
+                        formula = f)
+
+# Create hidden state process
+hid6 <- MarkovChain$new(data = energy, n_states = 2)
+# Create and fit HMM
+hmm6 <- HMM$new(obs = obs6, hidden = hid6)
+hmm6$fit(silent = TRUE)
+```
+
+We can see estimates of all the model parameters listed above using the `coeff_fe()` and `sd_re()` functions on the `Observation` model object. The former returns $\sigma_j$ and $\beta_0^{(j)}$, and the latter returns $s_j$ for each state.
+
+```{r re-par}
+# Fixed effect coefficients
+round(obs6$coeff_fe(), 2)
+
+# Std dev of random effects
+round(obs6$sd_re(), 2)
+```
+
+The year-specific random intercepts $\gamma_k^{(j)}$ are also predicted, and can be printed using `coeff_re()`. For each state, there are 7 levels: one for each year from 2002 to 2008.
+
+```{r re-par2}
+# Predicted random intercepts
+round(obs6$coeff_re(), 2)
+```
+
+We see that the year-specific intercepts overall increase with time (negative for first three years, then positive), suggesting that, in each state, the mean energy price increased between 2002 and 2008. The mean energy price in each state can also be plotted against the year, to visualise the between-year heterogeneity with uncertainty bounds.
+
+```{r re-plot, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center"}
+hmm6$plot("obspar", "Year", i = "Price.mean")
+```
+
+# Extensions and other features
+
+## Model predictions
+
+From a model that includes covariates, we can predict the HMM parameters using the function `predict()`, possibly with confidence intervals. It takes as input the new data set, and the component of the model that should be predicted (either `tpm` for transition probabilities, `delta` for stationary state probabilities, and `obspar` for observation parameters). Here, we consider the model with oil price as a covariate on the transition probabilities as an example. If we want confidence intervals, we also need to specify the argument `n_post`, which is the number of posterior samples used to approximate the confidence interval.
+
+```{r pred-hmm3}
+# Covariate data for predictions
+newdata <- data.frame(Oil = c(20, 80))
+
+# Predict transition probabilities
+hmm3$predict(what = "tpm", newdata = newdata, n_post = 1e3)
+
+# Predict stationary state probabilities
+hmm3$predict(what = "delta", newdata = newdata, n_post = 1e3)
+```
+
+## Simulating from an HMM
+
+The function `simulate()` can be used to simulate from an `HMM` model object. This first generates one realisation from the hidden Markov chain, and then simulates observations based on the hidden state and the observation model. We need to pass to `simulate()` the number `n` of observations that should be simulated and, if the model includes covariate dependences, a data frame `data` with columns for the covariates.
+
+In the code below, we simulate from the model `hmm3`, which included the effect of oil prices on the transition probabilities. Plotting the simulated time series gives some insights into how well the model captures features of the real data. In particular, the simulated time series does not display the same autocorrelation as the observations.
+
+```{r sim-hmm1, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center"}
+# Simulate a time series of same length as data
+sim_data <- hmm3$simulate(n = nrow(energy), data = energy, silent = TRUE)
+head(sim_data)
+
+# Plot simulated prices
+ggplot(sim_data, aes(Day, Price)) + geom_line()
+```
+
+# References
