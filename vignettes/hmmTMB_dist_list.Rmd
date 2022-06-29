@@ -1,0 +1,29 @@
+---
+title: "List of distributions in hmmTMB"
+author: "Théo Michelot"
+output: 
+    pdf_document:
+        number_sections: true
+header-includes:
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+---
+
+The hidden Markov models implemented in hmmTMB comprise two stochastic processes: an unobserved state process $(S_t)$, defined as a discrete-valued Markov chain, and an observation process $(Z_t)$. The observation depends on the hidden state as follows,
+$$
+Z_t \vert \{ S_t = j \} \sim \mathcal{D}(\theta_j),
+$$
+where $\mathcal{D}$ is a distribution, and $\theta_j$ is the vector of its parameters in state $j \in \{ 1, 2, \dots\}$.
+
+In practice, the choice of $\mathcal{D}$ depends on the observed variable; for example, a beta variable might be appropriate for a variable defined between 0 and 1, or a gamma distribution for a strictly positive variable. The distributions that are currently included in hmmTMB can be accessed using `hmmTMB:::dist_list`, and a list of distributions together with their parameters is shown below in alphabetical order. The word in quotes is the name of the distribution used in the package, which should be used when defining the observation model.
+
+```{r dist-list, echo = FALSE}
+dist_list <- lapply(hmmTMB:::dist_list, function(dist) dist$name_long())
+par_list <- lapply(hmmTMB:::dist_list, function(dist) dist$parnames())
+order <- order(names(par_list))
+for(i in 1:length(par_list)) {
+  j <- order[i]
+  cat(paste0("\"", names(par_list)[j], "\": ", dist_list[[j]], 
+             "(", paste0(par_list[[j]], collapse = ", "), ")\n"))
+}
+```
