@@ -1,0 +1,199 @@
+---
+title: "Occupancy modelling using hmmTMB"
+author: "Théo Michelot"
+output: 
+    pdf_document:
+        number_sections: true
+header-includes:
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, error = FALSE, warning = FALSE,
+  comment = NA
+)
+```
+
+In the following, we use hmmTMB to analyse a crossbill occupancy dataset from the R package unmarked, which is described by @schmid2004 and @kery2013.
+
+```{r load-packages}
+# Load packages and color palette
+library(ggplot2)
+theme_set(theme_bw())
+library(hmmTMB)
+pal <- hmmTMB:::hmmTMB_cols
+```
+
+# Data preparation
+
+The dataset included in unmarked has one row for each survey site, with columns for:
+
+- `ele`: elevation of the survey site
+
+- `forest`: forest cover at survey site
+
+- `surveys`: number of surveys carried out (either 2 or 3)
+
+It also has many columns filled with 0s and 1s, depending on whether crossbills were detected at each site and each survey event, named with the following convention:
+
+- `detxyz`: number of detections in year xy and survey z
+
+```{r load-data}
+# Load data from unmarked package
+data(crossbill, package = "unmarked")
+
+crossbill[1:6, 1:8]
+```
+
+For the HMM analysis, we need to change this dataset to a "long" format, where each year of survey is on a different row. The resulting data set has the following columns:
+
+- `ID`: identified for survey site
+
+- `year`: survey year
+
+- `elev` and `forest` are the environmental covariates
+
+- `surveys`: number of surveys for this site and this year
+
+- `y2`: count of detections for years with 2 surveys (either 0, 1, or 2)
+
+- `y3`: count of detections for years with 3 surveys (0, 1, 2, or 3)
+
+The last two columns are separate because the two variables need to be modelled separately by the HMM. Specifically, we assume that these variables follow binomial distributions, where the size parameter is either 2 (for `y2`) or 3 (for `y3`).
+
+```{r prep-data}
+# Get into format for hmmTMB
+nsites <- nrow(crossbill)
+data <- data.frame(ID = rep(1:nsites, each = 9),
+                   year = rep(1:9, nsites), 
+                   elev = rep(crossbill$ele, each = 9), 
+                   forest = rep(crossbill$forest, each = 9), 
+                   surveys = rep(crossbill$surveys, each = 9))
+y <- apply(as.matrix(crossbill[,5:31]), 1, FUN = function(x) {
+  tapply(as.numeric(x), rep(1:9, each = 3), FUN = function(r) {sum(r, na.rm = TRUE)})
+})
+y <- as.numeric(y)
+data$y2 <- ifelse(data$surveys == 2, y, NA)
+data$y3 <- ifelse(data$surveys == 3, y, NA)
+data$forest <- as.numeric(data$forest)
+data$elev <- as.numeric(data$elev)
+
+head(data)
+```
+
+# Model specification
+
+In this application, the observation is the number of detections in a given site and year, and the hidden state is the occupancy of the site (i.e., either "occupied" or "not occupied"). The occupancy is modelled as a Markov chain, and one aim is to estimate the transition probabilities between those two states, i.e.,
+
+- $\Pr(\text{occupied} \rightarrow \text{not occupied})$, the extinction probability, and
+
+- $\Pr(\text{not occupied} \rightarrow \text{occupied})$, the colonisation probability.
+
+In the following, we define state 1 as "not occupied" and state 2 as "occupied".
+
+We denote as $y^{(2)}_t$ and $y^{(3)}_t$ the number of detections in year $t$ for years with 2 and 3 survey events, respectively. The observation model is
+$$
+  y^{(k)}_t \vert S_t = j \sim \text{binomial}(\text{size = } k, \text{prob = } p^{(k)}_j)
+$$
+where $S_t$ is the hidden state. The parameter $p^{(k)}_j$ is the detection probability in state $j$ at a site which was surveyed $k$ times. We don't actually need to estimate all those parameters, because we know that $p^{(k)}_1 = 0$, i.e., the probability of detection is zero if the animal is not present.
+
+We first create an R object from the `MarkovChain` class, for the hidden state model, indicating that we need a 2-state model.
+
+```{r mod-spec1}
+# Define hidden state model
+hid1 <- MarkovChain$new(data = data, n_states = 2)
+```
+
+The second step is to create an object of class `Observation`, to specify the observation model of the HMM. In particular, this requires passing a list of observation distributions (here, "binom" for both observed variables), and a list of initial parameter values. The size parameter is the same in both states: either 2 (for sites with 2 surveys) or 3 (for sites with 3 surveys). The detection probability parameter is 0 in state 1 for both variables, and we choose some plausible value for state 2 (here, $p = 0.5$).
+
+```{r mod-spec2}
+# Define observation model
+dists <- list(y2 = "binom", y3 = "binom")
+par0 <- list(y2 = list(size = c(2, 2), prob = c(0, 0.5)),
+             y3 = list(size = c(3, 3), prob = c(0, 0.5)))
+
+obs1 <- Observation$new(data = data, dists = dists, 
+                       n_states = 2, par = par0)
+```
+
+We can now create an `HMM` object, which combines the hidden state and observation components. We use the argument `fixpar` to indicate that the detection probabilities in state 1 do not need to be estimated (and should be kept fixed to their initial value, zero). To find the name of the parameter that needs to be fixed, we can use the following command:
+```{r mod-coeff-fe}
+obs1$coeff_fe()
+```
+
+The `-Inf` entries are the ones we want to keep fixed, so we can specify `fixpar` as shown below. It is defined as a list, in which the element `obs` is a named vector where the fixed parameters are set to `NA`.
+
+```{r mod-fixpar}
+# Fix detection prob to zero in state 1
+fixpar <- list(obs = c("y2.prob.state1.(Intercept)" = NA, 
+                       "y3.prob.state1.(Intercept)" = NA))
+```
+
+Finally, we create and fit the model, which takes a few seconds.
+```{r mod-fit}
+# Create and fit model
+hmm1 <- HMM$new(obs = obs1, hidden = hid1, fixpar = fixpar)
+hmm1$fit(silent = TRUE)
+```
+
+We can see the estimated parameters using `hmm1$par()`. Note that, if covariate effects were included on the observation parameters, then this would return estimated parameters _for the first time step_.
+
+```{r mod-par}
+hmm1$par()
+```
+
+The estimates that the detection probability was $p^{(2)}_2 = 0.17$ in years with 2 surveys, and $p^{(3)}_2 = 0.53$ in years with 3 surveys. The colonisation probability over one year was about 0.15, and the extinction probability about 0.19.
+
+We can also obtain the most likely state sequence using the `viterbi()` function (after the Viterbi algorithm), for example to plot the observed time series coloured by estimated states. The code below creates such a plot for a few chosen sites.
+
+```{r mod-viz, fig.width = 5, fig.height = 5, out.width="60%", fig.align = "center"}
+# Get most likely state sequence
+data$viterbi <- factor(hmm1$viterbi())
+
+# Select sites to keep 
+ID_to_keep <- c(2, 3, 4, 5, 7, 8)
+ind_to_keep <- which(data$ID %in% unique(data$ID)[ID_to_keep])
+
+ggplot(data[ind_to_keep,], aes(year, y3, col = viterbi)) + 
+    geom_point() +
+    facet_wrap("ID", ncol = 2) +
+    ylab("count") +
+    scale_color_manual(values = pal, guide = "none") +
+    scale_x_continuous(breaks = 1:9)
+```
+
+# Adding covariates
+
+The dataset includes two environmental covariates: elevation, and forest cover. In this application, it might be of interest to investigate whether those affect the transition probabilities (i.e., colonisation and extinction probabilities). In this section, we focus on the effect of elevation. It could be included as a linear effect but we don't want to assume any parametric form for the relationship. We therefore use a smooth function, following formula syntax from the mgcv package.
+
+```{r mod2-spec1}
+# Define hidden state process with elevation covariate
+hid2 <- MarkovChain$new(data = data, n_states = 2, 
+                        formula = ~ s(elev, k = 5, bs = "ts"))
+```
+
+The rest of the model specification is unchanged. This time, fitting the model takes a few minutes, as the non-parametric relationship between elevation and transition probabilities needs to be estimated.
+
+```{r mod2-spec2}
+obs2 <- Observation$new(data = data, dists = dists, 
+                       n_states = 2, par = par0)
+hmm2 <- HMM$new(obs = obs2, hidden = hid2, fixpar = fixpar)
+hmm2$fit(silent = TRUE)
+```
+
+We can visualise the results by plotting the transition probabilities against the elevation covariate. The plot suggests that the colonisation probability is highest for an intermediate range of elevation values, roughly between 1000 and 1700m. On the other hand, it looks like the extinction probability decreases consistently with elevation.
+
+```{r mod2-viz1, fig.width = 5, fig.height = 4, out.width="60%", fig.align = "center"}
+hmm2$plot("tpm", var = "elev")
+```
+
+Another option is to plot the stationary state probabilities, i.e., the probabilities of being in each state in the long run, for a range of covariate values. This output can be easier to interpret in some cases than the transition probabilities themselves. The plot suggests that the probability of being in state 2 (occupied) is highest for elevations between 1000-2000m, although there is a lot of uncertainty for larger elevation values.
+
+```{r mod2-viz2, fig.width = 5, fig.height = 3, out.width="60%", fig.align = "center"}
+hmm2$plot("delta", var = "elev")
+```
+
+# References
