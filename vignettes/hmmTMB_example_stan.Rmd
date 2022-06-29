@@ -1,0 +1,204 @@
+---
+title: "Bayesian inference in hmmTMB"
+author: "Théo Michelot"
+output: 
+    pdf_document:
+        number_sections: true
+header-includes:
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+---
+
+This vignette describes functionalities of the package hmmTMB for Bayesian inference, which are based on Stan (@stan2019; @rstan2022). The package tmbstan conveniently integrates TMB with Stan, such that a TMB model object (such as the one created inside the `HMM` class in hmmTMB) can directly be used to run MCMC in Stan (@monnahan2018).
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, error = FALSE, warning = FALSE,
+  comment = NA
+)
+```
+
+```{r load-packages, include = FALSE}
+# Load packages and color palette
+library(ggplot2)
+theme_set(theme_bw())
+library(hmmTMB)
+pal <- hmmTMB:::hmmTMB_cols
+set.seed(34564529)
+```
+
+# Generating data
+
+For the sake of demonstration, we use simulated data in this vignette. You can skip this section if you are not interested in the procedure used to generate artificial data. In the following chunk of code, we:
+
+1. create an empty data set, just as a way to define the number of observations;
+
+2. create a `MarkovChain` object for a 2-state hidden process $(S_t)$, with transition probability matrix
+
+$$
+\Gamma =
+\begin{pmatrix}
+0.95 & 0.05 \\
+0.2 & 0.8
+\end{pmatrix}
+$$
+
+3. create an `Observation` object for the observation process $(Z_t)$, defined such that
+\begin{align*}
+Z_t & \vert \{ S_t = 1 \} \sim N(0, 3) \\
+Z_t & \vert \{ S_t = 2 \} \sim N(5, 1)
+\end{align*}
+That is, the observations follow a state-dependent normal distribution.
+
+4. create an `HMM` object from the two model components;
+
+5. simulate observations from the `HMM` object.
+
+```{r sim-data, fig.width = 6, fig.height = 3, out.width="80%", fig.align = "center"}
+# Create empty data set to specify number of observations
+n <- 500
+data_sim <- data.frame(z = rep(NA, n))
+
+# Hidden state process
+hid_sim <- MarkovChain$new(data = data_sim, n_states = 2, 
+                           tpm = matrix(c(0.95, 0.2, 0.05, 0.8), 2, 2))
+
+# Observation process
+par_sim <- list(z = list(mean = c(0, 5), sd = c(3, 1)))
+obs_sim <- Observation$new(data = data_sim, dists = list(z = "norm"), 
+                           n_states = 2, par = par_sim)
+
+# Create HMM and simulate observations
+hmm_sim <- HMM$new(hidden = hid_sim, obs = obs_sim)
+data_sim <- hmm_sim$simulate(n = n, silent = TRUE)
+
+head(data_sim)
+
+# Plot simulated time series
+state_sim <- factor(attr(data_sim, "state"))
+ggplot(data_sim, aes(1:nrow(data_sim), z, col = state_sim)) +
+  geom_point() +
+  labs(x = "time", y = "observation") +
+  scale_color_manual(values = pal, name = "state")
+```
+
+# Model specification 
+
+We now turn to the specification of the model used for analysis.
+
+## Model structure
+
+The steps used to create the model object are similar to the above. This time, the parameters passed as input are starting values, i.e., from where the sampler will start exploring parameter space. We choose values that are somwhat different from the ones used for simulation, but within a plausible range based on the simulated data. For the hidden state process, we use the default initial values (a matrix with 0.9 on the diagonal). We also set `stationary = TRUE`, which means that the initial distribution of the hidden state process is fixed to the stationary distribution of the Markov chain, rather than estimated. We do this here because the initial distribution parameters are often not well identified, which can lead to convergence issues in the MCMC sampling.
+
+```{r mod-spec1}
+# Hidden state model
+hid <- MarkovChain$new(data = data_sim, n_states = 2, stationary = TRUE)
+
+# Initial parameters for observation process
+par <- list(z = list(mean = c(2, 7), sd = c(4, 0.5)))
+obs <- Observation$new(data = data_sim, dists = list(z = "norm"), 
+                       n_states = 2, par = par)
+
+# Create HMM object
+hmm <- HMM$new(hidden = hid, obs = obs)
+```
+
+## Priors
+
+By default, the priors of an `HMM` object are set to `NA`, which correspond to an improper flat prior on all model parameters. The function `set_priors` can be used to specify priors for the observation parameters and/or the transition probabilities. 
+
+In practice, hmmTMB transforms parameters to a "working" scale, i.e., into parameters defined over the whole real line (e.g., a positive parameter is log-transformed into a real working parameter). This is to avoid having to deal with constraints during the model fitting. The priors should be defined for those working parameters, rather than for the "natural" parameters that we are interested in.
+
+We can see a list of the priors, and of the parameters on the working scale, using the functions `priors()` and `coeff_fe()`, respectively.
+
+```{r check-priors}
+hmm$priors()
+hmm$coeff_fe()
+```
+
+The observation model has four working parameters: the mean in each state (which is not transformed because its domain is already the real line), and the log standard deviation in each state. In hmmTMB, only normal priors can be defined, and they should be specified in a matrix with one row for each working parameter, and two columns (mean and standard deviation of prior). In this example, we choose the following priors:
+\begin{align*}
+\mu_1 & \sim N(0, 5^2)\\
+\mu_2 & \sim N(0, 5^2)\\
+\log(\sigma_1) & \sim N(\log(2), 5^2)\\
+\log(\sigma_2) & \sim N(\log(2), 5^2)
+\end{align*}
+where $\mu_j$ and $\sigma_j$ are the mean and standard deviation of the observation distribution for state $j \in \{1, 2\}$.
+
+```{r set-priors1}
+# Parameter of normal priors for observation parameters
+prior_obs <- matrix(c(0, 5, 
+                      0, 5,
+                      log(2), 5,
+                      log(2), 5), 
+                    ncol = 2, byrow = TRUE)
+```
+
+In a 2-state model, the two working parameters for the hidden state process are $\text{logit}(\gamma_{12})$ and $\text{logit}(\gamma_{21})$, where $\gamma_{ij} = \Pr(S_t = j \vert S_{t-1} = j)$ is the transition probability from state $i$ to state $j$. As above, we can define a matrix with two columns to specify parameters of normal priors. We use the following priors,
+\begin{align*}
+\text{logit}(\gamma_{12}) \sim N(-2, 1) \\
+\text{logit}(\gamma_{21}) \sim N(-2, 1)
+\end{align*}
+
+The mean is chosen as $-2$ because $\text{logit}(0.1) \approx -2$, i.e., the prior suggests that the off-diagonal elements of the transition probability matrix should be small (as is often the case in practice due to autocorrelation in the hidden process). Note that the definition of the working parameters is a little more complicated in models with more than 2 states.
+
+```{r set-priors2}
+# Parameter of normal priors for transition probabilities
+prior_hid <- matrix(c(-2, 1,
+                      -2, 1),
+                    ncol = 2, byrow = TRUE)
+```
+
+Finally, we update the priors stored in the model object using `set_priors()`, and we check that they have been correctly set.
+
+```{r set-priors3}
+# Update priors
+hmm$set_priors(new_priors = list(coeff_fe_obs = prior_obs, 
+                                 coeff_fe_hid = prior_hid))
+
+hmm$priors()
+```
+
+# Fitting the model
+
+The main function to fit a model using Stan in hmmTMB is `fit_stan`. It takes the same arguments as `tmbstan()` from the tmbstan package, and documentation for that function should be consulted for more details. Here, we pass two arguments: the number of chains (`chains`) and the number of MCMC iterations in each chain (`iter`). In practice, these arguments should be chosen carefully to ensure convergence of the sampler to the stationary distribution (see Stan documentation for more information); the values below were merely chosen for speed. In this example, running the sampler for 1000 iterations takes about 3 min on a laptop.
+
+```{r fit-hmm, results = 'hide'}
+hmm$fit_stan(chains = 1, iter = 1000)
+```
+
+# Inspecting the results
+
+## Working parameters
+
+After running `fit_stan()`, the output of Stan is accessible with the `out_stan()` function. This is an object of class `stanfit`, and it can directly be used with functions from the rstan package, e.g., to create traceplots or density plots of the posterior samples. Note that these plots show the working parameters.
+
+```{r rstan-plots, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center", fig.show = "hold"}
+rstan::traceplot(hmm$out_stan())
+rstan::stan_dens(hmm$out_stan())
+```
+
+## Natural parameters
+
+To inspect the posterior distributions of the natural parameters, which is often more interesting, we can extract posterior samples using `iters()`. This returns a matrix with one column for each parameter and one row for each MCMC iteration. It can directly be used to make traceplots, histograms, etc. It looks like the model successfully captured the true parameter values used for simulation. Note that this is an example of label switching, where states 1 and 2 are swapped compared to their order in the simulation model. This can often happen in HMMs, because the labelling of states is arbitrary.
+
+```{r iters-hist, fig.width = 8, fig.height = 4, out.width="100%", fig.align = "center"}
+iters <- hmm$iters()
+head(iters)
+
+iters_df <- as.data.frame.table(iters)
+ggplot(iters_df, aes(x = Freq)) + 
+    geom_histogram(bins = 20, fill = "lightgrey", col = "white") + 
+    facet_wrap("Var2", nrow = 2, scales = "free_x")
+```
+
+## Plotting functions
+
+We can also use other plotting functions as we would for a model fitted using `fit()`. By default, the parameter values used in that case are the posterior means. For example, we can plot the state-dependent distributions over a histogram of the data:
+
+```{r plot-dist, fig.width = 6, fig.height = 3, out.width="80%", fig.align = "center"}
+hmm$plot_dist("z")
+```
+
+# References
