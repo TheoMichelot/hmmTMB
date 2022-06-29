@@ -1,0 +1,565 @@
+---
+title: "Advanced features of hmmTMB"
+author: "Théo Michelot"
+output: 
+  pdf_document:
+    number_sections: true
+header-includes:
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, error = FALSE, warning = FALSE,
+  comment = NA
+)
+```
+
+\tableofcontents
+
+\newpage
+We will cover some advanced features of the R package hmmTMB, using the energy price example from the MSwM package (@sanchez2021). The vignette "_Analysing time series data with hidden Markov models in hmmTMB_" is a better starting point to learn about the basic functionalities of hmmTMB, and we build on it here. The sections of this document are mostly independent.
+
+```{r load-stuff}
+# Load packages and color palette
+library(ggplot2)
+theme_set(theme_bw())
+library(hmmTMB)
+pal <- hmmTMB:::hmmTMB_cols
+```
+
+The data set includes energy prices in Spain between 2002 and 2008, as well as some potential explanatory variables (e.g., raw material prices, financial indices). Refer to `?MSwM::energy`, or to the other vignette, for more detail about the data set.
+
+```{r load-data, fig.width = 6, fig.height = 3, out.width="90%", fig.align = "center"}
+data(energy, package = "MSwM")
+
+# Add time column to data set for plots
+day1 <- as.POSIXct("2002/01/01", format = "%Y/%m/%d")
+day2 <- as.POSIXct("2008/10/31", format = "%Y/%m/%d")
+days_with_we <- seq(day1, day2, by = "1 day")
+which_we <- which(format(days_with_we, '%u') %in% 6:7)
+days <- days_with_we[-which_we]
+energy$Day <- days
+
+ggplot(energy, aes(Day, Price)) + geom_line()
+```
+
+# Supervised learning
+
+HMMs are most often presented as a method for unsupervised learning: the states are not known a priori, and their definition is data-driven. This is also the default way to use hmmTMB, which is described in other vignettes. In some applications, we might know what the hidden states are for some of the time steps. This could be the case for example in an ecological study where the hidden state is the behavioural state of the animal, if direct observations of the behaviour are available for some period of time. Another example might be a study where the states can easily be identified manually by a human, but only for a subset of the data because of time constraints. 
+
+In cases where such information is available, it is valuable to pass it to the model, to help with defining the states. Indeed, in such a supervised setting, the interpretation of the states is known a priori, rather than purely determined by the data. In hmmTMB, known states can be passed to a model through a column named `state` in the data set. If such a column exists, it should include `NA` for time steps when the state is not known, and an integer when the state is known (e.g., either 1 or 2 for a two-state model).
+
+In the energy example, the states are not known a priori but, for the sake of illustration, let's assume that some are. More specifically, let's say that we know that the energy prices after January 1st 2007 are all in state 2 (which might represent "high prices"). We should then create a vector of same length as the data, where all elements up to December 31st 2006 are `NA`, and all elements from January 1st 2007 are 2. 
+
+```{r supervised, fig.width = 6, fig.height = 3, out.width="90%", fig.align = "center"}
+# Create vector of known states
+known_states <- rep(NA, nrow(energy))
+known_states[which(energy$Day > as.POSIXct("2007/01/01"))] <- 2
+
+# Add to data set
+data_supervised <- energy
+data_supervised$state <- known_states
+
+# Create model, with data including known states
+hid <- MarkovChain$new(data = data_supervised, n_states = 2)
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
+obs <- Observation$new(data = data_supervised, n_states = 2, 
+                       dists = dists, par = par0)
+hmm <- HMM$new(hidden = hid, obs = obs)
+
+# Fit model
+hmm$fit(silent = TRUE)
+
+# Plot prices coloured by most likely state sequence 
+data_supervised$state <- factor(paste0("State ", hmm$viterbi()))
+ggplot(data_supervised, aes(Day, Price, col = state, group = NA)) + 
+  geom_line() +
+  scale_color_manual(values = pal, name = NULL)
+```
+
+The plot of the state-coloured time series confirms that the state was fixed to 2 for 2007-2008. This caused the definition of the states to be different from what they would have been without the known states.
+
+# Using a trained model on new data
+
+In some applications, it might be useful to apply a fitted model to new data, without fitting it again. For example, consider the case where the full data set is too large to fit a model. We could fit a model to a subset of the data, and then use this model to carry out inferences on the full data set (e.g., state decoding). We call "training data" the subset to which the model is fitted, and "new data" the data set to which we wish to apply the fitted model directly. For example, let's say that the training data consists of the first 500 rows of the `energy` data set, and the new data is the rest.
+
+```{r fit-false}
+# "Training data"
+energy_train <- energy[1:500,]
+# "New data"
+energy_new <- energy[-(1:500),]
+```
+
+In hmmTMB, the trick to achieve this is to pass the trained model as `init` when creating the `HMM` object for the new data. When this argument is specified, all parameters of that model are copied into the new model (parameters that the two models have in common). Therefore, this creates an HMM object which stores the new data, but the parameter values estimated from the training data. 
+
+```{r fit-false2}
+# Create and fit model to training data
+hid_train <- MarkovChain$new(data = energy_train, n_states = 2)
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
+obs_train <- Observation$new(data = energy_train, n_states = 2, 
+                             dists = dists, par = par0)
+hmm_train <- HMM$new(hidden = hid_train, obs = obs_train)
+hmm_train$fit(silent = TRUE)
+
+# Create model for new data, but don't fit
+hid_new <- MarkovChain$new(data = energy_new, n_states = 2)
+obs_new <- Observation$new(data = energy_new, n_states = 2, 
+                           dists = dists, par = par0)
+hmm_new <- HMM$new(hidden = hid_new, obs = obs_new, init = hmm_train)
+
+# Check parameters
+hmm_new
+```
+
+Then, we can use this model without fitting it, for example to get the most likely state sequence for the new data, based on the parameters estimated from the training data. We can also plot some model outputs, like a time series coloured by state, or plots of the new data overlaid with the distributions estimated from the training data. Looking at these outputs actually makes it clear that the method did not work very well in this example: the state-dependent distributions don't fit the new data well. This approach is only useful in cases where patterns in the training data and the new data are similar, so that the states estimates from the former can describe the latter well.
+
+```{r fit-false3, fig.width = 4, fig.height = 3, out.width="49%", fig.align = "center", fig.show = 'hold'}
+# Global state decoding
+head(hmm_new$viterbi())
+
+# Plot new data coloured by states (based on trained model)
+hmm_new$plot_ts("Price")
+
+# Check whether distributions fit the new data well
+hmm_new$plot_dist("Price")
+```
+
+# Fixed parameters
+
+Parameters of the model can be fixed using the argument `fixpar` when creating an `HMM` object. If a parameter is fixed, then it stays fixed at its initial value rather than being estimated. This may be useful in many situations, for example if we know that a given transition probability is zero. It is also possible to specify that two (or more) parameters should be estimated, but with a common value. Under the hood, this functionality uses the argument `map` of `MakeADFun` in TMB, and you can refer to `?TMB::MakeADFun` for more details.
+
+The `fixpar` argument should be a named list with elements from: `obs` (observation parameters), `hid` (transition probabilities), `lambda_obs` (smoothness parameter for observation process), `lambda_hid` (smoothness parameter for hidden process), and `delta0` (initial distribution of hidden process). Each of these entries should be a named vector, in a format similar to that expected by TMB with `map`. Specifically, each element of the vector should be named after a working parameter of the model, which can be found by `hmm$coeff_fe()` or `hmm$lambda()`, and its value should be: (i) `NA` if it is fixed, or (ii) some integer if several parameters have a common value.
+
+The chunk below shows a few examples to illustrate the syntax that should be used, and we describe a couple of examples in more detail in the next subsections.
+
+```{r eval = FALSE}
+# Intercept for "mean" parameter fixed in state 1
+fixpar <- list(obs = c("Price.mean.state1.(Intercept)" = NA))
+
+# Intercept for Pr(1>2) fixed
+fixpar <- list(hid = c("S1>S2.(Intercept)" = NA))
+
+# Same intercepts for Pr(S1 -> S2) and Pr(S2 -> S1)
+fixpar <- list(hid = c("S1>S2.(Intercept)" = 1,
+                       "S2>S1.(Intercept)" = 1))
+
+# Pr(S[1] = 1) fixed
+fixpar <- list(delta0 = c("state1" = NA))
+```
+
+## Example 1: fixed observation parameters
+
+We first turn to the case where some of the state-dependent observation parameters should be fixed. We fit a 3-state model with a gamma distribution for the energy price, and assume that we know the standard deviations of the three gamma distributions a priori, and therefore fix them to 0.5. To do this, we first need to set the initial standard deviations to 0.5 when creating the `Observation` object.
+
+```{r fixpar-obs1}
+hid <- MarkovChain$new(data = energy, n_states = 3)
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(2, 5, 7), sd = c(0.5, 0.5, 0.5)))
+obs <- Observation$new(data = energy, n_states = 3, 
+                       dists = dists, par = par0)
+```
+
+Then, we use the argument `fixpar` to indicate that they should be kept fixed. The names of the working parameters corresponding to the three standard deviations can be found using `obs$coeff_fe()`.
+
+```{r fixpar-obs2}
+# Find names of working parameters for SDs
+obs$coeff_fe()
+
+# List of fixed parameters
+fixpar <- list(obs = c("Price.sd.state1.(Intercept)" = NA,
+                       "Price.sd.state2.(Intercept)" = NA,
+                       "Price.sd.state3.(Intercept)" = NA))
+
+# Create and fit model with fixed parameters
+hmm <- HMM$new(hidden = hid, obs = obs, fixpar = fixpar)
+hmm$fit(silent = TRUE)
+
+# Check that standard deviations were kept fixed
+hmm
+```
+
+Alternatively, we might want to estimate the standard deviations, but constrain them to have a common value (rather than estimating them as three separate parameters). To do this, we need to set the elements of `fixpar` to some integer (which should be the same for all three standard deviations), rather than `NA`.
+
+```{r fixpar-obs3}
+# List of fixed parameters
+fixpar <- list(obs = c("Price.sd.state1.(Intercept)" = 1,
+                       "Price.sd.state2.(Intercept)" = 1,
+                       "Price.sd.state3.(Intercept)" = 1))
+
+# Create and fit model with fixed parameters
+hmm <- HMM$new(hidden = hid, obs = obs, fixpar = fixpar)
+hmm$fit(silent = TRUE)
+
+# Check that standard deviations have common value
+hmm
+```
+
+## Example 2: fixed transition probabilities
+
+Similarly, the transition probabilities can be kept fixed or fixed to a common value using `fixpar`. The most common application might be a model where some transitions are prohibited, and therefore should have probability fixed to zero. Consider the 3-state model with transition probability matrix
+$$
+\Gamma = 
+\begin{pmatrix}
+\gamma_{11} & \gamma_{12} & 0 \\
+\gamma_{21} & \gamma_{22} & \gamma_{23} \\
+0 & \gamma_{32} & \gamma_{33}
+\end{pmatrix},
+$$
+i.e., where transitions cannot occur between states 1 and 3.
+
+This could be implemented by setting the initial values for $\gamma_{13}$ and $\gamma_{31}$ to zero, and then using `fixpar` to keep them fixed.
+
+```{r fixpar-hid}
+# Create Markov chain with initial transition probabilities
+tpm0 <- matrix(c(0.9, 0.1, 0,
+                 0.1, 0.8, 0.1,
+                 0, 0.1, 0.9),
+               nrow = 3, byrow = TRUE)
+hid <- MarkovChain$new(data = energy, n_states = 3, tpm = tpm0)
+
+# Create observation model
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(2, 5, 7), sd = c(0.5, 0.5, 0.5)))
+obs <- Observation$new(data = energy, n_states = 3, 
+                       dists = dists, par = par0)
+
+# Find names of working parameters for transition probabilities
+hid$coeff_fe()
+
+# List of fixed parameters
+fixpar <- list(hid = c("S1>S3.(Intercept)" = NA,
+                       "S3>S1.(Intercept)" = NA))
+
+# Create and fit model with fixed parameters
+hmm <- HMM$new(hidden = hid, obs = obs, fixpar = fixpar)
+hmm$fit(silent = TRUE)
+
+# Check that transition probabilities were kept fixed
+hmm
+```
+
+# Updating a model component
+
+There are functions to modify an existing model without having to create a new model object from scratch.
+
+## Updating model parameters
+
+It is possible to manually update the parameters stored in the different model components, for example to change the initial parameters. We can either change the model parameters themselves (e.g., transition probabilities, observation parameters), or the underlying working parameters. The latter option is mostly useful in cases where the model includes covariates, as this is the only way to change the corresponding effect parameters.
+
+```{r update-par1}
+# Create model with default transition probabilities
+hid <- MarkovChain$new(data = energy, n_states = 2)
+hid$tpm()
+
+# Update transition probabilities
+new_tpm <- matrix(c(0.5, 0.5, 0.5, 0.5), nrow = 2)
+hid$update_tpm(tpm = new_tpm)
+hid$tpm()
+
+# Create model with covariate and default effect (zero)
+hid <- MarkovChain$new(data = energy, n_states = 2, formula = ~Oil)
+hid$coeff_fe()
+
+# Update working parameters
+hid$update_coeff_fe(coeff_fe = c(-3, 0.1, -3, -0.1))
+hid$coeff_fe()
+```
+
+In the same way, we can manually modify the parameters (including the working parameters if necessary) of the observation model.
+
+```{r update-par2}
+# Create observation model with some initial parameters
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(2, 7), sd = c(0.5, 0.5)))
+obs <- Observation$new(data = energy, n_states = 2, 
+                       dists = dists, par = par0)
+obs$par()
+
+# Update parameters
+new_par <- list(Price = list(mean = c(1, 5), sd = c(0.5, 1)))
+obs$update_par(par = new_par)
+obs$par()
+```
+
+Note that, if these `MarkovChain` and `Observation` objects had been used to create an `HMM` object, then this would also change the parameters in that `HMM`.
+
+## Updating model formulas
+
+The formulas on any model parameters can also be updated for an existing model, using the `update()` function. This is not an R6 method, so we call it as `update(hmm, ...)` rather than `hmm$update(...)`. First, we create a covariate-free model for illustration.
+
+```{r update-form1}
+# Create model with no covariates
+hid <- MarkovChain$new(data = energy, n_states = 2)
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(2, 7), sd = c(0.5, 0.5)))
+obs <- Observation$new(data = energy, n_states = 2, 
+                       dists = dists, par = par0)
+hmm <- HMM$new(obs = obs, hidden = hid)
+
+# Check model formulation
+hmm
+```
+The arguments of the function `update` are the following:
+
+- `mod` is an `HMM` object.
+
+- `type` refers to the model component that should be changed, either `"hidden"` or `"obs"`.
+
+- `i` and `j` are used to indicate which specific formula should be changed. If `type = "hidden"`, these are the indices of the transition probability for which the formula should be updated. If `type = "obs"`, `i` is the name of the relevant variable, and `j` the name of the relevant parameter.
+
+- `change` is a template describing how the formula should be updated. See `?update.formula` for more details.
+
+- `fit` is a logical indicating whether the updated model should be fitted or not.
+
+The chunk below illustrates the use of `update`. We first update the hidden state model, to add a linear effect of the covariate `Oil` on the transition probability $\gamma_{12} = \Pr(S_t = 2 \vert S_{t-1} = 1)$, then add a linear effect of the covariate `Oil` on the transition probability $\gamma_{21} = \Pr(S_t = 1 \vert S_{t-1} = 2)$, then add a non-linear effect of `EurDol` on the mean parameter of the `Price` variable.
+
+```{r update-form2, fig.width = 4, fig.height = 3, out.width="49%", fig.align="center", fig.show='hold'}
+# Update formula for Pr(S1 > S2)
+hmm2 <- update(mod = hmm, type = "hidden", i = 1, j = 2, 
+               change = ~ . + Oil, fit = FALSE)
+
+# Update formula for Pr(S2 > S1)
+hmm2 <- update(mod = hmm2, type = "hidden", i = 2, j = 1, 
+               change = ~ . + Oil, fit = FALSE)
+
+# # Update formula for Price mean
+# hmm2 <- update(mod = hmm2, type = "obs", i = "Price", j = "mean", 
+#                change = ~ . + s(EurDol, k = 5, bs = "cs"), 
+#                fit = TRUE, silent = TRUE)
+# 
+# # Plot covariate effects
+# hmm2$plot("delta", var = "Oil")
+# hmm2$plot("obspar", var = "EurDol", i = "Price.mean")
+```
+
+Here, we only decided to fit the final model. However, it can sometimes be a strategy to fit several incrementally more complex models, to ensure that the initial parameter values used for the more complex model are good.
+
+# Selecting initial parameters
+
+In hmmTMB, the models are fitted using numerical optimisation of the log-likelihood function, based on the `optimx` function. This procedure essentially consists of exploring the parameter space to find the maximum of the log-likelihood, and it requires a starting point from where to start the search. This starting point should be provided by the user, and poorly chosen initial starting values can lead to numerical problems. In particular, if the starting point is too far from the maximum, the optimiser can get stuck in a local maximum of the log-likelihood, and fail to converge to the global maximum. This issue is discussed in more detail in the following vignette of the package moveHMM: \url{https://cran.r-project.org/package=moveHMM/vignettes/moveHMM-starting-values.pdf}.
+
+Here, we discuss three strategies for selecting initial parameter values. 
+
+## Data visualisation
+
+The closer the initial values are to the global maximum, the easier it is for hmmTMB to converge. So, we want to make an educated guess to choose plausible values, given the data and what we expect the states to be. For this purpose, it is often valuable to plot the response variables, and think about what we might expect the state-dependent distributions to look like.
+
+As an example, consider that we want to model the energy price data by a 2-state model, with gamma distributions, parameterised by a mean and standard deviation (this is the distribution named `"gamma2"` in hmmTMB). We can plot a histogram of the observed prices, and think about how it could be modelled by a mixture of two gamma distributions.
+
+```{r init-viz, fig.width = 5, fig.height = 3, out.width="70%", fig.align="center"}
+ggplot(energy, aes(Price)) + geom_histogram(col = "white", bins = 20)
+```
+
+The energy prices are between 0 and 10, so we know that the mean parameters will also be between those two bounds. If we anticipate that one state will capture the lower prices, and one state the higher prices, we can hypothesise that the first mean will be around 3, and the second mean around 6 or so. Similarly, given the spread of the data, it seems plausible that each distribution would have a standard deviation of about 1. So, we could define the initial parameters as a list that contains these values.
+
+```{r init-viz2}
+par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
+```
+
+In addition to the histogram, it can also be convenient to plot the state-dependent distributions corresponding to a set of starting values, to see if they seem reasonable. This can be done using `plot_dist()` in hmmTMB, and it suggests that the values proposed above were adequate.
+
+```{r init-viz3, fig.width = 5, fig.height = 3, out.width="80%", fig.align="center"}
+# Create hidden state process
+hid <- MarkovChain$new(data = energy, n_states = 2)
+# Create observation model
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
+obs <- Observation$new(data = energy, n_states = 2, 
+                       dists = dists, par = par0)
+
+# Create HMM
+hmm <- HMM$new(hidden = hid, obs = obs)
+
+# Plot histogram of prices, and initial state-dependent distributions
+hmm$plot_dist("Price")
+```
+
+## Using K-means clustering
+
+Although it is no substitute for thinking critically about what would be plausible initial parameter values, hmmTMB implements a more automated method to suggest initial values for a given model. This is implemented in the function `suggest_initial()`, which uses the following procedure:
+
+1. Apply K-means clustering to group the observations into $N$ classes (where $N$ is the number of states of the HMM). K-means is a simple clustering algorithm which ignores temporal autocorrelation in the data, but in many cases it will be good enough to roughly identify $N$ coherent groups in the data.
+
+2. For each of the $N$ clusters, estimate parameters for the observation distribution if it were fitted only to the data in that cluster. For example, if we were using normal state-dependent distributions, the parameters for that cluster would be approximated by the empirical mean and standard deviation of the data. In practice, this is done by the function `Dist$parapprox()`.
+
+3. Return a list of the parameters, which can directly be passed to `update_par()`.
+
+The key assumption behind this approach is that the K-means clusters are a good approximation of the HMM states. When this is not the case, the suggested values might not be very good, so this should be applied with care.
+
+```{r init-kmeans}
+# Create hidden state process
+hid <- MarkovChain$new(data = energy, n_states = 2)
+
+# Create observation model
+dists <- list(Price = "gamma2")
+# These initial values don't matter, we will update them
+par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
+obs <- Observation$new(data = energy, n_states = 2, 
+                       dists = dists, par = par0)
+
+# Create HMM
+hmm <- HMM$new(hidden = hid, obs = obs)
+
+# Get suggested initial parameters
+par0 <- hmm$suggest_initial()
+par0
+
+obs$update_par(par = par0)
+hmm
+```
+
+## From smaller model
+
+A third useful approach to select initial parameter values for complex models is to start from a simple model, and incrementally add model components (e.g., add formulas). In this procedure, the estimated parameters for the simpler model can be used as starting values for the more complex model, which reduces the risk of numerical issues.
+
+Consider that we want to eventually fit a model to the energy prices with the linear effect of oil price on the transition probabilities, and a quadratic relationship between the price mean and the euro-dollar exchange rate. This is a model with many parameters, and there would be a high chance of convergence issues if we tried to fit it with poorly chosen initial parameter values.
+
+In the code below, we use the argument `init` to create a new `HMM` object with parameters taken from another model. The parameters that are shared are copied from the first model, and parameters that are not shared are kept at their default initial value (e.g., zero for covariate effect parameters).
+
+```{r init-incremental}
+############################
+## Model 1: no covariates ##
+############################
+# Create hidden state process
+hid1 <- MarkovChain$new(data = energy, n_states = 2)
+# Create observation model
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
+obs1 <- Observation$new(data = energy, n_states = 2, 
+                       dists = dists, par = par0)
+# Create HMM
+hmm1 <- HMM$new(hidden = hid1, obs = obs1)
+hmm1$fit(silent = TRUE)
+
+# Estimated (working) parameters
+hmm1$coeff_fe()
+
+###############################
+## Model 2: covariate on tpm ##
+###############################
+# Create hidden state process
+hid2 <- MarkovChain$new(data = energy, n_states = 2, formula = ~Oil)
+# Create observation model
+obs2 <- Observation$new(data = energy, n_states = 2, 
+                       dists = dists, par = par0)
+# Create HMM with initial values from hmm1
+hmm2 <- HMM$new(hidden = hid2, obs = obs2, init = hmm1)
+hmm2$coeff_fe()
+
+hmm2$fit(silent = TRUE)
+hmm2$coeff_fe()
+
+############################################
+## Model 3: covariates on tpm and obs par ##
+############################################
+# Create hidden state process
+hid3 <- MarkovChain$new(data = energy, n_states = 2, formula = ~Oil)
+# Create observation model
+f <- list(Price = list(mean = ~poly(EurDol, 2)))
+obs3 <- Observation$new(data = energy, n_states = 2, 
+                       dists = dists, par = par0, formula = f)
+# Create HMM with initial values from hmm1
+hmm3 <- HMM$new(hidden = hid3, obs = obs3, init = hmm2)
+hmm3$coeff_fe()
+
+hmm3$fit(silent = TRUE)
+hmm3$coeff_fe()
+```
+
+This could also be achieved, in a more concise way, using the `update()` function to add formulas to the model.
+
+# Accessing the TMB objects
+
+Model fitting in hmmTMB is done using the Template Model Builder (TMB) package (@kristensen2016), and the objects created by TMB can be accessed by the user if needed. We consider the 2-state model for the energy data.
+
+```{r tmb-obj1}
+# Create model
+hid <- MarkovChain$new(data = energy, n_states = 2)
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
+obs <- Observation$new(data = energy, n_states = 2, 
+                       dists = dists, par = par0)
+hmm <- HMM$new(hidden = hid, obs = obs)
+# Fit model
+hmm$fit(silent = TRUE)
+```
+
+## `HMM$tmb_obj()`
+
+The method `tmb_obj()` returns the object created by `TMB::MakeADFun()`, a list with elements that can be used to evaluate the negative log-likelihood function of the model and its gradient. In hmmTMB, these are passed to `optimx()` for model fitting. Consult the TMB documentation (and particularly `?TMB::MakeADFun`) for more details about what the list components are.
+
+```{r tmb-obj2}
+# Names of TMB object
+names(hmm$tmb_obj())
+
+# Initial parameters
+hmm$tmb_obj()$par
+
+# Evaluate negative log-likelihood at initial parameters
+hmm$tmb_obj()$fn(hmm$tmb_obj()$par)
+```
+
+## `HMM$tmb_rep()`
+
+After the model is fitted, the function `TMB::sdreport()` is used to get the joint precision matrix of the fixed effect and random effect parameters of the model, which is then used for uncertainty quantification. Mathematical details about how the precision matrix is derived are described in the TMB documentation (`?TMB::sdreport`).
+
+In hmmTMB, this output is available through the `tmb_rep()` function. Printing it shows a table of estimated model parameters and their standard errors. 
+
+```{r tmb-rep1}
+hmm$tmb_rep()
+```
+
+We can for example extract from this object a vector of estimated fixed effect parameters, and the corresponding covariance matrix. If this model included random effects (or penalised splines), similar objects would be available for the predicted random effects and for the joint precision matrix of the fixed and random effect parameters.
+
+```{r tmb-rep2}
+# Estimated fixed effect parameters
+hmm$tmb_rep()$par.fixed
+
+# ...and the corresponding covariance matrix
+hmm$tmb_rep()$cov.fixed
+```
+
+# Posterior sampling for uncertainty quantification
+
+The parameters that are estimated by TMB in hmmTMB are _working_ parameters, i.e., unbounded regression parameters on some link scale, rather than the HMM parameters directly. This is because models are fitted using unbounded optimisation, and also to allow for covariate dependence on the HMM parameters. So, TMB provides a covariance matrix and standard errors for the working parameters, but we are more often interested in quantifying the uncertainty on the HMM parameters themselves (possibly for some fixed covariate values). There are several approaches to uncertainty quantification for transformed quantities, e.g., the delta method.
+
+The main method implemented in hmmTMB is to sample from the approximate distribution of the maximum likelihood estimators. Under maximum likelihood theory (and asymptotic conditions), the estimators follow a multivariate normal distribution centred on the true parameter values, with a covariance matrix which can be approximated by the inverse of the Hessian of the negative log-likelihood. Based on this result, we can use the following workflow:
+
+1. Simulate $K$ replicates from sampling distribution of working parameter estimators, $\theta_1, \theta_2, \dots, \theta_K$ (where $K$ is a large number). Here, each $\theta_k$ is a vector that includes both fixed effect and random effect parameters of the model.
+
+2. Transform each $\theta_k$ to obtain the parameter(s) of interest, $g(\theta_k)$. This could mean applying an inverse link function, for example.
+
+3. Use the $g(\theta_k)$ for uncertainty quantification. For example, to obtain an approximate 95\% confidence interval of $g(\theta)$, we would define the lower and upper bounds as the 0.025 and 0.975 quantiles of the $g(\theta_k)$, respectively. The approximation will get better as $K$ increases.
+
+This procedure is implemented in the function `predict()` in hmmTMB, which can return confidence intervals for the HMM parameters (for a given data frame of covariate values). Here, we describe lower-level functions that can be used to generate confidence intervals for custom functions $g$, for example. For illustration, we create a model with the linear effect of `Oil` on the transition probabilities.
+
+```{r post1}
+# Create model
+hid <- MarkovChain$new(data = energy, n_states = 2, f = ~Oil)
+dists <- list(Price = "gamma2")
+par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
+obs <- Observation$new(data = energy, n_states = 2, 
+                       dists = dists, par = par0)
+hmm <- HMM$new(hidden = hid, obs = obs)
+# Fit model
+hmm$fit(silent = TRUE)
+```
+
+The function `post_coeff()` implements the first step in the workflow above, and generates posterior samples for the working parameters. Specifically, it returns a matrix with one row for each replicate, and one column for each parameter. The column names help identify the parameters; e.g., in this example, `coeff_fe_obs` are fixed effect parameters for the observation model, `coeff_fe_hid` are fixed effect parameters for the transition probabilities hidden state model, and `log_delta0` are the parameters for the initial distribution of the state process.
+
+```{r post2}
+hmm$post_coeff(n_post = 2)
+```
+
+The functions `post_linpred()` and `post_fn()` build on `post_coeff()` to generate posterior samples for the linear predictor of each model parameter, and for some user-defined function of the linear predictor, respectively.
+
+<!-- # Custom optimiser settings -->
+
+<!-- [This could describe how to change the settings of `optimx`, focusing on some of the more important options. For example, this might include using `nlm` rather than `optim`, etc. It might also be relevant to describe SANN approaches if they are available through `optimx`, as a method for models with complex likelihoods. It looks like they are not available, though.] -->
+
+# References
