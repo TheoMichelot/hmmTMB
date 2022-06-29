@@ -1,6 +1,6 @@
 # hmmTMB
 
-Fit hidden Markov models using Template Model Builder (TMB): flexible state-dependent distributions, transition probability structures, random effects, and smoothing splines.
+This R package implements flexible hidden Markov models, based on Template Model Builder (TMB): flexible state-dependent distributions, transition probability structures, random effects, and smoothing splines.
 
 ## Package installation
 
@@ -18,9 +18,15 @@ To find help files for the methods implemented in the package, search for help u
 ?HMM
 ```
 
-We describe functionalities of the package in two vignettes:
+We describe functionalities of the package in several vignettes:
 
- - ['hmmTMB user guide'](https://github.com/r-glennie/HmmTmb/raw/master/vignettes/hmmTMB_vignette.pdf): Overview of package functionalities using detailed examples based on animal movement data.
+ - ['Analysing time series data with hidden Markov models in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/raw/master/vignettes/hmmTMB_workflow.pdf): Overview of package workflow, using detailed example based on analysis of energy prices.
  
- - ['hmmTMB technical guide'](https://github.com/r-glennie/HmmTmb/raw/master/vignettes/hmmTMB_technical_guide.pdf): Description of models and implementation.
+ - ['Flexible animal movement modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/raw/master/vignettes/hmmTMB_example_movement.pdf): Description of wild haggis movement analysis, illustrating how non-parametric covariate effects can be included.
+ 
+ - ['Occupancy modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/raw/master/vignettes/hmmTMB_example_occupancy.pdf): Analysis of occupancy data set of crossbill from [Kéry et al. (2013)](https://onlinelibrary.wiley.com/doi/abs/10.1111/jbi.12087).
+ 
+ - ['Bayesian inference in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/raw/master/vignettes/hmmTMB_example_stan.pdf): Description of workflow for Bayesian analysis in hmmTMB, including specifying priors, and extracting posterior samples.
+ 
+ - ['Advanced features of hmmTMB'](https://github.com/TheoMichelot/hmmTMB/raw/master/vignettes/hmmTMB_advanced_features.pdf): Description of some other useful functionalities, including (semi-)supervised learning, parameter constraints, selection of initial parameter values, etc.
  
