@@ -1,0 +1,148 @@
+---
+title: "Flexible animal movement modelling using hmmTMB"
+author: "Théo Michelot"
+output: 
+    pdf_document:
+        number_sections: true
+header-includes:
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, error = FALSE, warning = FALSE,
+  comment = NA
+)
+```
+
+In this vignette, we showcase how hmmTMB can be used to analyse time series of animals' step lengths and turning angles. This is a popular application of hidden Markov models (HMMs), to identify movement modes often interpreted as behavioural states (@patterson2009, @langrock2012). There are two specialised R packages focused on HMMs for the analysis of animal movement: moveHMM and momentuHMM (@michelot2016, @mcclintock2018). Those might be a good alternative; in particular, momentuHMM has additional functionalities for processing animal telemetry data, and to specify some complex movement models (e.g., biased random walks). The main advantage of hmmTMB over those packages is the possibility to include random effects on the model parameters, as well as non-parametric effects of covariates (with automatic smoothness selection).
+
+We start by loading a few packages, including moveHMM, which contains a data set of wild haggis movement data that we will use here, as well as functions for data preparation. 
+
+```{r load-packages}
+library(moveHMM)
+library(ggplot2)
+theme_set(theme_bw())
+library(hmmTMB)
+```
+
+# Data preparation
+
+In many movement studies, HMMs are used to analyse time series of step lengths and turning angles, to identify phases with different levels of speed and/or directional persistence. Those variables can directly be computed from the locations; for convenience, we use the function `prepData()` from moveHMM to do it here.
+
+```{r prep-data}
+head(haggis_data)
+
+# Get step lengths and turning angles
+hmm_data <- prepData(haggis_data, type = "UTM")
+head(hmm_data)
+```
+
+The columns of the data frame are:
+
+- `ID` is an identifier the track or individual. This data set has three different tracks, to which we will fit a common model.
+
+- `step` and `angle` will be the response variables for the HMM.
+
+- `x` and `y` are the coordinates of the observed locations. They will not be used in the HMM analysis directly.
+
+- `slope` and `temp` are environmental covariates, and we will demonstrate how their effects on the transition probabilities can be estimated.
+
+# Model specification
+
+An HMM has two components: a hidden state process, and an observation model. Those two parts can be specified separately in hmmTMB. We first create an object of class `MarkovChain` for the hidden process model. Here, we just indicate that it is a 2-state process, i.e., we assume that the movement patterns are driven by two underlying states.
+
+```{r mod1-hid}
+hid1 <- MarkovChain$new(data = hmm_data, n_states = 2)
+```
+
+Defining the observation process takes only a little bit more work. We need to specify the family of distribution used for each response variable; here, a gamma distribution for step length, and von Mises distribution for turning angle. Specifically, we use the `gamma2` distribution, which is formulated in terms of a mean and standard deviation, rather than shape and scale.
+
+We also need to choose initial parameter values, which will be used as a starting point for model fitting. The moveHMM package has a vignette discussing some suggested approaches to choosing those initial values: \url{https://cran.r-project.org/package=moveHMM/vignettes/moveHMM-starting-values.pdf}.
+
+The distributions need to be stored in a list (with one element for each observed variable), and the initial parameters are in a nested list, as shown below. Finally, we can use those to create an object of class `Observation`.
+
+```{r mod1-obs}
+# Observation distributions
+dists <- list(step = "gamma2", angle = "vm")
+
+# Initial observation parameters
+par0 <- list(step = list(mean = c(1, 5), sd = c(1, 5)),
+             angle = list(mu = c(0, 0), kappa = c(1, 5)))
+
+obs1 <- Observation$new(data = hmm_data, dists = dists, 
+                        par = par0, n_states = 2)
+```
+
+# Model fitting
+
+We can now create an `HMM` object, which combines the hidden process and the observation model. Printing it shows the model formulation, as well as the initial parameter values that it stores. Note that, because we did not specify initial parameter values for the `MarkovChain` object, it defaulted to a matrix with 0.9 on the diagonal, but we could have entered it manually using the argument `tpm`.
+
+```{r mod1}
+hmm1 <- HMM$new(obs = obs1, hidden = hid1)
+
+hmm1
+```
+
+We fit the model using the `fit` method, which takes a few seconds. After the model is fitted, printing it shows the estimated (rather than initial) parameter values. Note that, in models where the parameters depend on covariates, only the parameters corresponding to the first row of covariates are shown, which is why the output says `(t = 1)`. Here, the parameters are not time-varying, so this does not matter.
+
+```{r mod1-fit}
+hmm1$fit(silent = TRUE)
+
+hmm1
+```
+
+# Model visualisation
+
+The fitted model can be plotted in a few different ways. The method `plot_dist` creates a plot of the state-dependent distributions for the response variable specified as input. We can use such plots to help with interpretation of the states, to see how much overlap there is between distributions in different states, and to check whether the distributions seem to fit the data well.
+
+```{r mod1-plot1, fig.width = 6, fig.height = 4, out.width="49%", fig.align = "center", fig.show="hold"}
+# Plot state-dependent distributions of steps and angles
+hmm1$plot_dist("step")
+hmm1$plot_dist("angle")
+```
+
+We can also use `plot_ts` to show a time series plot of one or two observed variables, coloured by the Viterbi-estimated state sequence. The variables don't have to be those to which the model was fitted, so we can for example use `x` and `y` here, to create a map of the tracks. This code also highlights that the plotting functions all return ggplot objects, which can be edited as needed.
+
+```{r mod1-plot2, fig.width = 6, fig.height = 5, out.width="60%", fig.align = "center"}
+# Plot track coloured by estimated states
+hmm1$plot_ts("x", "y") + 
+  geom_point(size = 0.5) + 
+  coord_equal()
+```
+
+# Covariates
+
+A popular extension of HMMs in ecology consists in including the effects of time-varying (or individual-specific) covariates on parameters of the model. This can for example be used to estimate effects of covariates on the transition probabilities of the hidden state process, and we illustrate this case here.
+
+Consider that we assume that temperature has a linear effect on transition probabilities, whereas slope has an unknown non-linear effect. The latter can be specified using the syntax from the package mgcv (which implements generalised additive models in R), with the function `s` for a smooth term. We create a new `MarkovChain`, with the new formula, and the `Observation` object is the same as before because the observation model hasn't changed. This time, fitting the model takes a little longer because of the need to estimate the non-parametric relationship between transition probabilities and slope.
+
+```{r mod2}
+# Formula for transition probabilities (using splines)
+formula <- ~ temp + s(slope, k = 8, bs = "ts")
+hid2 <- MarkovChain$new(data = hmm_data, n_states = 2, formula = formula)
+
+# Same observation model as before
+obs2 <- Observation$new(data = hmm_data, dists = dists, 
+                        par = par0, n_states = 2)
+
+# Create and fit model
+hmm2 <- HMM$new(obs = obs2, hidden = hid2)
+hmm2$fit(silent = TRUE)
+```
+
+Covariate effects can be visualised with the `plot` method. The first argument indicates what part of the model should be plotted, and can be `tpm` (transition probabilities), `delta` (stationary state probabilities), or `obspar` (observation parameters). The covariates are included in the hidden process here, so we might want to visualise the first two.
+
+```{r mod2-plot, fig.width = 6, fig.height = 4, out.width="49%", fig.align = "center", fig.show="hold"}
+hmm2$plot("tpm", var = "slope")
+hmm2$plot("tpm", var = "temp")
+
+hmm2$plot("delta", var = "slope")
+hmm2$plot("delta", var = "temp")
+```
+
+The plots suggest there is no evidence that temperature affects transition probabilities. There seems to be a strong effect of slope, however: it is more likely to be in state 2 for intermediate values (between 10 and 30 degrees), and more likely to be in state 1 for extreme values (either smaller than 10 or larger than 30).
+
+# References
