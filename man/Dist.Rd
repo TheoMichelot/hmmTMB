@@ -26,6 +26,7 @@ functions for a probability distribution.
 \item \href{#method-Dist-parapprox}{\code{Dist$parapprox()}}
 \item \href{#method-Dist-fixed}{\code{Dist$fixed()}}
 \item \href{#method-Dist-code}{\code{Dist$code()}}
+\item \href{#method-Dist-name_long}{\code{Dist$name_long()}}
 \item \href{#method-Dist-set_npar}{\code{Dist$set_npar()}}
 \item \href{#method-Dist-set_parnames}{\code{Dist$set_parnames()}}
 \item \href{#method-Dist-pdf_apply}{\code{Dist$pdf_apply()}}
@@ -51,6 +52,7 @@ Create a Dist object
   parnames,
   parapprox = NULL,
   fixed = NULL,
+  name_long = name,
   cpp = NULL,
   compile_cpp = TRUE
 )}\if{html}{\out{</div>}}
@@ -76,13 +78,19 @@ parameters}
 
 \item{\code{parnames}}{character vector with name of each parameter}
 
-\item{\code{parapprox}}{Function that takes a sample and produces approximate values for the unknown parameters}
+\item{\code{parapprox}}{Function that takes a sample and produces approximate 
+values for the unknown parameters}
 
-\item{\code{fixed}}{vector with element for each parameter which is TRUE if parameter is fixed}
+\item{\code{fixed}}{vector with element for each parameter which is TRUE if 
+parameter is fixed}
+
+\item{\code{name_long}}{Long version of the name of the distribution, possibly 
+more user-readable than name.}
 
 \item{\code{cpp}}{location of C++ TMB definition of distribution}
 
-\item{\code{compile_cpp}}{if FALSE then distribution code in cpp is added but not compiled into package}
+\item{\code{compile_cpp}}{if FALSE then distribution code in cpp is added but 
+not compiled into package}
 }
 \if{html}{\out{</div>}}
 }
@@ -187,6 +195,16 @@ Return which parameters are fixed
 Return code of Dist object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dist$code()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Dist-name_long"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-name_long}{}}}
+\subsection{Method \code{name_long()}}{
+Human-readable name of Dist object
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$name_long()}\if{html}{\out{</div>}}
 }
 
 }

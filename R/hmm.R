@@ -205,6 +205,7 @@ HMM <- R6Class(
       }
     }, 
     
+    #' @description Array of working parameters
     coeff_array = function() {
       return(private$coeff_array_)
     },
@@ -1318,6 +1319,9 @@ HMM <- R6Class(
     #' @param level Confidence interval level if required (e.g., 0.95 for 95%
     #' confidence intervals). Default is 0, i.e., confidence intervals are not
     #' returned. 
+    #' @param return_post Logical indicating whether to return the posterior
+    #' samples. If FALSE (default), only mean estimates and confidence intervals
+    #' are returned
     #' 
     #' @return A list with elements:
     #' \itemize{

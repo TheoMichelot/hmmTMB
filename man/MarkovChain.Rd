@@ -20,6 +20,7 @@ Contains the parameters and model formulas for the hidden process model.
 \item \href{#method-MarkovChain-tpm}{\code{MarkovChain$tpm()}}
 \item \href{#method-MarkovChain-coeff_fe}{\code{MarkovChain$coeff_fe()}}
 \item \href{#method-MarkovChain-delta}{\code{MarkovChain$delta()}}
+\item \href{#method-MarkovChain-delta0}{\code{MarkovChain$delta0()}}
 \item \href{#method-MarkovChain-stationary}{\code{MarkovChain$stationary()}}
 \item \href{#method-MarkovChain-coeff_re}{\code{MarkovChain$coeff_re()}}
 \item \href{#method-MarkovChain-X_fe}{\code{MarkovChain$X_fe()}}
@@ -33,7 +34,7 @@ Contains the parameters and model formulas for the hidden process model.
 \item \href{#method-MarkovChain-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
 \item \href{#method-MarkovChain-update_X_fe}{\code{MarkovChain$update_X_fe()}}
 \item \href{#method-MarkovChain-update_X_re}{\code{MarkovChain$update_X_re()}}
-\item \href{#method-MarkovChain-update_delta}{\code{MarkovChain$update_delta()}}
+\item \href{#method-MarkovChain-update_delta0}{\code{MarkovChain$update_delta0()}}
 \item \href{#method-MarkovChain-update_lambda}{\code{MarkovChain$update_lambda()}}
 \item \href{#method-MarkovChain-make_mat}{\code{MarkovChain$make_mat()}}
 \item \href{#method-MarkovChain-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
@@ -145,7 +146,7 @@ Current parameter estimates (fixed effects)
 \if{html}{\out{<a id="method-MarkovChain-delta"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-delta}{}}}
 \subsection{Method \code{delta()}}{
-Stationary distributions
+Stationary distribution
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$delta(t = NULL, linpred = NULL)}\if{html}{\out{</div>}}
 }
@@ -153,16 +154,40 @@ Stationary distributions
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{t}}{time point, default is 1; if t = "all" then 
-all deltas are returned otherwise deltas for time points in t are returned}
+\item{\code{t}}{Time point(s) for which stationary distribution should be returned. 
+If t = "all", all deltas are returned; else this should be a vector of
+time indices. If NULL (default), the stationary distribution for the first
+time step is returned.}
 
-\item{\code{linpred}}{custom linear predictor}
+\item{\code{linpred}}{Optional custom linear predictor}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 Matrix of stationary distributions. Each row corresponds to
 a row of the design matrices, and each column corresponds to a state.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-delta0"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-delta0}{}}}
+\subsection{Method \code{delta0()}}{
+Initial distribution
+
+Vector of length the number of states, with i-th element the probability
+Pr(S[1] = i)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$delta0(log = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{log}}{Logical indicating whether to return the log of the initial
+probabilities (default: FALSE). If TRUE, then the last element is
+excluded, as it is not estimated.}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -336,18 +361,19 @@ Update design matrix for random effects
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-MarkovChain-update_delta"></a>}}
-\if{latex}{\out{\hypertarget{method-MarkovChain-update_delta}{}}}
-\subsection{Method \code{update_delta()}}{
-Update delta coefficients
+\if{html}{\out{<a id="method-MarkovChain-update_delta0"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-update_delta0}{}}}
+\subsection{Method \code{update_delta0()}}{
+Update initial distribution
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_delta(delta)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_delta0(delta0)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{delta}}{Vector of delta coefficients}
+\item{\code{delta0}}{Vector of initial distribution, i.e., where
+the i-th element is Pr(S[1] = i)}
 }
 \if{html}{\out{</div>}}
 }

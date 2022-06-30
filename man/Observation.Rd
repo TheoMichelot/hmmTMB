@@ -554,13 +554,13 @@ overlaid with the pdf of the specified distribution for that data stream.
 Helpful to select initial parameter values for model fitting, or to visualise 
 fitted state-dependent distributions.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$plot_dist(name, weights = NULL, t = 1)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$plot_dist(var, weights = NULL, t = 1)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{name}}{Name of response variable for which the histogram
+\item{\code{var}}{Name of response variable for which the histogram
 and pdfs should be plotted.}
 
 \item{\code{weights}}{Optional vector of length the number of pdfs that are

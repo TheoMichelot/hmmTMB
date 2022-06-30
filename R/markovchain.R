@@ -203,6 +203,10 @@ MarkovChain <- R6Class(
     #' 
     #' Vector of length the number of states, with i-th element the probability
     #' Pr(S[1] = i)
+    #' 
+    #' @param log Logical indicating whether to return the log of the initial
+    #' probabilities (default: FALSE). If TRUE, then the last element is
+    #' excluded, as it is not estimated.
     delta0 = function(log = FALSE) {
       d0 <- private$delta0_
       if(!log) {

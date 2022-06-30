@@ -10,12 +10,12 @@
 \item{mod}{a HMM model object}
 
 \item{type}{character string for the part of the model that is updated
-(either "hidden" or "obs")}
+(either "hid" or "obs")}
 
-\item{i}{if type="hidden" then i is the row of the formula containing the change
+\item{i}{if type="hid" then i is the row of the formula containing the change
 if type="obs" then i is the observation variable name}
 
-\item{j}{if type="hidden" then j is the column of the formula containing the change
+\item{j}{if type="hid" then j is the column of the formula containing the change
 if type="obs" then j is the parameter whose formula is to be changed}
 
 \item{change}{the change to make to the formula, see ?update.formula for details}
