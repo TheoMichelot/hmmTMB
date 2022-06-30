@@ -162,10 +162,10 @@ hmm$priors()
 
 # Fitting the model
 
-The main function to fit a model using Stan in hmmTMB is `fit_stan`. It takes the same arguments as `tmbstan()` from the tmbstan package, and documentation for that function should be consulted for more details. Here, we pass two arguments: the number of chains (`chains`) and the number of MCMC iterations in each chain (`iter`). In practice, these arguments should be chosen carefully to ensure convergence of the sampler to the stationary distribution (see Stan documentation for more information); the values below were merely chosen for speed. In this example, running the sampler for 1000 iterations takes about 3 min on a laptop.
+The main function to fit a model using Stan in hmmTMB is `fit_stan`. It takes the same arguments as `tmbstan()` from the tmbstan package, and documentation for that function should be consulted for more details. Here, we pass two arguments: the number of chains (`chains`) and the number of MCMC iterations in each chain (`iter`). In practice, these arguments should be chosen carefully to ensure convergence of the sampler to the stationary distribution (see Stan documentation for more information); the values below were merely chosen for speed. In this example, running the sampler for 2000 iterations takes about 30 sec on a laptop.
 
 ```{r fit-hmm, results = 'hide'}
-hmm$fit_stan(chains = 1, iter = 1000)
+hmm$fit_stan(chains = 1, iter = 2000)
 ```
 
 # Inspecting the results
