@@ -37,8 +37,8 @@ duration:
 m2 <- HMM$new(file = "geyser_norm.hmm")
 m2$fit()
 
-m2$obs()$plot_dist("waiting", weights = m2$hidden()$delta())
-m2$obs()$plot_dist("duration", weights = m2$hidden()$delta())
+m2$obs()$plot_dist("waiting", weights = m2$hid()$delta())
+m2$obs()$plot_dist("duration", weights = m2$hid()$delta())
 
 ## try a bi-variate normal distribution of duration and waiting time 
 # to do that need data in vector format 

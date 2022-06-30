@@ -146,7 +146,7 @@ autocor_sims <- mod$gof(autocor_stat, nsims = 100, silent = FALSE)
 # Inference ---------------------------------------------------------------
 
 # stationary distribution
-round(mod$hidden()$delta(), 2)
+round(mod$hid()$delta(), 2)
 
 # observation means and sds
 means <- apply(mod$par()$obspar[,,1], 2, prod)

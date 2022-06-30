@@ -121,7 +121,7 @@ obs1 <- Observation$new(data = energy, n_states = 2, dists = dists, par = par0_2
 An HMM is the combination of the hidden state and the observation model, and so we create an `HMM` object using the two components.
 
 ```{r create-hmm1}
-hmm1 <- HMM$new(obs = obs1, hidden = hid1)
+hmm1 <- HMM$new(obs = obs1, hid = hid1)
 
 hmm1
 ```
@@ -259,7 +259,7 @@ obs2 <- Observation$new(data = energy, n_states = 3,
                         dists = dists, par = par0_3s)
 
 # Create and fit HMM
-hmm2 <- HMM$new(obs = obs2, hidden = hid2)
+hmm2 <- HMM$new(obs = obs2, hid = hid2)
 hmm2$fit(silent = TRUE)
 
 # Show parameters
@@ -301,7 +301,7 @@ obs3 <- Observation$new(data = energy, n_states = 2,
                         dists = dists, par = par0_2s)
 
 # Fit HMM
-hmm3 <- HMM$new(obs = obs3, hidden = hid3)
+hmm3 <- HMM$new(obs = obs3, hid = hid3)
 hmm3$fit(silent = TRUE)
 ```
 
@@ -314,7 +314,7 @@ hmm3$coeff_fe()
 Confidence intervals on the estimated model parameters can also be derived using `confint()`, with an optional argument for the level of the interval (default: 0.95 for 95% confidence interval). The 95% confidence intervals for the effect of oil on the two transition probabilities don't overlap with zero.
 
 ```{r confint-hmm3}
-round(hmm3$confint(level = 0.95)$coeff_fe$hidden, 2)
+round(hmm3$confint(level = 0.95)$coeff_fe$hid, 2)
 ```
 
 The relationship can also be visualised (with confidence bands), by plotting the transition probabilities as functions of the covariate. We can also plot the stationary state probabilities, which measure the probability of being in each state in the long run, over a grid of covariate values. The latter option can sometimes help with interpretation, like in this example: in the second plot, it is clear that the probability of being in state 2 increases with oil price.
@@ -356,7 +356,7 @@ obs4 <- Observation$new(data = energy, n_states = 2, dists = dists,
                         par = par0_2s, formulas = f)
 
 # Fit HMM
-hmm4 <- HMM$new(obs = obs4, hidden = hid4)
+hmm4 <- HMM$new(obs = obs4, hid = hid4)
 hmm4$fit(silent = TRUE)
 
 # Look at regression coefficients
@@ -390,7 +390,7 @@ hid5 <- MarkovChain$new(data = energy, n_states = 2)
 f <- list(Price = list(mean = ~s(EurDol, k = 10, bs = "cs")))
 obs5 <- Observation$new(data = energy, n_states = 2, dists = dists,
                         par = par0_2s, formulas = f)
-hmm5 <- HMM$new(obs = obs5, hidden = hid5)
+hmm5 <- HMM$new(obs = obs5, hid = hid5)
 
 hmm5$fit(silent = TRUE)
 
@@ -450,7 +450,7 @@ obs6 <- Observation$new(data = energy, n_states = 2,
 # Create hidden state process
 hid6 <- MarkovChain$new(data = energy, n_states = 2)
 # Create and fit HMM
-hmm6 <- HMM$new(obs = obs6, hidden = hid6)
+hmm6 <- HMM$new(obs = obs6, hid = hid6)
 hmm6$fit(silent = TRUE)
 ```
 

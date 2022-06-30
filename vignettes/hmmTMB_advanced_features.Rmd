@@ -69,7 +69,7 @@ dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
 obs <- Observation$new(data = data_supervised, n_states = 2, 
                        dists = dists, par = par0)
-hmm <- HMM$new(hidden = hid, obs = obs)
+hmm <- HMM$new(hid = hid, obs = obs)
 
 # Fit model
 hmm$fit(silent = TRUE)
@@ -103,14 +103,14 @@ dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
 obs_train <- Observation$new(data = energy_train, n_states = 2, 
                              dists = dists, par = par0)
-hmm_train <- HMM$new(hidden = hid_train, obs = obs_train)
+hmm_train <- HMM$new(hid = hid_train, obs = obs_train)
 hmm_train$fit(silent = TRUE)
 
 # Create model for new data, but don't fit
 hid_new <- MarkovChain$new(data = energy_new, n_states = 2)
 obs_new <- Observation$new(data = energy_new, n_states = 2, 
                            dists = dists, par = par0)
-hmm_new <- HMM$new(hidden = hid_new, obs = obs_new, init = hmm_train)
+hmm_new <- HMM$new(hid = hid_new, obs = obs_new, init = hmm_train)
 
 # Check parameters
 hmm_new
@@ -176,7 +176,7 @@ fixpar <- list(obs = c("Price.sd.state1.(Intercept)" = NA,
                        "Price.sd.state3.(Intercept)" = NA))
 
 # Create and fit model with fixed parameters
-hmm <- HMM$new(hidden = hid, obs = obs, fixpar = fixpar)
+hmm <- HMM$new(hid = hid, obs = obs, fixpar = fixpar)
 hmm$fit(silent = TRUE)
 
 # Check that standard deviations were kept fixed
@@ -192,7 +192,7 @@ fixpar <- list(obs = c("Price.sd.state1.(Intercept)" = 1,
                        "Price.sd.state3.(Intercept)" = 1))
 
 # Create and fit model with fixed parameters
-hmm <- HMM$new(hidden = hid, obs = obs, fixpar = fixpar)
+hmm <- HMM$new(hid = hid, obs = obs, fixpar = fixpar)
 hmm$fit(silent = TRUE)
 
 # Check that standard deviations have common value
@@ -236,7 +236,7 @@ fixpar <- list(hid = c("S1>S3.(Intercept)" = NA,
                        "S3>S1.(Intercept)" = NA))
 
 # Create and fit model with fixed parameters
-hmm <- HMM$new(hidden = hid, obs = obs, fixpar = fixpar)
+hmm <- HMM$new(hid = hid, obs = obs, fixpar = fixpar)
 hmm$fit(silent = TRUE)
 
 # Check that transition probabilities were kept fixed
@@ -299,7 +299,7 @@ dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(2, 7), sd = c(0.5, 0.5)))
 obs <- Observation$new(data = energy, n_states = 2, 
                        dists = dists, par = par0)
-hmm <- HMM$new(obs = obs, hidden = hid)
+hmm <- HMM$new(obs = obs, hid = hid)
 
 # Check model formulation
 hmm
@@ -308,9 +308,9 @@ The arguments of the function `update` are the following:
 
 - `mod` is an `HMM` object.
 
-- `type` refers to the model component that should be changed, either `"hidden"` or `"obs"`.
+- `type` refers to the model component that should be changed, either `"hid"` or `"obs"`.
 
-- `i` and `j` are used to indicate which specific formula should be changed. If `type = "hidden"`, these are the indices of the transition probability for which the formula should be updated. If `type = "obs"`, `i` is the name of the relevant variable, and `j` the name of the relevant parameter.
+- `i` and `j` are used to indicate which specific formula should be changed. If `type = "hid"`, these are the indices of the transition probability for which the formula should be updated. If `type = "obs"`, `i` is the name of the relevant variable, and `j` the name of the relevant parameter.
 
 - `change` is a template describing how the formula should be updated. See `?update.formula` for more details.
 
@@ -320,11 +320,11 @@ The chunk below illustrates the use of `update`. We first update the hidden stat
 
 ```{r update-form2, fig.width = 4, fig.height = 3, out.width="49%", fig.align="center", fig.show='hold'}
 # Update formula for Pr(S1 > S2)
-hmm2 <- update(mod = hmm, type = "hidden", i = 1, j = 2, 
+hmm2 <- update(mod = hmm, type = "hid", i = 1, j = 2, 
                change = ~ . + Oil, fit = FALSE)
 
 # Update formula for Pr(S2 > S1)
-hmm2 <- update(mod = hmm2, type = "hidden", i = 2, j = 1, 
+hmm2 <- update(mod = hmm2, type = "hid", i = 2, j = 1, 
                change = ~ . + Oil, fit = FALSE)
 
 # # Update formula for Price mean
@@ -373,7 +373,7 @@ obs <- Observation$new(data = energy, n_states = 2,
                        dists = dists, par = par0)
 
 # Create HMM
-hmm <- HMM$new(hidden = hid, obs = obs)
+hmm <- HMM$new(hid = hid, obs = obs)
 
 # Plot histogram of prices, and initial state-dependent distributions
 hmm$plot_dist("Price")
@@ -403,7 +403,7 @@ obs <- Observation$new(data = energy, n_states = 2,
                        dists = dists, par = par0)
 
 # Create HMM
-hmm <- HMM$new(hidden = hid, obs = obs)
+hmm <- HMM$new(hid = hid, obs = obs)
 
 # Get suggested initial parameters
 par0 <- hmm$suggest_initial()
@@ -433,7 +433,7 @@ par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
 obs1 <- Observation$new(data = energy, n_states = 2, 
                        dists = dists, par = par0)
 # Create HMM
-hmm1 <- HMM$new(hidden = hid1, obs = obs1)
+hmm1 <- HMM$new(hid = hid1, obs = obs1)
 hmm1$fit(silent = TRUE)
 
 # Estimated (working) parameters
@@ -448,7 +448,7 @@ hid2 <- MarkovChain$new(data = energy, n_states = 2, formula = ~Oil)
 obs2 <- Observation$new(data = energy, n_states = 2, 
                        dists = dists, par = par0)
 # Create HMM with initial values from hmm1
-hmm2 <- HMM$new(hidden = hid2, obs = obs2, init = hmm1)
+hmm2 <- HMM$new(hid = hid2, obs = obs2, init = hmm1)
 hmm2$coeff_fe()
 
 hmm2$fit(silent = TRUE)
@@ -464,7 +464,7 @@ f <- list(Price = list(mean = ~poly(EurDol, 2)))
 obs3 <- Observation$new(data = energy, n_states = 2, 
                        dists = dists, par = par0, formula = f)
 # Create HMM with initial values from hmm1
-hmm3 <- HMM$new(hidden = hid3, obs = obs3, init = hmm2)
+hmm3 <- HMM$new(hid = hid3, obs = obs3, init = hmm2)
 hmm3$coeff_fe()
 
 hmm3$fit(silent = TRUE)
@@ -484,7 +484,7 @@ dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
 obs <- Observation$new(data = energy, n_states = 2, 
                        dists = dists, par = par0)
-hmm <- HMM$new(hidden = hid, obs = obs)
+hmm <- HMM$new(hid = hid, obs = obs)
 # Fit model
 hmm$fit(silent = TRUE)
 ```
@@ -545,7 +545,7 @@ dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
 obs <- Observation$new(data = energy, n_states = 2, 
                        dists = dists, par = par0)
-hmm <- HMM$new(hidden = hid, obs = obs)
+hmm <- HMM$new(hid = hid, obs = obs)
 # Fit model
 hmm$fit(silent = TRUE)
 ```

@@ -21,9 +21,9 @@ par <- true_mod$coeff_fe()$obs
 par <- c(par[1], -0.05, par[3], 0.08)
 true_mod$obs()$update_coeff_fe(par)
 # set covariate effect on transition probability 
-tpmpar <- true_mod$coeff_fe()$hidden
+tpmpar <- true_mod$coeff_fe()$hid
 tpmpar <- c(tpmpar[1], 0.1, tpmpar[3])
-true_mod$hidden()$update_coeff_fe(tpmpar)
+true_mod$hid()$update_coeff_fe(tpmpar)
 
 for (i in 1:nsims) {
   cat(i, " / ", nsims, "\r")
@@ -44,9 +44,9 @@ bias_obs_ests <- 100 * (e_obs_ests - true_obs_ests) / true_obs_ests
 # relative percentage bias in observation parameter estimates
 bias_obs_ests
 
-tpm_ests <- sapply(mods, FUN = function(x) {x$coeff_fe()$hidden[,1]})
+tpm_ests <- sapply(mods, FUN = function(x) {x$coeff_fe()$hid[,1]})
 e_tpm_ests <- rowMeans(tpm_ests)
-true_tpm_ests <- true_mod$coeff_fe()$hidden[,1]
+true_tpm_ests <- true_mod$coeff_fe()$hid[,1]
 bias_tpm_ests <- 100 * (e_tpm_ests - true_tpm_ests) / true_tpm_ests
 # relative percentage bias in transition probability parameter estimates
 bias_tpm_ests

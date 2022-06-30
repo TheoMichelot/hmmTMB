@@ -106,7 +106,7 @@ formulas <- list(step = list(shape = ~ x1 + x2, scale = ~ 1),
 obs <- Observation$new(data = data, dists = dists, n_states = 2, par = par0, 
                        formulas = formulas)
 hid <- MarkovChain$new(n_states = 2, data = data)
-mod <- HMM$new(obs = obs, hidden = hid)
+mod <- HMM$new(obs = obs, hid = hid)
 
 # Fit model
 mod$fit(silent = FALSE)

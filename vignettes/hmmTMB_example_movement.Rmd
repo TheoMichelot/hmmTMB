@@ -81,7 +81,7 @@ obs1 <- Observation$new(data = hmm_data, dists = dists,
 We can now create an `HMM` object, which combines the hidden process and the observation model. Printing it shows the model formulation, as well as the initial parameter values that it stores. Note that, because we did not specify initial parameter values for the `MarkovChain` object, it defaulted to a matrix with 0.9 on the diagonal, but we could have entered it manually using the argument `tpm`.
 
 ```{r mod1}
-hmm1 <- HMM$new(obs = obs1, hidden = hid1)
+hmm1 <- HMM$new(obs = obs1, hid = hid1)
 
 hmm1
 ```
@@ -129,7 +129,7 @@ obs2 <- Observation$new(data = hmm_data, dists = dists,
                         par = par0, n_states = 2)
 
 # Create and fit model
-hmm2 <- HMM$new(obs = obs2, hidden = hid2)
+hmm2 <- HMM$new(obs = obs2, hid = hid2)
 hmm2$fit(silent = TRUE)
 ```
 

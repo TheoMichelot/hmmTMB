@@ -50,11 +50,11 @@ The package hmmTMB uses the R6 framework for object-oriented programming (@chang
   
 Model specification, model fitting and model visualisation can all be performed by manipulating objects from those three classes. Following the R6 syntax, an object is created with something like
 ```{r r6-new}
-hidden <- MarkovChain$new(n_states = 2, data = data.frame(z = rnorm(100)))
+hid <- MarkovChain$new(n_states = 2, data = data.frame(z = rnorm(100)))
 ```
 This line of code defines a hidden state model with 2 states and no covariate dependence. Once an object is created, various methods (i.e., functions) can be called to manipulate it, using the following syntax:
 ```{r r6-method}
-hidden$formulas()
+hid$formulas()
 ```
 
 # Example 1: Elk movement analysis
@@ -122,7 +122,7 @@ hid <- MarkovChain$new(n_states = n_states,
 Combining the MarkovChain and Observation object, we create an object of the HMM class.
 
 ```{r elk-hmm-new}
-hmm <- HMM$new(obs = obs, hidden = hid)
+hmm <- HMM$new(obs = obs, hid = hid)
 ```
 
 We fit the model with the method `fit`, and print the output of the optimiser with `out`. It contains the parameters estimates (fixed effects), the value of the objective function at the optimum, and diagnostics from the optimiser.
@@ -284,7 +284,7 @@ obs <- Observation$new(data = data,
 
 We create the HMM object from the MarkovChain and Observation components, fit it using the fit method, and compute the most likely state sequence using the viterbi method,
 ```{r haggis-fit}
-hmm <- HMM$new(hidden = hid, obs = obs)
+hmm <- HMM$new(hid = hid, obs = obs)
 hmm$fit(silent = TRUE)
 data$state <- hmm$viterbi()
 ```

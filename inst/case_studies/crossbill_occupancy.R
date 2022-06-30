@@ -56,25 +56,25 @@ m0$par()
 
 ## Effects on occupancy 
 # effect of year on colonisation
-mt <- update(m0, "hidden", i = 1, j = 2, ~.+s(year, bs = "cs", k = 9))
+mt <- update(m0, "hid", i = 1, j = 2, ~.+s(year, bs = "cs", k = 9))
 # effect of year on extinction
-mt2 <- update(mt, "hidden", i = 2, j = 1, ~.+s(year, bs = "cs", k = 9))
+mt2 <- update(mt, "hid", i = 2, j = 1, ~.+s(year, bs = "cs", k = 9))
 AIC(m0, mt, mt2)
 
 # effect of forest on colonisation  
-m_f <- update(mt2, "hidden", i = 1, j = 2, ~.+s(forest, bs = "cs"))
+m_f <- update(mt2, "hid", i = 1, j = 2, ~.+s(forest, bs = "cs"))
 # effect of forest on extinction
-m_f2 <- update(m_f, "hidden", i = 2, j = 1, ~.+s(forest, bs = "cs"))
+m_f2 <- update(m_f, "hid", i = 2, j = 1, ~.+s(forest, bs = "cs"))
 AIC(m0, m_f, m_f2)
 
 # effect of elevation on colonisation
-m_e <- update(m_f2, "hidden", i = 1, j = 2, ~.+s(elev, bs = "cs"))
+m_e <- update(m_f2, "hid", i = 1, j = 2, ~.+s(elev, bs = "cs"))
 # effect of elevation on extinction
-m_e2 <- update(m_e, "hidden", i = 2, j = 1, ~.+s(elev, bs = "cs"))
+m_e2 <- update(m_e, "hid", i = 2, j = 1, ~.+s(elev, bs = "cs"))
 AIC(m_e2, m_e, m_f2)
 
 # interaction between elevation and forest
-m_int <- update(mt2, "hidden", i = 1, j = 2, ~.+t2(forest, elev, bs = "cs"))
+m_int <- update(mt2, "hid", i = 1, j = 2, ~.+t2(forest, elev, bs = "cs"))
 m_int$fit()
 AIC(m_e, m_int)
 

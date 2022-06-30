@@ -86,7 +86,7 @@ cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid
   # Get covariate names
   if(!is.null(obj)) {
     var_names <- unique(c(rapply(obj$obs()$formulas(), all.vars), 
-                          rapply(obj$hidden()$formulas(), all.vars)))
+                          rapply(obj$hid()$formulas(), all.vars)))
   } else {
     var_names <- unique(rapply(formulas, all.vars))
   }

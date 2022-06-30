@@ -25,9 +25,9 @@ par <- c(par[1], -0.5, 0.08, 0.1, -0.8,
 true_mod$obs()$update_coeff_fe(par)
 
 # set covarite effect on tpm 
-tpmpar <- true_mod$coeff_fe()$hidden
+tpmpar <- true_mod$coeff_fe()$hid
 tpmpar <- c(tpmpar[1], 0.8, tpmpar[3])
-true_mod$hidden()$update_coeff_fe(tpmpar)
+true_mod$hid()$update_coeff_fe(tpmpar)
 
 # simulate from true model
 set.seed(58320)
@@ -69,8 +69,8 @@ AIC(mod_x, mod_z, mod_f)
 BIC(mod_x, mod_z, mod_f)
 
 ## update transition probability model
-mod_tpm <- update(mod_f, "hidden", 1, 2, ~.+x, fit = FALSE)
-mod_tpm <- update(mod_tpm, "hidden", 2, 1, ~.+x)
+mod_tpm <- update(mod_f, "hid", 1, 2, ~.+x, fit = FALSE)
+mod_tpm <- update(mod_tpm, "hid", 2, 1, ~.+x)
 
 AIC(mod_f, mod_tpm)
 

@@ -3,10 +3,10 @@
 #' 
 #' @param mod a HMM model object 
 #' @param type character string for the part of the model that is updated
-#' (either "hidden" or "obs") 
-#' @param i if type="hidden" then i is the row of the formula containing the change
+#' (either "hid" or "obs") 
+#' @param i if type="hid" then i is the row of the formula containing the change
 #'          if type="obs" then i is the observation variable name
-#' @param j if type="hidden" then j is the column of the formula containing the change
+#' @param j if type="hid" then j is the column of the formula containing the change
 #'          if type="obs" then j is the parameter whose formula is to be changed 
 #' @param change the change to make to the formula, see ?update.formula for details
 #' @param fit if FALSE then change is made but model is not re-fit
@@ -21,23 +21,23 @@ update.HMM <- function(mod, type, i, j, change, fit = TRUE, silent = FALSE) {
     dat$state <- mod$obs()$known_states(mat = FALSE)
   }
   
-  if (type == "hidden") {
+  if (type == "hid") {
     # copy model components 
     new_obs <- mod$obs()$clone()
-    copy_hid <- mod$hidden()$clone()
+    copy_hid <- mod$hid()$clone()
     # extract current formula 
     new_formula <- copy_hid$formula()
     # update relevant formula 
     new_formula[i, j] <- as_character_formula(update(as.formula(new_formula[i, j]), change))
     # create new hidden sub-model component 
-    new_hid <- MarkovChain$new(n_states = mod$hidden()$nstates(), 
+    new_hid <- MarkovChain$new(n_states = mod$hid()$nstates(), 
                                formula = new_formula, 
                                data = dat, 
-                               stationary = mod$hidden()$stationary()) 
+                               stationary = mod$hid()$stationary()) 
   } else if (type == "obs") {
     # copy model components 
     copy_obs <- mod$obs()$clone()
-    new_hid <- mod$hidden()$clone()
+    new_hid <- mod$hid()$clone()
     # get formulas 
     forms <- copy_obs$formulas(raw = TRUE)
     # make change 

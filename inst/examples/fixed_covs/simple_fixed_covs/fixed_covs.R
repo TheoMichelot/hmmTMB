@@ -22,9 +22,9 @@ par <- c(par[1], -0.05, par[3], 0.08)
 true_mod$obs()$update_coeff_fe(par)
 
 # set covariate effect on transition probability 
-tpmpar <- true_mod$coeff_fe()$hidden
+tpmpar <- true_mod$coeff_fe()$hid
 tpmpar <- c(tpmpar[1], 0.1, tpmpar[3])
-true_mod$hidden()$update_coeff_fe(tpmpar)
+true_mod$hid()$update_coeff_fe(tpmpar)
 
 # simulate from true model
 set.seed(58320)

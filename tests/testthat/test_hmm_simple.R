@@ -10,7 +10,7 @@ obs <- Observation$new(data = dat,
                        n_states = 2, 
                        par = list(count = list(lambda = c(5, 20))))
 hid <- MarkovChain$new(n_states = 2, data = dat)
-true_mod <- HMM$new(obs = obs, hidden = hid)
+true_mod <- HMM$new(obs = obs, hid = hid)
 # simulate from true model
 set.seed(57320)
 dat <- true_mod$simulate(n, silent = TRUE)
@@ -20,7 +20,7 @@ obs <- Observation$new(data = dat,
                        n_states = 2, 
                        par = list(count = list(lambda = c(5, 10))))
 hid <- MarkovChain$new(n_states = 2, data = dat)
-mod <- HMM$new(obs = obs, hidden = hid)
+mod <- HMM$new(obs = obs, hid = hid)
 # suggest better starting parameters?
 ini <- mod$suggest_initial()
 
@@ -38,7 +38,7 @@ test_that("Model is setup correctly", {
   
   # check coeffs on link scale
   expect_equal(as.numeric(mod$coeff_fe()$obs), log(c(5, 10)))
-  expect_equal(as.numeric(mod$coeff_fe()$hidden), qlogis(c(0.1, 0.1)))
+  expect_equal(as.numeric(mod$coeff_fe()$hid), qlogis(c(0.1, 0.1)))
 })
 
 test_that("Model fits correctly", {

@@ -25,11 +25,11 @@ par <- c(samp[1:8], 0, samp[9:length(samp)], 0)
 true_mod$obs()$update_coeff_re(par)
 
 # set gam coefficients for tpm 
-tpmpar <- true_mod$coeff_re()$hidden
-Shid <- true_mod$hidden()$make_mat(data = dat)$S
+tpmpar <- true_mod$coeff_re()$hid
+Shid <- true_mod$hid()$make_mat(data = dat)$S
 samphid <- rmvn(n = 1, rep(0, ncol(Shid)- 1), solve(0.1 * Shid[-9, -9]))
 tpmpar <- c(samphid, 0)
-true_mod$hidden()$update_coeff_re(tpmpar)
+true_mod$hid()$update_coeff_re(tpmpar)
 
 # simulate from true model
 set.seed(52320)

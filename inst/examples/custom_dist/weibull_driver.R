@@ -23,7 +23,7 @@ dummy_data <- data.frame(ID = rep(1, n_sim), wait = rep(0, n_sim))
 obs <- Observation$new(data = dummy_data, dists = dist, n_states = n_states, par = par)
 par_hid0 <- c(0.05, 0.03)
 hid <- MarkovChain$new(n_states = n_states)
-mod <- HMM$new(obs = obs, hidden = hid)
+mod <- HMM$new(obs = obs, hid = hid)
 sim <- mod$simulate(n = n_sim, data = data.frame(ID = 1, wait = rep(0, n_sim)))
 
 # plot it 
@@ -38,7 +38,7 @@ obs2 <- Observation$new(data = sim, dists = dist,
 
 hid2 <- MarkovChain$new(n_states = n_states, data = sim)
 
-mod2 <- HMM$new(obs = obs2, hidden = hid2)
+mod2 <- HMM$new(obs = obs2, hid = hid2)
 
 mod2$fit(silent = FALSE)
 
@@ -46,7 +46,7 @@ mod2$fit(silent = FALSE)
 mod2$obs()$par()
 
 # Estimated parameters of the state process
-mod2$hidden()$coeff_fe()
+mod2$hid()$coeff_fe()
 
 # Compare estimated states and true states
 s <- mod2$viterbi()

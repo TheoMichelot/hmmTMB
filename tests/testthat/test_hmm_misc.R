@@ -17,7 +17,7 @@ test_that("NA covariates are filled in", {
                            par = par, formulas = formulas)
     hid <- MarkovChain$new(n_states = 2, data = data)
     # NAs should be filled in at this stage
-    hmm <- HMM$new(obs = obs, hidden = hid)
+    hmm <- HMM$new(obs = obs, hid = hid)
     
     # Check that NAs were filled in with the right value
     expect_true(!any(is.na(obs$data()$x1)))
@@ -30,7 +30,7 @@ test_that("edf works in case with no smooth", {
     # Model with no covariates
     obs <- Observation$new(data = data, dists = list(z = "norm"), n_states = 2, par = par)
     hid <- MarkovChain$new(n_states = 2, data = data)
-    hmm <- HMM$new(obs = obs, hidden = hid)
+    hmm <- HMM$new(obs = obs, hid = hid)
     expect_equal(hmm$edf(), length(hid$coeff_fe()) + length(obs$coeff_fe()))
     
     # Model with fixed effects only
@@ -38,7 +38,7 @@ test_that("edf works in case with no smooth", {
     obs <- Observation$new(data = data, dists = list(z = "norm"), n_states = 2, 
                            par = par, formulas = list(z = list(mean = ~1, sd = f)))
     hid <- MarkovChain$new(n_states = 2, data = data, formula = f)
-    hmm <- HMM$new(obs = obs, hidden = hid)
+    hmm <- HMM$new(obs = obs, hid = hid)
     expect_equal(hmm$edf(), length(hid$coeff_fe()) + length(obs$coeff_fe()))
 })
 
@@ -53,17 +53,17 @@ formulas <- list(z = list(mean = ~x1, sd = ~x2))
 obs <- Observation$new(data = data, dists = dists, n_states = 2, 
                        par = par, formulas = formulas)
 # HMM object
-hmm <- HMM$new(obs = obs, hidden = hid)
+hmm <- HMM$new(obs = obs, hid = hid)
 
 test_that("update.HMM modifies formulas correctly", {
     # Update in hidden state model
-    hmm2 <- update(hmm, type = "hidden", i = 2, j = 1, 
+    hmm2 <- update(hmm, type = "hid", i = 2, j = 1, 
                    change = ~ . + I(x2^2), fit = FALSE)
     
-    expect_equal(hmm2$hidden()$formula()[1,2], "~x1")
-    expect_equal(hmm2$hidden()$formula()[2,1], "~x1 + I(x2^2)")
-    expect_equal(hmm2$hidden()$formulas()[[1]], ~x1)
-    expect_equal(hmm2$hidden()$formulas()[[2]], ~x1 + I(x2^2))
+    expect_equal(hmm2$hid()$formula()[1,2], "~x1")
+    expect_equal(hmm2$hid()$formula()[2,1], "~x1 + I(x2^2)")
+    expect_equal(hmm2$hid()$formulas()[[1]], ~x1)
+    expect_equal(hmm2$hid()$formulas()[[2]], ~x1 + I(x2^2))
     
     # Update in observation model
     hmm3 <- update(hmm, type = "obs", i = "z", j = "mean", 

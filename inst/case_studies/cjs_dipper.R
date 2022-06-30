@@ -70,13 +70,13 @@ cjs$fit()
 
 # fit time-varying detection and survival
 cjs_pt <- update(cjs, "obs", "cap", "prob", ~ . + state1(s(occ, k = 7, bs = "cs")))
-cjs_phit <- update(cjs, "hidden", 1, 2, ~.+s(occ, k = 6, bs = "cs"))
-cjs_pt_phit <- update(cjs_pt, "hidden", 1, 2, ~.+s(occ, k = 6, bs = "cs"))
+cjs_phit <- update(cjs, "hid", 1, 2, ~.+s(occ, k = 6, bs = "cs"))
+cjs_pt_phit <- update(cjs_pt, "hid", 1, 2, ~.+s(occ, k = 6, bs = "cs"))
 
 AIC(cjs, cjs_pt, cjs_phit, cjs_pt_phit)
 
 # look at sex effect
 cjs_psex <- update(cjs, "obs", "cap", "prob", ~. + sex)
 AIC(cjs, cjs_psex)
-cjs_phisex <- update(cjs_psex, "hidden", 1, 2, ~.+sex)
+cjs_phisex <- update(cjs_psex, "hid", 1, 2, ~.+sex)
 # won't fit, likely due sex effect being minimal 

@@ -70,7 +70,7 @@ obs_sim <- Observation$new(data = data_sim, dists = list(z = "norm"),
                            n_states = 2, par = par_sim)
 
 # Create HMM and simulate observations
-hmm_sim <- HMM$new(hidden = hid_sim, obs = obs_sim)
+hmm_sim <- HMM$new(hid = hid_sim, obs = obs_sim)
 data_sim <- hmm_sim$simulate(n = n, silent = TRUE)
 
 head(data_sim)
@@ -101,7 +101,7 @@ obs <- Observation$new(data = data_sim, dists = list(z = "norm"),
                        n_states = 2, par = par)
 
 # Create HMM object
-hmm <- HMM$new(hidden = hid, obs = obs)
+hmm <- HMM$new(hid = hid, obs = obs)
 ```
 
 ## Priors

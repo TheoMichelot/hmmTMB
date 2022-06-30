@@ -135,7 +135,7 @@ fixpar <- list(obs = c("y2.prob.state1.(Intercept)" = NA,
 Finally, we create and fit the model, which takes a few seconds.
 ```{r mod-fit}
 # Create and fit model
-hmm1 <- HMM$new(obs = obs1, hidden = hid1, fixpar = fixpar)
+hmm1 <- HMM$new(obs = obs1, hid = hid1, fixpar = fixpar)
 hmm1$fit(silent = TRUE)
 ```
 
@@ -180,7 +180,7 @@ The rest of the model specification is unchanged. This time, fitting the model t
 ```{r mod2-spec2}
 obs2 <- Observation$new(data = data, dists = dists, 
                        n_states = 2, par = par0)
-hmm2 <- HMM$new(obs = obs2, hidden = hid2, fixpar = fixpar)
+hmm2 <- HMM$new(obs = obs2, hid = hid2, fixpar = fixpar)
 hmm2$fit(silent = TRUE)
 ```
 

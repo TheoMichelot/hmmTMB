@@ -78,7 +78,7 @@ cjs_sex <- update(cjs, "obs", "cap", "prob", ~.+state1(sex))
 AIC(cjs_sex, cjs)
 
 # include time-varying survival
-cjs_phit <- update(cjs_sex, "hidden", 1, 2, ~.+s(occ, k = 9, bs = "cs"))
+cjs_phit <- update(cjs_sex, "hid", 1, 2, ~.+s(occ, k = 9, bs = "cs"))
 AIC(cjs_sex, cjs_phit)
 
 # Try a finite mixture with 2 subpopulations 
@@ -123,7 +123,7 @@ cjs_h2$fit()
 # sub-population probabilities
 cjs_h2$par()
 # sub-population proportions 
-round(cjs_h2$hidden()$delta(), 2)
+round(cjs_h2$hid()$delta(), 2)
 AIC(cjs_h2, cjs_sex)
 
 

@@ -294,7 +294,7 @@ hid_process$simulate(n = n_sim, data = data, new_data = new_data)
 The `HMM` class encapsulates a `MarkovChain` and an `Observation` object, the two components of an HMM. It include methods to fit the model and visualise the results.
 
 ```{r hmm-create}
-hmm <- HMM$new(obs = obs_process, hidden = hid_process)
+hmm <- HMM$new(obs = obs_process, hid = hid_process)
 ```
 
 # Some implementation details

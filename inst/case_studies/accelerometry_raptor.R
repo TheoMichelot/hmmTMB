@@ -69,32 +69,32 @@ msa:
 
 m0 <- HMM$new(file = "raptor_m0.hmm")
 m0$fit()
-m0$obs()$plot_dist("msa", weights = m0$hidden()$delta())
+m0$obs()$plot_dist("msa", weights = m0$hid()$delta())
 
 ## look at effects on tpm
 # temperature
-m_temp <- update(m0, "hidden", 1, 2, ~.+s(temp, bs = "cs"), fit = FALSE)
-m_temp <- update(m_temp, "hidden", 2, 1, ~.+s(temp, bs = "cs"))
+m_temp <- update(m0, "hid", 1, 2, ~.+s(temp, bs = "cs"), fit = FALSE)
+m_temp <- update(m_temp, "hid", 2, 1, ~.+s(temp, bs = "cs"))
 AIC(m0, m_temp) # little evidence of an effect 
 
 # try temp linear only 
-m_temp2 <- update(m0, "hidden", 1, 2, ~.+temp, fit = FALSE)
-m_temp2 <- update(m_temp2, "hidden", 2, 1, ~.+temp)
+m_temp2 <- update(m0, "hid", 1, 2, ~.+temp, fit = FALSE)
+m_temp2 <- update(m_temp2, "hid", 2, 1, ~.+temp)
 AIC(m0, m_temp2) # little evidence of an effect 
 
 # wind speed 
-m_wind <- update(m0, "hidden", 1, 2, ~.+s(wind_speed, bs = "cs"), fit = FALSE)
-m_wind <- update(m_wind, "hidden", 2, 1, ~.+s(wind_speed, bs = "cs"))
+m_wind <- update(m0, "hid", 1, 2, ~.+s(wind_speed, bs = "cs"), fit = FALSE)
+m_wind <- update(m_wind, "hid", 2, 1, ~.+s(wind_speed, bs = "cs"))
 AIC(m0, m_wind)
 
 # try wind linear only 
-m_wind2 <- update(m0, "hidden", 1, 2, ~.+wind_speed, fit = FALSE)
-m_wind2 <- update(m_wind2, "hidden", 2, 1, ~.+wind_speed)
+m_wind2 <- update(m0, "hid", 1, 2, ~.+wind_speed, fit = FALSE)
+m_wind2 <- update(m_wind2, "hid", 2, 1, ~.+wind_speed)
 AIC(m0, m_wind2) # some evidence of a linear effect 
 
 # look for hour of day effects
-m_hr <- update(m_wind2, "hidden", 1, 2, ~.+s(hour, bs = "cc"), fit = FALSE)
-m_hr <- update(m_hr, "hidden", 2, 1, ~.+s(hour, bs = "cc"))
+m_hr <- update(m_wind2, "hid", 1, 2, ~.+s(hour, bs = "cc"), fit = FALSE)
+m_hr <- update(m_hr, "hid", 2, 1, ~.+s(hour, bs = "cc"))
 AIC(m_wind2, m_hr) # nothing
 
 
