@@ -52,9 +52,7 @@ Create a Dist object
   parnames,
   parapprox = NULL,
   fixed = NULL,
-  name_long = name,
-  cpp = NULL,
-  compile_cpp = TRUE
+  name_long = name
 )}\if{html}{\out{</div>}}
 }
 
@@ -86,11 +84,6 @@ parameter is fixed}
 
 \item{\code{name_long}}{Long version of the name of the distribution, possibly 
 more user-readable than name.}
-
-\item{\code{cpp}}{location of C++ TMB definition of distribution}
-
-\item{\code{compile_cpp}}{if FALSE then distribution code in cpp is added but 
-not compiled into package}
 }
 \if{html}{\out{</div>}}
 }

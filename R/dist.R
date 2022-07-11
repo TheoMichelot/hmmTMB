@@ -29,9 +29,6 @@ Dist <- R6Class(
     #' parameter is fixed
     #' @param name_long Long version of the name of the distribution, possibly 
     #' more user-readable than name.
-    #' @param cpp location of C++ TMB definition of distribution
-    #' @param compile_cpp if FALSE then distribution code in cpp is added but 
-    #' not compiled into package
     #' 
     #' @return A new Dist object
     initialize = function(name, 
@@ -43,9 +40,7 @@ Dist <- R6Class(
                           parnames, 
                           parapprox = NULL, 
                           fixed = NULL, 
-                          name_long = name,
-                          cpp = NULL, 
-                          compile_cpp = TRUE) {
+                          name_long = name) {
       # Check arguments
       private$check_args(name = name, 
                          pdf = pdf, 
@@ -68,69 +63,8 @@ Dist <- R6Class(
       private$name_long_ <- name_long
       
       # All parameters are unfixed by default
-      if (is.null(fixed)) private$fixed_ <- rep(FALSE, npar)
-      
-      # Load list of distributions included in the package and check against 
-      # specified distribution name 
-      load(paste0(find.package("hmmTMB"), "/distnames.RData"))
-      if(!name %in% distnames$name) {
-        if (is.null(cpp)) {
-          stop(paste0("must provide 'cpp' argument for new distributions or use one of the
-                      existing distributions:'", 
-                      paste(distnames$name, sep = "", collapse = "', '"), 
-                      "'"))
-        } else { 
-          # add distribution to package 
-          warning("Adding new distribution to package. If you want to delete this 
-                  distribution later, use the function remove_dist().")
-          # get package root 
-          root <- find.package("hmmTMB")
-          # copy C++ TMB definition to package root 
-          file.copy(from = cpp, to = paste0(root, "/include/dist__", name, ".hpp"))
-          # include in added_dists file 
-          added_dist_file <- scan(paste0(root, "/include/added_dists.hpp"), character(), sep = "\n")
-          new_dist_file <- c(added_dist_file[-length(added_dist_file)],
-                             paste0("#include \"dist__", name, ".hpp\""), 
-                             added_dist_file[length(added_dist_file)])
-          cat(new_dist_file, file = paste0(root, "/include/added_dists.hpp"), sep = "\n")
-          # add to list of available TMB distributions 
-          dist_file <- scan(paste0(root, "/include/dist.hpp"), character(), sep = "\n")
-          len <- length(dist_file)
-          code <- max(distnames$code) + 1 
-          new_dist_file <- c(dist_file[-((len - 4):len)], 
-                             paste0("  case ", code, ":"), 
-                             paste0("    return(std::unique_ptr<Dist<Type>>(new ", name, "<Type>));"), 
-                             dist_file[(len - 4):len])
-          cat(new_dist_file, file = paste0(root, "/include/dist.hpp"), sep = "\n")
-          
-          # recompile TMB library 
-          if (compile_cpp) {
-            # add to distnames data 
-            distnames <- rbind(distnames, c(name, code))
-            distnames$code <- as.numeric(distnames$code)
-            save(distnames, file = paste0(root, "/distnames.RData"))
-            # create a dummy compilation file 
-            cat('#include "hmmTMB.hpp"\n', file = paste0(root, "/include/hmmTMB.cpp"))
-            # compile using dummy file 
-            comp <- tryCatch(TMB::compile(paste0(root, "/include/hmmTMB.cpp"), flags = "-Wno-ignored-attributes"))
-            if ("try-error" %in% class(comp)) {
-              cat(new_dist_file, file = paste0(root, "/include/added_dists.hpp"), sep = "\n")
-              cat(new_dist_file, file = paste0(root, "/include/dist.hpp"), sep = "\n")
-            }
-            # copy compiled library to lib folder
-            file.copy(from = paste0(root, "/include/hmmTMB.so"), to = paste0(root, "/libs/"), overwrite = TRUE)
-            # restart R 
-            if (exists(".rs.restartR")){
-              .rs.restartR() 
-            } else {
-              warning("You must restart the R session for the new distribution to be available.")
-            }
-          }
-        }
-        
-      } else {
-        # load code unique to this distribution 
-        private$code_ <- distnames$code[which(distnames$name == name)]       
+      if (is.null(fixed)) {
+        private$fixed_ <- rep(FALSE, npar)
       }
     },
     
@@ -180,6 +114,11 @@ Dist <- R6Class(
     #' @param new_parnames Parameter names
     set_parnames = function(new_parnames) {private$parnames_ <- new_parnames}, 
 
+    #' @description Set distribution code
+    #' 
+    #' @param new_code Distribution code
+    set_code = function(new_code) {private$code_ <- new_code},
+    
     # Other methods -----------------------------------------------------------
 
     #' @description Evaluate probability density/mass function

@@ -758,29 +758,34 @@ dist_dir <- Dist$new(
 
 # List of all distributions -----------------------------------------------
 
-dist_list <- list(pois = dist_pois,
+dist_list <- list(beta = dist_beta,
                   binom = dist_binom,
-                  nbinom = dist_nbinom, 
-                  gamma = dist_gamma,
-                  norm = dist_norm,
-                  beta = dist_beta,
-                  vm = dist_vm, 
-                  zip = dist_zip, 
-                  zib = dist_zib, 
-                  zinb = dist_zinb,
-                  ztp = dist_ztp, 
-                  ztnb = dist_ztnb, 
                   cat = dist_cat,
+                  dir = dist_dir,
                   exp = dist_exp,
-                  lnorm = dist_lnorm,
-                  weibull = dist_weibull,
-                  truncnorm = dist_truncnorm, 
                   foldednorm = dist_foldednorm, 
-                  t = dist_t, 
-                  tweedie = dist_tweedie, 
-                  mvnorm = dist_mvnorm, 
-                  dir = dist_dir, 
+                  gamma = dist_gamma,
                   gamma2 = dist_gamma2,
+                  lnorm = dist_lnorm,
+                  mvnorm = dist_mvnorm, 
+                  nbinom = dist_nbinom, 
+                  norm = dist_norm,
+                  pois = dist_pois,
+                  t = dist_t, 
+                  truncnorm = dist_truncnorm, 
+                  tweedie = dist_tweedie, 
+                  vm = dist_vm, 
+                  weibull = dist_weibull,
                   wrpcauchy = dist_wrpcauchy,
+                  zib = dist_zib, 
                   zigamma = dist_zigamma,
-                  zigamma2 = dist_zigamma2)
+                  zigamma2 = dist_zigamma2,
+                  zinb = dist_zinb,
+                  zip = dist_zip, 
+                  ztnb = dist_ztnb, 
+                  ztp = dist_ztp)
+
+# Define unique distribution code (must match C++ side)
+lapply(seq_along(dist_list), function(i) {
+  dist_list[[i]]$set_code(new_code = i - 1)
+})
