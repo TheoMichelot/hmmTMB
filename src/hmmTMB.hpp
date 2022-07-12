@@ -1,12 +1,12 @@
-#include<memory>
-#include<iostream>
-#include "dist.hpp"
-
 
 #ifndef _HMMTMB_
 #define _HMMTMB_
 #include <TMB.hpp>
 #endif
+
+#include<memory>
+#include<iostream>
+#include "dist.hpp"
 
 //' Compute Negative log-likelihood for HMM
 //' DATA:
