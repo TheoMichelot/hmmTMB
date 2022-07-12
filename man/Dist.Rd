@@ -29,6 +29,7 @@ functions for a probability distribution.
 \item \href{#method-Dist-name_long}{\code{Dist$name_long()}}
 \item \href{#method-Dist-set_npar}{\code{Dist$set_npar()}}
 \item \href{#method-Dist-set_parnames}{\code{Dist$set_parnames()}}
+\item \href{#method-Dist-set_code}{\code{Dist$set_code()}}
 \item \href{#method-Dist-pdf_apply}{\code{Dist$pdf_apply()}}
 \item \href{#method-Dist-rng_apply}{\code{Dist$rng_apply()}}
 \item \href{#method-Dist-n2w}{\code{Dist$n2w()}}
@@ -231,6 +232,23 @@ Set parameter names
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{new_parnames}}{Parameter names}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Dist-set_code"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-set_code}{}}}
+\subsection{Method \code{set_code()}}{
+Set distribution code
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$set_code(new_code)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{new_code}}{Distribution code}
 }
 \if{html}{\out{</div>}}
 }
