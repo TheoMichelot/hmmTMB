@@ -435,8 +435,9 @@ dist_zigamma <- Dist$new(
     name = "zigamma", 
     name_long = "zero-inflated gamma",
     pdf = function(x, shape, scale, z, log = FALSE) {
-        zero <- x == 0 
-        l <- z * zero + (1 - z) * dgamma(x, shape = shape, scale = scale)
+        l <- ifelse(x == 0, 
+                    yes = z,
+                    no = (1 - z) * dgamma(x, shape = shape, scale = scale))
         if (log) l <- log(l)
         return(l)
     }, 
@@ -468,8 +469,9 @@ dist_zigamma2 <- Dist$new(
   pdf = function(x, mean, sd, z, log = FALSE) {
     shape <- mean^2 / sd^2
     scale <- sd^2 / mean
-    zero <- x == 0 
-    l <- z * zero + (1 - z) * dgamma(x, shape = shape, scale = scale)
+    l <- ifelse(x == 0, 
+                yes = z,
+                no = (1 - z) * dgamma(x, shape = shape, scale = scale))
     if (log) l <- log(l)
     return(l)
   }, 
