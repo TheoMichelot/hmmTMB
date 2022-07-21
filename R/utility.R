@@ -294,5 +294,10 @@ find_re <- function(form) {
   var_names <- gsub(pattern = pattern, "\\1", term_labs)
   which_re <- grep(pattern = pattern, term_labs)
   var_re <- var_names[which_re]
+  if(length(var_re) > 0) {
+    # This is needed for models with "by", e.g. ~s(ID, x, bs = "re"),
+    # to make sure only "ID" is kept, rather than "ID, x"
+    var_re <- strsplit(var_re, split = ",")[[1]][1]
+  }
   return(var_re)
 }
