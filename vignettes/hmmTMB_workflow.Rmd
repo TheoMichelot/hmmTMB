@@ -430,7 +430,7 @@ In this model, the observation process has six parameters to estimate:
 
 - the variance of the random intercepts in each state, $s_1^2$ and $s_2^2$.
 
-For the analysis, we first extract the year for each row of the `energy` data set. Note that we treat is as a factor (categorical) variable here, rather than a continuous variable.
+For the analysis, we first extract the year for each row of the `energy` data set. Note that we treat it as a factor (categorical) variable here, rather than a continuous variable.
 
 ```{r re-prep}
 energy$Year <- factor(format(energy$Day, "%Y"))
