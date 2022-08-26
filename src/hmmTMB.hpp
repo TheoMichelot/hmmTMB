@@ -184,8 +184,6 @@ Type objective_function<Type>::operator() ()
     par_count = par_count + distpar(var) * n_states;
   }
   
-  
-  
   //======================//
   // Priors               //
   //======================//
@@ -230,10 +228,11 @@ Type objective_function<Type>::operator() ()
   for (int i = 0; i < n; ++i) {
     // Re-initialise phi at first observation of each time series
     if(i == 0 || ID(i-1) != ID(i)) {
-      phi = delta0;
+      phi = (delta0.array() * prob.row(i).array()).matrix();
+    } else {
+      phi = phi * tpm_array(i - 1);
+      phi = (phi.array() * prob.row(i).array()).matrix();
     }
-    phi = (phi.array() * prob.row(i).array()).matrix();
-    phi = phi * tpm_array(i);
     sumphi = phi.sum();
     llk = llk + log(sumphi);
     phi = phi / sumphi;
