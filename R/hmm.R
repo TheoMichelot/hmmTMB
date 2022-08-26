@@ -1112,7 +1112,7 @@ HMM <- R6Class(
         v <- delta0 * sub_obs_probs[1,]
         xi[1,] <- v/sum(v)
         for(i in 2:n_this_id) {
-          v <- apply(xi[i-1,] * sub_tpm_all[,,i], 2, max) * sub_obs_probs[i,]
+          v <- apply(xi[i-1,] * sub_tpm_all[,,i-1], 2, max) * sub_obs_probs[i,]
           xi[i,] <- v/sum(v)
         }
         
@@ -1120,7 +1120,7 @@ HMM <- R6Class(
         states <- rep(NA, n_this_id)
         states[n_this_id] <- which.max(xi[n_this_id,])
         for(i in (n_this_id - 1):1) {
-          states[i] <- which.max(sub_tpm_all[, states[i+1], i+1] * xi[i,])
+          states[i] <- which.max(sub_tpm_all[, states[i+1], i] * xi[i,])
         }
         
         # Append estimated states for this ID
