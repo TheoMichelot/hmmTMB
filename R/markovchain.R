@@ -13,7 +13,8 @@ MarkovChain <- R6Class(
     
     #' @description Create new MarkovChain object
     #' 
-    #' @param data Data frame, needed to create model matrices
+    #' @param data Data frame, needed to create model matrices, and to identify the
+    #' number of time series (which each have a separate initial distribution)
     #' @param formula Either (2) R formula, used for all transition probabilities, 
     #' or (2) matrix of character strings, with an entry of "." on diagonal, 
     #' a "0" for transitions that are not allowed (not implemented yet), 
@@ -61,6 +62,14 @@ MarkovChain <- R6Class(
         private$nstates_ <- n_states
       }
       
+      # How many time series are in data (used to initialise delta0)
+      if(! "ID" %in% colnames(data)) {
+        # Default = 1 if ID not provided
+        private$unique_ID_ <- 1
+      } else {
+        private$unique_ID_ <- unique(data$ID)
+      }
+      
       # Should initial distribution delta0 be stationary?
       private$stationary_ <- stationary 
       
@@ -105,7 +114,9 @@ MarkovChain <- R6Class(
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
       self$update_coeff_re(rep(0, ncol(mats$X_re)))
       self$update_lambda(rep(1, ifelse(is.null(ncol_re), 0, ncol(ncol_re))))
-      self$update_delta0(rep(1 / n_states, n_states))
+      self$update_delta0(matrix(1 / n_states, 
+                                nrow = length(self$unique_ID()), 
+                                ncol = n_states))
       
       # Initialise tpm
       if(is.null(tpm)) {
@@ -201,18 +212,19 @@ MarkovChain <- R6Class(
     
     #' @description Initial distribution
     #' 
-    #' Vector of length the number of states, with i-th element the probability
-    #' Pr(S[1] = i)
-    #' 
     #' @param log Logical indicating whether to return the log of the initial
     #' probabilities (default: FALSE). If TRUE, then the last element is
     #' excluded, as it is not estimated.
+    #' 
+    #' @return Matrix with one row for each time series ID, and one column
+    #' for each state. For each ID, the i-th element of the corresponding 
+    #' row is the probability Pr(S[1] = i)
     delta0 = function(log = FALSE) {
       d0 <- private$delta0_
       if(!log) {
         return(d0)
       } else {
-        log_d0 <- log(d0[-length(d0)] / d0[length(d0)])
+        log_d0 <- log(d0[, -ncol(d0), drop = FALSE] / d0[, ncol(d0)])
         return(log_d0)
       }
     },
@@ -246,6 +258,8 @@ MarkovChain <- R6Class(
     #' @description Terms of model formulas
     terms = function() {return(private$terms_)},
     
+    #' @description Number of time series
+    unique_ID = function() {return(private$unique_ID_)},
     
     # Mutators ----------------------------------------------------------------
     
@@ -312,17 +326,40 @@ MarkovChain <- R6Class(
     
     #' @description Update initial distribution 
     #' 
-    #' @param delta0 Vector of initial distribution, i.e., where
-    #' the i-th element is Pr(S[1] = i)
+    #' @param delta0 Either a matrix where the i-th row is the initial
+    #' distribution for the i-th time series in the data, or a vector which is
+    #' then used for all time series. Entries of each row of delta0 should sum
+    #' to one.
     update_delta0 = function(delta0) {
-      if(abs(sum(delta0) - 1) > 1e-10) {
-        wng <- paste0("Entries of delta0 don't sum to 1 (sum = ",
-                      round(sum(delta0), 2), "). Normalising probabilities.")
-        warning(wng)
-        delta0 <- delta0/sum(delta0)
+      # If input is vector, copy into matrix
+      if(is.null(dim(delta0))) {
+        if(length(delta0) != n_states) {
+          stop(paste0("'delta0' should have length the number of states (", 
+                      n_states, ")"))
+        }
+        delta0 <- matrix(delta0, nrow = nrow(self$delta0()), 
+                         ncol = self$nstates(), byrow = TRUE)
       }
+      
+      # Check format of matrix input
+      if(nrow(delta0) != length(self$unique_ID()) | ncol(delta0) != self$nstates()) {
+        stop(paste0("'delta0' should have ", length(self$unique_ID()), " rows and ", 
+                    self$nstates(), " columns"))
+      }
+      
+      # Normalise rows if necessary
+      if(any(abs(rowSums(delta0) - 1) > 1e-10)) {
+        wng <- paste0("At least one row of delta0 doesn't sum to 1 (sum = ",
+                      round(max(abs(rowSums(delta0) - 1)), 2), 
+                      "). Normalising probabilities.")
+        warning(wng)
+        delta0 <- delta0/rowSums(delta0)
+      }
+      
+      # Copy delta0 into object attribute
       private$delta0_ <- delta0
-      names(private$delta0_) <- paste0("state", 1:length(delta0))
+      rownames(private$delta0_) <- paste0("ID:", self$unique_ID())
+      colnames(private$delta0_) <- paste0("state", 1:ncol(delta0))
     }, 
     
     #' @description Update smoothness parameters
@@ -464,16 +501,18 @@ MarkovChain <- R6Class(
       # Initial distribution
       delta0 <- self$delta0()
       
-      # Simulate state process      
+      # Simulate state process
       S <- rep(NA, n)
-      S[1] <- sample(1:n_states, size = 1, prob = delta0)
+      S[1] <- sample(1:n_states, size = 1, prob = delta0[1,])
+      id <- 1 # time series ID
       for(i in 2:n) {
         if(!silent & round(i/n*100)%%10 == 0) {
           cat("\rSimulating states... ", round(i/n*100), "%", sep = "")        
         }
         
         if(ID[i] != ID[i-1]) {
-          S[i] <- sample(1:n_states, size = 1, prob = delta0)
+          id <- id + 1
+          S[i] <- sample(1:n_states, size = 1, prob = delta0[id,])
         } else {
           S[i] <- sample(1:n_states, size = 1, prob = tpms[S[i-1], , i-1])          
         }
@@ -519,6 +558,7 @@ MarkovChain <- R6Class(
     delta0_ = NULL,
     lambda_ = NULL,
     nstates_ = NULL,
+    unique_ID_ = NULL,
     terms_ = NULL,
     
     #' Check constructor arguments ##

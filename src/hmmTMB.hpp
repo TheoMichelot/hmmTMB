@@ -58,7 +58,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(log_lambda_obs); // smoothness parameters
   PARAMETER_VECTOR(coeff_fe_hid); // state process parameters (fixed effects)
   PARAMETER_VECTOR(log_lambda_hid); // smoothness parameters
-  PARAMETER_VECTOR(log_delta0); // initial distribution
+  PARAMETER_MATRIX(log_delta0); // initial distribution
   PARAMETER_VECTOR(coeff_re_obs); // observation parameters (random effects)
   PARAMETER_VECTOR(coeff_re_hid); // state process parameters (random effects)
 
@@ -66,6 +66,8 @@ Type objective_function<Type>::operator() ()
   int n_var = distcode.size();
   // Number of data rows
   int n = data.rows();
+  // Number of time series
+  int n_ID = log_delta0.rows();
   
   //======================//
   // Transform parameters //
@@ -107,7 +109,7 @@ Type objective_function<Type>::operator() ()
   }
   
   // Initial distribution
-  matrix<Type> delta0(1, n_states); 
+  matrix<Type> delta0(n_ID, n_states); 
   if (statdist == 1) {
     matrix<Type> I = matrix<Type>::Identity(n_states, n_states);
     matrix<Type> tpminv = I; 
@@ -117,20 +119,32 @@ Type objective_function<Type>::operator() ()
     // if tpm is ill-conditioned then just use uniform initial distribution 
     try {
       tpminv = tpminv.inverse();
-      delta0 = ivec * tpminv;
+      for(int id = 0; id < n_ID; id++) {
+        delta0.row(id) = ivec * tpminv;
+      }
     } catch(...) {
-      for (int i = 0; i < n_states; ++i) delta0(0, i) = 1.0 / n_states; 
+      for (int i = 0; i < n_ID; i++) {
+        for(int j = 0; j < n_states; j++) {
+          delta0(i, j) = 1.0 / n_states;           
+        }
+      } 
     }
   } else if (statdist == 0) {
     delta0.setOnes();
-    for(int i = 0; i < n_states - 1; i++)
-      delta0(0, i) = exp(log_delta0(i));
-    delta0 = delta0/delta0.sum();
+    for(int i = 0; i < n_ID; i++) {
+      for(int j = 0; j < n_states - 1; j++) {
+        delta0(i, j) = exp(log_delta0(i, j));
+      }
+      delta0.row(i) = delta0.row(i)/delta0.row(i).sum();
+    }
   } else {
     delta0.setZero(); 
-    for (int i = 0; i < n_states - 1; i++) 
-      delta0(0, i) = log_delta0(i); 
-    delta0(0, n_states - 1) = 1.0 - delta0.sum(); 
+    for(int i = 0; i < n_ID; i++) {
+      for (int j = 0; j < n_states - 1; j++) {
+        delta0(i, j) = log_delta0(i, j);
+      } 
+      delta0(i, n_states - 1) = 1.0 - delta0.row(i).sum(); 
+    }
   }
 
   //===================================//  
@@ -221,14 +235,16 @@ Type objective_function<Type>::operator() ()
   // Compute log-likelihood //
   //========================//
   // Initialise log-likelihood
-  matrix<Type> phi(delta0);
+  matrix<Type> phi(delta0.row(0));
   Type sumphi = 0;
   
   // Forward algorithm
+  int id = 0;
   for (int i = 0; i < n; ++i) {
     // Re-initialise phi at first observation of each time series
     if(i == 0 || ID(i-1) != ID(i)) {
-      phi = (delta0.array() * prob.row(i).array()).matrix();
+      phi = (delta0.row(id).array() * prob.row(i).array()).matrix();
+      id = id + 1;
     } else {
       phi = phi * tpm_array(i - 1);
       phi = (phi.array() * prob.row(i).array()).matrix();

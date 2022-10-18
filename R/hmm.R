@@ -268,15 +268,17 @@ HMM <- R6Class(
       
       # Update initial distribution delta0
       if (self$hid()$stationary()) {
-        delta0 <- self$hid()$delta(t = 1)
+        delta <- self$hid()$delta(t = 1)
+        n_ID <- length(unique(self$obs()$data()$ID))
+        delta0 <- matrix(delta, ncol = length(delta), nrow = n_ID, byrow = TRUE)
       } else {
         if (!is.null(private$fixpar_$delta0)) {
           delta0 <- par_list$log_delta0
-          delta0 <- c(delta0, 1 - sum(delta0))
+          delta0 <- cbind(delta0, 1 - rowSums(delta0))
         } else {
           ldelta0 <- par_list$log_delta0 
-          delta0 <- c(exp(ldelta0), 1)
-          delta0 <- delta0 / sum(delta0)
+          delta0 <- cbind(exp(ldelta0), 1)
+          delta0 <- delta0 / rowSums(delta0)
         }
       }
       self$hid()$update_delta0(delta0)
@@ -463,14 +465,12 @@ HMM <- R6Class(
       if(is.null(private$tmb_obj_)) {
         self$setup(silent = TRUE)
       }
-      # set parameter vector to current values 
-      delta0 <- self$hid()$delta0() 
-      ldelta0 <- log(delta0[-length(delta0)] / delta0[length(delta0)])
+      # set parameter vector to current values
       par <- c(self$obs()$coeff_fe(), 
                self$obs()$lambda(), 
                self$hid()$coeff_fe(), 
                self$hid()$lambda(), 
-               ldelta0)
+               self$hid()$delta0(log = TRUE))
       # compute log-likelihood
       return(-self$tmb_obj()$fn(par))
     },
@@ -554,7 +554,7 @@ HMM <- R6Class(
       if (!is.null(private$fixpar_$delta0)) {
         # if it is fixed, don't transform it to working scale 
         # as it may be common to have fixed values of zero 
-        ldelta0 <- self$hid()$delta0()[-n_states]
+        ldelta0 <- self$hid()$delta0()[,-n_states]
       } else {
         ldelta0 <- self$hid()$delta0(log = TRUE)
       }
@@ -594,9 +594,9 @@ HMM <- R6Class(
       if (!is.null(private$fixpar_$delta0)) {
         statdist <- -1
       } else if (self$hid()$stationary()) {
-        private$fixpar_$delta0 <- rep(NA, self$hid()$nstates() - 1)
-        names(private$fixpar_$delta0) <- 
-          paste0("state", 1:(self$hid()$nstates() - 1))
+        n_ID <- length(unique(self$obs()$data()$ID))
+        private$fixpar_$delta0 <- matrix(NA, nrow = n_ID, ncol = n_states - 1)
+        colnames(private$fixpar_$delta0) <- paste0("state", 1:(n_states - 1))
         statdist <- 1 
       } 
       
@@ -646,7 +646,7 @@ HMM <- R6Class(
       if (!is.null(private$fixpar_$delta0)) {
         # if it is fixed, don't transform it to working scale 
         # as it may be common to have fixed values of zero 
-        par_list$log_delta0 <- self$hid()$delta0()[-n_states]
+        par_list$log_delta0 <- self$hid()$delta0()[,-n_states]
       }
       usernms <- c("obs", "lambda_obs", "hid", "lambda_hid", "delta0", NA, NA)
       par_names <- names(par_list)
@@ -918,7 +918,7 @@ HMM <- R6Class(
       k <- 1 
       for (ind in 1:length(n_by_ID)) {
         # Forward algorithm 
-        p <- delta0 * obsprobs[k,]
+        p <- delta0[ind,] * obsprobs[k,]
         psum <- sum(p)
         llk <- log(psum)
         p <- p / psum
@@ -977,9 +977,11 @@ HMM <- R6Class(
       # compute conditional state probabilities
       if (!silent) cat("Computing conditional state probabilities...")
       cond <- matrix(0, nr = n, nc = self$hid()$nstates()) 
+      k <- 1
       for (i in 1:n) {
         if (i == 1 || (self$obs()$data()$ID[i] != self$obs()$data()$ID[i - 1])) {
-          f <- log(delta0)
+          f <- log(delta0[k,])
+          k <- k + 1
         } else {
           f <- lforw[,i]
         }
@@ -1109,7 +1111,7 @@ HMM <- R6Class(
         
         # Forward iterations
         xi <- matrix(NA, n_this_id, n_states)
-        v <- delta0 * sub_obs_probs[1,]
+        v <- delta0[id,] * sub_obs_probs[1,]
         xi[1,] <- v/sum(v)
         for(i in 2:n_this_id) {
           v <- apply(xi[i-1,] * sub_tpm_all[,,i-1], 2, max) * sub_obs_probs[i,]
@@ -2045,8 +2047,9 @@ HMM <- R6Class(
         len <- length(fixed_block)
         fixed <- NULL
         if ("delta0" %in% fixed_block) {
-          fixed$delta0 <- rep(NA, nstates - 1)
-          names(fixed$delta0) <- paste0("state", 1:(nstates - 1))
+          fixed$delta0 <- matrix(NA, nrow = length(unique(self$obs()$data()$ID)), 
+                                 ncol = nstates - 1)
+          colnames(fixed$delta0) <- paste0("state", 1:(nstates - 1))
           len <- len - 1
         }
         fixed$obs <- rep(NA, len)
