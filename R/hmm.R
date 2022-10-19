@@ -589,7 +589,7 @@ HMM <- R6Class(
       if (self$hid()$stationary()) {
         private$fixpar_$delta0 <- rep(NA, length = length(ldelta0))
         names(private$fixpar_$delta0) <- 
-          names(self$hid()$delta0(log = TRUE, as_matrix = FALSE))
+          rownames(self$hid()$delta0(log = TRUE, as_matrix = FALSE))
         statdist <- 1 
       } 
       
@@ -636,13 +636,6 @@ HMM <- R6Class(
       # for TMB, and create a vector of 0/1 to record which parameters
       # are estimated and which are not (used e.g. in post_coeff)
       par_list <- self$coeff_list()
-      if (!is.null(private$fixpar_$delta0)) {
-        # if it is fixed, don't transform it to working scale 
-        # as it may be common to have fixed values of zero 
-        par_list$log_delta0 <- as.vector(self$hid()$delta0()[,-n_states])
-        names(par_list$log_delta0) <- 
-          names(self$hid()$delta0(log = TRUE, as_matrix = FALSE))
-      }
       usernms <- c("obs", "lambda_obs", "hid", "lambda_hid", "delta0", NA, NA)
       par_names <- names(par_list)
       fixpar_vec <- NULL
