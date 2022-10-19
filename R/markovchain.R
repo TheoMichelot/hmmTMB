@@ -219,12 +219,20 @@ MarkovChain <- R6Class(
     #' @return Matrix with one row for each time series ID, and one column
     #' for each state. For each ID, the i-th element of the corresponding 
     #' row is the probability Pr(S[1] = i)
-    delta0 = function(log = FALSE) {
+    delta0 = function(log = FALSE, as_matrix = TRUE) {
       d0 <- private$delta0_
       if(!log) {
         return(d0)
       } else {
         log_d0 <- log(d0[, -ncol(d0), drop = FALSE] / d0[, ncol(d0)])
+        
+        if(!as_matrix) {
+          d0_names <- apply(expand.grid(rownames(log_d0), colnames(log_d0)), 
+                            MARGIN = 1, FUN = paste, collapse = ".")
+          log_d0 <- as.vector(log_d0)
+          names(log_d0) <- d0_names
+        }
+        
         return(log_d0)
       }
     },
@@ -350,7 +358,7 @@ MarkovChain <- R6Class(
       # Normalise rows if necessary
       if(any(abs(rowSums(delta0) - 1) > 1e-10)) {
         wng <- paste0("At least one row of delta0 doesn't sum to 1 (sum = ",
-                      round(max(abs(rowSums(delta0) - 1)), 2), 
+                      round(max(abs(rowSums(delta0))), 2), 
                       "). Normalising probabilities.")
         warning(wng)
         delta0 <- delta0/rowSums(delta0)
@@ -358,7 +366,7 @@ MarkovChain <- R6Class(
       
       # Copy delta0 into object attribute
       private$delta0_ <- delta0
-      rownames(private$delta0_) <- paste0("ID:", self$unique_ID())
+      rownames(private$delta0_) <- self$unique_ID()
       colnames(private$delta0_) <- paste0("state", 1:ncol(delta0))
     }, 
     

@@ -58,7 +58,7 @@ Type objective_function<Type>::operator() ()
   PARAMETER_VECTOR(log_lambda_obs); // smoothness parameters
   PARAMETER_VECTOR(coeff_fe_hid); // state process parameters (fixed effects)
   PARAMETER_VECTOR(log_lambda_hid); // smoothness parameters
-  PARAMETER_MATRIX(log_delta0); // initial distribution
+  PARAMETER_VECTOR(log_delta0); // initial distribution
   PARAMETER_VECTOR(coeff_re_obs); // observation parameters (random effects)
   PARAMETER_VECTOR(coeff_re_hid); // state process parameters (random effects)
 
@@ -67,7 +67,7 @@ Type objective_function<Type>::operator() ()
   // Number of data rows
   int n = data.rows();
   // Number of time series
-  int n_ID = log_delta0.rows();
+  int n_ID = log_delta0.size()/(n_states - 1);
   
   //======================//
   // Transform parameters //
@@ -111,6 +111,7 @@ Type objective_function<Type>::operator() ()
   // Initial distribution
   matrix<Type> delta0(n_ID, n_states); 
   if (statdist == 1) {
+    // Case 1: the initial distribution is the stationary distribution
     matrix<Type> I = matrix<Type>::Identity(n_states, n_states);
     matrix<Type> tpminv = I; 
     tpminv -= tpm_array(0); 
@@ -130,19 +131,21 @@ Type objective_function<Type>::operator() ()
       } 
     }
   } else if (statdist == 0) {
+    // Case 2: the initial distribution is estimated
     delta0.setOnes();
     for(int i = 0; i < n_ID; i++) {
       for(int j = 0; j < n_states - 1; j++) {
-        delta0(i, j) = exp(log_delta0(i, j));
+        delta0(i, j) = exp(log_delta0(j * n_ID + i));
       }
       delta0.row(i) = delta0.row(i)/delta0.row(i).sum();
     }
   } else {
+    // Case 3: the initial distribution has some fixed elements
     delta0.setZero(); 
     for(int i = 0; i < n_ID; i++) {
       for (int j = 0; j < n_states - 1; j++) {
-        delta0(i, j) = log_delta0(i, j);
-      } 
+        delta0(i, j) = log_delta0(j * n_ID + i);
+      }
       delta0(i, n_states - 1) = 1.0 - delta0.row(i).sum(); 
     }
   }

@@ -187,7 +187,7 @@ HMM <- R6Class(
            log_lambda_obs = self$obs()$lambda(), 
            coeff_fe_hid = self$hid()$coeff_fe(), 
            log_lambda_hid = self$hid()$lambda(), 
-           log_delta0 = self$hid()$delta0(log = TRUE), 
+           log_delta0 = self$hid()$delta0(log = TRUE, as_matrix = FALSE), 
            coeff_re_obs = self$obs()$coeff_re(), 
            coeff_re_hid = self$hid()$coeff_re())
     },
@@ -267,16 +267,16 @@ HMM <- R6Class(
       }
       
       # Update initial distribution delta0
+      n_ID <- length(unique(self$obs()$data()$ID))
       if (self$hid()$stationary()) {
         delta <- self$hid()$delta(t = 1)
-        n_ID <- length(unique(self$obs()$data()$ID))
         delta0 <- matrix(delta, ncol = length(delta), nrow = n_ID, byrow = TRUE)
       } else {
         if (!is.null(private$fixpar_$delta0)) {
-          delta0 <- par_list$log_delta0
+          delta0 <- matrix(par_list$log_delta0, nrow = n_ID)
           delta0 <- cbind(delta0, 1 - rowSums(delta0))
         } else {
-          ldelta0 <- par_list$log_delta0 
+          ldelta0 <- matrix(par_list$log_delta0, nrow = n_ID) 
           delta0 <- cbind(exp(ldelta0), 1)
           delta0 <- delta0 / rowSums(delta0)
         }
@@ -470,7 +470,7 @@ HMM <- R6Class(
                self$obs()$lambda(), 
                self$hid()$coeff_fe(), 
                self$hid()$lambda(), 
-               self$hid()$delta0(log = TRUE))
+               self$hid()$delta0(log = TRUE, as_matrix = FALSE))
       # compute log-likelihood
       return(-self$tmb_obj()$fn(par))
     },
@@ -554,9 +554,9 @@ HMM <- R6Class(
       if (!is.null(private$fixpar_$delta0)) {
         # if it is fixed, don't transform it to working scale 
         # as it may be common to have fixed values of zero 
-        ldelta0 <- self$hid()$delta0()[,-n_states]
+        ldelta0 <- as.vector(self$hid()$delta0()[,-n_states])
       } else {
-        ldelta0 <- self$hid()$delta0(log = TRUE)
+        ldelta0 <- self$hid()$delta0(log = TRUE, as_matrix = FALSE)
       }
       
       # Setup TMB parameters
@@ -594,9 +594,9 @@ HMM <- R6Class(
       if (!is.null(private$fixpar_$delta0)) {
         statdist <- -1
       } else if (self$hid()$stationary()) {
-        n_ID <- length(unique(self$obs()$data()$ID))
-        private$fixpar_$delta0 <- matrix(NA, nrow = n_ID, ncol = n_states - 1)
-        colnames(private$fixpar_$delta0) <- paste0("state", 1:(n_states - 1))
+        private$fixpar_$delta0 <- rep(NA, length = length(ldelta0))
+        names(private$fixpar_$delta0) <- 
+          names(self$hid()$delta0(log = TRUE, as_matrix = FALSE))
         statdist <- 1 
       } 
       
@@ -646,7 +646,9 @@ HMM <- R6Class(
       if (!is.null(private$fixpar_$delta0)) {
         # if it is fixed, don't transform it to working scale 
         # as it may be common to have fixed values of zero 
-        par_list$log_delta0 <- self$hid()$delta0()[,-n_states]
+        par_list$log_delta0 <- as.vector(self$hid()$delta0()[,-n_states])
+        names(par_list$log_delta0) <- 
+          names(self$hid()$delta0(log = TRUE, as_matrix = FALSE))
       }
       usernms <- c("obs", "lambda_obs", "hid", "lambda_hid", "delta0", NA, NA)
       par_names <- names(par_list)
