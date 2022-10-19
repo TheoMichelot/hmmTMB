@@ -51,9 +51,9 @@ HMM <- R6Class(
                                par = spec$par, 
                                formulas = spec$forms)
         hid <- MarkovChain$new(n_states = spec$nstates, 
-                                  formula = spec$tpm, 
-                                  data = spec$data, 
-                                  stationary = is.null(spec$delta0))
+                               formula = spec$tpm, 
+                               data = spec$data, 
+                               stationary = is.null(spec$delta0))
         if(!is.null(spec$delta0)) hid$update_delta0(spec$delta0)
         if (!is.null(spec$fixed)) fixpar <- spec$fixed 
         if (!is.null(spec$tpm0))  hid$update_tpm(spec$tpm0)
@@ -272,14 +272,9 @@ HMM <- R6Class(
         delta <- self$hid()$delta(t = 1)
         delta0 <- matrix(delta, ncol = length(delta), nrow = n_ID, byrow = TRUE)
       } else {
-        if (!is.null(private$fixpar_$delta0)) {
-          delta0 <- matrix(par_list$log_delta0, nrow = n_ID)
-          delta0 <- cbind(delta0, 1 - rowSums(delta0))
-        } else {
-          ldelta0 <- matrix(par_list$log_delta0, nrow = n_ID) 
-          delta0 <- cbind(exp(ldelta0), 1)
-          delta0 <- delta0 / rowSums(delta0)
-        }
+        ldelta0 <- matrix(par_list$log_delta0, nrow = n_ID) 
+        delta0 <- cbind(exp(ldelta0), 1)
+        delta0 <- delta0 / rowSums(delta0)
       }
       self$hid()$update_delta0(delta0)
       
@@ -591,9 +586,7 @@ HMM <- R6Class(
       
       # Check if delta0 should be stationary (overrides custom map specified)
       statdist <- 0 
-      if (!is.null(private$fixpar_$delta0)) {
-        statdist <- -1
-      } else if (self$hid()$stationary()) {
+      if (self$hid()$stationary()) {
         private$fixpar_$delta0 <- rep(NA, length = length(ldelta0))
         names(private$fixpar_$delta0) <- 
           names(self$hid()$delta0(log = TRUE, as_matrix = FALSE))
@@ -1412,7 +1405,7 @@ HMM <- R6Class(
                     X_re_hid = self$hid()$X_re())
         obsmats <- self$obs()$make_mat(new_data = newdata)
         hidmats <- self$hid()$make_mat(data = self$obs()$data(), 
-                                          new_data = newdata)
+                                       new_data = newdata)
         self$obs()$update_X_fe(obsmats$X_fe)
         self$obs()$update_X_re(obsmats$X_re)
         self$hid()$update_X_fe(hidmats$X_fe) 
@@ -1530,8 +1523,8 @@ HMM <- R6Class(
       
       # Simulate state process      
       S <- self$hid()$simulate(n = n, data = self$obs()$data(), 
-                                  new_data = data, 
-                                  silent = silent)
+                               new_data = data, 
+                               silent = silent)
       
       # Create observation parameters
       mats_obs <- self$obs()$make_mat(new_data = data)

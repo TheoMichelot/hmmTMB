@@ -139,15 +139,6 @@ Type objective_function<Type>::operator() ()
       }
       delta0.row(i) = delta0.row(i)/delta0.row(i).sum();
     }
-  } else {
-    // Case 3: the initial distribution has some fixed elements
-    delta0.setZero(); 
-    for(int i = 0; i < n_ID; i++) {
-      for (int j = 0; j < n_states - 1; j++) {
-        delta0(i, j) = log_delta0(j * n_ID + i);
-      }
-      delta0(i, n_states - 1) = 1.0 - delta0.row(i).sum(); 
-    }
   }
 
   //===================================//  
