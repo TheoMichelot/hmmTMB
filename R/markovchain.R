@@ -15,7 +15,7 @@ MarkovChain <- R6Class(
     #' 
     #' @param data Data frame, needed to create model matrices, and to identify the
     #' number of time series (which each have a separate initial distribution)
-    #' @param formula Either (2) R formula, used for all transition probabilities, 
+    #' @param formula Either (1) R formula, used for all transition probabilities, 
     #' or (2) matrix of character strings, with an entry of "." on diagonal, 
     #' a "0" for transitions that are not allowed (not implemented yet), 
     #' or an R formula. (Default: no covariate dependence.)
