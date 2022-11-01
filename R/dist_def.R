@@ -630,7 +630,13 @@ dist_vm <- Dist$new(
 dist_wrpcauchy <- Dist$new(
   name = "wrpcauchy",
   name_long = "wrapped Cauchy",
-  pdf = CircStats::dwrpcauchy,
+  pdf = function(x, mu, rho, log = FALSE) {
+    val <- CircStats::dwrpcauchy(theta = x, mu = mu, rho = rho)
+    if(log) {
+      val <- log(val)
+    }
+    return(val)
+  },
   rng = function(n, mu, rho) {
     samp <- CircStats::rwrpcauchy(n, mu, rho)
     samp <- ifelse(samp > pi, samp - 2 * pi, samp)
