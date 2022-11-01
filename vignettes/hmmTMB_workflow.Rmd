@@ -52,8 +52,8 @@ We add a column for the date, to make time series plots.
 
 ```{r add-date, fig.width = 6, fig.height = 3, out.width="60%", fig.align = "center"}
 # Create a grid of days that excludes weekends
-day1 <- as.POSIXct("2002/01/01", format = "%Y/%m/%d")
-day2 <- as.POSIXct("2008/10/31", format = "%Y/%m/%d")
+day1 <- as.POSIXct("2002/01/01", format = "%Y/%m/%d", tz = "UTC")
+day2 <- as.POSIXct("2008/10/31", format = "%Y/%m/%d", tz = "UTC")
 days_with_we <- seq(day1, day2, by = "1 day")
 which_we <- which(format(days_with_we, '%u') %in% 6:7)
 days <- days_with_we[-which_we]
