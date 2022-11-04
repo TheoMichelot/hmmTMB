@@ -554,6 +554,62 @@ Observation <- R6Class(
       return(prob)
     },
     
+    #' @description Suggest initial observation parameters
+    #' 
+    #' The K-means algorithm is used to define clusters of observations
+    #' (supposed to approximate the HMM states). Then, for each cluster,
+    #' the \code{parapprox} function of the relevant \code{Dist} object
+    #' is used to obtain parameter values.
+    #' 
+    #' @return List of initial parameters for each observation variable 
+    suggest_initial = function() {
+      n_states <- private$nstates_
+      
+      # Remove NAs and do clustering
+      var_noNA <- na.omit(self$obs_var(expand = TRUE))
+      wh_noNA <- attr(var_noNA, "row.names")
+      cluster <- kmeans(var_noNA, centers = n_states, nstart = 100)
+      states <- cluster$cluster
+      
+      # Get current parameters 
+      current_par <- matrix(self$par(t = 1, full_names = FALSE)[,,1],
+                            ncol = n_states)
+      
+      # Initialise list of suggested parameters 
+      par <- vector(mode = "list", length = ncol(self$obs_var()))
+      names(par) <- colnames(self$obs_var())
+      
+      # Loop over observed variables 
+      par_count <- 1 
+      for (i in 1:length(self$dists())) {
+        var <- self$obs_var()[wh_noNA, i]
+        
+        # Possibly pass fixed parameters to parapprox function within dist
+        par_ind <- par_count:(par_count + self$dists()[[i]]$npar() - 1)
+        sub_current_par <- current_par[par_ind,,drop=FALSE]
+        sub_current_par <- sub_current_par[self$dists()[[i]]$fixed(),,
+                                           drop=FALSE]
+        npar <- self$dists()[[i]]$npar()
+        subpar <- vector(mode = "list", length = npar)
+        
+        # For each state, use parapprox() to suggest parameters
+        for (j in 1:n_states) {
+          args <- c(list(x = var[states == j]), as.list(sub_current_par[,j]))
+          approx <- do.call(self$dists()[[i]]$parapprox(), args)
+          for (k in 1:npar) {
+            subpar[[k]] <- c(subpar[[k]], approx[k])
+          }
+        }
+        
+        par_count <- par_count + self$dists()[[i]]$npar()
+        names(subpar) <- self$dists()[[i]]$parnames()
+        par[[i]] <- subpar
+      }
+      
+      return(par)
+    }, 
+    
+    
     #' @description Plot histogram of data and pdfs
     #' 
     #' Plot histogram of observations for the variable specified by the argument name, 
