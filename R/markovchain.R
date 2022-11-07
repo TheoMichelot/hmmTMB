@@ -229,6 +229,7 @@ MarkovChain <- R6Class(
         if(!as_matrix) {
           d0_names <- apply(expand.grid(rownames(log_d0), colnames(log_d0)), 
                             MARGIN = 1, FUN = paste, collapse = ".")
+          d0_names <- paste0("ID:", d0_names)
           log_d0 <- matrix(log_d0, ncol = 1)
           rownames(log_d0) <- d0_names
         }
