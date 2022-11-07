@@ -500,8 +500,8 @@ MarkovChain <- R6Class(
       
       # Create transition probability matrices
       mats_hid <- self$make_mat(data = data, new_data = new_data)
-      X_fe_old <- mats_hid$X_fe
-      X_re_old <- mats_hid$X_re
+      X_fe_old <- self$X_fe()
+      X_re_old <- self$X_re()
       self$update_X_fe(mats_hid$X_fe)
       self$update_X_re(mats_hid$X_re)
       tpms <- self$tpm(t = "all")
