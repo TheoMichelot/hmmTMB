@@ -24,7 +24,7 @@ Observation <- R6Class(
                           dists, 
                           formulas = NULL, 
                           n_states, 
-                          par = NULL) {
+                          par) {
       private$check_args(data = data, 
                          dists = dists, 
                          n_states = n_states, 
@@ -111,33 +111,28 @@ Observation <- R6Class(
       self$update_coeff_re(rep(0, ncol(mats$X_re)))
       self$update_lambda(rep(1, ifelse(is.null(ncol_re), 0, ncol(ncol_re))))
       
-      # Fixed effect parameters     
-      if(!is.null(par)) {
-        # make sure par is in right order 
-        n_var <- ncol(self$obs_var())
-        varnm <- colnames(self$obs_var())
-        corrected_par <- vector(mode = "list", length = n_var)
-        for (i in 1:n_var) {
-          subvars <- self$dists()[[i]]$parnames()
-          if (!all(subvars %in% names(par[[varnm[i]]]))) {
-            msg <- paste0("Parameters for variable ", varnm[i], " are missing",
-                          " or have wrong name. These should be: ",
-                          paste0(subvars, collapse = ", "), ".")
-            stop(msg)
-          }
-          subpar <- vector(mode = "list", length = length(subvars))
-          for (j in 1:length(subvars)) {
-            subpar[[j]] <- par[[varnm[i]]][[subvars[j]]]
-          }
-          names(subpar) <- subvars
-          corrected_par[[i]] <- subpar
+      # Fixed effect parameters
+      # Make sure par is in right order
+      n_var <- ncol(self$obs_var())
+      varnm <- colnames(self$obs_var())
+      corrected_par <- vector(mode = "list", length = n_var)
+      for (i in 1:n_var) {
+        subvars <- self$dists()[[i]]$parnames()
+        if (!all(subvars %in% names(par[[varnm[i]]]))) {
+          msg <- paste0("Parameters for variable ", varnm[i], " are missing",
+                        " or have wrong name. These should be: ",
+                        paste0(subvars, collapse = ", "), ".")
+          stop(msg)
         }
-        names(corrected_par) <- varnm
-        self$update_par(corrected_par)
-      } else {
-        stop("'par' must be provided")
+        subpar <- vector(mode = "list", length = length(subvars))
+        for (j in 1:length(subvars)) {
+          subpar[[j]] <- par[[varnm[i]]][[subvars[j]]]
+        }
+        names(subpar) <- subvars
+        corrected_par[[i]] <- subpar
       }
-      
+      names(corrected_par) <- varnm
+      self$update_par(corrected_par)
     },
     
     # Accessors ---------------------------------------------------------------
