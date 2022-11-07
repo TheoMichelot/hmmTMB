@@ -47,6 +47,7 @@ Type objective_function<Type>::operator() ()
   DATA_SPARSE_MATRIX(S_hid); // penalty matrix
   DATA_IMATRIX(ncol_re_hid); // number of columns of S and X_re for each random effect
   DATA_INTEGER(include_smooths); // > 0 = include penalty in likelihood evaluation
+  DATA_IVECTOR(ref_tpm); // indices of reference transition probabilities
   // prior information 
   DATA_MATRIX(coeff_fe_obs_prior); // means, sds for prior on fixed effects for obs 
   DATA_MATRIX(coeff_fe_hid_prior); // means, sds for prior on fixed effects for hidden 
@@ -90,15 +91,15 @@ Type objective_function<Type>::operator() ()
     ltpm_mat.col(i) = ltpm_vec.segment(i*n, n);
   }
 
-  // Create vector of transition probability matrices
+  // Create array of transition probability matrices
   vector<matrix<Type> > tpm_array(n);
   for(int i = 0; i < n; i++) {
     matrix<Type> tpm(n_states, n_states);
     int cur = 0;
     for (int j = 0; j < n_states; j++) {
-      tpm(j, j) = 1;
+      tpm(j, ref_tpm(j) - 1) = 1;
       for (int k = 0; k < n_states; k++) {
-        if (j != k) {
+        if (k != ref_tpm(j) - 1) {
           tpm(j, k) = exp(ltpm_mat(i, cur));
           cur++;
         }

@@ -16,9 +16,9 @@ MarkovChain <- R6Class(
     #' @param data Data frame, needed to create model matrices, and to identify the
     #' number of time series (which each have a separate initial distribution)
     #' @param formula Either (1) R formula, used for all transition probabilities, 
-    #' or (2) matrix of character strings, with an entry of "." on diagonal, 
-    #' a "0" for transitions that are not allowed (not implemented yet), 
-    #' or an R formula. (Default: no covariate dependence.)
+    #' or (2) matrix of character strings giving the formula for each transition
+    #' probability, with "." along the diagonal (or for reference elements; see
+    #' \code{ref} argument). (Default: no covariate dependence.)
     #' @param n_states Number of states. If not specified, then \code{formula} 
     #' needs to be provided as a matrix, and n_states is deduced from its dimensions.
     #' @param tpm Optional transition probability matrix, to initialise the model
@@ -27,40 +27,50 @@ MarkovChain <- R6Class(
     #' @param stationary if TRUE then stationary distribution with respect to tpm for 
     #' first time point is used as initial distribution, if FALSE then initial distribution
     #' is estimated 
+    #' @param ref Vector of indices for reference transition probabilities, 
+    #' of length \code{n_states}. The i-th element is the index for the 
+    #' reference in the i-th row of the transition probability matrix. For 
+    #' example, ref = c(1, 1) means that the first element of the first row
+    #' Pr(1>1) and the first element of the second row Pr(2>1) are used as 
+    #' reference elements and are not estimated. If this is not provided,
+    #' the diagonal transition probabilities are used as references. 
     #' 
     #' @return A new MarkovChain object
     initialize = function(data,
                           formula = NULL, 
-                          n_states = NULL,
+                          n_states,
                           tpm = NULL,
-                          stationary = FALSE) {
+                          stationary = FALSE,
+                          ref = 1:n_states) {
       # Check arguments
       private$check_args(n_states = n_states, 
                          formula = formula, 
                          stationary = stationary, 
                          data = data)
+      private$nstates_ <- n_states
+      private$ref_ <- ref
+      
+      # Matrix with 1 for reference element and 0 elsewhere
+      # (used later to select relevant entries of tpm)
+      private$ref_mat_ <- matrix(0, n_states, n_states)
+      private$ref_mat_[cbind(1:n_states, ref)] <- 1
       
       # Define 'formula' as matrix
       if(is.null(formula)) {
         # No covariate effects
         formula <- matrix("~1", nrow = n_states, ncol = n_states)
-        diag(formula) <- "."
-        private$nstates_ <- n_states
+      } else if(length(formula) == 1 | inherits(formula, "formula")) {
+        # Same formula for all transitions
+        # Use deparse to transform to string without linebreaks
+        formula <- matrix(deparse(formula, width.cutoff = 500), 
+                          nrow = n_states, 
+                          ncol = n_states)
       } else {
-        # Covariate effects
-        if(length(formula) == 1 | inherits(formula, "formula")) {
-          # Same formula for all transitions
-          # Use deparse to transform to string without linebreaks
-          formula <- matrix(deparse(formula, width.cutoff = 500), 
-                            nrow = n_states, 
-                            ncol = n_states)
-          diag(formula) <- "."
-        } else {
-          n_states <- nrow(formula)
+        if(!all(formula[cbind(1:n_states, ref)] == ".")) {
+          stop("Formulas for reference transition probabilities should be '.'.")
         }
-        
-        private$nstates_ <- n_states
       }
+      formula[cbind(1:n_states, ref)] <- "."
       
       # How many time series are in data (used to initialise delta0)
       if(! "ID" %in% colnames(data)) {
@@ -75,7 +85,7 @@ MarkovChain <- R6Class(
       
       # Create list of formulas  ('formula' is transposed to get 
       # the formulas in the order 1>2, 1>3, ..., 2>1, 2>3, ...)
-      ls_form_char <- as.list(t(formula)[!diag(self$nstates())])
+      ls_form_char <- as.list(t(formula)[!t(self$ref_mat())])
       ls_form <- lapply(ls_form_char, function(form_char) {
         if(form_char == ".")
           return(as.formula("~1"))
@@ -86,7 +96,7 @@ MarkovChain <- R6Class(
       # Names for transition probabilities
       tr_names <- paste0("S", rep(1:n_states, each = n_states), 
                          ">S", rep(1:n_states, n_states))
-      names(ls_form) <- tr_names[-which(diag(n_states) == 1)]
+      names(ls_form) <- tr_names[-which(t(self$ref_mat()) == 1)]
       
       # Set formula and formulas attributes
       private$formula_ <- formula
@@ -167,6 +177,14 @@ MarkovChain <- R6Class(
       colnames(val) <- paste0("state ", 1:n_states)
       return(val)
     },
+    
+    #' @description Indices of reference elements in transition probability
+    #' matrix
+    ref = function() {return(private$ref_)},
+    
+    #' @description Matrix of reference elements in transition probability
+    #' matrix
+    ref_mat = function() {return(private$ref_mat_)},
     
     #' @description Current parameter estimates (fixed effects)
     coeff_fe = function() {return(private$coeff_fe_)},
@@ -435,31 +453,31 @@ MarkovChain <- R6Class(
     
     #' @description Transform transition probabilities to working scale
     #' 
-    #' Apply the multinomial logit link function to get the corresponding parameters on the
-    #' working scale (i.e., linear predictor scale).
+    #' Apply the multinomial logit link function to get the corresponding 
+    #' parameters on the working scale (i.e., linear predictor scale).
     #' 
     #' @param tpm Transition probability matrix
     #' 
     #' @return Vector of parameters on linear predictor scale
     tpm2par = function(tpm) {
-      ltpm <- log(tpm / diag(tpm))
+      ltpm <- log(tpm / tpm[which(self$ref_mat() == 1)])
       ltpm <- t(ltpm) # transpose to fill by rows (like in C++)
-      par <- ltpm[!diag(self$nstates())]
+      par <- ltpm[!t(self$ref_mat())]
       return(par)
     },
     
     #' @description Transform working parameters to transition probabilities
     #' 
-    #' Apply the inverse multinomial logit link function to transform the parameters on
-    #' the working scale (i.e., linear predictor scale) into the transition
-    #' probabilities.
+    #' Apply the inverse multinomial logit link function to transform the 
+    #' parameters on the working scale (i.e., linear predictor scale) into 
+    #' the transition probabilities.
     #' 
     #' @param par Vector of parameters on working scale
     #' 
     #' @return Transition probability matrix
     par2tpm = function(par) {
-      tpm <- diag(self$nstates())
-      tpm[!diag(self$nstates())] <- exp(par)
+      tpm <- matrix(1, nrow = self$nstates(), ncol = self$nstates())
+      tpm[!t(self$ref_mat())] <- exp(par)
       tpm <- t(tpm) # transpose to fill by rows (like in C++)
       tpm <- tpm / rowSums(tpm)
       return(tpm)
@@ -562,6 +580,8 @@ MarkovChain <- R6Class(
     formula_ = NULL,
     stationary_ = NULL, 
     formulas_ = NULL,
+    ref_ = NULL,
+    ref_mat_ = NULL,
     coeff_fe_ = NULL,
     coeff_re_ = NULL,
     delta0_ = NULL,
