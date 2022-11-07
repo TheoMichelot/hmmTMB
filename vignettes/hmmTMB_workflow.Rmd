@@ -35,13 +35,15 @@ This vignette is a good starting point to learn about hmmTMB. It describes the m
 
 In hmmTMB, the data set to analyse must be passed as a data frame that contains the following variables:
 
-- `ID` is the only reserved column name, for the identifier of the time series (in cases where there are several time series in the data). If the data only consists of one time series, like in the following example, then this can be omitted.
+- `ID` is a reserved column name, for the identifier of the time series (in cases where there are several time series in the data). If the data only consists of one time series, like in the following example, then this can be omitted.
 
 - one column for each response variable ("data stream") that will be included in the model. There should be at least one of these.
 
 - one column for each covariate that will be included in the model, if any.
 
-In this vignette, we will use the data set shown below, which is taken from MSwM R package (@sanchez2021). The column `Price` is the response variable that we want to model with an HMM, representing the price of energy in Spain (in cents/kWh) over 1784 working days from Jan 1, 2002 to Oct 31, 2008. All other columns are covariates related to the prices of raw matrials (`Oil`, `Gas`, `Coal`), to energy demand (`Demand`), and to the state of the financial market (`EurDol` and `Ibex35`). See `?MSwM::energy` for more detail about each variable.
+There are two other reserved column names, which are optional: (1) `state` should only be included if the state process is known for some observations (see "Advanced features" vignette), and (2) `time` is used to check that the observations are equally spaced (if provided).
+
+In this vignette, we will use the data set shown below, which is taken from the MSwM R package (@sanchez2021). The column `Price` is the response variable that we want to model with an HMM, representing the price of energy in Spain (in cents/kWh) over 1784 working days from Jan 1, 2002 to Oct 31, 2008. All other columns are covariates related to the prices of raw matrials (`Oil`, `Gas`, `Coal`), to energy demand (`Demand`), and to the state of the financial market (`EurDol` and `Ibex35`). See `?MSwM::energy` for more detail about each variable.
 
 ```{r head-data}
 data(energy, package = "MSwM")
@@ -85,11 +87,13 @@ object$method(...)
 
 ## Hidden state process
 
-The hidden state process is stored as a `MarkovChain` object in hmmTMB. The main modelling decision required at this stage is the number of states of the model, i.e., the number of values that the hidden process $S_t$ can take. Here, we choose $N = 2$ states, assuming that the observed energy price arises from one of two distributions, depending on the underlying state. We could also include covariates on the dynamics of the Markov chain, as illustrated later in this document, using the `formula` argument.
+The hidden state process is stored as a `MarkovChain` object in hmmTMB. The main modelling decision required at this stage is the number of states of the model, i.e., the number of values that the hidden process $S_t$ can take. Here, we choose $N = 2$ states, assuming that the observed energy price arises from one of two distributions, depending on the underlying state. 
 
 ```{r create-hid1}
 hid1 <- MarkovChain$new(data = energy, n_states = 2)
 ```
+
+There are a few other arguments we could specify for more complex model formulations, and this is discussed in more detail in other parts of the vignette. In particular, we could pass an initial transition probabilitiy matrix with the argument `tpm`. This would then be used as a starting point for the parameter estimation. (By default, the transition probability matrix is initialised with 0.9 along the diagonal, and $0.1/N$ elsewhere.) We could also include covariates on the dynamics of the Markov chain, as illustrated later in this document, using the `formula` argument.
 
 ## Observation model
 
@@ -118,7 +122,7 @@ obs1 <- Observation$new(data = energy, n_states = 2, dists = dists, par = par0_2
 
 ## Hidden Markov model
 
-An HMM is the combination of the hidden state and the observation model, and so we create an `HMM` object using the two components.
+An HMM is the combination of the hidden state and the observation model, and so we create an `HMM` object using the two components. Printing it in the command line shows some information about the model formulation, as well as initial parameter values (because the model hasn't been fitted yet). In cases where the model includes covariates, i.e., the parameters are time-varying, these initial values correspond to the first row of the data set (which is what `t = 1` means).
 
 ```{r create-hmm1}
 hmm1 <- HMM$new(obs = obs1, hid = hid1)
@@ -130,7 +134,7 @@ hmm1
 
 Model fitting consists in estimating all model parameters, in particular the transition probabilities of the state process, and the state-dependent observation parameters. Fitting this simple model takes less than a second on a laptop. 
 
-Once it has been fitted, the model stores the estimated parameters. Here, we find
+Once it has been fitted, the model stores the estimated parameters, and we can see them by printing the model (or, alternatively, with `hmm$par()`). Here, we find
 \begin{align*}
 \mu_1 = 3.4,\quad \mu_2 = 6.0 \\
 \sigma_1 = 0.9,\quad \sigma_2 = 1.1\\
@@ -141,13 +145,15 @@ Once it has been fitted, the model stores the estimated parameters. Here, we fin
 \end{pmatrix}
 \end{align*}
 
-The first state therefore captures periods with lower energy prices (with a mean of 3.4 cents/kWh), and the second state captures higher prices (mean = 6 cents/kWh).
+The first state therefore captures periods with lower energy prices (with a mean of 3.4 cents/kWh), and the second state captures higher prices (mean = 6 cents/kWh). Note that, if covariates were included in the model, the parameters would be time-varying, and printing the model would show the parameters for the first time step of the data (as indicated by `t = 1`).
 
 ```{r fit-hmm1}
 hmm1$fit(silent = TRUE)
 
 hmm1
 ```
+
+Just like for
 
 # Model interpretation
 
