@@ -553,7 +553,7 @@ HMM <- R6Class(
       }
       
       # Check for transitions that have fixed probabilities 
-      ls_form_char <- as.list(t(self$hid()$formula())[!diag(self$hid()$nstates())])
+      ls_form_char <- as.list(t(self$hid()$formula())[!t(self$hid()$ref_mat())])
       which_fixed <- sapply(ls_form_char, function(x) {x == "."})
       getnms <- rownames(self$hid()$coeff_fe())[which_fixed]
       oldnms <- names(private$fixpar_$hid)
