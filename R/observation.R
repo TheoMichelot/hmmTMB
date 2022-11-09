@@ -13,11 +13,27 @@ Observation <- R6Class(
     # Constructor -------------------------------------------------------------
     #' @description Create new Observation object
     #' 
-    #' @param data Data frame containing response variables and covariates
-    #' @param formulas List of formulas for observation parameters
+    #' @param data Data frame containing response variables (named in dists
+    #' and par) and covariates (named in formulas)
+    #' @param dists Named list of distribution names for each data stream,
+    #' with the following options: beta, binom, cat, dir, exp, foldednorm, 
+    #' gamma, gamma2, lnorm, mvnorm, nbinom, norm, pois, t, truncnorm, tweedie, 
+    #' vm, weibull, wrpcauchy, zib, zigamma, zigamma2, zinb, zip, ztnb, ztp.
+    #' See vignette about list of distributions for more detail, e.g., list
+    #' of parameters for each distribution.
+    #' @param formulas List of formulas for observation parameters. This should
+    #' be a nested list, where the outer list has one element for each
+    #' observed variable, and the inner lists have one element for each
+    #' parameter. Any parameter that is not included is assumed to have the
+    #' formula ~1. By default, all parameters have the formula ~1 (i.e., no
+    #' covariate effects).
     #' @param n_states Number of states (needed to construct model formulas)
-    #' @param dists Named list of Distribution objects for each data stream
-    #' @param par List of observation parameters (for covariate-free model)
+    #' @param par List of initial observation parameters. This should
+    #' be a nested list, where the outer list has one element for each
+    #' observed variable, and the inner lists have one element for each
+    #' parameter. The choice of good initial values can be important, especially
+    #' for complex models; the package vignettes discuss approaches to selecting
+    #' them (e.g., see \code{Observation$suggest_initial()}).
     #' 
     #' @return A new Observation object
     initialize = function(data, 

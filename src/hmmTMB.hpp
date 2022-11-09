@@ -9,21 +9,6 @@
 #include "dist.hpp"
 
 //' Compute Negative log-likelihood for HMM
-//' DATA:
-//'   ID: vector of time series IDs
-//'   data: matrix of response variables
-//'   X_fe: block-diagonal design matrix for fixed effects
-//'   X_re: block-diagonal design matrix for random effects
-//'   S: block-diagonal penalty matrix
-//'   ncol_re: number of columns of S and X_re for each random effect
-//'   n_states: number of states
-//'   distcode: vector of codes of observation distributions
-//' PARAMETERS:
-//'   ltpm: parameters for transition probabilities
-//'   coeff_fe: observation parameters (fixed effects)
-//'   coeff_re: observation parameters (random effects)
-//'   log_lambda: vector of smoothness parameters
-
 template<class Type>
 Type objective_function<Type>::operator() ()
 {

@@ -24,12 +24,24 @@ HMM <- R6Class(
     # Constructor -------------------------------------------------------------
     #' @description Create new HMM object
     #' 
-    #' @param obs Observation object
-    #' @param hid MarkovChain object
-    #' @param file path to specification file for HMM 
-    #' @param init HMM object to initialize parameters with 
-    #' @param fixpar a named list of parameters in coeff_fe that you want fixed 
-    #' (set to NA) or pool into common values (using factor levels)
+    #' @param obs Observation object, created with \code{Observation$new()}.
+    #' This contains the formulation for the observation model.
+    #' @param hid MarkovChain object, created with \code{MarkovChain$new()}.
+    #' This contains the formulation for the state process model.
+    #' @param file Path to specification file for HMM. If this argument is
+    #' used, then \code{obs} and \code{hid} are unnecessary.
+    #' @param init HMM object, used to initialise the parameters for this model.
+    #' If \code{init} is passed, then all parameters that are included in init
+    #' and in the present model are copied. This may be useful when fitting
+    #' increasingly complex models: start from a simple model, then pass it as
+    #' init to create a more complex model, and so on. 
+    #' @param fixpar Named list, with optional elements: 'hid', 'obs', 'delta0',
+    #' 'lambda_obs', and 'lambda_hid'. Each element is a named vector of 
+    #' parameters in coeff_fe that should either be fixed (if the corresponding
+    #' element is set to NA) or estimated to a common value (using integers or
+    #' factor levels). See examples in the vignettes, and check the TMB
+    #' documentation to understand the inner workings (argument \code{map}
+    #' of \code{TMB::MakeADFun()}).
     #' 
     #' @return A new HMM object
     initialize = function(obs = NULL, 
@@ -39,8 +51,9 @@ HMM <- R6Class(
                           fixpar = NULL) {
       # Decide how model has been specified 
       if (is.null(file) & is.null(obs)) {
-        stop("either 'file' must a file name for a file specifying the model or 
-            both obs/hid model objects should be supplied.")
+        stop(paste0("Either 'file' should be the name of a file specifying ",
+                    "the model or both obs/hid model objects should be ",
+                    "supplied."))
       }
       if (!is.null(file) & is.null(obs)) {
         spec <- private$read_file(file)
@@ -111,7 +124,7 @@ HMM <- R6Class(
     #' @description Output of optimiser after model fitting
     out = function() {
       if (is.null(private$out_)) {
-        stop("fit model first using $fit()")
+        stop("Fit model first using $fit()")
       }
       return(private$out_)
     },
@@ -125,7 +138,7 @@ HMM <- R6Class(
     #' }
     tmb_obj = function() {
       if(is.null(private$tmb_obj_)) {
-        stop("setup or fit model first")
+        stop("Setup or fit model first")
       }
       return(private$tmb_obj_)
     },
@@ -140,7 +153,7 @@ HMM <- R6Class(
     #' }
     tmb_obj_joint = function() {
       if(is.null(private$tmb_obj_joint_)) {
-        stop("setup model first")
+        stop("Setup model first")
       }
       
       return(private$tmb_obj_joint_)
@@ -150,7 +163,7 @@ HMM <- R6Class(
     #' estimates and standard errors for all model parameters.
     tmb_rep = function() {
       if(is.null(private$tmb_rep_)) {
-        stop("fit model first")
+        stop("Fit model first")
       }
       return(private$tmb_rep_)
     },
@@ -159,7 +172,7 @@ HMM <- R6Class(
     #' been run
     states = function() {
       if(is.null(private$states_)) {
-        stop("run viterbi first")
+        stop("Run viterbi first")
       }
       return(private$states_)
     },
@@ -229,7 +242,7 @@ HMM <- R6Class(
         stop("No new parameter values to update to")
       }
       if (!is.null(iter) & !is.null(par_list)) {
-        stop("Either specify iter or par_list in update_par, not both")
+        stop("Either specify iter or par_list, not both")
       }
       if (!is.null(iter)) {
         # update to MCMC iteration 
@@ -238,13 +251,13 @@ HMM <- R6Class(
         }
         if (is.numeric(iter)) {
           if (iter > dim(private$iters_)[1]) {
-            stop("iter exceeds number of mcmc iterations available")
+            stop("'iter' exceeds number of MCMC iterations available")
           }
           samp <- private$iters_[iter,]
         } else if (iter == "mean") {
           samp <- colMeans(private$iters_)
         } else {
-          stop("invalid iter to update_par()")
+          stop("Invalid iter to update_par()")
         }
         nms <- gsub("\\[[^][]*\\]", "", names(samp))
         names(samp) <- NULL
@@ -293,7 +306,7 @@ HMM <- R6Class(
     #' hidden state model.
     sd_re = function() {
       if(is.null(private$tmb_rep_)) {
-        stop("fit model first")
+        stop("Fit model first")
       }
       return(list(obs = self$obs()$sd_re(),
                   hid = self$hid()$sd_re()))
@@ -376,14 +389,14 @@ HMM <- R6Class(
     #' @return see output of as.matrix in stan 
     iters = function(type = "response") {
       if (is.null(private$iters_)) {
-        stop("must run fit_stan before extracting iterations")
+        stop("Run fit_stan() before extracting iterations")
       }
       if (type == "response") {
         return(private$par_iters_)
       } else if (type == "raw") {
         return(private$iters_)
       } else {
-        stop("unknown type argument given to iters()")
+        stop("Unknown type argument given to iters()")
       }
     }, 
     
@@ -392,7 +405,7 @@ HMM <- R6Class(
     #' @return the stanfit object 
     out_stan = function() {
       if (is.null(private$iters_)) {
-        stop("must run fit_stan before extracting stan fitted object")
+        stop("Run fit_stan() first")
       }
       return(private$out_stan_)
     }, 
@@ -467,8 +480,10 @@ HMM <- R6Class(
       
       # check distcodes exist
       if (any(is.null(distcode))) {
-        stop("not all observation distributions are properly created. If you added any custom distributions
-             recently, make sure you re-create them using Dist$new after you have recompiled the package.")
+        stop(paste0("Not all observation distributions are properly created. ",
+                    "If you added any custom distributions recently, make sure ",
+                    "you re-create them using Dist$new after you have ",
+                    "recompiled the package."))
       }
       
       # Number of states
@@ -659,9 +674,9 @@ HMM <- R6Class(
       
       nllk0 <- obj$fn(obj$par)
       if(is.nan(nllk0) | is.infinite(nllk0)) {
-        stop(paste("log-likelihood is NaN or infinite at starting parameters.",
+        stop(paste("Log-likelihood is NaN or infinite at starting parameters.",
                    "Check that the data are within the domain of definition of the",
-                   "observation distributions, and/or try other starting parameters."))
+                   "observation distributions, or try other starting parameters."))
       }
       
       # Negative log-likelihood function
@@ -689,11 +704,11 @@ HMM <- R6Class(
       self$formulation()
       
       if (!requireNamespace("rstan", quietly = TRUE)) {
-        stop("you need to install the package rstan to do this")
+        stop("You need to install the package rstan to do this")
       }
       
       if (!requireNamespace("tmbstan", quietly = TRUE)) {
-        stop("you need to install the package tmbstan to do this")
+        stop("You need to install the package tmbstan to do this")
       }
       
       # Setup if necessary
@@ -735,15 +750,15 @@ HMM <- R6Class(
     
     #' @description Model fitting
     #' 
-    #' The negative log-likelihood of the model is minimised using the
-    #' function \code{optim}. TMB uses the Laplace approximation to integrate 
+    #' @details The negative log-likelihood of the model is minimised using the
+    #' function \code{optimx}. TMB uses the Laplace approximation to integrate 
     #' the random effects out of the likelihood.
     #' 
     #' After the model has been fitted, the output of \code{optim} can be
     #' accessed using the method \code{out}.
     #' 
-    #' @param silent Logical. If FALSE, all tracing outputs are hidden (default).
-    #' @param ... other arguments to optimx which is used to optimise likelihood, 
+    #' @param silent Logical. If FALSE, all tracing outputs are shown (default).
+    #' @param ... Other arguments to optimx which is used to optimise likelihood, 
     #' see ?optimx
     fit = function(silent = FALSE, ...) {
       if(!silent) self$formulation()
@@ -759,10 +774,11 @@ HMM <- R6Class(
       # Fit model
       args <- list(...)
       if (any(c("par", "fn", "gr", "he", "hessian") %in% names(args))) {
-        stop("cannot supply arguments to fit of name par, fn, gr, he, or hessian. These are handled by TMB")
+        stop(paste("Cannot supply arguments to HMM$fit() with name par,",
+                   "fn, gr, he, or hessian. These are reserved by TMB."))
       }
       if (any(c("lower", "upper") %in% names(args))) {
-        warning("lower and upper arguments to optimx are ignored in hmmTMB")
+        warning("'lower' and 'upper' arguments to optimx are ignored in hmmTMB")
       }
       # change default method to nlminb
       private$tmb_obj_$method <- "nlminb"
@@ -789,9 +805,10 @@ HMM <- R6Class(
                              control = args$control)
       best <- which.min(private$out_$value)
       if (private$out_$convcode[best] != 0) {
-        warning("convergence code was not zero, indicating that the optimizer may
-                not have converged to the correct estimates. Please check by consulting
-                the out() function which shows what optimx returned.")
+        warning(paste("Convergence code was not zero, indicating that the",
+                      "optimizer may not have converged to the correct",
+                      "estimates. Please check by consulting the out() function",
+                      "which shows what optimx returned."))
       }
       
       # Get estimates and precision matrix for all parameters
@@ -814,7 +831,7 @@ HMM <- R6Class(
     #' @return list of maximum likelihood estimates as described as
     #' input for the function update_par() 
     mle = function() {
-      if (is.null(private$out_)) stop("must fit model with fit() function first")
+      if (is.null(private$out_)) stop("Fit model first")
       par_list <- as.list(self$tmb_rep(), "Estimate")
       return(par_list)
     }, 
@@ -962,7 +979,7 @@ HMM <- R6Class(
       n <- nrow(self$obs()$data())
       cat("Computing conditional CDFs... ")
       cond <- self$cond(silent = TRUE)
-      cat("DONE\n")
+      cat("done\n")
       pdfs <- cond$pdfs
       grids <- cond$grids
       vars <- self$obs()$obs_var()
@@ -995,7 +1012,7 @@ HMM <- R6Class(
           val <- (val + cdfs[[v]][i, wh2]) / 2
           r[v, i] <- qnorm(val - 1e-16)
         }
-        cat("DONE\n")
+        cat("done\n")
       }
       return(r)
     }, 
@@ -1086,7 +1103,7 @@ HMM <- R6Class(
     #' and each row is a time of observation
     sample_states = function(nsamp = 1, full = FALSE) {
       if (full & is.null(private$out_stan_)) {
-        stop("must fit model with $fit_stan first")
+        stop("Fit model with fit_stan() first")
       }
       if (full) {
         n_full_samp <- nsamp
@@ -1331,7 +1348,7 @@ HMM <- R6Class(
     predict = function(what, t = 1, newdata = NULL, n_post = 0, level = 0.95, 
                        return_post = FALSE) {
       if (is.null(private$out_) & n_post > 0) {
-        stop("must fit model with fit() function first")
+        stop("Fit model first")
       }
       if (!is.null(newdata)) {
         # Return predictions for all rows of newdata if provided
@@ -1488,7 +1505,10 @@ HMM <- R6Class(
         obs <- rep(NA, n)
         for(i in 1:n) {
           if(round(i/n*100)%%10 == 0) {
-            if(!silent) cat("\rSimulating ", var_name, "... ", round(i/n*100), "%", sep = "")        
+            if(!silent) {
+              cat("\rSimulating ", var_name, "... ", 
+                  round(i/n*100), "%", sep = "")
+            }
           }
           
           # Generate realisation
@@ -1912,7 +1932,7 @@ HMM <- R6Class(
     ## }
     read_file = function(file) {
       if (!file.exists(file)) {
-        stop("model specification file does not exist:", file)
+        stop("Model specification file does not exist:", file)
       }
       # Vector with one element for each line of 'file'
       spec <- scan(file = file,
@@ -2011,12 +2031,15 @@ HMM <- R6Class(
     read_block = function(name, wh_blocks, spec) {
       find <- which(names(wh_blocks) == name)
       start_block <- wh_blocks[find] + 1 
-      end_block <- ifelse(start_block > max(wh_blocks), length(spec), wh_blocks[find + 1] - 1)
+      end_block <- ifelse(start_block > max(wh_blocks), 
+                          length(spec), 
+                          wh_blocks[find + 1] - 1)
       block <- spec[start_block:end_block]
       return(block)
     }, 
     
-    ## @description Separate left hand side and right hand side variables from a equation 
+    ## @description Separate left hand side and right hand side variables 
+    ## from a equation 
     ## @param x Character vector of equations 
     ## @return List of left hand sides (lhs) and right hand sides (rhs)
     read_equals = function(x) {
@@ -2157,7 +2180,11 @@ HMM <- R6Class(
                     "same number of states. (obs$nstates = ", obs$nstates(), 
                     ", hid$nstates = ", hid$nstates(), ")"))
       }
-      if(!is.null(init)) if (!("HMM" %in% class(init))) stop("init must be a HMM object.")
+      if(!is.null(init)) {
+        if (!("HMM" %in% class(init))) {
+          stop("init must be a HMM object.")
+        }
+      }
     }
   )
 )
