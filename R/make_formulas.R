@@ -89,8 +89,12 @@ make_formulas <- function(input_forms,
         which_this_state <- attr(form_terms, "specials")[[paste0("state", s)]]
         
         # Initialise new formula
-        new_form <- "~ 1"
-        
+        if(attr(form_terms, "intercept") == 1) {
+          new_form <- "~ 1"          
+        } else {
+          new_form <- "~ -1"
+        }
+
         # Loop over terms that need to be added to the formula
         for(k in which_this_state)
           new_form <- paste0(new_form, " + ", covs[k])
