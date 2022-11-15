@@ -5,6 +5,8 @@ output:
     pdf_document:
         number_sections: true
 header-includes:
+  \usepackage{tcolorbox}
+  \usepackage{bm}
   \renewcommand{\baselinestretch}{1.2}
 fontsize: 12pt
 bibliography: refs.bib
@@ -17,18 +19,44 @@ knitr::opts_chunk$set(
 )
 ```
 
-In this vignette, we showcase how hmmTMB can be used to analyse time series of animals' step lengths and turning angles. This is a popular application of hidden Markov models (HMMs), to identify movement modes often interpreted as behavioural states (@patterson2009, @langrock2012). There are two specialised R packages focused on HMMs for the analysis of animal movement: moveHMM and momentuHMM (@michelot2016, @mcclintock2018). Those might be a good alternative; in particular, momentuHMM has additional functionalities for processing animal telemetry data, and to specify some complex movement models (e.g., biased random walks). The main advantage of hmmTMB over those packages is the possibility to include random effects on the model parameters, as well as non-parametric effects of covariates (with automatic smoothness selection).
+\tableofcontents
+\newpage
+
+# Introduction
+
+In this vignette, we showcase how hmmTMB can be used to analyse time series of animal locations. This is a popular application of hidden Markov models (HMMs), to identify movement modes often interpreted as behavioural states (@patterson2009; @langrock2012). There are two specialised R packages focused on HMMs for the analysis of animal movement: moveHMM and momentuHMM (@michelot2016; @mcclintock2018). Those might be a good alternative; in particular, momentuHMM has additional functionalities for processing animal telemetry data, and to specify some complex movement models (e.g., biased random walks). The main advantage of hmmTMB over those packages is the possibility to include random effects on the model parameters, as well as non-parametric effects of covariates (with automatic smoothness selection).
+
+The most common approach is to assume that, within each state, the animal's movement follows a correlated random walk, i.e., a model that captures the speed of movement and the degree of persistence in the movement. This is convenient because animals often alternative between periods of fast, directed movement (e.g., "transiting", "exploring"), and periods of slow, undirected movement (e.g., "resing", "foraging"). There are two main ways to model correlated random walks: based on step lengths and turning angles (@morales2004), or based on locations directly (@jonsen2005). Both approaches can be implemented in hmmTMB, and we describe them in turn below.
+
+\tcolorbox
+\textbf{Data requirements}
+
+We need to make two key assumptions about the data, which may be limiting in some animal movement applications: (a) the locations are observed at regular time intervals, and (b) the locations are observed with negligible measurement error.
+
+In cases where these assumptions are not satisfied, another modelling approach will be needed. Various state-space models have been developed to accommodate noisy, irregular animal trajectories (@jonsen2005; @johnson2008). Relevant R packages include crawl (@johnson2008) and foieGras (@jonsen2020), and momentuHMM has dedicated functions to prepare the data using crawl before an HMM analysis.
+\endtcolorbox
 
 We start by loading a few packages, including moveHMM, which contains a data set of wild haggis movement data that we will use here, as well as functions for data preparation. 
 
 ```{r load-packages}
 library(moveHMM)
 library(ggplot2)
-theme_set(theme_bw())
+theme_set(theme_bw(13))
 library(hmmTMB)
 ```
 
-# Data preparation
+# Step-and-turn model
+
+The most common correlated random walk formulation is based on two derived variables: the step length $L_t$ (distance between successive locations) and the turning angle $\varphi_t$ (angle between successive steps). We consider the followind widely-used HMM formulation:
+$$
+\begin{cases}
+L_t \mid \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j)\\
+\varphi_t \mid \{ S_t = j \} \sim \text{von Mises}(\theta_j, \kappa_j^2)
+\end{cases}
+$$
+where, in state $j$, $\mu_j > 0$ is the mean step length, $\sigma_j$ is the standard deviation of step length, $-\pi < \theta_j \leq \pi$ is the mean turning angle, and $\kappa_j > 0$ is the concentration of turning angle.
+
+## Data preparation
 
 In many movement studies, HMMs are used to analyse time series of step lengths and turning angles, to identify phases with different levels of speed and/or directional persistence. Those variables can directly be computed from the locations; for convenience, we use the function `prepData()` from moveHMM to do it here.
 
@@ -50,7 +78,7 @@ The columns of the data frame are:
 
 - `slope` and `temp` are environmental covariates, and we will demonstrate how their effects on the transition probabilities can be estimated.
 
-# Model specification
+## Model specification
 
 An HMM has two components: a hidden state process, and an observation model. Those two parts can be specified separately in hmmTMB. We first create an object of class `MarkovChain` for the hidden process model. Here, we just indicate that it is a 2-state process, i.e., we assume that the movement patterns are driven by two underlying states.
 
@@ -76,7 +104,7 @@ obs1 <- Observation$new(data = hmm_data, dists = dists,
                         par = par0, n_states = 2)
 ```
 
-# Model fitting
+## Model fitting
 
 We can now create an `HMM` object, which combines the hidden process and the observation model. Printing it shows the model formulation, as well as the initial parameter values that it stores. Note that, because we did not specify initial parameter values for the `MarkovChain` object, it defaulted to a matrix with 0.9 on the diagonal, but we could have entered it manually using the argument `tpm`.
 
@@ -94,7 +122,7 @@ hmm1$fit(silent = TRUE)
 hmm1
 ```
 
-# Model visualisation
+## Model visualisation
 
 The fitted model can be plotted in a few different ways. The method `plot_dist` creates a plot of the state-dependent distributions for the response variable specified as input. We can use such plots to help with interpretation of the states, to see how much overlap there is between distributions in different states, and to check whether the distributions seem to fit the data well.
 
@@ -113,7 +141,7 @@ hmm1$plot_ts("x", "y") +
   coord_equal()
 ```
 
-# Covariates
+## Covariates
 
 A popular extension of HMMs in ecology consists in including the effects of time-varying (or individual-specific) covariates on parameters of the model. This can for example be used to estimate effects of covariates on the transition probabilities of the hidden state process, and we illustrate this case here.
 
@@ -144,5 +172,94 @@ hmm2$plot("delta", var = "temp")
 ```
 
 The plots suggest there is no evidence that temperature affects transition probabilities. There seems to be a strong effect of slope, however: it is more likely to be in state 2 for intermediate values (between 10 and 30 degrees), and more likely to be in state 1 for extreme values (either smaller than 10 or larger than 30).
+
+# Position-based model
+
+As an alternative to the model based on step lengths and turning angles, we turn to the location-based correlated random walk of @jonsen2005. If we denote as $\bm{Z}_t$ the location of the animal at time $t$ (i.e., a vector of its x and y coordinate), we consider the model
+$$
+\bm{Z}_t \mid \{ S_t = j \} \sim N \left[ \bm{Z}_{t-1} + \alpha_j (\bm{Z}_{t-1}- \bm{Z}_{t-2}),\  \sigma_j \bm{I}_2 \right],
+$$
+where $\bm{I}_2$ is the 2-by-2 identity matrix and, in state $j$, the parameter $\alpha_j \in \mathbb{R}$ measures the degree of autocorrelation in the location process, and $\sigma_j > 0$ measures variability. This model gives rise to correlated movement steps because, for $\alpha_j > 0$, the expected direction of change from $\bm{Z}_{t-1}$ to $\bm{Z}_t$ is aligned with the previous step from $\bm{Z}_{t-2}$ to $\bm{Z}_{t-1}$. If $\sigma_j = 0$, this reduces to a simple Gaussian random walk where each location is normally distributed around the previous location.
+
+## Data preparation
+
+For each coordinate, we will need to include two covariates in the observation model: the previous location ($\bm{Z}_{t-1}$), and the previous step ($\bm{Z}_{t-1} - \bm{Z}_{t-2}$). We derive these two variables from the data, and we remove data rows where either is missing.
+
+```{r crw-prep}
+for(id in unique(hmm_data$ID)) {
+  ind <- which(hmm_data$ID == id)
+  hmm_data$x_lag[ind] <- c(NA, hmm_data$x[ind[-length(ind)]])
+  hmm_data$y_lag[ind] <- c(NA, hmm_data$y[ind[-length(ind)]])
+  hmm_data$x_diff[ind] <- c(NA, NA, diff(hmm_data$x[ind])[1:(length(ind) - 2)])
+  hmm_data$y_diff[ind] <- c(NA, NA, diff(hmm_data$y[ind])[1:(length(ind) - 2)])
+}
+
+hmm_data <- na.omit(hmm_data)
+```
+
+## Model specification
+
+Similarly to the step-and-turn analysis, we use a 2-state model. We create the hidden state model with no special arguments, but we could include covariate effects in the transition probabilities like we did above.
+
+```{r crw-hid}
+hid3 <- MarkovChain$new(data = hmm_data, n_states = 2)
+```
+
+We define the observation model as follows:
+
+- Each observed variable (i.e., each coordinate) follows a state-specific normal distribution.
+
+- The mean of the normal distribution depends on the previous location and on the previous step. We remove the intercept from the R formula because there is no additive constant in the mean of the normal distribution. (If there was, this would create a systematic drift towards a preferred direction.)
+
+- We define initial values for $\sigma_1$ and $\sigma_2$, shared between the two coordinates because we assume that the movement characteristics are the same along the two dimensions. The initial mean values are not used because there is no intercept.
+
+```{r crw-obs}
+dists <- list(x = "norm", y = "norm")
+f <- list(x = list(mean = ~ x_lag + x_diff - 1),
+          y = list(mean = ~ y_lag + y_diff - 1))
+par0 <- list(x = list(mean = c(0, 0), sd = c(0.3, 3)),
+             y = list(mean = c(0, 0), sd = c(0.3, 3)))
+obs3 <- Observation$new(data = hmm_data, dists = dists, formulas = f, 
+                       n_states = 2, par = par0)
+```
+
+We need to add parameter constraints to ensure that the coefficient in from of the lagged covariate $\bm{Z}_{t-1}$ is not estimated (fixed to 1), and that $\alpha_j$ and $\sigma_j$ have the same value for the two observed variables (i.e., same movement parameters along x and y dimensions). We update the parameters stored in `obs` to set the slope parameters for $\bm{Z}_{t-1}$ to 1. The function `obs3$coeff_fe()` can be used to remember what the order of the coefficients is. Then, we define a vector of `NA`s and integers that indicates which parameters are fixed (`NA`s), and which share a common value (integers). 
+
+```{r crw-fixpar}
+obs3$update_coeff_fe(c(1, 0, 1, 0.6, log(0.3), log(3),
+                      1, 0, 1, 0.6, log(0.3), log(3)))
+
+fixpar_obs <- c(NA, 1, NA, 2, 3, 4,
+                NA, 1, NA, 2, 3, 4)
+names(fixpar_obs) <- rownames(obs3$coeff_fe())
+fixpar <- list(obs3 = fixpar_obs)
+```
+
+## Model fitting and results
+
+We combine the hidden state and observation models, and pass `fixpar` to specify the parameter constraints, to create the `HMM` object.
+
+```{r crw-fit}
+hmm3 <- HMM$new(obs = obs3, hid = hid3, fixpar = fixpar)
+hmm3$fit(silent = TRUE)
+```
+
+Although we can't plot the state-dependent distributions over the data like we did for step lengths and turning angles (because the distributions are covariate-dependent), we can extract the parameter estimates to interpret the states. The standard deviation parameters were $\sigma_1 = 0.74$ and $\sigma_2 = 3.18$, suggesting that there is more variability in state 2, perhaps associated with higher movement speed. The estimated persistence parameters were $\alpha_1 = -0.09$ and $\alpha_2 = 0.68$, indicating that there was virtually no persistence in state 1, and fairly strong persistence in state 2. We can also plot the trajectory, coloured by the Viterbi state sequence; from this, it is clear that state 1 captures slow clustered movement, and state 2 is fast and directed.
+
+```{r crw-viz, fig.width = 6, fig.height = 5, out.width="60%", fig.align = "center"}
+# Transition probability matrix
+hid3$tpm()[,,1]
+
+# Standard deviations
+obs3$par()[2,,1]
+
+# Persistence parameters
+obs3$coeff_fe()[c(2,4),]
+
+# Tracks coloured by most likely state sequence
+hmm3$plot_ts("x", "y") + 
+  coord_equal() + 
+  geom_point(size = 0.4)
+```
 
 # References
