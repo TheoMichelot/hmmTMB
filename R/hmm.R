@@ -12,6 +12,7 @@
 #' @importFrom TMB MakeADFun sdreport
 #' @importFrom stringr str_trim str_split str_split_fixed
 #' @importFrom optimx optimx
+#' @importFrom Matrix sparseMatrix
 #' 
 #' @useDynLib hmmTMB, .registration = TRUE
 #' 
