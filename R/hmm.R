@@ -12,7 +12,6 @@
 #' @importFrom TMB MakeADFun sdreport
 #' @importFrom stringr str_trim str_split str_split_fixed
 #' @importFrom optimx optimx
-#' @importFrom Matrix sparseMatrix
 #' 
 #' @useDynLib hmmTMB, .registration = TRUE
 #' 
@@ -534,9 +533,9 @@ HMM <- R6Class(
         # coeff_re and log_lambda are not estimated
         map <- c(map, list(coeff_re_obs = factor(NA),
                            log_lambda_obs = factor(NA)))
-        S_obs <- as(matrix(0, 1, 1), "sparseMatrix")
+        S_obs <- as(matrix(0, 1, 1), "dgTMatrix")
         ncol_re_obs <- matrix(-1, nr = 1, nc = 1)
-        X_re_obs <- as(rep(0, nrow(X_fe_obs)), "sparseMatrix")
+        X_re_obs <- as(matrix(0, nrow = nrow(X_fe_obs), ncol = 2), "dgTMatrix")
       } else {
         # If there are random effects, 
         # set initial values for coeff_re and log_lambda
@@ -582,9 +581,9 @@ HMM <- R6Class(
         # coeff_re and log_lambda are not estimated
         map <- c(map, list(coeff_re_hid = factor(NA),
                            log_lambda_hid = factor(NA)))
-        S_hid <- as(matrix(0, 1, 1), "sparseMatrix")
+        S_hid <- as(matrix(0, 1, 1), "dgTMatrix")
         ncol_re_hid <- matrix(-1, nr = 1, nc = 1)
-        X_re_hid <- as(rep(0, nrow(X_fe_hid)), "sparseMatrix")
+        X_re_hid <- as(matrix(0, nrow = nrow(X_fe_hid), ncol = 1), "dgTMatrix")
       } else {
         # If there are random effects, 
         # set initial values for coeff_re and log_lambda
