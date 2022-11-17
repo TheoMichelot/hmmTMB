@@ -533,9 +533,9 @@ HMM <- R6Class(
         # coeff_re and log_lambda are not estimated
         map <- c(map, list(coeff_re_obs = factor(NA),
                            log_lambda_obs = factor(NA)))
-        S_obs <- as(matrix(0, 1, 1), "dgTMatrix")
+        S_obs <- as_sparse(matrix(0, 1, 1))
         ncol_re_obs <- matrix(-1, nr = 1, nc = 1)
-        X_re_obs <- as(matrix(0, nrow = nrow(X_fe_obs), ncol = 2), "dgTMatrix")
+        X_re_obs <- as_sparse(rep(0, nrow(X_fe_obs)))
       } else {
         # If there are random effects, 
         # set initial values for coeff_re and log_lambda
@@ -581,9 +581,9 @@ HMM <- R6Class(
         # coeff_re and log_lambda are not estimated
         map <- c(map, list(coeff_re_hid = factor(NA),
                            log_lambda_hid = factor(NA)))
-        S_hid <- as(matrix(0, 1, 1), "dgTMatrix")
+        S_hid <- as_sparse(matrix(0, 1, 1))
         ncol_re_hid <- matrix(-1, nr = 1, nc = 1)
-        X_re_hid <- as(matrix(0, nrow = nrow(X_fe_hid), ncol = 1), "dgTMatrix")
+        X_re_hid <- as_sparse(rep(0, nrow(X_fe_hid)))
       } else {
         # If there are random effects, 
         # set initial values for coeff_re and log_lambda
@@ -651,13 +651,13 @@ HMM <- R6Class(
                       statdist = statdist, 
                       distcode = distcode,
                       distpar = distpar, 
-                      X_fe_obs = X_fe_obs,
-                      X_re_obs = X_re_obs,
-                      S_obs = S_obs,
+                      X_fe_obs = as_sparse(X_fe_obs),
+                      X_re_obs = as_sparse(X_re_obs),
+                      S_obs = as_sparse(S_obs),
                       ncol_re_obs = ncol_re_obs,
-                      X_fe_hid = X_fe_hid,
-                      X_re_hid = X_re_hid,
-                      S_hid = S_hid,
+                      X_fe_hid = as_sparse(X_fe_hid),
+                      X_re_hid = as_sparse(X_re_hid),
+                      S_hid = as_sparse(S_hid),
                       ncol_re_hid = ncol_re_hid,
                       include_smooths = 1, 
                       ref_tpm = self$hid()$ref(),
