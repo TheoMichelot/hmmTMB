@@ -18,6 +18,8 @@ Contains the parameters and model formulas for the hidden process model.
 \item \href{#method-MarkovChain-formula}{\code{MarkovChain$formula()}}
 \item \href{#method-MarkovChain-formulas}{\code{MarkovChain$formulas()}}
 \item \href{#method-MarkovChain-tpm}{\code{MarkovChain$tpm()}}
+\item \href{#method-MarkovChain-ref}{\code{MarkovChain$ref()}}
+\item \href{#method-MarkovChain-ref_mat}{\code{MarkovChain$ref_mat()}}
 \item \href{#method-MarkovChain-coeff_fe}{\code{MarkovChain$coeff_fe()}}
 \item \href{#method-MarkovChain-delta}{\code{MarkovChain$delta()}}
 \item \href{#method-MarkovChain-delta0}{\code{MarkovChain$delta0()}}
@@ -29,6 +31,7 @@ Contains the parameters and model formulas for the hidden process model.
 \item \href{#method-MarkovChain-sd_re}{\code{MarkovChain$sd_re()}}
 \item \href{#method-MarkovChain-nstates}{\code{MarkovChain$nstates()}}
 \item \href{#method-MarkovChain-terms}{\code{MarkovChain$terms()}}
+\item \href{#method-MarkovChain-unique_ID}{\code{MarkovChain$unique_ID()}}
 \item \href{#method-MarkovChain-update_tpm}{\code{MarkovChain$update_tpm()}}
 \item \href{#method-MarkovChain-update_coeff_fe}{\code{MarkovChain$update_coeff_fe()}}
 \item \href{#method-MarkovChain-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
@@ -56,21 +59,23 @@ Create new MarkovChain object
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$new(
   data,
   formula = NULL,
-  n_states = NULL,
+  n_states,
   tpm = NULL,
-  stationary = FALSE
+  stationary = FALSE,
+  ref = 1:n_states
 )}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{Data frame, needed to create model matrices}
+\item{\code{data}}{Data frame, needed to create model matrices, and to identify the
+number of time series (which each have a separate initial distribution)}
 
-\item{\code{formula}}{Either (2) R formula, used for all transition probabilities, 
-or (2) matrix of character strings, with an entry of "." on diagonal, 
-a "0" for transitions that are not allowed (not implemented yet), 
-or an R formula. (Default: no covariate dependence.)}
+\item{\code{formula}}{Either (1) R formula, used for all transition probabilities, 
+or (2) matrix of character strings giving the formula for each transition
+probability, with "." along the diagonal (or for reference elements; see
+\code{ref} argument). (Default: no covariate dependence.)}
 
 \item{\code{n_states}}{Number of states. If not specified, then \code{formula} 
 needs to be provided as a matrix, and n_states is deduced from its dimensions.}
@@ -82,6 +87,14 @@ is a matrix with 0.9 on the diagonal.}
 \item{\code{stationary}}{if TRUE then stationary distribution with respect to tpm for 
 first time point is used as initial distribution, if FALSE then initial distribution
 is estimated}
+
+\item{\code{ref}}{Vector of indices for reference transition probabilities, 
+of length \code{n_states}. The i-th element is the index for the 
+reference in the i-th row of the transition probability matrix. For 
+example, ref = c(1, 1) means that the first element of the first row
+Pr(1>1) and the first element of the second row Pr(2>1) are used as 
+reference elements and are not estimated. If this is not provided,
+the diagonal transition probabilities are used as references.}
 }
 \if{html}{\out{</div>}}
 }
@@ -133,6 +146,28 @@ Array with one slice for each transition probability matrix
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-ref"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-ref}{}}}
+\subsection{Method \code{ref()}}{
+Indices of reference elements in transition probability
+matrix
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$ref()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-ref_mat"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-ref_mat}{}}}
+\subsection{Method \code{ref_mat()}}{
+Matrix of reference elements in transition probability
+matrix
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$ref_mat()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-coeff_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-coeff_fe}{}}}
 \subsection{Method \code{coeff_fe()}}{
@@ -173,11 +208,8 @@ a row of the design matrices, and each column corresponds to a state.
 \if{latex}{\out{\hypertarget{method-MarkovChain-delta0}{}}}
 \subsection{Method \code{delta0()}}{
 Initial distribution
-
-Vector of length the number of states, with i-th element the probability
-Pr(S[1] = i)
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$delta0(log = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$delta0(log = FALSE, as_matrix = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -186,8 +218,17 @@ Pr(S[1] = i)
 \item{\code{log}}{Logical indicating whether to return the log of the initial
 probabilities (default: FALSE). If TRUE, then the last element is
 excluded, as it is not estimated.}
+
+\item{\code{as_matrix}}{Logical indicating whether the output should be
+formatted as a matrix (default). If as_matrix is FALSE and log is
+TRUE, the result is formatted as a column vector.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Matrix with one row for each time series ID, and one column
+for each state. For each ID, the i-th element of the corresponding 
+row is the probability Pr(S[1] = i)
 }
 }
 \if{html}{\out{<hr>}}
@@ -272,6 +313,16 @@ Number of states
 Terms of model formulas
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$terms()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-unique_ID"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-unique_ID}{}}}
+\subsection{Method \code{unique_ID()}}{
+Number of time series
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$unique_ID()}\if{html}{\out{</div>}}
 }
 
 }
@@ -372,8 +423,10 @@ Update initial distribution
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{delta0}}{Vector of initial distribution, i.e., where
-the i-th element is Pr(S[1] = i)}
+\item{\code{delta0}}{Either a matrix where the i-th row is the initial
+distribution for the i-th time series in the data, or a vector which is
+then used for all time series. Entries of each row of delta0 should sum
+to one.}
 }
 \if{html}{\out{</div>}}
 }
@@ -466,8 +519,8 @@ plus a data frame of covariates values.
 \subsection{Method \code{tpm2par()}}{
 Transform transition probabilities to working scale
 
-Apply the multinomial logit link function to get the corresponding parameters on the
-working scale (i.e., linear predictor scale).
+Apply the multinomial logit link function to get the corresponding 
+parameters on the working scale (i.e., linear predictor scale).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$tpm2par(tpm)}\if{html}{\out{</div>}}
 }
@@ -489,9 +542,9 @@ Vector of parameters on linear predictor scale
 \subsection{Method \code{par2tpm()}}{
 Transform working parameters to transition probabilities
 
-Apply the inverse multinomial logit link function to transform the parameters on
-the working scale (i.e., linear predictor scale) into the transition
-probabilities.
+Apply the inverse multinomial logit link function to transform the 
+parameters on the working scale (i.e., linear predictor scale) into 
+the transition probabilities.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$par2tpm(par)}\if{html}{\out{</div>}}
 }

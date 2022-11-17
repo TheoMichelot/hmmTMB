@@ -12,6 +12,14 @@ R6 class for hidden Markov model
 Encapsulates the observation and hidden state models for a hidden
 Markov model.
 
+The negative log-likelihood of the model is minimised using the
+function \code{optimx}. TMB uses the Laplace approximation to integrate 
+the random effects out of the likelihood.
+
+After the model has been fitted, the output of \code{optim} can be
+accessed using the method \code{out}.
+
+
 The forward-filtering backward-sampling algorithm returns a
 sequence of states, similarly to the Viterbi algorithm, but it generates
 it from the posterior distribution of state sequences, i.e., accounting
@@ -43,7 +51,6 @@ spent in that state (according to the Viterbi state sequence).
 \item \href{#method-HMM-update_par}{\code{HMM$update_par()}}
 \item \href{#method-HMM-sd_re}{\code{HMM$sd_re()}}
 \item \href{#method-HMM-par}{\code{HMM$par()}}
-\item \href{#method-HMM-suggest_initial}{\code{HMM$suggest_initial()}}
 \item \href{#method-HMM-set_priors}{\code{HMM$set_priors()}}
 \item \href{#method-HMM-priors}{\code{HMM$priors()}}
 \item \href{#method-HMM-iters}{\code{HMM$iters()}}
@@ -91,16 +98,28 @@ Create new HMM object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{obs}}{Observation object}
+\item{\code{obs}}{Observation object, created with \code{Observation$new()}.
+This contains the formulation for the observation model.}
 
-\item{\code{hid}}{MarkovChain object}
+\item{\code{hid}}{MarkovChain object, created with \code{MarkovChain$new()}.
+This contains the formulation for the state process model.}
 
-\item{\code{file}}{path to specification file for HMM}
+\item{\code{file}}{Path to specification file for HMM. If this argument is
+used, then \code{obs} and \code{hid} are unnecessary.}
 
-\item{\code{init}}{HMM object to initialize parameters with}
+\item{\code{init}}{HMM object, used to initialise the parameters for this model.
+If \code{init} is passed, then all parameters that are included in init
+and in the present model are copied. This may be useful when fitting
+increasingly complex models: start from a simple model, then pass it as
+init to create a more complex model, and so on.}
 
-\item{\code{fixpar}}{a named list of parameters in coeff_fe that you want fixed 
-(set to NA) or pool into common values (using factor levels)}
+\item{\code{fixpar}}{Named list, with optional elements: 'hid', 'obs', 'delta0',
+'lambda_obs', and 'lambda_hid'. Each element is a named vector of 
+parameters in coeff_fe that should either be fixed (if the corresponding
+element is set to NA) or estimated to a common value (using integers or
+factor levels). See examples in the vignettes, and check the TMB
+documentation to understand the inner workings (argument \code{map}
+of \code{TMB::MakeADFun()}).}
 }
 \if{html}{\out{</div>}}
 }
@@ -334,24 +353,6 @@ A list with elements:
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-HMM-suggest_initial"></a>}}
-\if{latex}{\out{\hypertarget{method-HMM-suggest_initial}{}}}
-\subsection{Method \code{suggest_initial()}}{
-Suggest initial observation parameters
-
-The K-means algorithm is used to define clusters of observations
-(supposed to approximate the HMM states). Then, for each cluster,
-the \code{parapprox} function of the relevant \code{Dist} object
-is used to obtain parameter values.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$suggest_initial()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-List of initial parameters for each observation variable
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HMM-set_priors"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-set_priors}{}}}
 \subsection{Method \code{set_priors()}}{
@@ -495,13 +496,6 @@ posterior estimate, although this can be changed using
 \if{latex}{\out{\hypertarget{method-HMM-fit}{}}}
 \subsection{Method \code{fit()}}{
 Model fitting
-
-The negative log-likelihood of the model is minimised using the
-function \code{optim}. TMB uses the Laplace approximation to integrate 
-the random effects out of the likelihood.
-
-After the model has been fitted, the output of \code{optim} can be
-accessed using the method \code{out}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$fit(silent = FALSE, ...)}\if{html}{\out{</div>}}
 }
@@ -509,9 +503,9 @@ accessed using the method \code{out}.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{silent}}{Logical. If FALSE, all tracing outputs are hidden (default).}
+\item{\code{silent}}{Logical. If FALSE, all tracing outputs are shown (default).}
 
-\item{\code{...}}{other arguments to optimx which is used to optimise likelihood, 
+\item{\code{...}}{Other arguments to optimx which is used to optimise likelihood, 
 see ?optimx}
 }
 \if{html}{\out{</div>}}

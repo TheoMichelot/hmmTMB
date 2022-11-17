@@ -4,7 +4,7 @@
 \alias{update.HMM}
 \title{Update a model to a new model by changing one formula}
 \usage{
-\method{update}{HMM}(mod, type, i, j, change, fit = TRUE, silent = FALSE)
+update.HMM(mod, type, i, j, change, fit = TRUE, silent = FALSE)
 }
 \arguments{
 \item{mod}{a HMM model object}

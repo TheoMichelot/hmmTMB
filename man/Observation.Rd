@@ -44,6 +44,7 @@ the observation model from a hidden Markov model.
 \item \href{#method-Observation-w2n}{\code{Observation$w2n()}}
 \item \href{#method-Observation-linpred}{\code{Observation$linpred()}}
 \item \href{#method-Observation-obs_probs}{\code{Observation$obs_probs()}}
+\item \href{#method-Observation-suggest_initial}{\code{Observation$suggest_initial()}}
 \item \href{#method-Observation-plot_dist}{\code{Observation$plot_dist()}}
 \item \href{#method-Observation-formulation}{\code{Observation$formulation()}}
 \item \href{#method-Observation-print}{\code{Observation$print()}}
@@ -56,21 +57,37 @@ the observation model from a hidden Markov model.
 \subsection{Method \code{new()}}{
 Create new Observation object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$new(data, dists, formulas = NULL, n_states, par = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$new(data, dists, formulas = NULL, n_states, par)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{Data frame containing response variables and covariates}
+\item{\code{data}}{Data frame containing response variables (named in dists
+and par) and covariates (named in formulas)}
 
-\item{\code{dists}}{Named list of Distribution objects for each data stream}
+\item{\code{dists}}{Named list of distribution names for each data stream,
+with the following options: beta, binom, cat, dir, exp, foldednorm, 
+gamma, gamma2, lnorm, mvnorm, nbinom, norm, pois, t, truncnorm, tweedie, 
+vm, weibull, wrpcauchy, zib, zigamma, zigamma2, zinb, zip, ztnb, ztp.
+See vignette about list of distributions for more detail, e.g., list
+of parameters for each distribution.}
 
-\item{\code{formulas}}{List of formulas for observation parameters}
+\item{\code{formulas}}{List of formulas for observation parameters. This should
+be a nested list, where the outer list has one element for each
+observed variable, and the inner lists have one element for each
+parameter. Any parameter that is not included is assumed to have the
+formula ~1. By default, all parameters have the formula ~1 (i.e., no
+covariate effects).}
 
 \item{\code{n_states}}{Number of states (needed to construct model formulas)}
 
-\item{\code{par}}{List of observation parameters (for covariate-free model)}
+\item{\code{par}}{List of initial observation parameters. This should
+be a nested list, where the outer list has one element for each
+observed variable, and the inner lists have one element for each
+parameter. The choice of good initial values can be important, especially
+for complex models; the package vignettes discuss approaches to selecting
+them (e.g., see \code{Observation$suggest_initial()}).}
 }
 \if{html}{\out{</div>}}
 }
@@ -541,6 +558,24 @@ Observation likelihoods
 \subsection{Returns}{
 Matrix of likelihoods of observations, with one row for each 
 time step, and one column for each state.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Observation-suggest_initial"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-suggest_initial}{}}}
+\subsection{Method \code{suggest_initial()}}{
+Suggest initial observation parameters
+
+The K-means algorithm is used to define clusters of observations
+(supposed to approximate the HMM states). Then, for each cluster,
+the \code{parapprox} function of the relevant \code{Dist} object
+is used to obtain parameter values.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$suggest_initial()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+List of initial parameters for each observation variable
 }
 }
 \if{html}{\out{<hr>}}

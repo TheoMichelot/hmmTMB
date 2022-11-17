@@ -233,6 +233,9 @@ MarkovChain <- R6Class(
     #' @param log Logical indicating whether to return the log of the initial
     #' probabilities (default: FALSE). If TRUE, then the last element is
     #' excluded, as it is not estimated.
+    #' @param as_matrix Logical indicating whether the output should be
+    #' formatted as a matrix (default). If as_matrix is FALSE and log is
+    #' TRUE, the result is formatted as a column vector.
     #' 
     #' @return Matrix with one row for each time series ID, and one column
     #' for each state. For each ID, the i-th element of the corresponding 
