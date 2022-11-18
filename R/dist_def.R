@@ -23,8 +23,8 @@ dist_pois <- Dist$new(
 )
 
 # Zero-Inflated Poisson ========================
-dist_zip <- Dist$new(
-  name = "zip", 
+dist_zipois <- Dist$new(
+  name = "zipois", 
   name_long = "zero-inflated Poisson",
   pdf = function(x, rate, z, log = FALSE) {
     zero <- x == 0 
@@ -59,8 +59,8 @@ dist_zip <- Dist$new(
 )
 
 # Zero-Truncated Poisson ========================
-dist_ztp <- Dist$new(
-  name = "ztp", 
+dist_ztpois <- Dist$new(
+  name = "ztpois", 
   name_long = "zero-truncated Poisson",
   pdf = function(x, rate, log = FALSE) {
     l <- dpois(x, rate) / (1 - dpois(0, rate))
@@ -104,8 +104,8 @@ dist_binom <- Dist$new(
 )
 
 # Zero-inflated Binomial =======================
-dist_zib <- Dist$new(
-  name = "zib", 
+dist_zibinom <- Dist$new(
+  name = "zibinom", 
   name_long = "zero-inflated binomial",
   pdf = function(x, size, prob, z, log = FALSE) {
     zero <- x == 0 
@@ -202,8 +202,8 @@ dist_cat <- Dist$new(
 )
 
 # Zero-inflated Negative-Binomial ==============
-dist_zinb <- Dist$new(
-  name = "zinb", 
+dist_zinbinom <- Dist$new(
+  name = "zinbinom", 
   name_long = "zero-inflated negative binomial",
   pdf = function(x, size, prob, z, log = FALSE) {
     zero <- x == 0 
@@ -241,8 +241,8 @@ dist_zinb <- Dist$new(
 )
 
 # Zero-Truncated Negative-Binomial ========================
-dist_ztnb <- Dist$new(
-  name = "ztnb",
+dist_ztnbinom <- Dist$new(
+  name = "ztnbinom",
   name_long = "zero-truncated negative binomial",
   pdf = function(x, size, prob, log = FALSE) {
     l <- dnbinom(x, size, prob) / (1 - dnbinom(0, size, prob))
@@ -785,13 +785,13 @@ dist_list <- list(beta = dist_beta,
                   vm = dist_vm, 
                   weibull = dist_weibull,
                   wrpcauchy = dist_wrpcauchy,
-                  zib = dist_zib, 
+                  zibinom = dist_zibinom, 
                   zigamma = dist_zigamma,
                   zigamma2 = dist_zigamma2,
-                  zinb = dist_zinb,
-                  zip = dist_zip, 
-                  ztnb = dist_ztnb, 
-                  ztp = dist_ztp)
+                  zinbinom = dist_zinbinom,
+                  zipois = dist_zipois, 
+                  ztnbinom = dist_ztnbinom, 
+                  ztpois = dist_ztpois)
 
 # Define unique distribution code (must match C++ side)
 lapply(seq_along(dist_list), function(i) {
