@@ -259,9 +259,7 @@ HMM <- R6Class(
         } else {
           stop("Invalid iter to update_par()")
         }
-        nms <- gsub("\\[[^][]*\\]", "", names(samp))
-        names(samp) <- NULL
-        par_list <- split(samp, nms)
+        par_list <- split(samp, names(samp))
       }
       # Update observation parameters
       self$obs()$update_coeff_fe(coeff_fe = par_list$coeff_fe_obs)
@@ -716,18 +714,27 @@ HMM <- R6Class(
         self$setup(silent = silent)
       }
       
-      # Run stan MCMC 
+      # Run Stan iterations 
       private$out_stan_ <- tmbstan::tmbstan(private$tmb_obj_, ...)
+      post <- as.matrix(private$out_stan_)
+      # Remove "lp__" column
+      post <- post[,-ncol(post)]
       
-      # Store iterations 
-      private$iters_ <- as.matrix(private$out_stan_)
-      
+      # Extract posterior samples 
+      n_coeff <- nrow(self$coeff_array())
+      n_post <- nrow(post)
+      iters <- matrix(rep(self$coeff_array()[,"value"], each = n_post), 
+                         nrow = n_post, ncol = n_coeff)
+      colnames(iters) <- rownames(self$coeff_array())
+      # Fill non-fixed columns with posterior samples
+      iters[,which(self$coeff_array()[,"fixed"] == 0)] <- post
+      private$iters_ <- iters
+
       # Get iterations on response scale 
       # (only obs parameters and transition probs)
       npar <- length(unlist(self$par()))
-      niter <- nrow(private$iters_)
-      par_iters <- matrix(0, nrow = niter, ncol = npar)
-      for (i in 1:niter) {
+      par_iters <- matrix(0, nrow = n_post, ncol = npar)
+      for (i in 1:n_post) {
         self$update_par(iter = i)
         par <- self$par()
         # Parameter matrices are transposed for best column order in par_iters
