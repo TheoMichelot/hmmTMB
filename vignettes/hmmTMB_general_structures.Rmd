@@ -1,0 +1,577 @@
+---
+title: "General dependence structures in hmmTMB"
+author: "Théo Michelot"
+output: 
+    pdf_document:
+        number_sections: true
+        toc: false
+header-includes:
+  \usepackage{tcolorbox}
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    message = FALSE, error = FALSE, warning = FALSE,
+    comment = NA
+)
+options(scipen = 1, digits = 2)
+```
+
+\tableofcontents
+
+\newpage
+
+# Introduction
+
+The package hmmTMB can be used to implement a wide range of extensions of hidden Markov models (HMMs), and we describe a few of them here. This document is not intended to be introductory, and one of the other vignettes might be a better place to start learning about hmmTMB. All dependence structures that we mention in this document are described in more detail by @zucchini2017 (in particular Chapters 10 and 12).
+
+\begin{tcolorbox}[title=\textbf{Do I really need a more complex model?}]
+This vignette showcases the flexibility of hmmTMB to create complex models, and those come with increased likelihood to run into numerical problems. This may include prohibitive memory or computing requirements for models with very many parameters or, more often, numerical instability in the estimation. Complex models are also more difficult to interpret. It is therefore useful to carefully consider the necessity for increased complexity, for a given data set and research question.
+\end{tcolorbox}
+
+```{r load-stuff}
+library(ggplot2)
+theme_set(theme_bw())
+library(hmmTMB)
+set.seed(534)
+```
+
+# Autoregressive hidden Markov models
+
+The standard assumptions of HMMs can be modified to allow the observation $Z_t$ to depend on the previous observation $Z_{t-1}$, rather than only on the state $S_t$. This relaxes the usual conditional independence assumption, and creates additional correlation between successive observations. Such models can be implemented in hmmTMB by including a lagged version of the observed variable as a covariate on the state-dependent observation parameters. This approach can be used to implement random walks with state-switching variance (and/or drift), or autoregressive (AR) models with state-switching parameters, for example.
+
+## State-switching Gaussian random walk
+
+Consider the following Gaussian random walk with state-dependent variance,
+$$
+Z_t = Z_{t-1} + \varepsilon_t,\quad \varepsilon_t \sim N(0,\ \sigma_{S_t}^2),
+$$
+or, equivalently,
+$$
+Z_t \mid \{ S_t = j, Z_{t-1} = z_{t-1} \} \sim N(z_{t-1},\ \sigma_j^2). 
+$$
+
+This is an HMM where:
+
+- the observation distributions are normal;
+
+- the mean of the normal distribution depends on the lagged sequence of observations;
+
+- the regression coefficient associated with this lagged covariate is fixed to 1 (i.e., there is no coefficient in front of $Z_{t-1}$).
+
+```{r rw-sim, echo = FALSE}
+# Simulate data
+tpm <- matrix(c(0.9, 0.1,
+                0.1, 0.9),
+              byrow = TRUE, ncol = 2)
+sd <- c(1, 5)
+
+n <- 1000
+s <- rep(1, n)
+z <- rep(0, n)
+for(i in 2:n) {
+  s[i] <- sample(1:2, size = 1, prob = tpm[s[i-1],])
+  z[i] <- z[i-1] + rnorm(1, mean = 0, sd = sd[s[i]])
+}
+data <- data.frame(z = z, z_lag = c(NA, z[1:(n-1)]), time = 1:n)
+```
+
+```{r rw-fit, fig.width = 6, fig.height = 3, out.width="100%", fig.align = "center"}
+# Have a look at the data
+head(data)
+ggplot(data, aes(time, z)) + geom_line() + geom_point(size = 0.5)
+
+# Hidden process model
+hid <- MarkovChain$new(data = data, n_states = 2)
+
+# Observation model
+dists <- list(z = "norm")
+par0 <- list(z = list(mean = c(0, 0), sd = c(0.5, 10)))
+f <- list(z = list(mean = ~ z_lag - 1))
+obs <- Observation$new(data = data, dists = dists, formulas = f,
+                       n_states = 2, par = par0)
+obs$update_coeff_fe(c(1, 1, log(1), log(5)))
+
+# Parameter constraints
+fixpar <- list(obs = c("z.mean.state1.z_lag" = NA,
+                       "z.mean.state2.z_lag" = NA))
+
+# HMM
+hmm <- HMM$new(obs = obs, hid = hid, fixpar = fixpar)
+hmm$fit(silent = TRUE)
+
+obs$par()
+
+hmm$plot_ts("z") + geom_point(size = 0.4)
+```
+
+## Other formulations
+
+We briefly describe a few other models that can be implemented with minimal change to the code above.
+
+### Random walk with drift
+
+$$
+Z_t \mid \{ S_t = j, Z_{t-1} = z_{t-1} \} \sim N(\alpha_{0j} + z_{t-1},\ \sigma_j^2)
+$$
+The only difference with the random walk without drift, is that an intercept should be included in the formula for the mean. That is, `mean = ~ z_lag - 1` is replaced by `mean = ~ z_lag`. The intercept coefficient is $\alpha_{0j}$, and it measures the expected drift in the process over one time step.
+
+### AR(1) model
+
+$$
+Z_t \mid \{ S_t = j, Z_{t-1} = z_{t-1} \} \sim N(\alpha_{1j} z_{t-1},\ \sigma_j^2)
+$$
+
+The first-order autoregressive ("AR(1)") model is widely used, in particular with $\vert\alpha_{1j}\vert < 1$ (which leads to a stationary process). In this case, there is no intercept coefficient in the definition of the mean parameter of the normal distribution, but there is a slope coefficient for the lagged covariate. We use the same formula as for the random walk, `mean = ~ z_lag - 1`, but we do not set the parameter constraints through `fixpar`, so that $\alpha_{11}$ and $\alpha_{12}$ are estimated (rather than fixed to 1).
+
+### Higher-order models
+
+Higher-order AR models could similarly be implemented by included additional lagged variables as covariates, e.g., observed variable lagged by two time intervals for AR(2),
+$$
+Z_t \mid \{ S_t = j, Z_{t-1} = z_{t-1}, Z_{t-2} = z_{t-2} \} \sim N(\alpha_{1j} z_{t-1} + \alpha_{2j} z_{t-2},\ \sigma_j^2)
+$$
+
+Another option would be to include something like the difference between the two previous observations as a covariate on the mean, to obtain a correlated random walk:
+$$
+Z_t \mid \{ S_t = j, Z_{t-1} = z_{t-1}, Z_{t-2} = z_{t-2} \} \sim N( z_{t-1} + (z_{t-1} - z_{t-2}),\ \sigma_j^2)
+$$
+
+# Semi-Markov models
+
+Hidden semi-Markov models (HSMMs) extend HMMs to allow for flexible distributions of dwell times (times spent in a state before switching). In a regular HMM, the dwell times follow a geometric distribution, whereas the distribution is modelled explicitly in an HSMM (e.g., using a Poisson or negative binomial distribution). @langrock2011 showed that an HSMM can be approximated by an HMM with a particular structure, and we use this approach here. We simulate some data from a hidden semi-Markov model using a negative binomial distribution of dwell times, and we then fit a regular HMM and an (approximate) HSMM using hmmTMB.
+
+## Simulate data
+
+We first simulate a sequence of states from a semi-Markov chain. To do this, we initialise the first state at 1, and we then generate dwell times from a zero-truncated negative binomial distribution with size parameter 10 and mean parameter 5. These dwell times define the number of time steps that the state process stays in the current state before switching to the other one. A density plot of the dwell times shows that that their distribution is clearly not geometric (as geometric densities are decreasing with a mode at 1).
+
+```{r sim-hid, fig.width = 6, fig.height = 4, out.width="90%", fig.align = "center"}
+# Number of observations
+n <- 1e4
+# Initialise state sequence
+s <- NULL
+state <- 1
+# Initialise vector of dwell times
+dwells <- NULL
+i <- 1
+# Loop until the dwell times add up to n or more
+while(sum(dwells) < n) {
+    dwells[i] <- rnbinom(n = 1, size = 10, mu = 6)
+    if(dwells[i] > 0) {
+        s <- c(s, rep(state, dwells[i]))
+        state <- 3 - state
+        i <- i + 1        
+    }
+}
+s <- s[1:n]
+plot(table(dwells), xlab = "dwell time", ylab = "density")
+```
+
+Using the state sequence, we generate the observations from state-dependent normal distributions: $N(-5, 5^2)$ in state 1, and $N(5, 5^2)$ in state 2.
+
+```{r sim-obs}
+# Observation process
+z <- rnorm(n, mean = c(-5, 5)[s], sd = c(3, 3)[s])
+data <- data.frame(z = z)
+```
+
+## Hidden Markov model analysis
+
+We fit a regular HMM to investigate its capacity to capture features of the simulated data set. You can refer to another vignette for details about the syntax used here.
+
+```{r hmm-fit}
+# Hidden state model
+hid <- MarkovChain$new(data = data, n_states = 2)
+dists <- list(z = "norm")
+par0 <- list(z = list(mean = c(-1, 1), sd = c(5, 5)))
+# Observation model
+obs <- Observation$new(data = data, dists = dists, n_states = 2, par = par0)
+# HMM
+hmm <- HMM$new(obs = obs, hid = hid)
+hmm$fit(silent = TRUE)
+```
+
+We extract a few variables from the fitted model:
+
+- The state-dependent observation parameters were estimated well.
+
+- The state sequence obtained from the Viterbi algorithm is very similar to the true state sequence (98% agreement).
+
+- The mean dwell time was slightly underestimated (estimate = 5.5, truth = 6).
+
+```{r hmm-res}
+# Estimated parameters
+hmm$par()$obspar[,,1]
+
+# Proportion of correctly estimated states
+vit <- hmm$viterbi()
+sum(vit == s)/n
+
+# Mean dwell time
+1/hid$tpm()[2,1,]
+```
+
+These all seem to indicate that the model captured many important features of the data well: it was able to identify and distinguish the two states. The main aim of HSMMs is to capture the dwell time distribution, so let's check whether this was captured by the simple HMM first. One simple way to do this is through simulation: we can simulate from the `MarkovChain` object directly, and then measure the dwell times in the simulated sequence.
+
+```{r hmm-sim, fig.width = 6, fig.height = 3, out.width="90%", fig.align = "center"}
+# Simulate Markov chain
+sim_mc <- hid$simulate(n = 1e5, silent = TRUE)
+
+# Plot over a grid of dwell times
+x <- 1:25
+# Zero-truncated negative binomial distribution
+dens_true <- dnbinom(x, size = 10, mu = 6)/(1 - dnbinom(0, size = 10, mu = 6))
+# Distribution of dwell times in Markov sequence
+dens_markov <- sapply(x, function(i) 
+    length(which(rle(sim_mc)$lengths == i))/length(rle(sim_mc)$lengths))
+
+# Compare the two distributions
+df <- data.frame(dwell_time = x,
+                 dens = c(dens_true, dens_markov),
+                 type = rep(c("true", "Markov"), each = length(x)))
+ggplot(df, aes(dwell_time, dens, col = type)) + 
+    geom_line() + geom_point() +
+    labs(x = "dwell time", y = "density", color = NULL) +
+    scale_color_manual(values = c("royalblue", "firebrick2"))
+```
+
+As expected, the dwell times in the state sequence simulated from the Markov process have a strictly decreasing distribution, with a mode at 1. (This is the geometric distribution.) It does not capture the true negative binomial distribution well.
+
+## (Approximate) hidden semi-Markov model analysis
+
+We do not describe the methodological approach of @langrock2011 in detail here, and refer to that paper for the details. The basic idea is that an HSMM can be approximated by an HMM with a higher-dimensional state space. Each HSMM state is made up of some number $m > 1$ of HMM states, and a particular structure is used for the resulting transition probability matrix. Larger values of $m$ lead to more flexibility in the dwell time distribution, but also increased computational cost. We apply this method with $m = 6$, leading to a 12-state HMM. There is a very large number of parameters in this model, but many of them will be constrained to be either fixed to zero, or to share a common value, such that the number of estimated parameters is much lower.
+
+```{r hsmm-tpm}
+# Transition matrix
+n_states <- 2
+m <- 6
+B1 <- matrix(0, nrow = m, ncol = m)
+B1[cbind(1:m, c(2:m, m))] <- 0.9
+B2 <- matrix(c(rep(0.1, m), rep(0, m*(m-1))), ncol = m)
+tpm0 <- rbind(cbind(B1, B2), cbind(B2, B1))
+# Format as sparse matrix to replace 0 by . in printed output
+Matrix::formatSparseM(tpm0)
+```
+
+When creating the `MarkovChain` object, we also need to specify reference indices for the transition probability matrix. These are the indices of the elements of the matrix that are not estimated, but deduced from other elements based on row constraints (entries of each row sum to 1). By default, the references are the diagonal elements, but this makes it impossible to fix them to zero, so here we choose one non-zero transition probability on each row as the reference. 
+
+```{r hsmm-hid}
+# Indices of reference transition probabilities
+ref <- apply(tpm0, 1, which.max)
+ref
+
+# Hidden state model
+hid2 <- MarkovChain$new(data = data, n_states = n_states * m, tpm = tpm0,
+                        ref = ref, stationary = TRUE)
+```
+
+We are using a 12-state HMM, so we need to specify 12 initial means and 12 initial standard deviations to create the `Observation` model. However, the idea is that the first 6 states capture state 1 in the HSMM, and the last 6 capture state 2, so a lot of parameters are shared. This is reflected in our choice of initial values.
+
+```{r hsmm-obs}
+# Observation model
+dists <- list(z = "norm")
+par0 <- list(z = list(mean = c(rep(-1, m), rep(1, m)), 
+                      sd = rep(5, n_states * m)))
+par0
+
+obs2 <- Observation$new(data = data, dists = dists,
+                        n_states = n_states * m, par = par0)
+```
+
+Many parameter constraints are required in this model, and these can be enforced through the `fixpar` argument of `HMM$new()`. This should be a list with elements `hid` and `obs`, corresponding to constraints on the hidden state and observation models, respectively. Each element is a named vector filled with NAs (for parameters that should be fixed to their initial value) and integers (for parameters that should be estimated to a shared value). This uses the `map` argument of `TMB::MakeADFun()`, and the TMB documentation provides some details; also see the TMB vignette on "Advanced features".
+
+For the transition probability constraints, we:
+
+1. Find the estimated parameters corresponding to transition probabilities fixed to zero. These are intercepts on the link scale, and they are equal to `-Inf` here (which is the result of applying the multinomial logit link function to zero)
+
+2. Create a vector with one `NA` for each such estimated parameter. This will let TMB know that those parameters should be fixed to their initial value, i.e., the corresponding transition probabilities will be fixed to zero.
+
+3. Name the vector of `NA`s after the estimated parameters (where the names can be found with `MarkovChain$coeff_fe()`).
+
+```{r hsmm-fixpar1}
+# Parameter constraints for tpm
+fix_hid <- rep(NA, length(which(is.infinite(hid2$coeff_fe()))))
+names(fix_hid) <- rownames(hid2$coeff_fe())[which(is.infinite(hid2$coeff_fe()))]
+```
+
+For the observation parameter constraints, we:
+
+1. Create a vector of integers, with $m$ 1s (for mean in state 1), $m$ 2s (mean in state 2), $m$ 3s (SD in state 1), and $m$ 4s (SD in state 2). This will let TMB know that the $m$ first parameters should be estimated to a common value, and likewise the next $m$ parameters, and so on.
+
+2. Get the parameter names from `Observation$coef_fe()`.
+
+```{r hsmm-fixpar2}
+# Parameter constraints for observation model
+fix_obs <- rep(1:4, each = m)
+names(fix_obs) <- rownames(obs2$coeff_fe())
+
+# List of all parameter constraints, to pass to HMM object
+fixpar <- list(hid = fix_hid, obs = fix_obs)
+```
+
+We can now combine the `MarkovChain` and `Observation` models into an `HMM` object, and pass `fixpar` to specify parameter constraints. Although there are many fewer parameters to estimate than in a regular 12-state HMM, model fitting takes longer than for the simple 2-state HMM (about 5-6 times slower on my laptop).
+
+```{r hsmm-fit}
+hmm2 <- HMM$new(obs = obs2, hid = hid2, fixpar = fixpar)
+hmm2$fit(silent = TRUE)
+```
+
+The estimated parameters are very close to the truth. To compare the Viterbi states to the true state sequence, we agglomerate the first 6 states into state 1, and the last 6 states into state 2. The states were recovered almost perfectly.
+
+```{r hsmm-res}
+# Observation parameters
+hmm2$par()$obs[, c(1, m + 1), 1]
+
+# Check decoded states
+vit2 <- hmm2$viterbi()
+vit2[which(vit2 %in% 1:m)] <- 1
+vit2[which(vit2 %in% (m + 1):(2 * m))] <- 2
+sum(vit2 == s)/n
+```
+
+The last check is to compare the distribution of dwell times in the Markov model and the semi-Markov model. We use simulations again, then agglomerate the 12 states into 2 states, and measure dwell times in the simulated sequence. The distribution of dwell times is a much better approximation of the true negative binomial distribution; in particular, it captures its non-monotonic shape (with a mode around 5). Increasing $m$ would improve the approximation, but memory is likely to be a bottleneck on many machines, as the size of model matrices will quickly increase with $m$.
+
+```{r hsmm-sim, fig.width = 6, fig.height = 3, out.width="90%", fig.align = "center"}
+# Simulate from Markov chain
+sim_mc2 <- hid2$simulate(n = 1e5, silent = TRUE)
+sim_mc2[which(sim_mc2 %in% 1:m)] <- 1
+sim_mc2[which(sim_mc2 %in% (m + 1):(2 * m))] <- 2
+
+# Plot different dwell time distributions
+dens_semi_markov <- sapply(x, function(i) 
+    length(which(rle(sim_mc2)$lengths == i))/length(rle(sim_mc2)$lengths))
+
+df <- rbind(df, data.frame(dwell_time = x,
+                           dens = dens_semi_markov,
+                           type = "semi-Markov"))
+
+ggplot(df, aes(dwell_time, dens, col = type)) + 
+    geom_line() + geom_point() +
+    labs(x = "dwell time", y = "density", color = NULL) +
+    scale_color_manual(values = c("royalblue", "gold", "firebrick2"))
+```
+
+# Higher-order Markov process
+
+The most common HMM formulation relies on a *first-order* Markov state process, where the state $S_t$ only depends on the previous state $S_{t-1}$. In a $k$-th order Markov process, the state $S_t$ depends on $\{ S_{t-1}, S_{t-2}, \dots, S_{t-k} \}$, making it possible to account for stronger "memory" in the state process. These higher-order Markov processes can be written as a regular Markov process with an augmented state space. Here, we focus on a second-order model for simplicity.
+
+We denote as $\gamma_{ijk} = \Pr(S_t = k \vert S_{t-1} = j, S_{t-2} = i)$ the transition probabilities of a second-order Markov process. A 2-state second-order model can be represented by a 4-state process $(\tilde{S}_t)$ on pairs of states, i.e.,
+\begin{align*}
+    \tilde{S}_t = 1 \text{ if } S_t = 1 \text{ and } S_{t-1} = 1 \\
+    \tilde{S}_t = 2 \text{ if } S_t = 2 \text{ and } S_{t-1} = 1 \\
+    \tilde{S}_t = 3 \text{ if } S_t = 1 \text{ and } S_{t-1} = 2 \\
+    \tilde{S}_t = 4 \text{ if } S_t = 2 \text{ and } S_{t-1} = 2 \\
+\end{align*}
+with transition probability matrix
+$$
+\Gamma =
+\begin{pmatrix}
+\gamma_{111} & \gamma_{112} & 0 & 0 \\
+0 & 0 & \gamma_{121} & \gamma_{122} \\
+\gamma_{211} & \gamma_{212} & 0 & 0 \\
+0 & 0 & \gamma_{221} & \gamma_{222} \\
+\end{pmatrix}.
+$$
+Some of the transitions are impossible, and the probabilities are fixed to zero. This can be implemented in hmmTMB using constraints on the transition probabilities.
+
+## Simulate data
+
+We simulate data from a second-order HMM, where the transition probabilities are stored in an array such that $\gamma_{ijk}$ is on the $i$-th row, $j$-th column, and $k$-th layer. Here, we choose transition probabilities such that (1) after having been in a state for two time steps, there is a 90% probability of staying in that state, and (2) after having switched to a new state, there is a 99% probability of staying in the new state. That is, we have $\gamma_{111} = \gamma_{222} = 0.9$ and $\gamma_{122} = \gamma_{211} = 0.99$, and other transition probabilities can de deduced from these using $\gamma_{ij1} + \gamma_{ij2} = 1$.
+
+```{r sohmm-sim, fig.width = 6, fig.height = 4, out.width="90%", fig.align = "center"}
+# State process
+tpa <- array(c(0.9, 0.99, 0.01, 0.1, 0.1, 0.01, 0.99, 0.9), dim = c(2, 2, 2))
+n <- 1e4
+s <- rep(NA, n)
+s <- c(1, 2)
+for(i in 3:n) {
+    s <- c(s, sample(1:2, size = 1, prob = tpa[s[i-2], s[i-1], ]))
+}
+# Plot distribution of dwell times
+plot(table(rle(s)$lengths), xlab = "dwell time", ylab = "density")
+
+# Observation process
+z <- rnorm(n, mean = c(-5, 5)[s], sd = c(3, 3)[s])
+data <- data.frame(z = z)
+```
+
+## Second-order HMM
+
+We define the 4-state process $(\tilde{S}_t)$ described above, which requires specifying an initial transition probability matrix with zeros in the right place, and indices of the reference transition probabilities. 
+
+```{r sohmm-hid}
+tpm0 <- matrix(c(0.9, 0.1, 0, 0,
+                 0, 0, 0.1, 0.9,
+                 0.9, 0.1, 0, 0,
+                 0, 0, 0.1, 0.9),
+               ncol = 4, byrow = TRUE)
+ref <- c(1, 3, 1, 3)
+hid <- MarkovChain$new(data = data, n_states = 4, tpm = tpm0, ref = ref)
+```
+
+Note from the definition of $\tilde{S}_t$ that $S_t = 1$ when $\tilde{S}_t =$ 1 or 3, and $S_t = 2$ when $\tilde{S}_t =$ 2 or 4. So, the observation model is such that parameters in states 1 and 3 are the same, and parameters in states 2 and 4 are the same.
+
+```{r sohmm-obs}
+dists <- list(z = "norm")
+par0 <- list(z = list(mean = c(-1, 1, -1, 1), sd = c(3, 3, 3, 3)))
+obs <- Observation$new(data = data, dists = dists, n_states = 4, par = par0)
+```
+
+We define parameter constraints to ensure that some transition probabilities are fixed to zero, and that observation parameters have common values in states 1 and 3 and states 2 and 4.
+
+```{r sohmm-fixpar}
+fix_hid <- rep(NA, length(which(is.infinite(hid$coeff_fe()))))
+names(fix_hid) <- rownames(hid$coeff_fe())[which(is.infinite(hid$coeff_fe()))]
+fix_obs <- c(1, 2, 1, 2, 3, 4, 3, 4)
+names(fix_obs) <- rownames(obs$coeff_fe())
+fixpar <- list(hid = fix_hid, obs = fix_obs)
+```
+
+We create the `HMM` object and fit the model.
+
+```{r sohmm-fit}
+hmm <- HMM$new(obs = obs, hid = hid, fixpar = fixpar)
+hmm$fit(silent = TRUE)
+```
+
+## Results
+
+We can unpack the results to check that the second-order HMM parameters used for simulation were recovered. In this example, the observation parameters and transition probabilities were estimated well. We can also compute the most likely state sequence with the Viterbi algorithm, which shows that the simulated state sequence was recovered.
+
+```{r sohmm-res}
+# Observation parameters
+obs$par()[,1:2,1]
+
+# Transition probability matrix
+hid$tpm()[,,1]
+
+# State sequence
+vit <- hmm$viterbi()
+vit[which(vit %in% c(1, 3))] <- 1
+vit[which(vit %in% c(2, 4))] <- 2
+sum(vit == s)/n
+```
+
+# Coupled hidden Markov models
+
+## Cartesian product model
+
+A coupled HMM assumed that two observed variables are driven by two separate, but dependent, state processes (@pohle2021). There are several ways to specify them, based on different levels of assumptions about the dependence of the two state processes, and here we focus on the "Cartesian product model" of @pohle2021.
+
+Similarly to semi-Markov and higher-order models, the basic idea is to rewrite the model as a standard HMM with expanded state space. Consider two observed variables $Z_t^{(1)}$ and $Z_t^{(2)}$, and assume that they depend on the state processes $S_t^{(1)}$ and $S_t^{(2)}$, respectively. For simplicity, we focus on the 2-state case here, i.e., $S_t^{(1)} \in \{ 1, 2 \}$ and $S_t^{(2)} \in \{ 1, 2 \}$. We define the state variable $S_t$ in such a way that
+$$
+  S_t =
+  \begin{cases}
+    1 & \text{ if } S_t^{(1)} = 1 \text{ and } S_t^{(2)} = 1,\\
+    2 & \text{ if } S_t^{(1)} = 1 \text{ and } S_t^{(2)} = 2,\\
+    3 & \text{ if } S_t^{(1)} = 2 \text{ and } S_t^{(2)} = 1,\\
+    4 & \text{ if } S_t^{(1)} = 2 \text{ and } S_t^{(2)} = 2.
+  \end{cases}
+$$
+The Cartesian procuct model can be written as the 4-state multivariate HMM with state process $(S_t)$. 
+
+For this example, we further assume that the observations follow state-dependent normal distributions. The observation model is the following,
+$$
+\begin{cases}
+\text{State 1:}\quad Z_t^{(1)} \sim N(\mu_{11}, \sigma_{11}^2),\
+                     Z_t^{(2)} \sim N(\mu_{12}, \sigma_{12}^2) \\
+\text{State 2:}\quad Z_t^{(1)} \sim N(\mu_{11}, \sigma_{11}^2),\
+                     Z_t^{(2)} \sim N(\mu_{22}, \sigma_{22}^2) \\
+\text{State 3:}\quad Z_t^{(1)} \sim N(\mu_{21}, \sigma_{21}^2),\
+                     Z_t^{(2)} \sim N(\mu_{12}, \sigma_{12}^2) \\
+\text{State 4:}\quad Z_t^{(1)} \sim N(\mu_{21}, \sigma_{21}^2),\
+                     Z_t^{(2)} \sim N(\mu_{22}, \sigma_{22}^2)
+\end{cases}
+$$
+
+Note that some of the parameters are shared between states. This is because, for example, $Z_t^{(1)}$ has the same distribution in states 1 and 2, because both correspond to $S_t^{(1)} = 1$.
+
+## Simulate data
+
+We simulate from a 4-state Markov chain, where the states are as defined above. We choose transition probabilities such that it is likely for both processes $(S_t^{(1)})$ and $(S_t^{(2)})$ to switch simultaneously. From the 4-state sequence, we can derive the two 2-state sequences for $(S_t^{(1)})$ and $(S_t^{(2)}).
+
+```{r coupled-sim1}
+# Transition probabilities for simulation
+tpm <- matrix(c(0.9, 0.02, 0.02, 0.06,
+                0.02, 0.9, 0.06, 0.02,
+                0.02, 0.06, 0.9, 0.02,
+                0.06, 0.02, 0.02, 0.9),
+              ncol = 4, byrow = TRUE)
+
+# Generate state sequence from 4-state process
+n <- 1000
+s <- rep(1, n)
+for(i in 2:n) {
+  s[i] <- sample(1:4, size = 1, prob = tpm[s[i-1],])
+}
+
+# Get state sequence for each separate 2-state process
+s1 <- ifelse(s %in% c(1, 2), 1, 2)
+s2 <- ifelse(s %in% c(1, 3), 1, 2)
+```
+
+Both observed variables follow state-dependent normal distributions, and we use the simulated state sequences to generate those.
+
+```{r coupled-sim2}
+# State-dependent observation parameters
+mean1 <- c(-5, 5)
+sd1 <- c(2, 2)
+mean2 <- c(0, 10)
+sd2 <- c(1, 5)
+
+# Generate observations
+z1 <- rnorm(n, mean = mean1[s1], sd = sd1[s1])
+z2 <- rnorm(n, mean = mean2[s2], sd = sd2[s2])
+data <- data.frame(ID = 1, z1 = z1, z2 = z2, s1 = s1, s2 = s2, time = 1:n)
+```
+
+We can look at the simulated state sequences to see that the two processes are dependent but separate: they can take different values, but they tend to switch states simultaneously.
+
+```{r coupled-sim3, fig.width = 6, fig.height = 3, out.width="100%", fig.align = "center"}
+library(ggplot2)
+ggplot(data[1:100,], aes(time, s1)) + 
+  geom_point(col = adjustcolor("firebrick2", 0.5)) + 
+  geom_line(col = adjustcolor("firebrick2", 0.5)) +
+  geom_point(aes(y = s2), col = adjustcolor("royalblue", 0.5)) + 
+  geom_line(aes(y = s2), col = adjustcolor("royalblue", 0.5)) +
+  labs(y = "state")
+```
+
+## Model fitting
+
+This model is relatively simple to specify in hmmTMB; the main challenge is to set the correct parameter constraints to ensure that the four states match their definitions. We first create the `MarkovChain` object, which does require any constraints.
+
+```{r coupled-hid}
+hid <- MarkovChain$new(data = data, n_states = 4)
+```
+
+In the observation model, we want to make sure that the parameters are shared between states as described above (e.g., same mean for $Z_t^{(1)}$ in states 1 and 2, etc.), and we choose the starting parameters accordingly.
+
+```{r coupled-obs}
+dists <- list(z1 = "norm", z2 = "norm")
+par0 <- list(z1 = list(mean = c(-3, -3, 3, 3), sd = c(1, 1, 1, 1)),
+             z2 = list(mean = c(-5, 5, -5, 5), sd = c(2, 3, 2, 3)))
+
+obs <- Observation$new(data = data, dists = dists, 
+                       n_states = 4, par = par0)
+```
+
+We set constraints on the observation parameters using the `fixpar` argument in `HMM$new()`, by defining a vector with one integer for each estimated parameter. The value of the integer is used to determine which parameters should be estimated to a common value. To find the list of estimated observation parameters, we can use `obs$coeff_fe()`; this is also handy to set the names of the vector of constraints.
+
+```{r coupled-fixpar}
+fixpar_obs <- c(1, 1, 2, 2, 3, 3, 4, 4, 5, 6, 5, 6, 7, 8, 7, 8)
+names(fixpar_obs) <- rownames(obs$coeff_fe())
+fixpar <- list(obs = fixpar_obs)
+```
+
+We can now create the HMM and fit it. The estimated parameters closely match the parameters used to simulate the data.
+
+```{r coupled-fit}
+hmm <- HMM$new(obs = obs, hid = hid, fixpar = fixpar)
+hmm$fit(silent = TRUE)
+hmm$par()
+```
+
+# References
