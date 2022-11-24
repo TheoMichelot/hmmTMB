@@ -715,7 +715,7 @@ HMM <- R6Class(
       }
       
       # Run Stan iterations 
-      private$out_stan_ <- tmbstan::tmbstan(private$tmb_obj_, ...)
+      private$out_stan_ <- tmbstan::tmbstan(private$tmb_obj_, init = "par", ...)
       post <- as.matrix(private$out_stan_)
       # Remove "lp__" column
       post <- post[,-ncol(post)]
