@@ -308,6 +308,8 @@ find_re <- function(form) {
 #' a single-column matrix.
 #' 
 #' @return Sparse matrix of class dgTMatrix
+#' 
+#' @importFrom Matrix dMatrix generalMatrix TsparseMatrix
 as_sparse <- function(x) {
   if(length(dim(x)) < 2) {
     x <- matrix(x, ncol = 1)
