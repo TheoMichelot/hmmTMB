@@ -308,12 +308,13 @@ find_re <- function(form) {
 #' a single-column matrix.
 #' 
 #' @return Sparse matrix of class dgTMatrix
-#' 
-#' @importFrom Matrix dMatrix generalMatrix TsparseMatrix
 as_sparse <- function(x) {
   if(length(dim(x)) < 2) {
     x <- matrix(x, ncol = 1)
   }
-  mat <- as(as(as(x, "dMatrix"), "generalMatrix"), "TsparseMatrix")
+  # # This is the syntax recommended by Matrix > 1.5.0, but doesn't seem
+  # # to be compatible with earlier versions of Matrix.
+  # mat <- as(as(as(x, "dMatrix"), "generalMatrix"), "TsparseMatrix")
+  mat <- suppressMessages(as(x, "dgTMatrix"))
   return(mat)
 }
