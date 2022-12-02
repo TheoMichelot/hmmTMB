@@ -8,7 +8,7 @@ dat <- data.frame(ID = rep(0, n), count = rep(0, n))
 obs <- Observation$new(data = dat, 
                        dists = list(count = "pois"), 
                        n_states = 2, 
-                       par = list(count = list(lambda = c(5, 20))))
+                       par = list(count = list(rate = c(5, 20))))
 hid <- MarkovChain$new(n_states = 2, data = dat)
 true_mod <- HMM$new(obs = obs, hid = hid)
 # simulate from true model
@@ -18,7 +18,7 @@ dat <- true_mod$simulate(n, silent = TRUE)
 obs <- Observation$new(data = dat, 
                        dists = list(count = "pois"), 
                        n_states = 2, 
-                       par = list(count = list(lambda = c(5, 10))))
+                       par = list(count = list(rate = c(5, 10))))
 hid <- MarkovChain$new(n_states = 2, data = dat)
 mod <- HMM$new(obs = obs, hid = hid)
 # suggest better starting parameters?
