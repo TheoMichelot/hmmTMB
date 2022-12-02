@@ -64,7 +64,7 @@ test_that("Stationary distribution has correct dimensions", {
 test_that("Update methods work", {
     # Test update of delta and tpm
     new_delta0 <- c(0.3, 0.7)
-    mc$update_delta0(delta0 = new_delta)
+    mc$update_delta0(delta0 = new_delta0)
     expect_equal(unname(c(mc$delta0())), new_delta0)
     new_tpm <- matrix(c(0.8, 0.3, 0.2, 0.7), ncol = 2)
     mc$update_tpm(tpm = new_tpm)

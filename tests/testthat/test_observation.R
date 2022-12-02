@@ -40,7 +40,8 @@ test_that("Model matrices have the right format", {
 test_that("Model terms are consistent", {
     terms <- obs$terms()
     expect_equal(sum(terms$ncol_fe), ncol(terms$X_fe))
-    expect_equal(sum(terms$ncol_re), ncol(terms$X_re))
+    expect_equal(sum(apply(terms$ncol_re, 2, function(x) diff(x) + 1)), 
+                 ncol(terms$X_re))
 })
 
 test_that("linpred has correct length", {
@@ -91,4 +92,3 @@ test_that("Update methods work", {
     obs <- Observation$new(data = data, dists = dists, n_states = 2, 
                            formulas = formulas, par = par0)
 })
-

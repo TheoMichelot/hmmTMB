@@ -21,8 +21,6 @@ obs <- Observation$new(data = dat,
                        par = list(count = list(rate = c(5, 10))))
 hid <- MarkovChain$new(n_states = 2, data = dat)
 mod <- HMM$new(obs = obs, hid = hid)
-# suggest better starting parameters?
-ini <- mod$suggest_initial()
 
 test_that("Simulate HMM data", {
   expect_equal(names(dat), c("ID", "count"))
@@ -50,22 +48,22 @@ test_that("Model fits correctly", {
   expect_equal(as.numeric(mod$par()$tpm), c(0.9, 0.1, 0.1, 0.9), tolerance = 0.2)
   
   # get uncertainty, e.g., for count means 
-  var <- mod$predict("obspar", level = 0.95)
+  var <- mod$predict("obspar", n_post = 1000)
   expect_equal(all(as.numeric(var$lcl) < as.numeric(var$ucl)), TRUE)
   expect_equal(as.numeric(var$lcl), c(5, 20), tolerance = 1)
   expect_equal(as.numeric(var$ucl), c(5, 20), tolerance = 1)
   
   # or for transition probabilities
-  var <- mod$predict("tpm", level = 0.95)
+  var <- mod$predict("tpm", n_post = 1000)
   expect_equal(all(var$lcl[!diag(2)] < var$ucl[!diag(2)]), TRUE)
   expect_equal(var$lcl[!diag(2)], c(0.1, 0.1), tolerance = 0.1)
   expect_equal(var$ucl[!diag(2)], c(0.3, 0.3), tolerance = 0.1)
   
   # or for stationary distribution 
-  var <- mod$predict("delta", level = 0.95)
+  var <- mod$predict("delta", n_post = 1000)
   expect_equal(var$lcl[2] < var$ucl[2], TRUE)
-  expect_equal(var$lcl[1], 0.57, tolerance = 0.01)
-  expect_equal(var$ucl[1], 0.56, tolerance = 0.01)
+  expect_equal(var$lcl[1], 0.31, tolerance = 0.01)
+  expect_equal(var$ucl[1], 0.79, tolerance = 0.01)
 })
 
 test_that("State inference is correct", {
@@ -101,7 +99,7 @@ test_that("Goodness-of-fit metrics are correct", {
     quantile(x$count, prob = seq(0.2, 0.8, 0.2))
   }
   # do simulation 
-  sims <- mod$gof(gof_stat, nsims = 100, silent = TRUE)
+  sims <- mod$check(gof_stat, nsims = 100, silent = TRUE)
   expect_equal(as.numeric(sims$obs_stat), c(4, 6, 15, 22), tolerance = 0.1)
 })
 
