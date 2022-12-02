@@ -5,24 +5,38 @@ set.seed(58320)
 # number of time steps
 n <- 1000
 # create an empty dataset
-dat <<- data.frame(ID = rep(0, n), count = rep(0, n))
+dat <- data.frame(ID = rep(0, n), count = rep(0, n))
 # add covariates
-dat$x <<- rnorm(n)
+dat$x <- rnorm(n)
 # create true model 
-true_mod <<- HMM$new(file = "../../inst/examples/fixed_covs/simple_fixed_covs/true_fixedcovsmod.hmm")
+true_hid <- MarkovChain$new(data = dat, n_states = 2, 
+                            tpm = matrix(c(0.8, 0.1, 0.2, 0.9), 2, 2),
+                            formula = matrix(c(".", "~1", "~x", "."), 2, 2))
+true_obs <- Observation$new(data = dat, n_states = 2, 
+                            dists = list(count = "pois"), 
+                            formulas = list(count = list(rate = ~ x)),
+                            par = list(count = list(rate = c(5, 20))))
+true_mod <- HMM$new(obs = true_obs, hid = true_hid)
 # set covariate effect on observation distribution
 par <- true_mod$coeff_fe()$obs
 par <- c(par[1], -0.05, par[3], 0.08)
 true_mod$obs()$update_coeff_fe(par)
-
 # set covariate effect on transition probability 
 tpmpar <- true_mod$coeff_fe()$hid
 tpmpar <- c(tpmpar[1], 0.1, tpmpar[3])
 true_mod$hid()$update_coeff_fe(tpmpar)
 # simulate from true model
-dat <<- true_mod$simulate(n, data = dat, silent = TRUE)
+dat <- true_mod$simulate(n, data = dat, silent = TRUE)
+
 # create model to fit 
-mod <<- HMM$new(file = "../../inst/examples/fixed_covs/simple_fixed_covs/fixedcovs_mod.hmm")
+hid <- MarkovChain$new(data = dat, n_states = 2, 
+                       tpm = matrix(c(0.95, 0.05, 0.05, 0.95), 2, 2),
+                       formula = matrix(c(".", "~1", "~x", "."), 2, 2))
+obs <- Observation$new(data = dat, n_states = 2, 
+                       dists = list(count = "pois"),
+                       formulas = list(count = list(rate = ~ x)),
+                       par = list(count = list(rate = c(5, 10))))
+mod <- HMM$new(obs = obs, hid = hid)
 # fit model
 mod$fit(silent = TRUE)
 

@@ -29,6 +29,7 @@ tpmpar <- c(tpmpar[1], 0.8, tpmpar[3])
 true_mod$hid()$update_coeff_fe(tpmpar)
 # simulate from true model
 dat <- true_mod$simulate(n, data = dat, silent = TRUE)
+
 # create model to fit 
 hid <- MarkovChain$new(data = dat, n_states = 2, 
                        tpm = matrix(c(0.95, 0.05, 0.05, 0.95), 2, 2))
@@ -38,6 +39,7 @@ obs <- Observation$new(data = dat, n_states = 2,
 mod <- HMM$new(obs = obs, hid = hid)
 # fit model
 mod$fit(silent = TRUE)
+
 # update observation model 
 mod_x <- update(mod, "obs", "count", "rate", ~.+ x, silent = TRUE)
 mod_z <- update(mod_x, "obs", "count", "rate", ~.+z, silent = TRUE)
