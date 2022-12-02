@@ -435,28 +435,30 @@ HMM <- R6Class(
       # Degrees of freedom for fixed effects
       edf <- nrow(self$obs()$coeff_fe()) + nrow(self$hid()$coeff_fe())
       
-      if(!is.null(self$tmb_rep()$jointPrecision)) {
-        # Joint covariance matrix
-        Q <- self$tmb_rep()$jointPrecision
-        V <- prec_to_cov(Q)
-        
-        # get Hessian
-        par_all <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
-        H <- self$tmb_obj_joint()$he(par_all)
-        
-        # Extract covariance for random effect components
-        ind_re_hid <- which(colnames(Q) == "coeff_re_hid")
-        ind_re_obs <- which(colnames(Q) == "coeff_re_obs")
-        V_re_hid <- V[ind_re_hid, ind_re_hid]
-        V_re_obs <- V[ind_re_obs, ind_re_obs]
-        H_re_hid <- H[ind_re_hid, ind_re_hid]
-        H_re_obs <- H[ind_re_obs, ind_re_obs]
-        
-        edf_hid <- sum(diag(H_re_hid %*% V_re_hid))
-        edf_obs <- sum(diag(H_re_obs %*% V_re_obs))
-        
-        # Random effect EDF
-        edf <- edf + edf_hid + edf_obs    
+      if(!is.null(private$tmb_rep_)) {
+        if(!is.null(self$tmb_rep()$jointPrecision)) {
+          # Joint covariance matrix
+          Q <- self$tmb_rep()$jointPrecision
+          V <- prec_to_cov(Q)
+          
+          # get Hessian
+          par_all <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
+          H <- self$tmb_obj_joint()$he(par_all)
+          
+          # Extract covariance for random effect components
+          ind_re_hid <- which(colnames(Q) == "coeff_re_hid")
+          ind_re_obs <- which(colnames(Q) == "coeff_re_obs")
+          V_re_hid <- V[ind_re_hid, ind_re_hid]
+          V_re_obs <- V[ind_re_obs, ind_re_obs]
+          H_re_hid <- H[ind_re_hid, ind_re_hid]
+          H_re_obs <- H[ind_re_obs, ind_re_obs]
+          
+          edf_hid <- sum(diag(H_re_hid %*% V_re_hid))
+          edf_obs <- sum(diag(H_re_obs %*% V_re_obs))
+          
+          # Random effect EDF
+          edf <- edf + edf_hid + edf_obs    
+        }        
       }
       
       return(edf)
