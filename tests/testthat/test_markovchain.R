@@ -37,7 +37,8 @@ test_that("Model matrices have the right format", {
 test_that("Model terms are consistent", {
     terms <- mc$terms()
     expect_equal(sum(terms$ncol_fe), ncol(terms$X_fe))
-    expect_equal(sum(terms$ncol_re), ncol(terms$X_re))
+    expect_equal(sum(apply(terms$ncol_re, 2, function(x) diff(x) + 1)), 
+                 ncol(terms$X_re))
 })
 
 test_that("linpred has correct length", {
@@ -53,21 +54,21 @@ test_that("TPM has correct dimensions", {
 })
 
 test_that("Stationary distribution has correct dimensions", {
-    expect_equal(dim(mc$delta0()), c(1, 2))
-    expect_equal(dim(mc$delta0(t = 5)), c(1, 2))
-    expect_equal(dim(mc$delta0(t = 6:10)), c(5, 2))
-    expect_equal(dim(mc$delta0(t = "all")), c(n, 2))
-    expect_equal(dim(mc$delta0(t = "all", linpred = seq(-2, 2, length = 4))), c(2, 2))
+    expect_equal(dim(mc$delta()), c(1, 2))
+    expect_equal(dim(mc$delta(t = 5)), c(1, 2))
+    expect_equal(dim(mc$delta(t = 6:10)), c(5, 2))
+    expect_equal(dim(mc$delta(t = "all")), c(n, 2))
+    expect_equal(dim(mc$delta(t = "all", linpred = seq(-2, 2, length = 4))), c(2, 2))
 })
 
 test_that("Update methods work", {
     # Test update of delta and tpm
-    new_delta <- c(0.3, 0.7)
+    new_delta0 <- c(0.3, 0.7)
     mc$update_delta0(delta0 = new_delta)
-    expect_equal(unname(mc$delta0(t = NULL)), new_delta)
+    expect_equal(unname(c(mc$delta0())), new_delta0)
     new_tpm <- matrix(c(0.8, 0.3, 0.2, 0.7), ncol = 2)
     mc$update_tpm(tpm = new_tpm)
-    expect_equal(mc$tpm()[,,1], new_tpm)
+    expect_equal(unname(mc$tpm()[,,1]), new_tpm)
     
     # Re-initialise object
     mc <- MarkovChain$new(n_states = 2, formula = f, data = data)
@@ -92,23 +93,23 @@ test_that("Update methods work", {
 test_that("delta is computed correctly", {
     # Check stationary distribution for a few special cases of TPM
     mc$update_tpm(tpm = matrix(c(0.5, 0.5, 0.5, 0.5), ncol = 2))
-    expect_equal(mc$delta0()[1,], c(0.5, 0.5))
+    expect_equal(unname(mc$delta()[1,]), c(0.5, 0.5))
     mc$update_tpm(tpm = matrix(c(0.9, 0.1, 0.1, 0.9), ncol = 2))
-    expect_equal(mc$delta0()[1,], c(0.5, 0.5))
+    expect_equal(unname(mc$delta()[1,]), c(0.5, 0.5))
     mc$update_tpm(tpm = matrix(c(0.9, 0.2, 0.1, 0.8), ncol = 2))
-    expect_equal(mc$delta0()[1,], c(2/3, 1/3))
+    expect_equal(unname(mc$delta()[1,]), c(2/3, 1/3))
     mc$update_tpm(tpm = matrix(c(0.9, 0.3, 0.1, 0.7), ncol = 2))
-    expect_equal(mc$delta0()[1,], c(3/4, 1/4))
+    expect_equal(unname(mc$delta()[1,]), c(3/4, 1/4))
     mc$update_tpm(tpm = matrix(c(0.9, 0.4, 0.1, 0.6), ncol = 2))
-    expect_equal(mc$delta0()[1,], c(4/5, 1/5))
+    expect_equal(unname(mc$delta()[1,]), c(4/5, 1/5))
     mc$update_tpm(tpm = matrix(c(0.9, 0.5, 0.1, 0.5), ncol = 2))
-    expect_equal(mc$delta0()[1,], c(5/6, 1/6))
+    expect_equal(unname(mc$delta()[1,]), c(5/6, 1/6))
     mc$update_tpm(tpm = matrix(c(0.1, 0.1, 0.9, 0.9), ncol = 2))
-    expect_equal(mc$delta0()[1,], c(0.1, 0.9))
+    expect_equal(unname(mc$delta()[1,]), c(0.1, 0.9))
     
     # Check that error is throw for singular system
     mc$update_tpm(tpm = matrix(c(1, 0, 0, 1), ncol = 2))
-    expect_error(mc$delta0(), "singular system")
+    expect_error(mc$delta(), "singular system")
     
     # Re-initialise object
     mc <- MarkovChain$new(n_states = 2, formula = f, data = data)
