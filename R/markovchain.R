@@ -361,11 +361,12 @@ MarkovChain <- R6Class(
     #' then used for all time series. Entries of each row of delta0 should sum
     #' to one.
     update_delta0 = function(delta0) {
+      
       # If input is vector, copy into matrix
       if(is.null(dim(delta0))) {
-        if(length(delta0) != n_states) {
+        if(length(delta0) != self$nstates()) {
           stop(paste0("'delta0' should have length the number of states (", 
-                      n_states, ")"))
+                      self$nstates(), ")"))
         }
         delta0 <- matrix(delta0, nrow = nrow(self$delta0()), 
                          ncol = self$nstates(), byrow = TRUE)
