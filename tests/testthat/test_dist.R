@@ -11,7 +11,7 @@ test_that("Distribution can be accessed and correct information is returned", {
     expect_equal(obj$npar(), 2)
     expect_equal(obj$parnames(), c("mean", "sd"))
     x <- 1:10
-    expect_equal(obj$parapprox(x), c(mean(x), sd(x)))
+    expect_equal(obj$parapprox()(x), c(mean(x), sd(x)))
     expect_equal(obj$fixed(), c(FALSE, FALSE))
 })
 
