@@ -10,9 +10,9 @@ test_that("Distribution can be accessed and correct information is returned", {
     expect_equal(obj$invlink(), list(mean = identity, sd = exp))
     expect_equal(obj$npar(), 2)
     expect_equal(obj$parnames(), c("mean", "sd"))
-    expect_equal(obj$parapprox(), function(x) {return(c(mean(x), sd(x)))})
+    x <- 1:10
+    expect_equal(obj$parapprox(x), c(mean(x), sd(x)))
     expect_equal(obj$fixed(), c(FALSE, FALSE))
-    expect_equal(obj$code(), 1)
 })
 
 test_that("n2w and w2n return right format (dist_norm)", {
