@@ -12,6 +12,7 @@
 #' @importFrom TMB MakeADFun sdreport
 #' @importFrom stringr str_trim str_split str_split_fixed
 #' @importFrom optimx optimx
+#' @importFrom tmbstan tmbstan
 #' 
 #' @useDynLib hmmTMB, .registration = TRUE
 #' 
@@ -717,7 +718,7 @@ HMM <- R6Class(
       }
       
       # Run Stan iterations 
-      private$out_stan_ <- tmbstan::tmbstan(private$tmb_obj_, init = "par", ...)
+      private$out_stan_ <- tmbstan(private$tmb_obj_, init = "par", ...)
       post <- as.matrix(private$out_stan_)
       # Remove "lp__" column
       post <- post[,-ncol(post)]

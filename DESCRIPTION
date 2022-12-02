@@ -9,12 +9,10 @@ Description: Fitting hidden Markov models with Template Model Builder (TMB)
   faster inference and more flexible random effect / smoothing spline structures. 
 License: GPL-3
 Depends: R6, mgcv, TMB, RcppEigen, ggplot2
-Imports: Matrix, stringr, optimx
+Imports: Matrix, stringr, optimx, CircStats, MASS, tmbstan
 LinkingTo: TMB, RcppEigen
 Suggests: 
-    tmbstan,
     rstan,
-    CircStats,
     testthat
 Encoding: UTF-8
 LazyData: true

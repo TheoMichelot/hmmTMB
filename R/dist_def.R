@@ -564,16 +564,17 @@ dist_beta <- Dist$new(
 # Mixed distributions -----------------------------------------------------
 
 # Tweedie ======================================
+#' @importFrom mgcv ldTweedie rTweedie
 dist_tweedie <- Dist$new(
   name = "tweedie", 
   name_long = "Tweedie",
   pdf = function(x, mean, p, phi, log = FALSE) {
-    l <- mgcv::ldTweedie(x, mu = mean, p = p + 1, phi = phi)[1,1]
+    l <- ldTweedie(x, mu = mean, p = p + 1, phi = phi)[1,1]
     if (!log) l <- exp(l)
     return(l)
   }, 
   rng = function(n, mean, p, phi) {
-    return(mgcv::rTweedie(rep(mean, n), p + 1, phi))
+    return(rTweedie(rep(mean, n), p + 1, phi))
   }, 
   link = list(mean = identity, p = qlogis, phi = log), 
   invlink = list(mean = identity, p = plogis, phi = exp), 
@@ -590,6 +591,7 @@ dist_tweedie <- Dist$new(
 # Angular distributions ---------------------------------------------------
 
 # Von Mises ====================================
+#' @importFrom CircStats rvm
 dist_vm <- Dist$new(
   name = "vm",
   name_long = "von Mises",
@@ -604,7 +606,7 @@ dist_vm <- Dist$new(
   rng = function(n, mu, kappa) {
     # rvm and dvm use different parameter names
     # (also, translate rvm output from [0, 2pi] to [-pi, pi])
-    CircStats::rvm(n = n, mean = mu + pi, k = kappa) - pi
+    rvm(n = n, mean = mu + pi, k = kappa) - pi
   },
   link = list(mu = function(x) qlogis((x + pi) / (2 * pi)),
               kappa = log),
@@ -627,18 +629,19 @@ dist_vm <- Dist$new(
 )
 
 # Wrapped Cauchy ====================================
+#' @importFrom CircStats dwrpcauchy rwrpcauchy
 dist_wrpcauchy <- Dist$new(
   name = "wrpcauchy",
   name_long = "wrapped Cauchy",
   pdf = function(x, mu, rho, log = FALSE) {
-    val <- CircStats::dwrpcauchy(theta = x, mu = mu, rho = rho)
+    val <- dwrpcauchy(theta = x, mu = mu, rho = rho)
     if(log) {
       val <- log(val)
     }
     return(val)
   },
   rng = function(n, mu, rho) {
-    samp <- CircStats::rwrpcauchy(n, mu, rho)
+    samp <- rwrpcauchy(n, mu, rho)
     samp <- ifelse(samp > pi, samp - 2 * pi, samp)
     return(samp)
   },

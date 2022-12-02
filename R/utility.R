@@ -258,13 +258,15 @@ as_character_formula <- function (x, ...)
 #' or sparse matrix on which as.matrix can be used)
 #' 
 #' @return Precision matrix
+#' 
+#' @importFrom MASS ginv
 #' @export
 prec_to_cov <- function(prec_mat)
 {
   cov_mat <- try(as.matrix(solve(prec_mat)), silent = TRUE)
   if(inherits(cov_mat, "try-error")) {
     message <- attr(cov_mat, 'condition')$message
-    cov_mat <- MASS::ginv(as.matrix(prec_mat))
+    cov_mat <- ginv(as.matrix(prec_mat))
     warning(paste0("Inversion of precision matrix using 'solve' failed: ", 
                    message, ". Using 'MASS::ginv' instead (uncertainty ",
                    "estimates may be unreliable)."))
