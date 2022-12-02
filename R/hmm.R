@@ -918,7 +918,7 @@ HMM <- R6Class(
     #' 
     #' @return cdfs on grid for each variable 
     cond = function(ngrid = 1000, silent = FALSE) {
-      delta0 <- t(self$hid()$delta0())
+      delta0 <- self$hid()$delta0()
       vars <- self$obs()$obs_var()
       nvars <- ncol(vars)
       n <- nrow(self$obs()$data())
