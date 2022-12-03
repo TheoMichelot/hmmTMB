@@ -8,7 +8,7 @@ Description: Fitting hidden Markov models with Template Model Builder (TMB)
   using automatic differentiation and Laplace approximation, allowing for 
   faster inference and more flexible random effect / smoothing spline structures. 
 License: GPL-3
-Depends: R6, mgcv, TMB, RcppEigen, ggplot2
+Depends: R6, mgcv, TMB, ggplot2
 Imports: Matrix, stringr, optimx, CircStats, MASS, tmbstan
 LinkingTo: TMB, RcppEigen
 Suggests: 
