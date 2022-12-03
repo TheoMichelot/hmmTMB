@@ -4,25 +4,30 @@
 \alias{update.HMM}
 \title{Update a model to a new model by changing one formula}
 \usage{
-\method{update}{HMM}(mod, type, i, j, change, fit = TRUE, silent = FALSE)
+\method{update}{HMM}(object, type, i, j, change, fit = TRUE, silent = FALSE, ...)
 }
 \arguments{
-\item{mod}{a HMM model object}
+\item{object}{HMM model object}
 
-\item{type}{character string for the part of the model that is updated
+\item{type}{Character string for the part of the model that is updated
 (either "hid" or "obs")}
 
-\item{i}{if type="hid" then i is the row of the formula containing the change
-if type="obs" then i is the observation variable name}
+\item{i}{If type = "hid" then i is the row of the formula containing the 
+change. If type = "obs" then i is the observation variable name.}
 
-\item{j}{if type="hid" then j is the column of the formula containing the change
-if type="obs" then j is the parameter whose formula is to be changed}
+\item{j}{If type = "hid" then j is the column of the formula containing the 
+change. If type = "obs" then j is the parameter whose formula is to be 
+changed.}
 
-\item{change}{the change to make to the formula, see ?update.formula for details}
+\item{change}{The change to make to the formula, see ?update.formula for 
+details.}
 
-\item{fit}{if FALSE then change is made but model is not re-fit}
+\item{fit}{If FALSE then change is made but model is not re-fit.}
 
-\item{silent}{if TRUE then no model fitting output is given}
+\item{silent}{If TRUE then no model fitting output is given}
+
+\item{...}{Additional arguments are ignored (for compatibility with generic
+S3 method)}
 }
 \description{
 Update a model to a new model by changing one formula
