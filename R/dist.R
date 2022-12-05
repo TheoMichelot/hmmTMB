@@ -123,8 +123,9 @@ Dist <- R6Class(
 
     #' @description Evaluate probability density/mass function
     #' 
-    #' This method is used in Observation$obs_probs. It is a wrapper around self\$pdf,
-    #' which prepares the parameters and passes them to the function.
+    #' This method is used in the Dist$obs_probs() method. It is a wrapper 
+    #' around Dist$pdf(), which prepares the parameters and passes them to the 
+    #' function.
     #' 
     #' @param x Value at which the function should be evaluated
     #' @param par Vector of parameters. The entries should be named if
@@ -143,8 +144,8 @@ Dist <- R6Class(
     
     #' @description Random number generator
     #' 
-    #' This method is a wrapper around self\$rng, which prepares the parameters and
-    #' passes them to the function.
+    #' This method is a wrapper around Dist$rng(), which prepares the parameters 
+    #' and passes them to the function.
     #' 
     #' @param n Number of realisations to generate
     #' @param par Vector of parameters. The entries should be named if
@@ -162,7 +163,7 @@ Dist <- R6Class(
     #' 
     #' This method transforms parameters from the natural scale (i.e., their domain
     #' of definition) to the "working" or "linear predictor" scale (i.e., the real
-    #' line). It is a wrapper for self\$link.
+    #' line). It is a wrapper for Dist$link().
     #' 
     #' @param par List of parameters
     #' 
@@ -193,7 +194,7 @@ Dist <- R6Class(
     #' 
     #' This method transforms parameters from the "working" or "linear predictor" 
     #' scale (i.e., the real line) to the natural scale (i.e., their domain
-    #' of definition). It is a wrapper for self\$invlink.
+    #' of definition). It is a wrapper for Dist$invlink().
     #' 
     #' @param wpar Vector of working parameters
     #' @param as_matrix Logical. If TRUE, the natural parameters are
