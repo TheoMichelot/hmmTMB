@@ -28,6 +28,7 @@
 #'               n_states = 2)
 #'               
 #' @importFrom stats as.formula terms
+#' @export
 make_formulas <- function(input_forms, 
                           var_names, 
                           par_names,
