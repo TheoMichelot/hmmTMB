@@ -46,20 +46,44 @@ test_that("Formulas are understood", {
 })
 
 test_that("Parameters are reasonable", {
-  expect_equal(as.numeric(mod$coeff_fe()$obs[,1]), c(log(5), -0.05, log(20), 0.08), tolerance = 0.2)
-  expect_equal(as.numeric(mod$coeff_fe()$hid[,1]), c(qlogis(0.2), 0.1, qlogis(0.1)), tolerance = 0.2)
+  expect_equal(
+    as.numeric(mod$coeff_fe()$obs[,1]), 
+    c(log(5), -0.05, log(20), 0.08), 
+    tolerance = 0.2)
+  expect_equal(
+    as.numeric(mod$coeff_fe()$hid[,1]), 
+    c(qlogis(0.2), 0.1, qlogis(0.1)), 
+    tolerance = 0.2)
 })
 
 test_that("Predictions can be made over time", {
-  pred <- mod$predict("obspar", t = c(2,3,12), level = 0.95)
-  expect_equal(as.numeric(pred$mean), c(4.9, 20.1, 5.8, 17.4, 5.9, 17.0), tolerance = 0.1)
-  expect_equal(as.numeric(pred$lcl), c(4.7, 20.5, 5.3, 16.73, 5.3, 16.3), tolerance = 0.1)
-  expect_equal(as.numeric(pred$ucl), c(5.2,21.4,6.3,18.1,6.5,17.8), tolerance = 0.1)
+  pred <- mod$predict("obspar", t = c(2, 3, 12), n_post = 3000)
+  expect_equal(
+    as.numeric(pred$mean), 
+    c(5.0, 20.9, 5.8, 17.4, 5.9, 17.1), 
+    tolerance = 0.1)
+  expect_equal(
+    as.numeric(pred$lcl), 
+    c(4.7, 20.5, 5.3, 16.7, 5.3, 16.3), 
+    tolerance = 0.1)
+  expect_equal(
+    as.numeric(pred$ucl), 
+    c(5.2, 21.4, 6.3, 18.1, 6.5, 17.8), 
+    tolerance = 0.1)
   expect_equal(all(as.numeric(pred$lcl) < as.numeric(pred$ucl)), TRUE)
   
-  pred2 <- mod$predict("tpm", t = c(5, 1, 12), level = 0.95)
-  expect_equal(as.numeric(pred2$mean), c(0.81,0.14,0.19,0.86,0.8,0.14,0.2,0.86,0.82,0.14,0.18,0.86), tolerance = 0.01)
-  expect_equal(as.numeric(pred2$lcl), c(0.84,0.11,0.16,0.89,0.84,0.11,0.16,0.89,0.89,0.11,0.11,0.89), tolerance = 0.01)
-  expect_equal(as.numeric(pred2$ucl), c(0.76,0.17,0.24,0.83,0.75,0.17,0.25,0.83,0.72,0.17,0.28,0.83), tolerance = 0.01)
+  pred2 <- mod$predict("tpm", t = c(5, 1, 12), n_post = 3000)
+  expect_equal(
+    as.numeric(pred2$mean), 
+    c(0.8, 0.14, 0.2, 0.86, 0.8, 0.14, 0.2, 0.86, 0.81, 0.14, 0.19, 0.86), 
+    tolerance = 0.01)
+  expect_equal(
+    as.numeric(pred2$lcl), 
+    c(0.76, 0.11, 0.16, 0.83, 0.75, 0.11, 0.16, 0.83, 0.72, 0.11, 0.11, 0.83), 
+    tolerance = 0.01)
+  expect_equal(
+    as.numeric(pred2$ucl), 
+    c(0.84, 0.17, 0.24, 0.89, 0.84, 0.17, 0.25, 0.89, 0.89, 0.17, 0.28, 0.89), 
+    tolerance = 0.01)
 })
 
