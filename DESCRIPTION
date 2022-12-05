@@ -10,7 +10,7 @@ Description: Fitting hidden Markov models with Template Model Builder (TMB)
 URL: https://github.com/TheoMichelot/hmmTMB
 License: GPL-3
 Depends: R6, mgcv, TMB, ggplot2
-Imports: Matrix, stringr, optimx, CircStats, MASS, tmbstan
+Imports: Matrix, stringr, optimx, CircStats, MASS, tmbstan, methods
 LinkingTo: TMB, RcppEigen
 Suggests: 
     rstan,
