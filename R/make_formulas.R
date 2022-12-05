@@ -26,6 +26,8 @@
 #'               var_names = names(input_forms), 
 #'               par_names = lapply(input_forms, names), 
 #'               n_states = 2)
+#'               
+#' @importFrom stats as.formula terms
 make_formulas <- function(input_forms, 
                           var_names, 
                           par_names,

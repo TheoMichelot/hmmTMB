@@ -2,17 +2,19 @@
 % Please edit documentation in R/utility.R
 \name{as_character_formula}
 \alias{as_character_formula}
-\title{Read formula with as.character without splitting
-Citation: this function was taken from the R package
-formula.tools: 
-  Christopher Brown (2018). formula.tools: Programmatic Utilities for Manipulating Formulas,
-  Expressions, Calls, Assignments and Other R Objects. R package version 1.7.1.
-  https://CRAN.R-project.org/package=formula.tools}
+\title{Read formula with as.character without splitting}
 \usage{
 as_character_formula(x, ...)
 }
+\arguments{
+\item{x}{R formula}
+
+\item{...}{Unused}
+}
 \description{
 Read formula with as.character without splitting
+}
+\details{
 Citation: this function was taken from the R package
 formula.tools: 
   Christopher Brown (2018). formula.tools: Programmatic Utilities for Manipulating Formulas,

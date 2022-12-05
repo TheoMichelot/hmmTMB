@@ -6,6 +6,10 @@
 \usage{
 mvnorm_invlink(x)
 }
+\arguments{
+\item{x}{Vector of parameters on linear predictor scale (in the order:
+means, SDs, correlations)}
+}
 \description{
 Multivariate Normal inverse link function
 }

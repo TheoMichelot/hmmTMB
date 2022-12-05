@@ -6,6 +6,9 @@
 \usage{
 invmlogit(x)
 }
+\arguments{
+\item{x}{Numeric vector}
+}
 \description{
 Multivarite inverse logit function
 }

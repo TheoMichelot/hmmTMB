@@ -6,6 +6,10 @@
 \usage{
 mvnorm_link(x)
 }
+\arguments{
+\item{x}{Vector of parameters on natural scale (in the order: means,
+SDs, correlations)}
+}
 \description{
 Multivariate Normal link function
 }

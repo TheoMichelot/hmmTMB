@@ -17,6 +17,8 @@
 #'   \item ncol_fe Number of columns of X_fe for each parameter
 #'   \item ncol_re Number of columns of X_re and S for each random effect
 #' }
+#' 
+#' @importFrom stats update predict
 make_matrices = function(formulas, data, new_data = NULL) {
   # Initialise lists of matrices
   X_list_fe <- list()

@@ -188,6 +188,9 @@ quad_pos_solve <- function(a, b, c) {
 }
 
 #' Multivariate logit function 
+#'
+#' @param x Numeric vector
+#' 
 #' @export 
 mlogit <- function(x) {
   s <- 1 - sum(x)
@@ -195,6 +198,9 @@ mlogit <- function(x) {
 }
 
 #' Multivarite inverse logit function
+#' 
+#' @param x Numeric vector
+#' 
 #' @export 
 invmlogit <- function(x) {
   y <- exp(x)
@@ -204,7 +210,13 @@ invmlogit <- function(x) {
 }
 
 #' Multivariate Normal link function 
+#'
+#' @param x Vector of parameters on natural scale (in the order: means,
+#' SDs, correlations)
+#'
 #' @export 
+#' 
+#' @importFrom stats qplogis
 mvnorm_link <- function(x) {
   # get dimension 
   m <- quad_pos_solve(1, 3, - 2 * length(x))
@@ -215,7 +227,13 @@ mvnorm_link <- function(x) {
 }
 
 #' Multivariate Normal inverse link function 
+#' 
+#' @param x Vector of parameters on linear predictor scale (in the order:
+#' means, SDs, correlations)
+#' 
 #' @export 
+#'
+#' @importFrom stats plogis
 mvnorm_invlink = function(x) {
   # get dimension 
   m <- quad_pos_solve(1, 3, - 2 * length(x))
@@ -226,6 +244,9 @@ mvnorm_invlink = function(x) {
 }
 
 #' Log of sum of exponentials 
+#' 
+#' @param Numeric vector
+#' 
 #' @export 
 logsumexp <- function(x) {
   xmax <- max(x)
@@ -234,7 +255,11 @@ logsumexp <- function(x) {
 }
 
 #' Read formula with as.character without splitting
-#' Citation: this function was taken from the R package
+#' 
+#' @param x R formula
+#' @param ... Unused
+#' 
+#' @details Citation: this function was taken from the R package
 #' formula.tools: 
 #'   Christopher Brown (2018). formula.tools: Programmatic Utilities for Manipulating Formulas,
 #'   Expressions, Calls, Assignments and Other R Objects. R package version 1.7.1.
@@ -284,6 +309,8 @@ prec_to_cov <- function(prec_mat)
 #' 
 #' @return Vector of names of variables for which a random
 #' effect term is included in the model.
+#'
+#' @importFrom stats terms
 find_re <- function(form) {
   term_labs <- attr(terms(form), "term.labels")
   # Regex description:
@@ -310,6 +337,8 @@ find_re <- function(form) {
 #' a single-column matrix.
 #' 
 #' @return Sparse matrix of class dgTMatrix
+#' 
+#' @importFrom methods as
 as_sparse <- function(x) {
   if(length(dim(x)) < 2) {
     x <- matrix(x, ncol = 1)

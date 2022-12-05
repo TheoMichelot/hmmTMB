@@ -6,6 +6,9 @@
 \usage{
 logsumexp(x)
 }
+\arguments{
+\item{Numeric}{vector}
+}
 \description{
 Log of sum of exponentials
 }

@@ -6,6 +6,9 @@
 \usage{
 mlogit(x)
 }
+\arguments{
+\item{x}{Numeric vector}
+}
 \description{
 Multivariate logit function
 }
