@@ -10,7 +10,7 @@ header-includes:
 fontsize: 12pt
 bibliography: refs.bib
 vignette: >
-  %\VignetteIndexEntry{Wild haggis example analysis}
+  %\VignetteIndexEntry{Occupancy modelling with hmmTMB}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 ---
@@ -55,7 +55,7 @@ crossbill[1:6, 1:8]
 
 For the HMM analysis, we need to change this dataset to a "long" format, where each year of survey is on a different row. The resulting data set has the following columns:
 
-- `ID`: identified for survey site
+- `ID`: identifier for survey site
 
 - `year`: survey year
 
@@ -105,11 +105,11 @@ $$
 $$
 where $S_t$ is the hidden state. The parameter $p^{(k)}_j$ is the detection probability in state $j$ at a site which was surveyed $k$ times. We don't actually need to estimate all those parameters, because we know that $p^{(k)}_1 = 0$, i.e., the probability of detection is zero if the animal is not present.
 
-We first create an R object from the `MarkovChain` class, for the hidden state model, indicating that we need a 2-state model.
+We first create an R object from the `MarkovChain` class, for the hidden state model, indicating that we need a 2-state model. We use `stationary = TRUE` to fix the initial distribution of the Markov chain to the stationary distribution of the transition probability matrix (rather than estimating it for each survey site).
 
 ```{r mod-spec1}
 # Define hidden state model
-hid1 <- MarkovChain$new(data = data, n_states = 2)
+hid1 <- MarkovChain$new(data = data, n_states = 2, stationary = TRUE)
 ```
 
 The second step is to create an object of class `Observation`, to specify the observation model of the HMM. In particular, this requires passing a list of observation distributions (here, "binom" for both observed variables), and a list of initial parameter values. The size parameter is the same in both states: either 2 (for sites with 2 surveys) or 3 (for sites with 3 surveys). The detection probability parameter is 0 in state 1 for both variables, and we choose some plausible value for state 2 (here, $p = 0.5$).
@@ -150,7 +150,7 @@ We can see the estimated parameters using `hmm1$par()`. Note that, if covariate 
 hmm1$par()
 ```
 
-The estimates that the detection probability was $p^{(2)}_2 = 0.17$ in years with 2 surveys, and $p^{(3)}_2 = 0.53$ in years with 3 surveys. The colonisation probability over one year was about 0.15, and the extinction probability about 0.19.
+The estimates that the detection probability was $p^{(2)}_2 = 0.17$ in years with 2 surveys, and $p^{(3)}_2 = 0.53$ in years with 3 surveys. The colonisation probability over one year was about 0.13, and the extinction probability about 0.20.
 
 We can also obtain the most likely state sequence using the `viterbi()` function (after the Viterbi algorithm), for example to plot the observed time series coloured by estimated states. The code below creates such a plot for a few chosen sites.
 
