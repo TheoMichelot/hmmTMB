@@ -7,7 +7,7 @@
 logsumexp(x)
 }
 \arguments{
-\item{Numeric}{vector}
+\item{x}{Numeric vector}
 }
 \description{
 Log of sum of exponentials

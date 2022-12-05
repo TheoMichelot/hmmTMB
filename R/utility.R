@@ -245,7 +245,7 @@ mvnorm_invlink = function(x) {
 
 #' Log of sum of exponentials 
 #' 
-#' @param Numeric vector
+#' @param x Numeric vector
 #' 
 #' @export 
 logsumexp <- function(x) {
