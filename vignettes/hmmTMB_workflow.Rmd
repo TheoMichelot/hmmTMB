@@ -1,6 +1,7 @@
 ---
 title: "Analysing time series data with hidden Markov models in hmmTMB"
 author: "Théo Michelot"
+date: "`r Sys.Date()`"
 output: 
     pdf_document:
         number_sections: true
@@ -9,6 +10,10 @@ header-includes:
   \renewcommand{\baselinestretch}{1.2}
 fontsize: 12pt
 bibliography: refs.bib
+vignette: >
+  %\VignetteIndexEntry{Wild haggis example analysis}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 ```{r setup, include = FALSE}

@@ -1,12 +1,17 @@
 ---
 title: "List of distributions in hmmTMB"
 author: "Théo Michelot"
+date: "`r Sys.Date()`"
 output: 
     pdf_document:
         number_sections: true
 header-includes:
   \renewcommand{\baselinestretch}{1.2}
 fontsize: 12pt
+vignette: >
+  %\VignetteIndexEntry{Wild haggis example analysis}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 The hidden Markov models implemented in hmmTMB comprise two stochastic processes: an unobserved state process $(S_t)$, defined as a discrete-valued Markov chain, and an observation process $(Z_t)$. The observation depends on the hidden state as follows,

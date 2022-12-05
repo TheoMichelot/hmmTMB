@@ -6,7 +6,8 @@ Author: Théo Michelot, Richard Glennie
 Maintainer: Théo Michelot <theo.michelot@dal.ca>
 Description: Fitting hidden Markov models with Template Model Builder (TMB) 
   using automatic differentiation and Laplace approximation, allowing for 
-  faster inference and more flexible random effect / smoothing spline structures. 
+  faster inference and more flexible random effect / smoothing spline structures.
+URL: https://github.com/TheoMichelot/hmmTMB
 License: GPL-3
 Depends: R6, mgcv, TMB, ggplot2
 Imports: Matrix, stringr, optimx, CircStats, MASS, tmbstan
@@ -17,3 +18,4 @@ Suggests:
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.0
+VignetteBuilder: knitr

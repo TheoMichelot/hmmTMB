@@ -1,6 +1,7 @@
 ---
 title: "Bayesian inference in hmmTMB"
 author: "Théo Michelot"
+date: "`r Sys.Date()`"
 output: 
     pdf_document:
         number_sections: true
@@ -8,6 +9,10 @@ header-includes:
   \renewcommand{\baselinestretch}{1.2}
 fontsize: 12pt
 bibliography: refs.bib
+vignette: >
+  %\VignetteIndexEntry{Wild haggis example analysis}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 This vignette describes functionalities of the package hmmTMB for Bayesian inference, which are based on Stan (@stan2019; @rstan2022). The package tmbstan conveniently integrates TMB with Stan, such that a TMB model object (such as the one created inside the `HMM` class in hmmTMB) can directly be used to run MCMC in Stan (@monnahan2018).

@@ -14,4 +14,11 @@ MarkovChain, Observation, and HMM. Type ?MarkovChain, ?Observation or ?HMM
 to find their documentation, or consult the package vignettes for detailed
 examples of the hmmTMB workflow.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/TheoMichelot/hmmTMB}
+}
+
+}
 \keyword{internal}
