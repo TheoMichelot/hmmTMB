@@ -9,7 +9,7 @@ header-includes:
   \renewcommand{\baselinestretch}{1.2}
 fontsize: 12pt
 vignette: >
-  %\VignetteIndexEntry{Wild haggis example analysis}
+  %\VignetteIndexEntry{List of distributions in hmmTMB}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 ---

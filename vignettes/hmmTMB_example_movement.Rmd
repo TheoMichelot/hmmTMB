@@ -12,7 +12,7 @@ header-includes:
 fontsize: 12pt
 bibliography: refs.bib
 vignette: >
-  %\VignetteIndexEntry{Wild haggis example analysis}
+  %\VignetteIndexEntry{Animal movement modelling with hmmTMB}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 ---

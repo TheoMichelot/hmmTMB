@@ -10,7 +10,7 @@ header-includes:
 fontsize: 12pt
 bibliography: refs.bib
 vignette: >
-  %\VignetteIndexEntry{Wild haggis example analysis}
+  %\VignetteIndexEntry{Model formulas in hmmTMB}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 ---
