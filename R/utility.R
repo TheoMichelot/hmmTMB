@@ -216,7 +216,7 @@ invmlogit <- function(x) {
 #'
 #' @export 
 #' 
-#' @importFrom stats qplogis
+#' @importFrom stats qlogis
 mvnorm_link <- function(x) {
   # get dimension 
   m <- quad_pos_solve(1, 3, - 2 * length(x))
