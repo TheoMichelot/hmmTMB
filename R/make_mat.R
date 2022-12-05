@@ -88,7 +88,7 @@ make_matrices = function(formulas, data, new_data = NULL) {
     ncol_fe <- c(ncol_fe, gam_setup$nsdf)
     
     if(length(gam_setup$smooth) > 0) {
-      sub_ncol_re <- matrix(1, nr = 2, nc = length(gam_setup$S))
+      sub_ncol_re <- matrix(1, nrow = 2, ncol = length(gam_setup$S))
       colnames(sub_ncol_re) <- 1:ncol(sub_ncol_re)
       start_s <- 1
       for (s in 1:length(gam_setup$smooth)) {
