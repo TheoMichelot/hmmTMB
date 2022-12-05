@@ -241,7 +241,7 @@ Type objective_function<Type>::operator() ()
   // Smoothing penalty //
   //===================//
   // Are there smooths in the observation model?
-  if(include_smooths > 0 & ncol_re_obs(0, 0) > -1) {
+  if((include_smooths > 0) & (ncol_re_obs(0, 0) > -1)) {
     // Index in matrix S
     int S_start = 0;
 
@@ -276,7 +276,7 @@ Type objective_function<Type>::operator() ()
   }
 
   // Are there smooths in the hidden state model?
-  if(include_smooths > 0 & ncol_re_hid(0, 0) > -1) {
+  if((include_smooths > 0) & (ncol_re_hid(0, 0) > -1)) {
     // Index in matrix S
     int S_start = 0;
 
