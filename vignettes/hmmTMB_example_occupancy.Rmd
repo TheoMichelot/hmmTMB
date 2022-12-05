@@ -177,7 +177,8 @@ The dataset includes two environmental covariates: elevation, and forest cover. 
 ```{r mod2-spec1}
 # Define hidden state process with elevation covariate
 hid2 <- MarkovChain$new(data = data, n_states = 2, 
-                        formula = ~ s(elev, k = 5, bs = "ts"))
+                        formula = ~ s(elev, k = 5, bs = "ts"), 
+                        stationary = TRUE)
 ```
 
 The rest of the model specification is unchanged. This time, fitting the model takes a few minutes, as the non-parametric relationship between elevation and transition probabilities needs to be estimated.

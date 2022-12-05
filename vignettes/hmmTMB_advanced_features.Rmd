@@ -325,21 +325,21 @@ The chunk below illustrates the use of `update`. We first update the hidden stat
 
 ```{r update-form2, fig.width = 4, fig.height = 3, out.width="49%", fig.align="center", fig.show='hold'}
 # Update formula for Pr(S1 > S2)
-hmm2 <- update(mod = hmm, type = "hid", i = 1, j = 2, 
+hmm2 <- update(object = hmm, type = "hid", i = 1, j = 2, 
                change = ~ . + Oil, fit = FALSE)
 
 # Update formula for Pr(S2 > S1)
-hmm2 <- update(mod = hmm2, type = "hid", i = 2, j = 1, 
+hmm2 <- update(object = hmm2, type = "hid", i = 2, j = 1, 
                change = ~ . + Oil, fit = FALSE)
 
-# # Update formula for Price mean
-# hmm2 <- update(mod = hmm2, type = "obs", i = "Price", j = "mean", 
-#                change = ~ . + s(EurDol, k = 5, bs = "cs"), 
-#                fit = TRUE, silent = TRUE)
-# 
-# # Plot covariate effects
-# hmm2$plot("delta", var = "Oil")
-# hmm2$plot("obspar", var = "EurDol", i = "Price.mean")
+# Update formula for Price mean
+hmm2 <- update(object = hmm2, type = "obs", i = "Price", j = "mean",
+               change = ~ . + s(EurDol, k = 5, bs = "cs"),
+               fit = TRUE, silent = TRUE)
+
+# Plot covariate effects
+hmm2$plot("delta", var = "Oil")
+hmm2$plot("obspar", var = "EurDol", i = "Price.mean")
 ```
 
 Here, we only decided to fit the final model. However, it can sometimes be a strategy to fit several incrementally more complex models, to ensure that the initial parameter values used for the more complex model are good.
@@ -397,9 +397,6 @@ Although it is no substitute for thinking critically about what would be plausib
 The key assumption behind this approach is that the K-means clusters are a good approximation of the HMM states. When this is not the case, the suggested values might not be very good, so this should be applied with care.
 
 ```{r init-kmeans}
-# Create hidden state process
-hid <- MarkovChain$new(data = energy, n_states = 2)
-
 # Create observation model
 dists <- list(Price = "gamma2")
 # These initial values don't matter, we will update them
@@ -407,15 +404,12 @@ par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
 obs <- Observation$new(data = energy, n_states = 2, 
                        dists = dists, par = par0)
 
-# Create HMM
-hmm <- HMM$new(hid = hid, obs = obs)
-
 # Get suggested initial parameters
-par0 <- hmm$suggest_initial()
+par0 <- obs$suggest_initial()
 par0
 
 obs$update_par(par = par0)
-hmm
+obs$par()
 ```
 
 ## From smaller model

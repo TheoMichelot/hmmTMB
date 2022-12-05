@@ -6,6 +6,7 @@ output:
     pdf_document:
         number_sections: true
 header-includes:
+  \usepackage{xcolor}
   \usepackage{tcolorbox}
   \usepackage{bm}
   \renewcommand{\baselinestretch}{1.2}
@@ -31,7 +32,7 @@ knitr::opts_chunk$set(
 
 In this vignette, we showcase how hmmTMB can be used to analyse time series of animal locations. This is a popular application of hidden Markov models (HMMs), to identify movement modes often interpreted as behavioural states (@patterson2009; @langrock2012). There are two specialised R packages focused on HMMs for the analysis of animal movement: moveHMM and momentuHMM (@michelot2016; @mcclintock2018). Those might be a good alternative; in particular, momentuHMM has additional functionalities for processing animal telemetry data, and to specify some complex movement models (e.g., biased random walks). The main advantage of hmmTMB over those packages is the possibility to include random effects on the model parameters, as well as non-parametric effects of covariates (with automatic smoothness selection).
 
-The most common approach is to assume that, within each state, the animal's movement follows a correlated random walk, i.e., a model that captures the speed of movement and the degree of persistence in the movement. This is convenient because animals often alternative between periods of fast, directed movement (e.g., "transiting", "exploring"), and periods of slow, undirected movement (e.g., "resing", "foraging"). There are two main ways to model correlated random walks: based on step lengths and turning angles (@morales2004), or based on locations directly (@jonsen2005). Both approaches can be implemented in hmmTMB, and we describe them in turn below.
+The most common approach is to assume that, within each state, the animal's movement follows a correlated random walk, i.e., a model that captures the speed of movement and the degree of persistence in the movement. This is convenient because animals often alternative between periods of fast, directed movement (e.g., "transiting", "exploring"), and periods of slow, undirected movement (e.g., "resting", "foraging"). There are two main ways to model correlated random walks: based on step lengths and turning angles (@morales2004), or based on locations directly (@jonsen2005). Both approaches can be implemented in hmmTMB, and we describe them in turn below.
 
 \tcolorbox
 \textbf{Data requirements}
@@ -41,7 +42,7 @@ We need to make two key assumptions about the data, which may be limiting in som
 In cases where these assumptions are not satisfied, another modelling approach will be needed. Various state-space models have been developed to accommodate noisy, irregular animal trajectories (@jonsen2005; @johnson2008). Relevant R packages include crawl (@johnson2008) and foieGras (@jonsen2020), and momentuHMM has dedicated functions to prepare the data using crawl before an HMM analysis.
 \endtcolorbox
 
-We start by loading a few packages, including moveHMM, which contains a data set of wild haggis movement data that we will use here, as well as functions for data preparation. 
+We start by loading a few packages, including moveHMM, which contains a data set of wild haggis movement that we will use here, as well as functions for data preparation. 
 
 ```{r load-packages}
 library(moveHMM)
