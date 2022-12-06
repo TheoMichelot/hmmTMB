@@ -255,7 +255,7 @@ checks <- hmm1$check(check_fn = gof, silent = TRUE, nsims = 500)
 checks$plot
 ```
 
-The observed values of the 25%, 50%, 75%, and 100% quantiles are well within the range of simulated values, suggesting that those features are well captured by the model. The 0% quantile (i.e., the minimum) is always larger in the simulations than in the real data, which means that the model underestimates how long the lower tail is. The autocorrelation is also captured poorly, as we also saw from the pseudo-residuals. Here, the distribution of simulated autocorrelations are between 0.55 and 0.65, whereas the true value is around 0.95.
+The observed values of the 0%, 25%, 50%, and 75% quantiles are well within the range of simulated values, suggesting that those features are well captured by the model. The 100% quantile (i.e., the maximum) is almost always smaller in the simulations than in the real data, which means that the model underestimates how long the upper tail is. The autocorrelation is also captured poorly, as we also saw from the pseudo-residuals. Here, the distribution of simulated autocorrelations are between 0.55 and 0.65, whereas the true value is around 0.95.
 
 # Changing the number of states
 
