@@ -102,11 +102,11 @@ There are a few other arguments we could specify for more complex model formulat
 
 ## Observation model
 
-The observation model, which defines the conditional distribution of the observations (given the state), is stored in an `Observation` object. Here, the response variable `Price` is strictly positive, and so we choose to use a gamma distribution in each state. That is, we assume
+The observation model, which defines the conditional distribution of the observations (given the state), is stored in an `Observation` object. Here, the response variable `Price` is strictly positive, but all values are pretty far from zero, so we use a normal distribution in each state. That is, we assume
 $$
-Z_t \vert \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j),
+Z_t \vert \{ S_t = j \} \sim N(\mu_j, \sigma_j),
 $$
-where $\mu_j > 0$ and $\sigma_j > 0$ are the mean and standard deviation of the distribution of price $Z_t$ in state $j \in \{1, 2\}$. We use this non-standard parameterisation of the gamma distribution (rather than the more usual shape/scale) because these parameters are easy to interpret. In hmmTMB, `"gamma2"` refers to the gamma distribution with mean and standard deviation, whereas `"gamma"` has a shape and scale. The distributions are passed in a named list, with one element for each response variable; here, there is only one.
+where $\mu_j > 0$ and $\sigma_j > 0$ are the mean and standard deviation of the distribution of price $Z_t$ in state $j \in \{1, 2\}$. In hmmTMB, `"norm"` refers to the normal distribution. The distributions are passed in a named list, with one element for each response variable; here, there is only one.
 
 In addition to the family of distribution, we need to choose initial parameter values for the observation process. This is because the model is fitted by numerical optimisation of the likelihood function, and the optimiser requires a starting point. The general idea is to pick values that are plausible given the data and the way we expect the states to be defined. We might for example use some quantiles of the observed prices for the mean parameter. These are also provided to the `Observation` object as a list, with the following structure:
 
@@ -118,7 +118,7 @@ We provide two initial means and two initial standard deviations (one for each s
 
 ```{r create-obs1}
 # List observation distribution(s)
-dists <- list(Price = "gamma2")
+dists <- list(Price = "norm")
 # List of initial parameter values
 par0_2s <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
 # Create observation model object
@@ -142,7 +142,7 @@ Model fitting consists in estimating all model parameters, in particular the tra
 Once it has been fitted, the model stores the estimated parameters, and we can see them by printing the model (or, alternatively, with `hmm$par()`). Here, we find
 \begin{align*}
 \mu_1 = 3.4,\quad \mu_2 = 6.0 \\
-\sigma_1 = 0.9,\quad \sigma_2 = 1.1\\
+\sigma_1 = 0.8,\quad \sigma_2 = 1.1\\
 \Gamma =
 \begin{pmatrix}
 0.99 & 0.01 \\
@@ -228,7 +228,7 @@ abline(0, 1)
 acf(pr["Price",])
 ```
 
-There is some slight deviation from the 1:1 diagonal in the upper part of the quantile-quantile plot, but the fit seems adequate overall, suggesting that a mixture of 2 gamma distributions works well for this data set. On the other hand, the ACF plot indicates that there is strong residual autocorrelation; i.e., much of the autocorrelation in the data was not captured by the model. This is clearly apparent from the time series plots shown above: successive prices within each state are not independent. There is no single remedy for this problem, but several approaches could be considered, including increasing the number of states, or including covariates to account for this autocorrelation.
+There is some slight deviation from the 1:1 diagonal in the upper part of the quantile-quantile plot, but the fit seems adequate overall, suggesting that a mixture of 2 normal distributions works well for this data set. On the other hand, the ACF plot indicates that there is strong residual autocorrelation; i.e., much of the autocorrelation in the data was not captured by the model. This is clearly apparent from the time series plots shown above: successive prices within each state are not independent. There is no single remedy for this problem, but several approaches could be considered, including increasing the number of states, or including covariates to account for this autocorrelation.
 
 ## Posterior predictive checks
 
@@ -249,8 +249,9 @@ gof <- function(data) {
 }
 
 # Run posterior predictive checks
-checks <- hmm1$check(check_fn = gof, silent = TRUE)
+checks <- hmm1$check(check_fn = gof, silent = TRUE, nsims = 500)
 
+# Plot histograms of simulated statistics
 checks$plot
 ```
 
@@ -350,8 +351,8 @@ In the following, we consider an analysis similar to that of @langrock2017, wher
 
 We now assume that the mean energy price in each state is a linear function of the euro-dollar exchange rate. This corresponds to the Markov-switching generalised linear model, an extension of Markov-switching regression:
 \begin{align*}
-  Z_t \vert \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j) \\
-  \log(\mu_j) = \beta_0^{(j)} + \beta_1^{(j)} x_{1t},
+  Z_t \vert \{ S_t = j \} & \sim N(\mu_j, \sigma_j) \\
+  \log(\mu_j) & = \beta_0^{(j)} + \beta_1^{(j)} x_{1t},
 \end{align*}
 where $\beta_0^{(j)}$ is the intercept, and $\beta_1^{(j)}$ the slope for the exchange rate covariate $x_{1t}$ in state $j \in \{1, 2\}$.
 
@@ -389,8 +390,8 @@ The plot of `Price` against `EurDol` shown above indicates that the relationship
 
 To estimate the effect of the euro-dollar exchange rate on mean price, we adapt the linear model shown above to
 \begin{align*}
-  Z_t \vert \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j) \\
-  \log(\mu_j) = \beta_0^{(j)} + f_1^{(j)}(x_{1t}),
+  Z_t \vert \{ S_t = j \} & \sim N(\mu_j, \sigma_j) \\
+  \log(\mu_j) & = \beta_0^{(j)} + f_1^{(j)}(x_{1t}),
 \end{align*}
 where $f_1^{(j)}$ is a smooth function, modelled using splines. This defines a Markov-switching generalised additive model, as described for example by @langrock2017. For more details about spline-based models, see for example @wood2017. 
 
@@ -411,7 +412,7 @@ hmm5$plot("obspar", "EurDol", i = "Price.mean") +
              data = data_plot, alpha = 0.3)
 ```
 
-These results illustrate both the flexibility of non-parametric models to capture complex relationships between HMM parameters and covariates, and the challenge of interpreting the results. The definition of states 1 and 2 is not clear any more, as the mean is sometimes larger in state 1 and sometimes larger in state 2. This might be an argument in favour of using a simpler linear model.
+These results illustrate both the flexibility of non-parametric models to capture complex relationships between HMM parameters and covariates, and the challenge of interpreting the results. The definition of states 1 and 2 is not as clear as before, because the mean price in state 2 for some values of the covariate is lower than the mean price in state 1 for some other values.
 
 We can compare the most likely state sequences in the two models, which are somewhat different.
 
@@ -426,8 +427,8 @@ Using the convenient mgcv syntax, it is also possible to specify random effects 
 
 In the energy example, we only have one time series, so we (rather artificially) use the year as the group variable for a random effect on the mean parameter of the price in each state. That is, we consider the model
 \begin{align*}
-  Z_t \vert \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j) \\
-  \log(\mu_j) = \beta_0^{(j)} + \gamma_k^{(j)}
+  Z_t \vert \{ S_t = j \} & \sim N(\mu_j, \sigma_j) \\
+  \log(\mu_j) & = \beta_0^{(j)} + \gamma_k^{(j)}
 \end{align*}
 where $k \in \{ 2002, 2003, \dots, 2008 \}$ is the index for the year, and where the year-specific intercepts are assumed to be independent and identically distributed in each state, as
 $$
