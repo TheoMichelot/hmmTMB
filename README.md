@@ -4,7 +4,7 @@ This R package implements flexible hidden Markov models, based on Template Model
 
 ## Preprint
 
-[Michelot, T. (2022). hmmTMB: Hidden Markov models with flexible covariate effects in R. arXiv:2211.14139.](https://arxiv.org/abs/2211.14139/)
+[Michelot, T. (2022). hmmTMB: Hidden Markov models with flexible covariate effects in R. arXiv:2211.14139.](https://arxiv.org/abs/2211.14139)
 
 ## Package installation
 
@@ -36,4 +36,4 @@ We describe functionalities of the package in several vignettes:
   
  - ['Flexible animal movement modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_movement.pdf): Description of wild haggis movement analysis, illustrating how non-parametric covariate effects can be included. This includes two different types of movement models: (1) correlated random walks based on step lengths and turning angles, and (2) correlated random walks based on locations directly.
  
- - ['Occupancy modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_occupancy.pdf): Analysis of occupancy data set of crossbill from [Kéry et al. (2013)](https://onlinelibrary.wiley.com/doi/abs/10.1111/jbi.12087/).
+ - ['Occupancy modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_occupancy.pdf): Analysis of occupancy data set of crossbill from [Kéry et al. (2013)](https://onlinelibrary.wiley.com/doi/10.1111/jbi.12087).
