@@ -2,8 +2,8 @@ Package: hmmTMB
 Type: Package
 Title: Fit Hidden Markov Models using Template Model Builder 
 Version: 0.1.0
-Author: Théo Michelot, Richard Glennie
-Maintainer: Théo Michelot <theo.michelot@dal.ca>
+Author: Theo Michelot, Richard Glennie
+Maintainer: Theo Michelot <theo.michelot@dal.ca>
 Description: Fitting hidden Markov models using automatic differentiation 
   and Laplace approximation, allowing for fast inference and flexible covariate
   effects (including random effects and smoothing splines) on model parameters.
