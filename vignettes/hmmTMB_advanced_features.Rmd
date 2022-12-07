@@ -386,7 +386,7 @@ hmm$plot_dist("Price")
 
 ## Using K-means clustering
 
-Although it is no substitute for thinking critically about what would be plausible initial parameter values, hmmTMB implements a more automated method to suggest initial values for a given model. This is implemented in the function `suggest_initial()`, which uses the following procedure:
+Although it is no substitute for thinking critically about what would be plausible initial parameter values, hmmTMB implements a more automated method to suggest initial values for a given model. This is implemented in the function `Observation$suggest_initial()`, which uses the following procedure:
 
 1. Apply K-means clustering to group the observations into $N$ classes (where $N$ is the number of states of the HMM). K-means is a simple clustering algorithm which ignores temporal autocorrelation in the data, but in many cases it will be good enough to roughly identify $N$ coherent groups in the data.
 
