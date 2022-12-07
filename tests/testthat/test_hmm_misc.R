@@ -31,7 +31,8 @@ test_that("edf works in case with no smooth", {
     obs <- Observation$new(data = data, dists = list(z = "norm"), n_states = 2, par = par)
     hid <- MarkovChain$new(n_states = 2, data = data)
     hmm <- HMM$new(obs = obs, hid = hid)
-    expect_equal(hmm$edf(), length(hid$coeff_fe()) + length(obs$coeff_fe()))
+    expect_equal(hmm$edf(), length(hid$coeff_fe()) + length(obs$coeff_fe()) + 
+                   length(hmm$coeff_list()$log_delta0))
     
     # Model with fixed effects only
     f <- ~ x1*x2 + I(x2^2)
@@ -39,7 +40,8 @@ test_that("edf works in case with no smooth", {
                            par = par, formulas = list(z = list(mean = ~1, sd = f)))
     hid <- MarkovChain$new(n_states = 2, data = data, formula = f)
     hmm <- HMM$new(obs = obs, hid = hid)
-    expect_equal(hmm$edf(), length(hid$coeff_fe()) + length(obs$coeff_fe()))
+    expect_equal(hmm$edf(), length(hid$coeff_fe()) + length(obs$coeff_fe()) +
+                   length(hmm$coeff_list()$log_delta0))
 })
 
 # Create dummy data
