@@ -421,8 +421,10 @@ HMM <- R6Class(
       par <- c(self$obs()$coeff_fe(), 
                self$obs()$lambda(), 
                self$hid()$coeff_fe(), 
-               self$hid()$lambda(), 
-               self$hid()$delta0(log = TRUE, as_matrix = FALSE))
+               self$hid()$lambda())
+      if(!self$hid()$stationary()) {
+        par <- c(par, self$hid()$delta0(log = TRUE, as_matrix = FALSE))
+      }
       # compute log-likelihood
       return(-self$tmb_obj()$fn(par))
     },
@@ -434,7 +436,12 @@ HMM <- R6Class(
     #' terms implied by smoothing)
     edf = function() {
       # Degrees of freedom for fixed effects
-      edf <- nrow(self$obs()$coeff_fe()) + nrow(self$hid()$coeff_fe())
+      # (don't count smoothing parameters)
+      edf <- nrow(self$obs()$coeff_fe()) + 
+        nrow(self$hid()$coeff_fe())
+      if(!self$hid()$stationary()) {
+        edf <- edf + length(self$coeff_list()$log_delta0)
+      }
       
       if(!is.null(private$tmb_rep_)) {
         if(!is.null(self$tmb_rep()$jointPrecision)) {
@@ -1840,6 +1847,9 @@ HMM <- R6Class(
         nrow(self$hid()$coeff_fe()) +
         length(self$obs()$lambda()) +
         length(self$hid()$lambda())
+      if(!self$hid()$stationary()) {
+        npar <- npar + length(self$coeff_list()$log_delta0)
+      }
       
       aic <- - 2 * llk + 2 * npar
       
