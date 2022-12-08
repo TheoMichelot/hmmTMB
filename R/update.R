@@ -17,6 +17,34 @@
 #' S3 method)
 #' 
 #' @export
+#' 
+#' @examples 
+#' # Load data set from MSwM package
+#' data(energy, package = "MSwM")
+#' 
+#' # Create hidden state and observation models
+#' hid <- MarkovChain$new(data = energy, n_states = 2)
+#' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+#' obs <- Observation$new(data = energy, n_states = 2,
+#'                        dists = list(Price = "norm"),
+#'                        par = par0)
+#' 
+#' # Create HMM (no covariate effects)
+#' hmm <- HMM$new(hid = hid, obs = obs)
+#' hmm$hid()$formula()
+#' hmm$obs()$formulas()
+#' 
+#' # Update transition probability formulas (one at a time)
+#' hmm <- update(hmm, type = "hid", i = 1, j = 2, 
+#'               change = ~ . + Oil, fit = FALSE)
+#' hmm <- update(hmm, type = "hid", i = 2, j = 1, 
+#'               change = ~ . + Gas + Coal, fit = FALSE)
+#' hmm$hid()$formula()
+#' 
+#' # Update observation parameter formulas (one at a time)
+#' hmm <- update(hmm, type = "obs", i = "Price", j = "mean", 
+#'               change = ~ . + EurDol, fit = FALSE)
+#' hmm$obs()$formulas()
 update.HMM <- function(object, type, i, j, change, fit = TRUE, 
                        silent = FALSE, ...) {
   

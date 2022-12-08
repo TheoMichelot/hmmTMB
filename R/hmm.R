@@ -45,6 +45,20 @@ HMM <- R6Class(
     #' of \code{TMB::MakeADFun()}).
     #' 
     #' @return A new HMM object
+    #' 
+    #' @examples
+    #' # Load data set from MSwM package
+    #' data(energy, package = "MSwM")
+    #' 
+    #' # Create hidden state and observation models
+    #' hid <- MarkovChain$new(data = energy, n_states = 2)
+    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+    #' obs <- Observation$new(data = energy, n_states = 2,
+    #'                        dists = list(Price = "norm"),
+    #'                        par = par0)
+    #'                        
+    #' # Create HMM                      
+    #' hmm <- HMM$new(hid = hid, obs = obs)
     initialize = function(obs = NULL, 
                           hid = NULL,
                           file = NULL,
@@ -767,7 +781,7 @@ HMM <- R6Class(
     
     #' @description Model fitting
     #' 
-    #' @details The negative log-likelihood of the model is minimised using the
+    #' The negative log-likelihood of the model is minimised using the
     #' function \code{optimx}. TMB uses the Laplace approximation to integrate 
     #' the random effects out of the likelihood.
     #' 
@@ -777,6 +791,23 @@ HMM <- R6Class(
     #' @param silent Logical. If FALSE, all tracing outputs are shown (default).
     #' @param ... Other arguments to optimx which is used to optimise likelihood, 
     #' see ?optimx
+    #'
+    #' @examples
+    #' # Load data set from MSwM package
+    #' data(energy, package = "MSwM")
+    #' 
+    #' # Create hidden state and observation models
+    #' hid <- MarkovChain$new(data = energy, n_states = 2)
+    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+    #' obs <- Observation$new(data = energy, n_states = 2,
+    #'                        dists = list(Price = "norm"),
+    #'                        par = par0)
+    #'                        
+    #' # Create HMM                      
+    #' hmm <- HMM$new(hid = hid, obs = obs)
+    #'
+    #' # Fit HMM
+    #' hmm$fit(silent = TRUE)
     fit = function(silent = FALSE, ...) {
       if(!silent) self$formulation()
       
@@ -1106,15 +1137,15 @@ HMM <- R6Class(
     #' @description Sample posterior state sequences using forward-filtering
     #' backward-sampling 
     #' 
-    #' @param nsamp Number of samples to produce 
-    #' @param full If TRUE and model fit by fit_stan then parameter estimates are 
-    #' sampled from the posterior samples before simulating each sequence 
-    #' 
-    #' @details The forward-filtering backward-sampling algorithm returns a
+    #' The forward-filtering backward-sampling algorithm returns a
     #' sequence of states, similarly to the Viterbi algorithm, but it generates
     #' it from the posterior distribution of state sequences, i.e., accounting
     #' for uncertainty in the state classification. Multiple generated sequences
     #' will therefore generally not be the same.
+    #' 
+    #' @param nsamp Number of samples to produce 
+    #' @param full If TRUE and model fit by fit_stan then parameter estimates are 
+    #' sampled from the posterior samples before simulating each sequence 
     #' 
     #' @return Matrix where each column is a different sample of state sequences,
     #' and each row is a time of observation
@@ -1362,6 +1393,26 @@ HMM <- R6Class(
     #' 
     #' @return Named array of predictions and confidence intervals, 
     #' if requested
+    #' 
+    #' @examples
+    #' # Load data set from MSwM package
+    #' data(energy, package = "MSwM")
+    #' 
+    #' # Create hidden state and observation models
+    #' hid <- MarkovChain$new(data = energy, n_states = 2)
+    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+    #' obs <- Observation$new(data = energy, n_states = 2,
+    #'                        dists = list(Price = "norm"),
+    #'                        par = par0)
+    #'                        
+    #' # Create HMM                      
+    #' hmm <- HMM$new(hid = hid, obs = obs)
+    #' 
+    #' # Fit HMM
+    #' hmm$fit(silent = TRUE)
+    #' 
+    #' # Get transition probability matrix with confidence intervals
+    #' hmm$predict(what = "tpm", n_post = 1000)
     predict = function(what, t = 1, newdata = NULL, n_post = 0, level = 0.95, 
                        return_post = FALSE) {
       if (is.null(private$out_) & n_post > 0) {
@@ -1418,7 +1469,7 @@ HMM <- R6Class(
       return(val)
     }, 
     
-    #' Confidence intervals for working parameters
+    #' @description Confidence intervals for working parameters
     #' 
     #' This function computes standard errors for all fixed effect model
     #' parameters based on the diagonal of the inverse of the Hessian matrix,
@@ -1564,12 +1615,12 @@ HMM <- R6Class(
     #' 
     #' @return List with elements:
     #' \itemize{
-    #'   \item{obs_stat}{Vector of values of goodness-of-fit statistics for the
+    #'   \item{obs_stat: }{Vector of values of goodness-of-fit statistics for the
     #'   observed data}
-    #'   \item{stats}{Matrix of values of goodness-of-fit statistics for the
+    #'   \item{stats: }{Matrix of values of goodness-of-fit statistics for the
     #'   simulated data sets (one row for each statistic, and one column for each
     #'   simulation)}
-    #'   \item{plot}{ggplot object}
+    #'   \item{plot: }{ggplot object}
     #' }
     check = function(check_fn, nsims = 100, full = FALSE, silent = FALSE) {
       # Evaluate statistics for observed data
@@ -1674,16 +1725,15 @@ HMM <- R6Class(
       return(p)
     },
     
-    #' Plot observation distributions weighted by frequency in Viterbi 
-    #'
-    #' @param var Name of data variable
+    #' @description Plot observation distributions weighted by frequency in Viterbi 
     #' 
-    #' @details This is a wrapper around Observation$plot_dist, where the
+    #' This is a wrapper around Observation$plot_dist, where the
     #' distribution for each state is weighted by the proportion of time
     #' spent in that state (according to the Viterbi state sequence).
     #'
+    #' @param var Name of data variable
+    #' 
     #' @return Plot of distribution with data histogram 
-    #' @export
     plot_dist = function(var) {
       if(is.null(private$states_)) {
         self$viterbi()
@@ -1715,6 +1765,28 @@ HMM <- R6Class(
     #' more detail.
     #' 
     #' @return A ggplot object 
+    #' 
+    #' @examples
+    #' # Load data set from MSwM package
+    #' data(energy, package = "MSwM")
+    #' 
+    #' # Transition probabilities depend on Oil covariate
+    #' hid <- MarkovChain$new(data = energy, n_states = 2, 
+    #'                        formula = ~Oil)
+    #' # Create observation model
+    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+    #' obs <- Observation$new(data = energy, n_states = 2,
+    #'                        dists = list(Price = "norm"),
+    #'                        par = par0)
+    #'                        
+    #' # Create HMM                      
+    #' hmm <- HMM$new(hid = hid, obs = obs)
+    #' 
+    #' # Fit HMM
+    #' hmm$fit(silent = TRUE)
+    #' 
+    #' # Plot stationary state probs as functions of Oil price
+    #' hmm$plot(what = "delta", var = "Oil")
     plot = function(what, var = NULL, covs = NULL, i = NULL, j = NULL, 
                     n_grid = 50, n_post = 1000) {
       # Get relevant model component 
@@ -1831,7 +1903,7 @@ HMM <- R6Class(
     }, 
     
     # AIC methods (for simulation experiments) --------------------------------
-    #' Marginal Akaike Information Criterion
+    #' @description Marginal Akaike Information Criterion
     #' 
     #' The marginal AIC is for example defined by 
     #' Wood (2017), as AIC = - 2L + 2k where L is the
@@ -1856,7 +1928,7 @@ HMM <- R6Class(
       return(aic)
     },
     
-    #' Conditional Akaike Information Criterion
+    #' @description Conditional Akaike Information Criterion
     #' 
     #' The conditional AIC is for example defined by 
     #' Wood (2017), as AIC = - 2L + 2k where L is the

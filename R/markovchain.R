@@ -24,9 +24,10 @@ MarkovChain <- R6Class(
     #' @param tpm Optional transition probability matrix, to initialise the model
     #' parameters (intercepts in model with covariates). If not provided, the default 
     #' is a matrix with 0.9 on the diagonal. 
-    #' @param stationary if TRUE then stationary distribution with respect to tpm for 
-    #' first time point is used as initial distribution, if FALSE then initial distribution
-    #' is estimated 
+    #' @param stationary If TRUE then the initial distribution of the Markov
+    #' chain is fixed to the stationary distribution of the transition
+    #' probability matrix for the first time point; if FALSE, the initial 
+    #' distribution is estimated (default). 
     #' @param ref Vector of indices for reference transition probabilities, 
     #' of length \code{n_states}. The i-th element is the index for the 
     #' reference in the i-th row of the transition probability matrix. For 
@@ -36,6 +37,27 @@ MarkovChain <- R6Class(
     #' the diagonal transition probabilities are used as references. 
     #' 
     #' @return A new MarkovChain object
+    #' 
+    #' @examples
+    #' # Load data set from MSwM package
+    #' data(energy, package = "MSwM")
+    #' 
+    #' # Create 2-state covariate-free model and initialise transition 
+    #' # probability matrix
+    #' hid <- MarkovChain$new(data = energy, n_states = 2,
+    #'                        tpm = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2))
+    #' 
+    #' # Create 2-state model with non-linear effect of Oil on all transition 
+    #' # probabilities
+    #' hid <- MarkovChain$new(data = energy, n_states = 2,
+    #'                        formula = ~ s(Oil, k = 5, bs = "cs"))
+    #' 
+    #' # Create 2-state model with quadratic effect of Oil on Pr(1 > 2)
+    #' structure <- matrix(c(".", "~poly(Oil, 2)",
+    #'                       "~1", "."),
+    #'                     ncol = 2, byrow = TRUE)
+    #' hid <- MarkovChain$new(data = energy, n_states = 2,
+    #'                        formula = structure)
     initialize = function(data,
                           formula = NULL, 
                           n_states,
@@ -148,9 +170,9 @@ MarkovChain <- R6Class(
     
     #' @description Get transition probability matrices 
     #' 
-    #' @param t time point, default 1; if t = "all" then 
-    #' all tpms are returned otherwise tpms for time points in t are returned
-    #' @param linpred custom linear predictor 
+    #' @param t Time index or vector of time indices; default = 1. If t = "all" 
+    #' then all transition probability matrices are returned.
+    #' @param linpred Optional custom linear predictor 
     #' 
     #' @return Array with one slice for each transition probability matrix
     tpm = function(t = 1, linpred = NULL) {
@@ -594,7 +616,7 @@ MarkovChain <- R6Class(
     unique_ID_ = NULL,
     terms_ = NULL,
     
-    #' Check constructor arguments ##
+    # Check constructor arguments
     # (For argument description, see constructor)
     check_args = function(n_states, formula, stationary, data) {
       if(!is.null(n_states)) {

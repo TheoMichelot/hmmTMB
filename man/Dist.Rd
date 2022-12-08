@@ -75,12 +75,12 @@ parameters}
 
 \item{\code{npar}}{Number of parameters of the distribution}
 
-\item{\code{parnames}}{character vector with name of each parameter}
+\item{\code{parnames}}{Character vector with name of each parameter}
 
 \item{\code{parapprox}}{Function that takes a sample and produces approximate 
 values for the unknown parameters}
 
-\item{\code{fixed}}{vector with element for each parameter which is TRUE if 
+\item{\code{fixed}}{Vector with element for each parameter which is TRUE if 
 parameter is fixed}
 
 \item{\code{name_long}}{Long version of the name of the distribution, possibly 

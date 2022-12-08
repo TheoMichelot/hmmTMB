@@ -6,7 +6,7 @@
 \alias{hmmTMB-package}
 \title{hmmTMB: Fit Hidden Markov Models using Template Model Builder}
 \description{
-Fitting hidden Markov models using automatic differentiation and Laplace approximation, allowing for fast inference and flexible covariate effects (including random effects and smoothing splines) on model parameters.
+Fitting hidden Markov models using automatic differentiation and Laplace approximation, allowing for fast inference and flexible covariate effects (including random effects and smoothing splines) on model parameters. Michelot (2022) "hmmTMB: hidden Markov models with flexible covariate effects in R" \href{https://arxiv.org/abs/2211.14139}{arXiv:2211.14139}
 }
 \details{
 The package hmmTMB is based on three main classes (i.e., types of objects):
@@ -18,6 +18,15 @@ examples of the hmmTMB workflow.
 Useful links:
 \itemize{
   \item \url{https://github.com/TheoMichelot/hmmTMB}
+}
+
+}
+\author{
+\strong{Maintainer}: Theo Michelot \email{theo.michelot@dal.ca}
+
+Authors:
+\itemize{
+  \item Richard Glennie [contributor]
 }
 
 }

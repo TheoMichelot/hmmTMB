@@ -22,10 +22,10 @@ Dist <- R6Class(
     #' @param invlink Named list of inverse link functions for distribution
     #' parameters
     #' @param npar Number of parameters of the distribution
-    #' @param parnames character vector with name of each parameter 
+    #' @param parnames Character vector with name of each parameter 
     #' @param parapprox Function that takes a sample and produces approximate 
     #' values for the unknown parameters
-    #' @param fixed vector with element for each parameter which is TRUE if 
+    #' @param fixed Vector with element for each parameter which is TRUE if 
     #' parameter is fixed
     #' @param name_long Long version of the name of the distribution, possibly 
     #' more user-readable than name.

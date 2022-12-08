@@ -36,6 +36,33 @@ Observation <- R6Class(
     #' them (e.g., see \code{Observation$suggest_initial()}).
     #' 
     #' @return A new Observation object
+    #' 
+    #' @examples
+    #' # Load data set from MSwM package
+    #' data(energy, package = "MSwM")
+    #' 
+    #' # Initial observation parameters
+    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
+    #' 
+    #' # Model "energy" with normal distributions
+    #' obs <- Observation$new(data = energy, 
+    #'                        dists = list(Price = "norm"),
+    #'                        par = par0,
+    #'                        n_states = 2)
+    #'                        
+    #' # Model "energy" with gamma distributions
+    #' obs <- Observation$new(data = energy, 
+    #'                        dists = list(Price = "gamma2"),
+    #'                        par = par0,
+    #'                        n_states = 2)
+    #'                        
+    #' # Model with non-linear effect of EurDol on mean price
+    #' f <- list(Price = list(mean = ~ s(EurDol, k = 5, bs = "cs")))
+    #' obs <- Observation$new(data = energy, 
+    #'                        dists = list(Price = "norm"),
+    #'                        par = par0,
+    #'                        n_states = 2, 
+    #'                        formula = f)
     initialize = function(data, 
                           dists, 
                           formulas = NULL, 
@@ -164,14 +191,14 @@ Observation <- R6Class(
     
     #' @description Parameters on natural scale
     #' 
-    #' @param t time point, default t = 1; 
-    #' if "all" then return for all time points, otherwise return at time points given in t 
+    #' @param t Time index or vector of time indices; default t = 1. If 
+    #' t = "all", then return observation parameters for all time points.
     #' @param full_names Logical. If TRUE, the rows of the output
     #' are named in the format "variable.parameter" (default). If
     #' FALSE, the rows are names in the format "parameter". The
     #' latter is used in various internal functions, when the parameters
     #' need to be passed on to an R function.
-    #' @param linpred custom linear predictor 
+    #' @param linpred Optional custom linear predictor.
     #' @param as_list Logical. If TRUE, the output is a nested list with three levels:
     #' (1) time step, (2) observed variable, (3) observation parameter. If FALSE (default),
     #' the output is an array with one row for each observation parameter, one column for
@@ -180,6 +207,27 @@ Observation <- R6Class(
     #' @return Array of parameters with one row for each observation parameter, 
     #' one column for each state, and one slice for each time step. (See as_list
     #' argument for alternative output format.)
+    #' 
+    #' @examples
+    #' # Load data set from MSwM package
+    #' data(energy, package = "MSwM")
+    #' 
+    #' # Initial observation parameters
+    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
+    #' 
+    #' # Model with linear effect of EurDol on mean price
+    #' f <- list(Price = list(mean = ~ EurDol))
+    #' obs <- Observation$new(data = energy, 
+    #'                        dists = list(Price = "norm"),
+    #'                        par = par0,
+    #'                        n_states = 2, 
+    #'                        formula = f)
+    #'
+    #' # Set slope coefficients
+    #' obs$update_coeff_fe(coeff_fe = c(3, 2, 6, -2, log(2), log(2)))
+    #' 
+    #' # Observation parameter values for given data rows
+    #' obs$par(t = c(1, 10, 20))
     par = function(t = 1, full_names = TRUE, linpred = NULL, as_list = FALSE) {
       # Number of states
       n_states <- self$nstates()
@@ -279,8 +327,11 @@ Observation <- R6Class(
     terms = function() {return(private$terms_)},
     
     #' @description  Data frame of response variables
-    #' @param expand if TRUE then multivariate variables in observations are expanded 
-    #' to be univariate, creating extra columns 
+    #' 
+    #' @param expand If TRUE, then multivariate variables in observations are 
+    #' expanded to be univariate, creating extra columns.
+    #' 
+    #' @return Data frame of observation variables 
     obs_var = function(expand = FALSE) {
       obs_names <- names(self$dists())
       obs_var <- self$data()[, obs_names, drop = FALSE]
@@ -572,7 +623,31 @@ Observation <- R6Class(
     #' the \code{parapprox} function of the relevant \code{Dist} object
     #' is used to obtain parameter values.
     #' 
-    #' @return List of initial parameters for each observation variable 
+    #' @return List of initial parameters for each observation variable
+    #'
+    #' @examples
+    #' # Load data set from MSwM package
+    #' data(energy, package = "MSwM")
+    #' 
+    #' # Initial observation parameters
+    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
+    #' 
+    #' # Model "energy" with normal distributions
+    #' obs <- Observation$new(data = energy, 
+    #'                        dists = list(Price = "norm"),
+    #'                        par = par0,
+    #'                        n_states = 2)
+    #'
+    #' # Print observation parameters
+    #' obs$par()
+    #' 
+    #' # Suggest initial parameters
+    #' par0_new <- obs$suggest_initial()
+    #' par0_new
+    #' 
+    #' # Update model parameters to suggested
+    #' obs$update_par(par = par0_new)
+    #' obs$par()
     suggest_initial = function() {
       n_states <- private$nstates_
       

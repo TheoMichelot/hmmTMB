@@ -11,25 +11,93 @@ R6 class for hidden Markov model
 \details{
 Encapsulates the observation and hidden state models for a hidden
 Markov model.
+}
+\examples{
 
-The negative log-likelihood of the model is minimised using the
-function \code{optimx}. TMB uses the Laplace approximation to integrate 
-the random effects out of the likelihood.
+## ------------------------------------------------
+## Method `HMM$new`
+## ------------------------------------------------
 
-After the model has been fitted, the output of \code{optim} can be
-accessed using the method \code{out}.
+# Load data set from MSwM package
+data(energy, package = "MSwM")
 
+# Create hidden state and observation models
+hid <- MarkovChain$new(data = energy, n_states = 2)
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+obs <- Observation$new(data = energy, n_states = 2,
+                       dists = list(Price = "norm"),
+                       par = par0)
+                       
+# Create HMM                      
+hmm <- HMM$new(hid = hid, obs = obs)
 
-The forward-filtering backward-sampling algorithm returns a
-sequence of states, similarly to the Viterbi algorithm, but it generates
-it from the posterior distribution of state sequences, i.e., accounting
-for uncertainty in the state classification. Multiple generated sequences
-will therefore generally not be the same.
+## ------------------------------------------------
+## Method `HMM$fit`
+## ------------------------------------------------
 
+# Load data set from MSwM package
+data(energy, package = "MSwM")
 
-This is a wrapper around Observation$plot_dist, where the
-distribution for each state is weighted by the proportion of time
-spent in that state (according to the Viterbi state sequence).
+# Create hidden state and observation models
+hid <- MarkovChain$new(data = energy, n_states = 2)
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+obs <- Observation$new(data = energy, n_states = 2,
+                       dists = list(Price = "norm"),
+                       par = par0)
+                       
+# Create HMM                      
+hmm <- HMM$new(hid = hid, obs = obs)
+
+# Fit HMM
+hmm$fit(silent = TRUE)
+
+## ------------------------------------------------
+## Method `HMM$predict`
+## ------------------------------------------------
+
+# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Create hidden state and observation models
+hid <- MarkovChain$new(data = energy, n_states = 2)
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+obs <- Observation$new(data = energy, n_states = 2,
+                       dists = list(Price = "norm"),
+                       par = par0)
+                       
+# Create HMM                      
+hmm <- HMM$new(hid = hid, obs = obs)
+
+# Fit HMM
+hmm$fit(silent = TRUE)
+
+# Get transition probability matrix with confidence intervals
+hmm$predict(what = "tpm", n_post = 1000)
+
+## ------------------------------------------------
+## Method `HMM$plot`
+## ------------------------------------------------
+
+# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Transition probabilities depend on Oil covariate
+hid <- MarkovChain$new(data = energy, n_states = 2, 
+                       formula = ~Oil)
+# Create observation model
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+obs <- Observation$new(data = energy, n_states = 2,
+                       dists = list(Price = "norm"),
+                       par = par0)
+                       
+# Create HMM                      
+hmm <- HMM$new(hid = hid, obs = obs)
+
+# Fit HMM
+hmm$fit(silent = TRUE)
+
+# Plot stationary state probs as functions of Oil price
+hmm$plot(what = "delta", var = "Oil")
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -126,6 +194,25 @@ of \code{TMB::MakeADFun()}).}
 \subsection{Returns}{
 A new HMM object
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Create hidden state and observation models
+hid <- MarkovChain$new(data = energy, n_states = 2)
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+obs <- Observation$new(data = energy, n_states = 2,
+                       dists = list(Price = "norm"),
+                       par = par0)
+                       
+# Create HMM                      
+hmm <- HMM$new(hid = hid, obs = obs)
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HMM-obs"></a>}}
@@ -496,6 +583,13 @@ posterior estimate, although this can be changed using
 \if{latex}{\out{\hypertarget{method-HMM-fit}{}}}
 \subsection{Method \code{fit()}}{
 Model fitting
+
+The negative log-likelihood of the model is minimised using the
+function \code{optimx}. TMB uses the Laplace approximation to integrate 
+the random effects out of the likelihood.
+
+After the model has been fitted, the output of \code{optim} can be
+accessed using the method \code{out}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$fit(silent = FALSE, ...)}\if{html}{\out{</div>}}
 }
@@ -510,6 +604,28 @@ see ?optimx}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Create hidden state and observation models
+hid <- MarkovChain$new(data = energy, n_states = 2)
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+obs <- Observation$new(data = energy, n_states = 2,
+                       dists = list(Price = "norm"),
+                       par = par0)
+                       
+# Create HMM                      
+hmm <- HMM$new(hid = hid, obs = obs)
+
+# Fit HMM
+hmm$fit(silent = TRUE)
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HMM-mle"></a>}}
@@ -605,7 +721,13 @@ Most likely state sequence
 \if{latex}{\out{\hypertarget{method-HMM-sample_states}{}}}
 \subsection{Method \code{sample_states()}}{
 Sample posterior state sequences using forward-filtering
-backward-sampling
+backward-sampling 
+
+The forward-filtering backward-sampling algorithm returns a
+sequence of states, similarly to the Viterbi algorithm, but it generates
+it from the posterior distribution of state sequences, i.e., accounting
+for uncertainty in the state classification. Multiple generated sequences
+will therefore generally not be the same.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$sample_states(nsamp = 1, full = FALSE)}\if{html}{\out{</div>}}
 }
@@ -773,17 +895,42 @@ for hid$tpm, hid$delta, obs$par}
 \subsection{Returns}{
 Named array of predictions and confidence intervals, 
 if requested
-Confidence intervals for working parameters
-
-This function computes standard errors for all fixed effect model
-parameters based on the diagonal of the inverse of the Hessian matrix,
-and then derives Wald-type confidence intervals.
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Create hidden state and observation models
+hid <- MarkovChain$new(data = energy, n_states = 2)
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+obs <- Observation$new(data = energy, n_states = 2,
+                       dists = list(Price = "norm"),
+                       par = par0)
+                       
+# Create HMM                      
+hmm <- HMM$new(hid = hid, obs = obs)
+
+# Fit HMM
+hmm$fit(silent = TRUE)
+
+# Get transition probability matrix with confidence intervals
+hmm$predict(what = "tpm", n_post = 1000)
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HMM-confint"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-confint}{}}}
 \subsection{Method \code{confint()}}{
+Confidence intervals for working parameters
+
+This function computes standard errors for all fixed effect model
+parameters based on the diagonal of the inverse of the Hessian matrix,
+and then derives Wald-type confidence intervals.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$confint(level = 0.95)}\if{html}{\out{</div>}}
 }
@@ -865,12 +1012,12 @@ will sample from posterior for each simulation}
 \subsection{Returns}{
 List with elements:
 \itemize{
-  \item{obs_stat}{Vector of values of goodness-of-fit statistics for the
+  \item{obs_stat: }{Vector of values of goodness-of-fit statistics for the
   observed data}
-  \item{stats}{Matrix of values of goodness-of-fit statistics for the
+  \item{stats: }{Matrix of values of goodness-of-fit statistics for the
   simulated data sets (one row for each statistic, and one column for each
   simulation)}
-  \item{plot}{ggplot object}
+  \item{plot: }{ggplot object}
 }
 }
 }
@@ -899,13 +1046,17 @@ are plotted against each other.
 }
 \subsection{Returns}{
 A ggplot object
-Plot observation distributions weighted by frequency in Viterbi
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HMM-plot_dist"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-plot_dist}{}}}
 \subsection{Method \code{plot_dist()}}{
+Plot observation distributions weighted by frequency in Viterbi 
+
+This is a wrapper around Observation$plot_dist, where the
+distribution for each state is weighted by the proportion of time
+spent in that state (according to the Viterbi state sequence).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$plot_dist(var)}\if{html}{\out{</div>}}
 }
@@ -968,7 +1119,40 @@ more detail.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A ggplot object 
+A ggplot object
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Transition probabilities depend on Oil covariate
+hid <- MarkovChain$new(data = energy, n_states = 2, 
+                       formula = ~Oil)
+# Create observation model
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
+obs <- Observation$new(data = energy, n_states = 2,
+                       dists = list(Price = "norm"),
+                       par = par0)
+                       
+# Create HMM                      
+hmm <- HMM$new(hid = hid, obs = obs)
+
+# Fit HMM
+hmm$fit(silent = TRUE)
+
+# Plot stationary state probs as functions of Oil price
+hmm$plot(what = "delta", var = "Oil")
+}
+\if{html}{\out{</div>}}
+
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-AIC_marginal"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-AIC_marginal}{}}}
+\subsection{Method \code{AIC_marginal()}}{
 Marginal Akaike Information Criterion
 
 The marginal AIC is for example defined by 
@@ -977,18 +1161,18 @@ maximum marginal log-likelihood (of fixed
 effects), and k is the number of degrees
 of freedom of the fixed effect component of
 the model
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-HMM-AIC_marginal"></a>}}
-\if{latex}{\out{\hypertarget{method-HMM-AIC_marginal}{}}}
-\subsection{Method \code{AIC_marginal()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$AIC_marginal()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
 Marginal AIC
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-AIC_conditional"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-AIC_conditional}{}}}
+\subsection{Method \code{AIC_conditional()}}{
 Conditional Akaike Information Criterion
 
 The conditional AIC is for example defined by 
@@ -997,12 +1181,6 @@ maximum joint log-likelihood (of fixed and random
 effects), and k is the number of effective degrees
 of freedom of the model (accounting for flexibility
 in non-parametric terms implied by smoothing)
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-HMM-AIC_conditional"></a>}}
-\if{latex}{\out{\hypertarget{method-HMM-AIC_conditional}{}}}
-\subsection{Method \code{AIC_conditional()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$AIC_conditional()}\if{html}{\out{</div>}}
 }

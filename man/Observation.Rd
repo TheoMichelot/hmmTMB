@@ -12,6 +12,89 @@ R6 class for HMM observation model
 Contains the data, distributions, parameters, and formulas for
 the observation model from a hidden Markov model.
 }
+\examples{
+
+## ------------------------------------------------
+## Method `Observation$new`
+## ------------------------------------------------
+
+# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Initial observation parameters
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
+
+# Model "energy" with normal distributions
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "norm"),
+                       par = par0,
+                       n_states = 2)
+                       
+# Model "energy" with gamma distributions
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "gamma2"),
+                       par = par0,
+                       n_states = 2)
+                       
+# Model with non-linear effect of EurDol on mean price
+f <- list(Price = list(mean = ~ s(EurDol, k = 5, bs = "cs")))
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "norm"),
+                       par = par0,
+                       n_states = 2, 
+                       formula = f)
+
+## ------------------------------------------------
+## Method `Observation$par`
+## ------------------------------------------------
+
+# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Initial observation parameters
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
+
+# Model with linear effect of EurDol on mean price
+f <- list(Price = list(mean = ~ EurDol))
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "norm"),
+                       par = par0,
+                       n_states = 2, 
+                       formula = f)
+
+# Set slope coefficients
+obs$update_coeff_fe(coeff_fe = c(3, 2, 6, -2, log(2), log(2)))
+
+# Observation parameter values for given data rows
+obs$par(t = c(1, 10, 20))
+
+## ------------------------------------------------
+## Method `Observation$suggest_initial`
+## ------------------------------------------------
+
+# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Initial observation parameters
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
+
+# Model "energy" with normal distributions
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "norm"),
+                       par = par0,
+                       n_states = 2)
+
+# Print observation parameters
+obs$par()
+
+# Suggest initial parameters
+par0_new <- obs$suggest_initial()
+par0_new
+
+# Update model parameters to suggested
+obs$update_par(par = par0_new)
+obs$par()
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -94,6 +177,38 @@ them (e.g., see \code{Observation$suggest_initial()}).}
 \subsection{Returns}{
 A new Observation object
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Initial observation parameters
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
+
+# Model "energy" with normal distributions
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "norm"),
+                       par = par0,
+                       n_states = 2)
+                       
+# Model "energy" with gamma distributions
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "gamma2"),
+                       par = par0,
+                       n_states = 2)
+                       
+# Model with non-linear effect of EurDol on mean price
+f <- list(Price = list(mean = ~ s(EurDol, k = 5, bs = "cs")))
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "norm"),
+                       par = par0,
+                       n_states = 2, 
+                       formula = f)
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-data"></a>}}
@@ -137,8 +252,8 @@ Parameters on natural scale
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{t}}{time point, default t = 1; 
-if "all" then return for all time points, otherwise return at time points given in t}
+\item{\code{t}}{Time index or vector of time indices; default t = 1. If 
+t = "all", then return observation parameters for all time points.}
 
 \item{\code{full_names}}{Logical. If TRUE, the rows of the output
 are named in the format "variable.parameter" (default). If
@@ -146,7 +261,7 @@ FALSE, the rows are names in the format "parameter". The
 latter is used in various internal functions, when the parameters
 need to be passed on to an R function.}
 
-\item{\code{linpred}}{custom linear predictor}
+\item{\code{linpred}}{Optional custom linear predictor.}
 
 \item{\code{as_list}}{Logical. If TRUE, the output is a nested list with three levels:
 (1) time step, (2) observed variable, (3) observation parameter. If FALSE (default),
@@ -160,6 +275,32 @@ Array of parameters with one row for each observation parameter,
 one column for each state, and one slice for each time step. (See as_list
 argument for alternative output format.)
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Initial observation parameters
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
+
+# Model with linear effect of EurDol on mean price
+f <- list(Price = list(mean = ~ EurDol))
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "norm"),
+                       par = par0,
+                       n_states = 2, 
+                       formula = f)
+
+# Set slope coefficients
+obs$update_coeff_fe(coeff_fe = c(3, 2, 6, -2, log(2), log(2)))
+
+# Observation parameter values for given data rows
+obs$par(t = c(1, 10, 20))
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-inipar"></a>}}
@@ -276,10 +417,13 @@ Data frame of response variables
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{expand}}{if TRUE then multivariate variables in observations are expanded 
-to be univariate, creating extra columns}
+\item{\code{expand}}{If TRUE, then multivariate variables in observations are 
+expanded to be univariate, creating extra columns.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Data frame of observation variables
 }
 }
 \if{html}{\out{<hr>}}
@@ -577,6 +721,35 @@ is used to obtain parameter values.
 \subsection{Returns}{
 List of initial parameters for each observation variable
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Initial observation parameters
+par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
+
+# Model "energy" with normal distributions
+obs <- Observation$new(data = energy, 
+                       dists = list(Price = "norm"),
+                       par = par0,
+                       n_states = 2)
+
+# Print observation parameters
+obs$par()
+
+# Suggest initial parameters
+par0_new <- obs$suggest_initial()
+par0_new
+
+# Update model parameters to suggested
+obs$update_par(par = par0_new)
+obs$par()
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-plot_dist"></a>}}

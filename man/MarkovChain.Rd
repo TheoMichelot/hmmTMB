@@ -11,6 +11,32 @@ R6 class for HMM hidden process model
 \details{
 Contains the parameters and model formulas for the hidden process model.
 }
+\examples{
+
+## ------------------------------------------------
+## Method `MarkovChain$new`
+## ------------------------------------------------
+
+# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Create 2-state covariate-free model and initialise transition 
+# probability matrix
+hid <- MarkovChain$new(data = energy, n_states = 2,
+                       tpm = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2))
+
+# Create 2-state model with non-linear effect of Oil on all transition 
+# probabilities
+hid <- MarkovChain$new(data = energy, n_states = 2,
+                       formula = ~ s(Oil, k = 5, bs = "cs"))
+
+# Create 2-state model with quadratic effect of Oil on Pr(1 > 2)
+structure <- matrix(c(".", "~poly(Oil, 2)",
+                      "~1", "."),
+                    ncol = 2, byrow = TRUE)
+hid <- MarkovChain$new(data = energy, n_states = 2,
+                       formula = structure)
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -84,9 +110,10 @@ needs to be provided as a matrix, and n_states is deduced from its dimensions.}
 parameters (intercepts in model with covariates). If not provided, the default 
 is a matrix with 0.9 on the diagonal.}
 
-\item{\code{stationary}}{if TRUE then stationary distribution with respect to tpm for 
-first time point is used as initial distribution, if FALSE then initial distribution
-is estimated}
+\item{\code{stationary}}{If TRUE then the initial distribution of the Markov
+chain is fixed to the stationary distribution of the transition
+probability matrix for the first time point; if FALSE, the initial 
+distribution is estimated (default).}
 
 \item{\code{ref}}{Vector of indices for reference transition probabilities, 
 of length \code{n_states}. The i-th element is the index for the 
@@ -101,6 +128,32 @@ the diagonal transition probabilities are used as references.}
 \subsection{Returns}{
 A new MarkovChain object
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{# Load data set from MSwM package
+data(energy, package = "MSwM")
+
+# Create 2-state covariate-free model and initialise transition 
+# probability matrix
+hid <- MarkovChain$new(data = energy, n_states = 2,
+                       tpm = matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2))
+
+# Create 2-state model with non-linear effect of Oil on all transition 
+# probabilities
+hid <- MarkovChain$new(data = energy, n_states = 2,
+                       formula = ~ s(Oil, k = 5, bs = "cs"))
+
+# Create 2-state model with quadratic effect of Oil on Pr(1 > 2)
+structure <- matrix(c(".", "~poly(Oil, 2)",
+                      "~1", "."),
+                    ncol = 2, byrow = TRUE)
+hid <- MarkovChain$new(data = energy, n_states = 2,
+                       formula = structure)
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-formula"></a>}}
@@ -134,10 +187,10 @@ Get transition probability matrices
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{t}}{time point, default 1; if t = "all" then 
-all tpms are returned otherwise tpms for time points in t are returned}
+\item{\code{t}}{Time index or vector of time indices; default = 1. If t = "all" 
+then all transition probability matrices are returned.}
 
-\item{\code{linpred}}{custom linear predictor}
+\item{\code{linpred}}{Optional custom linear predictor}
 }
 \if{html}{\out{</div>}}
 }
@@ -615,7 +668,6 @@ Print model formulation
 \if{latex}{\out{\hypertarget{method-MarkovChain-print}{}}}
 \subsection{Method \code{print()}}{
 Print MarkovChain object
-Check constructor arguments ##
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$print()}\if{html}{\out{</div>}}
 }
