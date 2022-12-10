@@ -110,6 +110,24 @@ Observation <- R6Class(
         private$dists_ <- dists        
       }
       
+      # If categorical distribution, setup parameters based on data
+      private$setup_cat()
+      
+      # Check if user-provided parameters match distribution definition
+      n_var <- length(dists)
+      var_names <- names(dists)
+      # Loop over observed variables
+      for (i in 1:n_var) {
+        # Parameters of this distribution
+        par_names <- self$dists()[[i]]$parnames()
+        if (!all(par_names %in% names(par[[var_names[i]]]))) {
+          msg <- paste0("Parameters for variable ", var_names[i], " are missing",
+                        " or have wrong name. These should be: ",
+                        paste0(par_names, collapse = ", "), ".")
+          stop(msg)
+        }
+      }
+      
       # Set formulas
       var_names <- colnames(self$obs_var())
       par_names <- lapply(self$dists(), FUN = function(x) {x$parnames()})
@@ -131,12 +149,12 @@ Observation <- R6Class(
       }
       
       # Get names of all covariates
-      var_names <- unique(rapply(self$formulas(), all.vars))
+      cov_names <- unique(rapply(self$formulas(), all.vars))
       # Remove pi from list of covariates if it is in the formulas
-      var_names <- var_names[which(var_names!="pi")]
-      if(length(var_names) > 0) {
+      cov_names <- cov_names[which(cov_names!="pi")]
+      if(length(cov_names) > 0) {
         # Remove NAs in covariates (replace by last non-NA value)
-        data[,var_names] <- lapply(data[,var_names, drop=FALSE], 
+        data[,cov_names] <- lapply(data[,cov_names, drop=FALSE], 
                                    function(col) na_fill(col))
         self$update_data(data)
       }
@@ -154,27 +172,18 @@ Observation <- R6Class(
       self$update_coeff_re(rep(0, ncol(mats$X_re)))
       self$update_lambda(rep(1, ifelse(is.null(ncol_re), 0, ncol(ncol_re))))
       
-      # Fixed effect parameters
       # Make sure par is in right order
-      n_var <- ncol(self$obs_var())
-      varnm <- colnames(self$obs_var())
       corrected_par <- vector(mode = "list", length = n_var)
       for (i in 1:n_var) {
-        subvars <- self$dists()[[i]]$parnames()
-        if (!all(subvars %in% names(par[[varnm[i]]]))) {
-          msg <- paste0("Parameters for variable ", varnm[i], " are missing",
-                        " or have wrong name. These should be: ",
-                        paste0(subvars, collapse = ", "), ".")
-          stop(msg)
+        par_names <- self$dists()[[i]]$parnames()
+        subpar <- vector(mode = "list", length = length(par_names))
+        for (j in 1:length(par_names)) {
+          subpar[[j]] <- par[[var_names[i]]][[par_names[j]]]
         }
-        subpar <- vector(mode = "list", length = length(subvars))
-        for (j in 1:length(subvars)) {
-          subpar[[j]] <- par[[varnm[i]]][[subvars[j]]]
-        }
-        names(subpar) <- subvars
+        names(subpar) <- par_names
         corrected_par[[i]] <- subpar
       }
-      names(corrected_par) <- varnm
+      names(corrected_par) <- var_names
       self$update_par(corrected_par)
     },
     
@@ -778,7 +787,7 @@ Observation <- R6Class(
       # List of distribution names
       d_list <- lapply(self$dists(), function(d) d$name())
       # List of parameter names
-      p_list <- lapply(self$dists(), function(d) names(d$link()))
+      p_list <- lapply(self$dists(), function(d) d$parnames())
       # List of fixed parameters
       fix_list <- lapply(self$dists(), function(d) d$fixed())
       
@@ -914,6 +923,43 @@ Observation <- R6Class(
         }
       }
     }, 
+    
+    # Setup categorical distributions
+    setup_cat = function() {
+      # Find categorical distributions
+      which_cat <- which(sapply(self$dists(), function(d) d$name()) == "cat")
+      
+      if(length(which_cat > 0)) {
+        # Loop through categorical variables
+        for(i in which_cat) {
+          var_name <- names(self$dists())[i]
+          # Observations for this variable
+          obs <- self$data()[[var_name]]
+          
+          # If factor/character, convert to 0:(N-1) where N = # categories
+          if(is.factor(obs) | is.character(obs)) {
+            obs <- factor(obs)
+            lv <- levels(obs) # save to print below
+            levels(obs) <- 0:(length(unique(obs)) - 1)
+            obs <- as.numeric(as.character(obs))
+            new_data <- self$data()
+            new_data[[var_name]] <- obs
+            self$update_data(data = new_data)
+            msg <- paste0("Converting variable '", var_name, "' from factor/",
+                          "character to integers between 0 and ", max(obs), ":")
+            message(msg)
+            message(paste0(as.character(lv), " = ", 0:(length(unique(obs)) - 1), 
+                           collapse = "\n"))
+          }
+          
+          # Update number and names of parameters
+          npar <- length(unique(obs)) - 1
+          parnames <- paste0("p", 1:npar) # CHECK REFERENCE
+          self$dists()[[i]]$set_npar(npar)
+          self$dists()[[i]]$set_parnames(parnames)
+        }
+      }
+    },
     
     # Create a distribution 
     # @param name name of distribution to create 

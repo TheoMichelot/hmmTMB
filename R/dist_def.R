@@ -194,8 +194,10 @@ dist_cat <- Dist$new(
     ymat <- t(apply(xmat, 1, invmlogit))
     return(as.vector(ymat))
   }, 
+  # npar and parnames are updated based on data values in 
+  # Observation$setup_cat()
   npar = 1,
-  parnames = c("p1"), 
+  parnames = c("..."), 
   parapprox = function(x) {
     return(as.numeric(prop.table(table(x))))
   }
