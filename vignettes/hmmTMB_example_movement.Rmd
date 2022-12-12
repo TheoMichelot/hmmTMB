@@ -151,6 +151,24 @@ hmm1$plot_ts("x", "y") +
 
 A popular extension of HMMs in ecology consists in including the effects of time-varying (or individual-specific) covariates on parameters of the model. This can for example be used to estimate effects of covariates on the transition probabilities of the hidden state process, and we illustrate this case here.
 
+\tcolorbox
+\textbf{Aligning the covariates with the observations}
+
+Some care is required to ensure that the covariates are correctly aligned with the response variables (e.g., step lengths and turning angles) in the input data set. In hmmTMB, the likelihood of the model is computed as
+$$
+L_n = \bm\delta^{(1)} \bm{P}(Z_1) \bm\Gamma^{(1)} \bm{P}(Z_2) \bm\Gamma^{(2)} \cdots \bm\Gamma^{(n-1)} \bm{P}(Z_n) \bm{1}'
+$$
+where $\bm\delta^{(1)}$ is the initial distribution of the state process, $\bm{P}(Z_t)$ is a diagonal matrix where the $j$-th element along the diagonal is $p(Z_t \vert S_t = j)$ (the likelihood of observation $Z_t$ in state $j$), $\bm\Gamma^{(t)}$ is the transition probability matrix at time $t$, and $\bm{1}'$ is a column vector of ones (@zucchini2017). That is, $\bm\Gamma^{(t)}$ is derived using the covariate values observed at time $t$.
+
+In the movement example above, $Z_t$ is the step length between locations at times $t$ and $t+1$ (as computed by moveHMM). In this case, it makes more sense for $\bm\Gamma^{(t)}$ to be replaced by $\bm\Gamma^{(t+1)}$, then, because it represents the transition between the steps measured over the intervals $(t, t+1]$ and $(t+1, t+2]$. To achieve this, we could either shift the step lengths down by one index in the data set, or shift the covariates up by one index. Here, we follow the latter approach.
+\endtcolorbox
+
+```{r move1-prep-cov}
+# Shift covariates up by one index to align with steps/angles
+hmm_data$slope <- c(hmm_data$slope[-1], NA)
+hmm_data$temp <- c(hmm_data$temp[-1], NA)
+```
+
 Consider that we assume that temperature has a linear effect on transition probabilities, whereas slope has an unknown non-linear effect. The latter can be specified using the syntax from the package mgcv (which implements generalised additive models in R), with the function `s` for a smooth term. We create a new `MarkovChain`, with the new formula, and the `Observation` object is the same as before because the observation model hasn't changed. This time, fitting the model takes a little longer because of the need to estimate the non-parametric relationship between transition probabilities and slope.
 
 ```{r mod2}
