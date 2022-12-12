@@ -936,34 +936,33 @@ Observation <- R6Class(
           # Observations for this variable
           obs <- self$data()[[var_name]]
           
-          # If factor/character, convert to 0:(N-1) where N = # categories
+          # If factor/character, convert to 1:N where N = # categories
           if(is.factor(obs) | is.character(obs)) {
             obs <- factor(obs)
             lv <- levels(obs) # save to print below
-            levels(obs) <- 0:(length(unique(obs)) - 1)
+            levels(obs) <- 1:length(unique(obs))
             obs <- as.numeric(as.character(obs))
             new_data <- self$data()
             new_data[[var_name]] <- obs
             self$update_data(data = new_data)
             msg <- paste0("Converting variable '", var_name, "' from factor/",
-                          "character to integers between 0 and ", max(obs), ":")
+                          "character to integers between 1 and ", max(obs), ":")
             message(msg)
-            message(paste0(as.character(lv), " = ", 0:(length(unique(obs)) - 1), 
+            message(paste0(as.character(lv), " = ", 1:length(unique(obs)), 
                            collapse = "\n"))
           } else if(is.numeric(obs)) {
             if(any(obs != round(obs))) {
               stop(paste0("Observations for variable '", var_name, "' must be ",
                           "integers to fit a categorical distribution."))
-            } else if(any(!obs %in% 0:(length(unique(obs)) - 1))) {
+            } else if(any(!obs %in% 1:length(unique(obs)))) {
               stop(paste0("Observations for variable '", var_name, "' must be ",
-                          "integers between 0 and [number of categories minus ",
-                          "one]"))
+                          "integers between 1 and the number of categories"))
             }
           }
           
           # Update number and names of parameters
           npar <- length(unique(obs)) - 1
-          parnames <- paste0("p", 1:npar) # CHECK REFERENCE
+          parnames <- paste0("p", 2:(npar + 1))
           self$dists()[[i]]$set_npar(npar)
           self$dists()[[i]]$set_parnames(parnames)
         }

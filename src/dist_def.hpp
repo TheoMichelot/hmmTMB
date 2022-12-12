@@ -336,10 +336,10 @@ public:
   Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
     int obs = int(asDouble(x)); 
     Type val; 
-    if (obs == 0) {
+    if (obs == 1) {
       val = 1.0 - par.sum(); 
     } else {
-      val = par(obs - 1);
+      val = par(obs - 2);
     }
     if (logpdf) val = log(val); 
     return(val); 

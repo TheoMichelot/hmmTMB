@@ -169,8 +169,8 @@ dist_cat <- Dist$new(
     p <- c(1 - sum(p), p)
     if (p[1] < -1e-10) stop("class probabilities must sum to one")
     n <- round(x)
-    if (n < 0 | n > length(p)) stop("invalid input")
-    val <- p[n + 1]
+    if (n < 1 | n > length(p)) stop("invalid input")
+    val <- p[n]
     if (log) val <- log(val)
     return(val)
   }, 
@@ -180,7 +180,7 @@ dist_cat <- Dist$new(
     p <- c(1 - sum(p), p)
     if (p[1] < -1e-10) stop("class probabilities must sum to one")
     # sample classes
-    samp <- sample(1:length(p), size = n, prob = p, replace = TRUE) - 1
+    samp <- sample(1:length(p), size = n, prob = p, replace = TRUE)
     return(samp)
   }, 
   link = function(x, n_states) {
