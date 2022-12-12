@@ -206,7 +206,15 @@ hmm
 
 ## Example 2: fixed transition probabilities
 
-Similarly, the transition probabilities can be kept fixed or fixed to a common value using `fixpar`. The most common application might be a model where some transitions are prohibited, and therefore should have probability fixed to zero. Consider the 3-state model with transition probability matrix
+Similarly, the transition probabilities can be kept fixed or fixed to a common value using `fixpar`. Note that, due to the multinomial logit link function used for the transition probabilities, it is sometimes impossible to fix a single transition probability. For example, in a 3-state model, fixing `S1>S2.(Intercept)` (the intercept for $\gamma_{12}$) does not necessarily fix the value of $\gamma_{12}$, because the transition probability also depends on `S1>S3.(Intercept)` (in the denominator of the multinomial logit). There are however three important cases where a transition probability can be fixed:
+
+1. In a 2-state model, fixing the intercept parameter fixes the corresponding transition probability (because each transition probability only depends on one intercept parameter, unlike in models with 3 or more states).
+
+2. If the intercept is fixed to $-\infty$, then the corresponding transition probability is fixed to zero.
+
+3. It is possible to fix a complete row of the transition probability matrix.
+
+The most common application might be a model where some transitions are prohibited, and therefore should have probability fixed to zero. Consider the 3-state model with transition probability matrix
 $$
 \Gamma = 
 \begin{pmatrix}
