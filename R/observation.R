@@ -950,6 +950,15 @@ Observation <- R6Class(
             message(msg)
             message(paste0(as.character(lv), " = ", 0:(length(unique(obs)) - 1), 
                            collapse = "\n"))
+          } else if(is.numeric(obs)) {
+            if(any(obs != round(obs))) {
+              stop(paste0("Observations for variable '", var_name, "' must be ",
+                          "integers to fit a categorical distribution."))
+            } else if(any(!obs %in% 0:(length(unique(obs)) - 1))) {
+              stop(paste0("Observations for variable '", var_name, "' must be ",
+                          "integers between 0 and [number of categories minus ",
+                          "one]"))
+            }
           }
           
           # Update number and names of parameters
