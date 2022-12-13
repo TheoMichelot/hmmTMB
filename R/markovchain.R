@@ -63,6 +63,7 @@ MarkovChain <- R6Class(
                           n_states,
                           tpm = NULL,
                           stationary = FALSE,
+                          fixpar = NULL,
                           ref = 1:n_states) {
       # Check arguments
       private$check_args(n_states = n_states, 
@@ -104,6 +105,10 @@ MarkovChain <- R6Class(
       
       # Should initial distribution delta0 be stationary?
       private$stationary_ <- stationary 
+      
+      # Save fixpar for use in HMM
+      private$fixpar_user_ <- fixpar
+      private$fixpar_ <- fixpar
       
       # Create list of formulas  ('formula' is transposed to get 
       # the formulas in the order 1>2, 1>3, ..., 2>1, 2>3, ...)
@@ -157,6 +162,9 @@ MarkovChain <- R6Class(
         diag(tpm) <- 0.9
       }
       self$update_tpm(tpm)
+      
+      # Store information about fixed parameters
+      self$update_fixpar(fixpar = fixpar)
     },
     
     
@@ -283,6 +291,19 @@ MarkovChain <- R6Class(
     
     #' @description Use stationary distribution as initial distribution? 
     stationary = function() {return(private$stationary_)}, 
+    
+    #' @description Fixed parameters
+    #' 
+    #' @param all Logical. If FALSE, only user-specified fixed
+    #' parameters are returned, but not parameters that are fixed
+    #' for some other reason (e.g., from '.' in formula)
+    fixpar = function(all = FALSE) {
+      if(all) {
+        return(private$fixpar_)
+      } else {
+        return(private$fixpar_user_)        
+      }
+    },
     
     #' @description Current parameter estimates (random effects)
     coeff_re = function() {return(private$coeff_re_)},
@@ -423,6 +444,15 @@ MarkovChain <- R6Class(
       rownames(private$lambda_) <- self$terms()$names_re
     },
     
+    #' @description Update information about fixed parameters
+    #' 
+    #' @param fixpar New list of fixed parameters, in the same format
+    #' expected by MarkovChain$new()
+    update_fixpar = function(fixpar) {
+      private$fixpar_ <- fixpar
+      private$fixpar_user_ <- fixpar
+      private$setup_fixpar()
+    },
     
     # Other methods -----------------------------------------------------------
     
@@ -615,6 +645,27 @@ MarkovChain <- R6Class(
     nstates_ = NULL,
     unique_ID_ = NULL,
     terms_ = NULL,
+    fixpar_user_ = NULL,
+    fixpar_ = NULL,
+    
+    setup_fixpar = function() {
+      # Don't estimate delta0 if stationary
+      ldelta0 <- self$delta0(log = TRUE, as_matrix = FALSE)
+      if(self$stationary()) {
+        private$fixpar_$delta0 <- rep(NA, length = length(ldelta0))
+        names(private$fixpar_$delta0) <- rownames(ldelta0)
+      }
+      
+      # Check for transitions that have fixed probabilities 
+      ls_form_char <- as.list(t(self$formula())[!t(self$ref_mat())])
+      which_fixed <- which(sapply(ls_form_char, function(x) {x == "."}))
+      if(length(which_fixed) > 0) {
+        getnms <- rownames(self$coeff_fe())[which_fixed]
+        oldnms <- names(private$fixpar_$hid)
+        private$fixpar_$hid <- c(private$fixpar_$hid, rep(NA, length(getnms)))
+        names(private$fixpar_$hid) <- c(oldnms, getnms)        
+      }
+    },
     
     # Check constructor arguments
     # (For argument description, see constructor)

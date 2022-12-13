@@ -67,7 +67,8 @@ Observation <- R6Class(
                           dists, 
                           formulas = NULL, 
                           n_states, 
-                          par) {
+                          par,
+                          fixpar = NULL) {
       private$check_args(data = data, 
                          dists = dists, 
                          n_states = n_states, 
@@ -185,6 +186,9 @@ Observation <- R6Class(
       }
       names(corrected_par) <- var_names
       self$update_par(corrected_par)
+      
+      # Store information about fixed parameters
+      self$update_fixpar(fixpar = fixpar)
     },
     
     # Accessors ---------------------------------------------------------------
@@ -384,6 +388,19 @@ Observation <- R6Class(
       }
     }, 
     
+    #' @description Fixed parameters
+    #' 
+    #' @param all Logical. If FALSE, only user-specified fixed
+    #' parameters are returned, but not parameters that are fixed
+    #' for some other reason (e.g., size of binomial distribution)
+    fixpar = function(all = FALSE) {
+      if(all) {
+        return(private$fixpar_)
+      } else {
+        return(private$fixpar_user_)        
+      }
+    },
+    
     # Mutators ----------------------------------------------------------------
     
     #' @description Update parameters
@@ -449,6 +466,16 @@ Observation <- R6Class(
     #' @param data New data frame
     update_data = function(data) {
       private$data_ <- data
+    },
+    
+    #' @description Update information about fixed parameters
+    #' 
+    #' @param fixpar New list of fixed parameters, in the same format
+    #' expected by Observation$new()
+    update_fixpar = function(fixpar) {
+      private$fixpar_ <- fixpar
+      private$fixpar_user_ <- fixpar
+      private$setup_fixpar()
     },
     
     
@@ -846,6 +873,8 @@ Observation <- R6Class(
     inipar_ = NULL, 
     terms_ = NULL,
     mats_ = NULL, 
+    fixpar_user_ = NULL,
+    fixpar_ = NULL,
     
     #' Check constructor arguments 
     # (For argument description, see constructor)
@@ -965,6 +994,22 @@ Observation <- R6Class(
           parnames <- paste0("p", 2:(npar + 1))
           self$dists()[[i]]$set_npar(npar)
           self$dists()[[i]]$set_parnames(parnames)
+        }
+      }
+    },
+    
+    setup_fixpar = function() {
+      # Check for parameters that must always be fixed (identified by having
+      # a fixed = TRUE in dist; e.g., size of binomial)
+      fixed <- unlist(lapply(self$dists(), function(d) d$fixed()))
+      if (any(fixed)) {
+        nms <- names(fixed)[fixed == TRUE]
+        obsnms <- rownames(self$coeff_fe())
+        for (i in 1:length(nms)) {
+          getnms <- obsnms[grep(nms[i], obsnms)]
+          oldnms <- names(private$fixpar_$obs)
+          private$fixpar_$obs <- c(private$fixpar_$obs, rep(NA, length(getnms)))
+          names(private$fixpar_$obs) <- c(oldnms, getnms)
         }
       }
     },

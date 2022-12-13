@@ -57,7 +57,7 @@ HMM <- R6Class(
     #'                        dists = list(Price = "norm"),
     #'                        par = par0)
     #'                        
-    #' # Create HMM                      
+    #' # Create HMM
     #' hmm <- HMM$new(hid = hid, obs = obs)
     initialize = function(obs = NULL, 
                           hid = NULL,
@@ -104,12 +104,17 @@ HMM <- R6Class(
         obs$update_data(data)
       }
       
-      # store sub-model components 
+      # Store sub-model components 
       private$obs_ <- obs
       private$hid_ <- hid
       
-      # store fixed parameter 
-      private$fixpar_user_ <- private$fixpar_ <- fixpar 
+      # Update/overwrite fixpar of each model component if necessary
+      if(!is.null(fixpar)) {
+        self$hid()$update_fixpar(fixpar = fixpar[
+          intersect(names(fixpar), c("hid", "lambda_hid", "delta0"))])
+        self$obs()$update_fixpar(fixpar = fixpar[
+          intersect(names(fixpar), c("obs", "lambda_obs"))])
+      }
       
       if (!is.null(init)) {
         # Copy parameters with matching names from 'init' model
@@ -226,11 +231,7 @@ HMM <- R6Class(
     #' parameters are returned, but not parameters that are fixed
     #' by definition (e.g., size of binomial distribution).
     fixpar = function(all = FALSE) {
-      if(all) {
-        return(private$fixpar_)
-      } else {
-        return(private$fixpar_user_)        
-      }
+      c(self$hid()$fixpar(all = all), self$obs()$fixpar(all = all))
     }, 
     
     #' @description Array of working parameters
@@ -528,13 +529,7 @@ HMM <- R6Class(
       ncol_re_hid <- mod_mat_hid$ncol_re
       
       # Prepare initial distribution delta0
-      if (!is.null(private$fixpar_$delta0)) {
-        # if it is fixed, don't transform it to working scale 
-        # as it may be common to have fixed values of zero 
-        ldelta0 <- as.vector(self$hid()$delta0()[,-n_states])
-      } else {
-        ldelta0 <- self$hid()$delta0(log = TRUE, as_matrix = FALSE)
-      }
+      ldelta0 <- self$hid()$delta0(log = TRUE, as_matrix = FALSE)
       
       # Setup TMB parameters
       tmb_par <- list(coeff_fe_obs = self$obs()$coeff_fe(),
@@ -566,37 +561,6 @@ HMM <- R6Class(
         tmb_par$log_lambda_obs <- log(self$lambda()$obs)
       }
       
-      # Check if delta0 should be stationary (overrides custom map specified)
-      statdist <- 0 
-      if (self$hid()$stationary()) {
-        private$fixpar_$delta0 <- rep(NA, length = length(ldelta0))
-        names(private$fixpar_$delta0) <- 
-          rownames(self$hid()$delta0(log = TRUE, as_matrix = FALSE))
-        statdist <- 1 
-      } 
-      
-      # Check for parameters that must always be fixed (identified by having
-      # a fixed = TRUE in dist; e.g., size of binomial)
-      fixed <- unlist(lapply(self$obs()$dists(), function(d) d$fixed()))
-      if (any(fixed)) {
-        nms <- names(fixed)[fixed == TRUE]
-        obsnms <- rownames(self$obs()$coeff_fe())
-        for (i in 1:length(nms)) {
-          getnms <- obsnms[grep(nms[i], obsnms)]
-          oldnms <- names(private$fixpar_$obs)
-          private$fixpar_$obs <- c(private$fixpar_$obs, rep(NA, length(getnms)))
-          names(private$fixpar_$obs) <- c(oldnms, getnms)
-        }
-      }
-      
-      # Check for transitions that have fixed probabilities 
-      ls_form_char <- as.list(t(self$hid()$formula())[!t(self$hid()$ref_mat())])
-      which_fixed <- sapply(ls_form_char, function(x) {x == "."})
-      getnms <- rownames(self$hid()$coeff_fe())[which_fixed]
-      oldnms <- names(private$fixpar_$hid)
-      private$fixpar_$hid <- c(private$fixpar_$hid, rep(NA, length(getnms)))
-      names(private$fixpar_$hid) <- c(oldnms, getnms)
-      
       # Setup random effects in hidden state model
       if(is.null(S_hid)) {
         # If there are no random effects, 
@@ -617,6 +581,7 @@ HMM <- R6Class(
       # Add custom mapping effects, i.e., add them to the map argument
       # for TMB, and create a vector of 0/1 to record which parameters
       # are estimated and which are not (used e.g. in post_coeff)
+      fixpar <- c(self$hid()$fixpar(all = TRUE), self$obs()$fixpar(all = TRUE))
       par_list <- self$coeff_list()
       usernms <- c("obs", "lambda_obs", "hid", "lambda_hid", "delta0", NA, NA)
       par_names <- names(par_list)
@@ -629,7 +594,7 @@ HMM <- R6Class(
         names(fix_or_not) <- rep(par_names[i], length(v))
         
         # Check if user-specified constraint
-        fixed <- private$fixpar_[[usernms[i]]]
+        fixed <- fixpar[[usernms[i]]]
         if (!is.null(fixed)) {
           # Map vector for TMB
           tmp <- 1:length(v)
@@ -656,6 +621,9 @@ HMM <- R6Class(
       coeff_array <- cbind(fixpar_vec, unlist(par_list, use.names = FALSE))
       colnames(coeff_array) <- c("fixed", "value")
       private$coeff_array_ <- coeff_array
+      
+      # Check if delta0 should be stationary
+      statdist <- ifelse(self$hid()$stationary(), yes = 1, no = 0)
       
       # Get stored priors 
       priors <- self$priors() 
@@ -748,12 +716,12 @@ HMM <- R6Class(
       n_coeff <- nrow(self$coeff_array())
       n_post <- nrow(post)
       iters <- matrix(rep(self$coeff_array()[,"value"], each = n_post), 
-                         nrow = n_post, ncol = n_coeff)
+                      nrow = n_post, ncol = n_coeff)
       colnames(iters) <- rownames(self$coeff_array())
       # Fill non-fixed columns with posterior samples
       iters[,which(self$coeff_array()[,"fixed"] == 0)] <- post
       private$iters_ <- iters
-
+      
       # Get iterations on response scale 
       # (only obs parameters and transition probs)
       npar <- length(unlist(self$par()))
@@ -2003,8 +1971,6 @@ HMM <- R6Class(
     out_stan_ = NULL, 
     iters_= NULL,
     par_iters_ = NULL, 
-    fixpar_ = NULL,
-    fixpar_user_ = NULL, 
     coeff_array_ = NULL,
     states_ = NULL,
     
