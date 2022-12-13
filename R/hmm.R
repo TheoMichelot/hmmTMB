@@ -1861,7 +1861,7 @@ HMM <- R6Class(
           coord_cartesian(ylim = c(0, 1))
         if(is.factor(df$var)) {
           p <- p + geom_point(size = 0.7) +
-            geom_errorbar(aes(x = var, y = lcl, xend = var, yend = ucl), 
+            geom_errorbar(aes(x = var, ymin = lcl, ymax = ucl), 
                           alpha = 0.5, width = 0.2) +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
         } else {
