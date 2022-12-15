@@ -34,6 +34,11 @@ Observation <- R6Class(
     #' parameter. The choice of good initial values can be important, especially
     #' for complex models; the package vignettes discuss approaches to selecting
     #' them (e.g., see \code{Observation$suggest_initial()}).
+    #' @param fixpar List with optional elements "obs" (fixed coefficients for
+    #' observation parameters), and "lambda_obs" (fixed smoothness parameters),
+    #' Each element is a named vector of coefficients that should either be 
+    #' fixed (if the corresponding element is set to NA) or estimated to a 
+    #' common value (using integers or factor levels).
     #' 
     #' @return A new Observation object
     #' 

@@ -131,6 +131,13 @@ are five different options:
    corresponding ID
 }}
 
+\item{\code{fixpar}}{List with optional elements "hid" (fixed parameters for
+transition probabilities), "lambda_hid" (fixed smoothness parameters), 
+and "delta0" (fixed parameters for initial distribution). Each element is 
+a named vector of coefficients that should either be fixed (if the 
+corresponding element is set to NA) or estimated to a common value (using 
+integers or factor levels).}
+
 \item{\code{ref}}{Vector of indices for reference transition probabilities, 
 of length \code{n_states}. The i-th element is the index for the 
 reference in the i-th row of the transition probability matrix. For 

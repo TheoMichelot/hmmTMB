@@ -39,6 +39,12 @@ MarkovChain <- R6Class(
     #'    of IDs): each element is used as the known initial state for the 
     #'    corresponding ID
     #' }
+    #' @param fixpar List with optional elements "hid" (fixed parameters for
+    #' transition probabilities), "lambda_hid" (fixed smoothness parameters), 
+    #' and "delta0" (fixed parameters for initial distribution). Each element is 
+    #' a named vector of coefficients that should either be fixed (if the 
+    #' corresponding element is set to NA) or estimated to a common value (using 
+    #' integers or factor levels). 
     #' @param ref Vector of indices for reference transition probabilities, 
     #' of length \code{n_states}. The i-th element is the index for the 
     #' reference in the i-th row of the transition probability matrix. For 
