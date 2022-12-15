@@ -105,11 +105,12 @@ $$
 $$
 where $S_t$ is the hidden state. The parameter $p^{(k)}_j$ is the detection probability in state $j$ at a site which was surveyed $k$ times. We don't actually need to estimate all those parameters, because we know that $p^{(k)}_1 = 0$, i.e., the probability of detection is zero if the animal is not present.
 
-We first create an R object from the `MarkovChain` class, for the hidden state model, indicating that we need a 2-state model. We use `stationary = TRUE` to fix the initial distribution of the Markov chain to the stationary distribution of the transition probability matrix (rather than estimating it for each survey site).
+We first create an R object from the `MarkovChain` class, for the hidden state model, indicating that we need a 2-state model. We use `initial_state = "stationary"` to fix the initial distribution of the Markov chain to the stationary distribution of the transition probability matrix (rather than estimating it for each survey site).
 
 ```{r mod-spec1}
 # Define hidden state model
-hid1 <- MarkovChain$new(data = data, n_states = 2, stationary = TRUE)
+hid1 <- MarkovChain$new(data = data, n_states = 2, 
+                        initial_state = "stationary")
 ```
 
 The second step is to create an object of class `Observation`, to specify the observation model of the HMM. In particular, this requires passing a list of observation distributions (here, "binom" for both observed variables), and a list of initial parameter values. The size parameter is the same in both states: either 2 (for sites with 2 surveys) or 3 (for sites with 3 surveys). The detection probability parameter is 0 in state 1 for both variables, and we choose some plausible value for state 2 (here, $p = 0.5$).
@@ -178,7 +179,7 @@ The dataset includes two environmental covariates: elevation, and forest cover. 
 # Define hidden state process with elevation covariate
 hid2 <- MarkovChain$new(data = data, n_states = 2, 
                         formula = ~ s(elev, k = 5, bs = "ts"), 
-                        stationary = TRUE)
+                        initial_state = "stationary")
 ```
 
 The rest of the model specification is unchanged. This time, fitting the model takes a few minutes, as the non-parametric relationship between elevation and transition probabilities needs to be estimated.

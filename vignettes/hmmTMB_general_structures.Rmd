@@ -270,7 +270,7 @@ ref
 
 # Hidden state model
 hid2 <- MarkovChain$new(data = data, n_states = n_states * m, tpm = tpm0,
-                        ref = ref, stationary = TRUE)
+                        ref = ref, initial_state = "stationary")
 ```
 
 We are using a 12-state HMM, so we need to specify 12 initial means and 12 initial standard deviations to create the `Observation` model. However, the idea is that the first 6 states capture state 1 in the HSMM, and the last 6 capture state 2, so a lot of parameters are shared. This is reflected in our choice of initial values.

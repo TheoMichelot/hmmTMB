@@ -94,11 +94,12 @@ We now turn to the specification of the model used for analysis.
 
 ## Model structure
 
-The steps used to create the model object are similar to the above. This time, the parameters passed as input are starting values, i.e., from where the sampler will start exploring parameter space. We choose values that are somwhat different from the ones used for simulation, but within a plausible range based on the simulated data. For the hidden state process, we use the default initial values (a matrix with 0.9 on the diagonal). We also set `stationary = TRUE`, which means that the initial distribution of the hidden state process is fixed to the stationary distribution of the Markov chain, rather than estimated. We do this here because the initial distribution parameters are often not well identified, which can lead to convergence issues in the MCMC sampling.
+The steps used to create the model object are similar to the above. This time, the parameters passed as input are starting values, i.e., from where the sampler will start exploring parameter space. We choose values that are somwhat different from the ones used for simulation, but within a plausible range based on the simulated data. For the hidden state process, we use the default initial values (a matrix with 0.9 on the diagonal). We also set `initial_state = "stationary"`, which means that the initial distribution of the hidden state process is fixed to the stationary distribution of the Markov chain, rather than estimated. We do this here because the initial distribution parameters are often not well identified, which can lead to convergence issues in the MCMC sampling.
 
 ```{r mod-spec1}
 # Hidden state model
-hid <- MarkovChain$new(data = data_sim, n_states = 2, stationary = TRUE)
+hid <- MarkovChain$new(data = data_sim, n_states = 2, 
+                       initial_state = "stationary")
 
 # Initial parameters for observation process
 par <- list(z = list(mean = c(2, 7), sd = c(4, 0.5)))
