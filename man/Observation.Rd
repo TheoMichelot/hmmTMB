@@ -114,6 +114,7 @@ obs$par()
 \item \href{#method-Observation-terms}{\code{Observation$terms()}}
 \item \href{#method-Observation-obs_var}{\code{Observation$obs_var()}}
 \item \href{#method-Observation-known_states}{\code{Observation$known_states()}}
+\item \href{#method-Observation-fixpar}{\code{Observation$fixpar()}}
 \item \href{#method-Observation-update_par}{\code{Observation$update_par()}}
 \item \href{#method-Observation-update_coeff_fe}{\code{Observation$update_coeff_fe()}}
 \item \href{#method-Observation-update_coeff_re}{\code{Observation$update_coeff_re()}}
@@ -121,6 +122,7 @@ obs$par()
 \item \href{#method-Observation-update_X_re}{\code{Observation$update_X_re()}}
 \item \href{#method-Observation-update_lambda}{\code{Observation$update_lambda()}}
 \item \href{#method-Observation-update_data}{\code{Observation$update_data()}}
+\item \href{#method-Observation-update_fixpar}{\code{Observation$update_fixpar()}}
 \item \href{#method-Observation-make_mat}{\code{Observation$make_mat()}}
 \item \href{#method-Observation-make_newdata_grid}{\code{Observation$make_newdata_grid()}}
 \item \href{#method-Observation-n2w}{\code{Observation$n2w()}}
@@ -140,7 +142,7 @@ obs$par()
 \subsection{Method \code{new()}}{
 Create new Observation object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$new(data, dists, formulas = NULL, n_states, par)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$new(data, dists, formulas = NULL, n_states, par, fixpar = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -444,6 +446,25 @@ Vector of known states
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Observation-fixpar"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-fixpar}{}}}
+\subsection{Method \code{fixpar()}}{
+Fixed parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$fixpar(all = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{all}}{Logical. If FALSE, only user-specified fixed
+parameters are returned, but not parameters that are fixed
+for some other reason (e.g., size of binomial distribution)}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_par"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-update_par}{}}}
 \subsection{Method \code{update_par()}}{
@@ -564,6 +585,24 @@ Update data
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{data}}{New data frame}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Observation-update_fixpar"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-update_fixpar}{}}}
+\subsection{Method \code{update_fixpar()}}{
+Update information about fixed parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$update_fixpar(fixpar)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{fixpar}}{New list of fixed parameters, in the same format
+expected by Observation$new()}
 }
 \if{html}{\out{</div>}}
 }

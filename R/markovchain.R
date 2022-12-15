@@ -24,10 +24,21 @@ MarkovChain <- R6Class(
     #' @param tpm Optional transition probability matrix, to initialise the model
     #' parameters (intercepts in model with covariates). If not provided, the default 
     #' is a matrix with 0.9 on the diagonal. 
-    #' @param stationary If TRUE then the initial distribution of the Markov
-    #' chain is fixed to the stationary distribution of the transition
-    #' probability matrix for the first time point; if FALSE, the initial 
-    #' distribution is estimated (default). 
+    #' @param initial_state Specify model for initial state distribution. There
+    #' are five different options: 
+    #' \itemize{
+    #'    \item "estimated": a separate initial distribution is estimated for 
+    #'    each ID (default)
+    #'    \item "stationary": the initial distribution is fixed to the
+    #'    stationary distribution of the transition probability matrix for the 
+    #'    first time point of each ID
+    #'    \item "shared": a common initial distribution is estimated for all IDs
+    #'    \item integer value between 1 and n_states: used as the known initial 
+    #'    state for all IDs
+    #'    \item vector of integers between 1 and n_states (of length the number 
+    #'    of IDs): each element is used as the known initial state for the 
+    #'    corresponding ID
+    #' }
     #' @param ref Vector of indices for reference transition probabilities, 
     #' of length \code{n_states}. The i-th element is the index for the 
     #' reference in the i-th row of the transition probability matrix. For 

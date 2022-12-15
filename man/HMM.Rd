@@ -28,7 +28,7 @@ obs <- Observation$new(data = energy, n_states = 2,
                        dists = list(Price = "norm"),
                        par = par0)
                        
-# Create HMM                      
+# Create HMM
 hmm <- HMM$new(hid = hid, obs = obs)
 
 ## ------------------------------------------------
@@ -206,7 +206,7 @@ obs <- Observation$new(data = energy, n_states = 2,
                        dists = list(Price = "norm"),
                        par = par0)
                        
-# Create HMM                      
+# Create HMM
 hmm <- HMM$new(hid = hid, obs = obs)
 }
 \if{html}{\out{</div>}}

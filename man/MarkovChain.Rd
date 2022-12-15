@@ -46,10 +46,12 @@ hid <- MarkovChain$new(data = energy, n_states = 2,
 \item \href{#method-MarkovChain-tpm}{\code{MarkovChain$tpm()}}
 \item \href{#method-MarkovChain-ref}{\code{MarkovChain$ref()}}
 \item \href{#method-MarkovChain-ref_mat}{\code{MarkovChain$ref_mat()}}
+\item \href{#method-MarkovChain-ref_delta0}{\code{MarkovChain$ref_delta0()}}
 \item \href{#method-MarkovChain-coeff_fe}{\code{MarkovChain$coeff_fe()}}
 \item \href{#method-MarkovChain-delta}{\code{MarkovChain$delta()}}
 \item \href{#method-MarkovChain-delta0}{\code{MarkovChain$delta0()}}
 \item \href{#method-MarkovChain-stationary}{\code{MarkovChain$stationary()}}
+\item \href{#method-MarkovChain-fixpar}{\code{MarkovChain$fixpar()}}
 \item \href{#method-MarkovChain-coeff_re}{\code{MarkovChain$coeff_re()}}
 \item \href{#method-MarkovChain-X_fe}{\code{MarkovChain$X_fe()}}
 \item \href{#method-MarkovChain-X_re}{\code{MarkovChain$X_re()}}
@@ -58,6 +60,7 @@ hid <- MarkovChain$new(data = energy, n_states = 2,
 \item \href{#method-MarkovChain-nstates}{\code{MarkovChain$nstates()}}
 \item \href{#method-MarkovChain-terms}{\code{MarkovChain$terms()}}
 \item \href{#method-MarkovChain-unique_ID}{\code{MarkovChain$unique_ID()}}
+\item \href{#method-MarkovChain-initial_state}{\code{MarkovChain$initial_state()}}
 \item \href{#method-MarkovChain-update_tpm}{\code{MarkovChain$update_tpm()}}
 \item \href{#method-MarkovChain-update_coeff_fe}{\code{MarkovChain$update_coeff_fe()}}
 \item \href{#method-MarkovChain-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
@@ -65,6 +68,7 @@ hid <- MarkovChain$new(data = energy, n_states = 2,
 \item \href{#method-MarkovChain-update_X_re}{\code{MarkovChain$update_X_re()}}
 \item \href{#method-MarkovChain-update_delta0}{\code{MarkovChain$update_delta0()}}
 \item \href{#method-MarkovChain-update_lambda}{\code{MarkovChain$update_lambda()}}
+\item \href{#method-MarkovChain-update_fixpar}{\code{MarkovChain$update_fixpar()}}
 \item \href{#method-MarkovChain-make_mat}{\code{MarkovChain$make_mat()}}
 \item \href{#method-MarkovChain-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
 \item \href{#method-MarkovChain-tpm2par}{\code{MarkovChain$tpm2par()}}
@@ -87,7 +91,8 @@ Create new MarkovChain object
   formula = NULL,
   n_states,
   tpm = NULL,
-  stationary = FALSE,
+  initial_state = "estimated",
+  fixpar = NULL,
   ref = 1:n_states
 )}\if{html}{\out{</div>}}
 }
@@ -110,10 +115,21 @@ needs to be provided as a matrix, and n_states is deduced from its dimensions.}
 parameters (intercepts in model with covariates). If not provided, the default 
 is a matrix with 0.9 on the diagonal.}
 
-\item{\code{stationary}}{If TRUE then the initial distribution of the Markov
-chain is fixed to the stationary distribution of the transition
-probability matrix for the first time point; if FALSE, the initial 
-distribution is estimated (default).}
+\item{\code{initial_state}}{Specify model for initial state distribution. There
+are five different options: 
+\itemize{
+   \item "estimated": a separate initial distribution is estimated for 
+   each ID (default)
+   \item "stationary": the initial distribution is fixed to the
+   stationary distribution of the transition probability matrix for the 
+   first time point of each ID
+   \item "shared": a common initial distribution is estimated for all IDs
+   \item integer value between 1 and n_states: used as the known initial 
+   state for all IDs
+   \item vector of integers between 1 and n_states (of length the number 
+   of IDs): each element is used as the known initial state for the 
+   corresponding ID
+}}
 
 \item{\code{ref}}{Vector of indices for reference transition probabilities, 
 of length \code{n_states}. The i-th element is the index for the 
@@ -221,6 +237,16 @@ matrix
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-ref_delta0"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-ref_delta0}{}}}
+\subsection{Method \code{ref_delta0()}}{
+Indices of reference elements in initial distribution
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$ref_delta0()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-coeff_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-coeff_fe}{}}}
 \subsection{Method \code{coeff_fe()}}{
@@ -293,6 +319,25 @@ Use stationary distribution as initial distribution?
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$stationary()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-fixpar"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-fixpar}{}}}
+\subsection{Method \code{fixpar()}}{
+Fixed parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$fixpar(all = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{all}}{Logical. If FALSE, only user-specified fixed
+parameters are returned, but not parameters that are fixed
+for some other reason (e.g., from '.' in formula)}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-coeff_re"></a>}}
@@ -376,6 +421,16 @@ Terms of model formulas
 Number of time series
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$unique_ID()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-initial_state"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-initial_state}{}}}
+\subsection{Method \code{initial_state()}}{
+Initial state (see constructor argument)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$initial_state()}\if{html}{\out{</div>}}
 }
 
 }
@@ -497,6 +552,24 @@ Update smoothness parameters
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{lambda}}{New smoothness parameter vector}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-update_fixpar"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-update_fixpar}{}}}
+\subsection{Method \code{update_fixpar()}}{
+Update information about fixed parameters
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_fixpar(fixpar)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{fixpar}}{New list of fixed parameters, in the same format
+expected by MarkovChain$new()}
 }
 \if{html}{\out{</div>}}
 }
