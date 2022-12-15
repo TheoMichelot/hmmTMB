@@ -62,7 +62,7 @@ MarkovChain <- R6Class(
                           formula = NULL, 
                           n_states,
                           tpm = NULL,
-                          stationary = FALSE,
+                          initial_state = "estimated",
                           fixpar = NULL,
                           ref = 1:n_states) {
       # Check arguments
@@ -104,7 +104,12 @@ MarkovChain <- R6Class(
       }
       
       # Should initial distribution delta0 be stationary?
-      private$stationary_ <- stationary 
+      private$stationary_ <- FALSE
+      if(length(initial_state) == 1) {
+        if(initial_state == "stationary") {
+          private$stationary_ <- TRUE          
+        }
+      }
       
       # Save fixpar for use in HMM
       private$fixpar_user_ <- fixpar
@@ -151,9 +156,19 @@ MarkovChain <- R6Class(
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
       self$update_coeff_re(rep(0, ncol(mats$X_re)))
       self$update_lambda(rep(1, ifelse(is.null(ncol_re), 0, ncol(ncol_re))))
-      self$update_delta0(matrix(1 / n_states, 
-                                nrow = length(self$unique_ID()), 
-                                ncol = n_states))
+      
+      # Setup initial distribution
+      private$initial_state_ <- initial_state
+      delta0 <- matrix(1/self$nstates(), nrow = length(self$unique_ID()), 
+                       ncol = self$nstates())
+      private$ref_delta0_ <- rep(ncol(delta0), length = nrow(delta0))
+      if(is.numeric(initial_state)) {
+        # Initial state is known (possible one for each ID)
+        delta0[] <- 0
+        delta0[cbind(1:nrow(delta0), initial_state)] <- 1
+        private$ref_delta0_ <- rep(initial_state, length = nrow(delta0))
+      }
+      self$update_delta0(delta0 = delta0)
       
       # Initialise tpm
       if(is.null(tpm)) {
@@ -216,6 +231,9 @@ MarkovChain <- R6Class(
     #' matrix
     ref_mat = function() {return(private$ref_mat_)},
     
+    #' @description Indices of reference elements in initial distribution
+    ref_delta0 = function() {return(private$ref_delta0_)},
+    
     #' @description Current parameter estimates (fixed effects)
     coeff_fe = function() {return(private$coeff_fe_)},
     
@@ -275,12 +293,19 @@ MarkovChain <- R6Class(
       if(!log) {
         return(d0)
       } else {
-        log_d0 <- log(d0[, -ncol(d0), drop = FALSE] / d0[, ncol(d0)])
+        ref <- self$ref_delta0()
+        num <- matrix(sapply(1:nrow(d0), function(i) d0[i, -ref[i]]), 
+                      nrow = nrow(d0), byrow = TRUE)
+        denom <- sapply(1:nrow(d0), function(i) d0[i, ref[i]])
+        log_d0 <- log(num / denom)
         
         if(!as_matrix) {
-          d0_names <- apply(expand.grid(rownames(log_d0), colnames(log_d0)), 
-                            MARGIN = 1, FUN = paste, collapse = ".")
-          d0_names <- paste0("ID:", d0_names)
+          states <- matrix(1:ncol(d0), nrow = nrow(d0), 
+                           ncol = ncol(d0), byrow = TRUE)
+          states <- as.vector(
+            sapply(1:nrow(states), function(i) states[i, -ref[i]]))
+          d0_names <- paste0("ID:", rep(1:nrow(log_d0), each = ncol(log_d0)), 
+                             ".state", states)
           log_d0 <- matrix(log_d0, ncol = 1)
           rownames(log_d0) <- d0_names
         }
@@ -333,6 +358,9 @@ MarkovChain <- R6Class(
     
     #' @description Number of time series
     unique_ID = function() {return(private$unique_ID_)},
+    
+    #' @description Initial state (see constructor argument)
+    initial_state = function() {return(private$initial_state_)},
     
     # Mutators ----------------------------------------------------------------
     
@@ -638,6 +666,7 @@ MarkovChain <- R6Class(
     formulas_ = NULL,
     ref_ = NULL,
     ref_mat_ = NULL,
+    ref_delta0_ = NULL,
     coeff_fe_ = NULL,
     coeff_re_ = NULL,
     delta0_ = NULL,
@@ -647,12 +676,23 @@ MarkovChain <- R6Class(
     terms_ = NULL,
     fixpar_user_ = NULL,
     fixpar_ = NULL,
+    initial_state_ = NULL,
     
+    # Setup fixed parameters
     setup_fixpar = function() {
-      # Don't estimate delta0 if stationary
       ldelta0 <- self$delta0(log = TRUE, as_matrix = FALSE)
-      if(self$stationary()) {
+      if(is.numeric(self$initial_state())) {
+        # Don't estimate delta0 if initial state is known
         private$fixpar_$delta0 <- rep(NA, length = length(ldelta0))
+        names(private$fixpar_$delta0) <- rownames(ldelta0)
+      } else if(self$initial_state() %in% c("stationary", "uniform")) {
+        # Don't estimate delta0 if stationary or uniform
+        private$fixpar_$delta0 <- rep(NA, length = length(ldelta0))
+        names(private$fixpar_$delta0) <- rownames(ldelta0)
+      } else if(self$initial_state() == "shared") {
+        # delta0 is shared for all IDs
+        private$fixpar_$delta0 <- rep(
+          1:(self$nstates() - 1), each = length(ldelta0)/(self$nstates() - 1))
         names(private$fixpar_$delta0) <- rownames(ldelta0)
       }
       

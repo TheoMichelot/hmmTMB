@@ -295,13 +295,19 @@ HMM <- R6Class(
       
       # Update initial distribution delta0
       n_ID <- length(unique(self$obs()$data()$ID))
+      n_states <- self$hid()$nstates()
       if (self$hid()$stationary()) {
         delta <- self$hid()$delta(t = 1)
-        delta0 <- matrix(delta, ncol = length(delta), nrow = n_ID, byrow = TRUE)
+        delta0 <- matrix(delta, ncol = n_states, nrow = n_ID, byrow = TRUE)
       } else {
-        ldelta0 <- matrix(par_list$log_delta0, nrow = n_ID) 
-        delta0 <- cbind(exp(ldelta0), 1)
-        delta0 <- delta0 / rowSums(delta0)
+        # Fill delta0 except reference elements
+        delta0 <- t(sapply(1:n_ID, function(i) {
+          ld0 <- rep(0, length = n_states)
+          ind <- ((n_states - 1)*(i - 1) + 1):((n_states - 1) * i)
+          ld0[-self$hid()$ref_delta0()[i]] <- par_list$log_delta0[ind]
+          d0 <- exp(ld0)/sum(exp(ld0))
+          return(d0)
+        }))
       }
       self$hid()$update_delta0(delta0)
       
