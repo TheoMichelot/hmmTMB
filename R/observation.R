@@ -694,7 +694,10 @@ Observation <- R6Class(
       
       # Remove NAs and do clustering
       var_noNA <- na.omit(self$obs_var(expand = TRUE))
-      wh_noNA <- attr(var_noNA, "row.names")
+      wh_noNA <- 1:nrow(self$obs_var())
+      if(any(is.na(self$obs_var(expand = TRUE)))) {
+        wh_noNA <- wh_noNA[-which(is.na(foo), arr.ind = TRUE)[,"row"]]
+      }
       cluster <- kmeans(var_noNA, centers = n_states, nstart = 100)
       states <- cluster$cluster
       
@@ -721,7 +724,8 @@ Observation <- R6Class(
         
         # For each state, use parapprox() to suggest parameters
         for (j in 1:n_states) {
-          args <- c(list(x = var[states == j]), as.list(sub_current_par[,j]))
+          args <- c(list(x = var[states == j]), 
+                    as.list(sub_current_par[,j]))
           approx <- do.call(self$dists()[[i]]$parapprox(), args)
           for (k in 1:npar) {
             subpar[[k]] <- c(subpar[[k]], approx[k])
