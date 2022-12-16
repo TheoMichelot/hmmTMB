@@ -199,7 +199,12 @@ dist_cat <- Dist$new(
   npar = 1,
   parnames = c("..."), 
   parapprox = function(x) {
-    return(as.numeric(prop.table(table(x))))
+    stop("parapprox() not implemented yet for categorical distribution")
+    # # This would require parapprox knowing how many categories there are
+    # p <- rep(0, length = npar + 1)
+    # tab <- prop.table(table(x))
+    # p[as.numeric(names(tab))] <- as.numeric(tab)
+    # return(p[-1])
   }
 )
 
