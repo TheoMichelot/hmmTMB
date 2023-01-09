@@ -659,15 +659,15 @@ dist_wrpcauchy <- Dist$new(
   npar = 2, 
   parnames = c("mu", "rho"), 
   parapprox = function(x) {
-    # approximate Wrp Cauchy with Wrapped Normal
     mcosx <- mean(cos(x))
     msinx <- mean(sin(x))
     mu <- atan2(msinx, mcosx)
+    # Estimate of concentration taken from Wikipedia article on wrapped Cauchy
+    # (they use gamma parameter where rho = e^-gamma)
     r <- mcosx^2 + msinx^2 
     n <- length(x)
-    r <- n * (r - 1 / n) / (n - 1)
-    s2 <- log(1/r)
-    rho <- 1 - exp(-s2/2)
+    r <- n/(n-1) * (r - 1/n)
+    rho <- sqrt(r)
     return(c(mu, rho))
   }
 )
