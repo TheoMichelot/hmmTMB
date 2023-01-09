@@ -14,7 +14,7 @@ Maintainer: Theo Michelot <theo.michelot@dal.ca>
 Description: Fitting hidden Markov models using automatic differentiation 
   and Laplace approximation, allowing for fast inference and flexible covariate
   effects (including random effects and smoothing splines) on model parameters.
-  Michelot (2022) <arXiv:2211.14139>
+  The package is described by Michelot (2022) <arXiv:2211.14139>.
 URL: https://github.com/TheoMichelot/hmmTMB
 License: GPL-3
 Depends: R6, mgcv, TMB, ggplot2
