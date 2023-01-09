@@ -40,23 +40,24 @@ HMM <- R6Class(
     #' 'lambda_obs', and 'lambda_hid'. Each element is a named vector of 
     #' parameters in coeff_fe that should either be fixed (if the corresponding
     #' element is set to NA) or estimated to a common value (using integers or
-    #' factor levels). See examples in the vignettes, and check the TMB
+    #' factor levels).don See examples in the vignettes, and check the TMB
     #' documentation to understand the inner workings (argument \code{map}
     #' of \code{TMB::MakeADFun()}).
     #' 
     #' @return A new HMM object
     #' 
     #' @examples
-    #' # Load data set from MSwM package
-    #' data(energy, package = "MSwM")
+    #' # Load data set (included with R)
+    #' data(nottem)
+    #' data <- data.frame(temp = as.vector(t(nottem)))
     #' 
     #' # Create hidden state and observation models
-    #' hid <- MarkovChain$new(data = energy, n_states = 2)
-    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
-    #' obs <- Observation$new(data = energy, n_states = 2,
-    #'                        dists = list(Price = "norm"),
+    #' hid <- MarkovChain$new(data = data, n_states = 2)
+    #' par0 <- list(temp = list(mean = c(40, 60), sd = c(5, 5)))
+    #' obs <- Observation$new(data = data, n_states = 2, 
+    #'                        dists = list(temp = "norm"),
     #'                        par = par0)
-    #'                        
+    #' 
     #' # Create HMM
     #' hmm <- HMM$new(hid = hid, obs = obs)
     initialize = function(obs = NULL, 
@@ -767,17 +768,18 @@ HMM <- R6Class(
     #' see ?optimx
     #'
     #' @examples
-    #' # Load data set from MSwM package
-    #' data(energy, package = "MSwM")
+    #' # Load data set (included with R)
+    #' data(nottem)
+    #' data <- data.frame(temp = as.vector(t(nottem)))
     #' 
     #' # Create hidden state and observation models
-    #' hid <- MarkovChain$new(data = energy, n_states = 2)
-    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
-    #' obs <- Observation$new(data = energy, n_states = 2,
-    #'                        dists = list(Price = "norm"),
+    #' hid <- MarkovChain$new(data = data, n_states = 2)
+    #' par0 <- list(temp = list(mean = c(40, 60), sd = c(5, 5)))
+    #' obs <- Observation$new(data = data, n_states = 2, 
+    #'                        dists = list(temp = "norm"),
     #'                        par = par0)
-    #'                        
-    #' # Create HMM                      
+    #' 
+    #' # Create HMM
     #' hmm <- HMM$new(hid = hid, obs = obs)
     #'
     #' # Fit HMM
@@ -1369,17 +1371,18 @@ HMM <- R6Class(
     #' if requested
     #' 
     #' @examples
-    #' # Load data set from MSwM package
-    #' data(energy, package = "MSwM")
+    #' # Load data set (included with R)
+    #' data(nottem)
+    #' data <- data.frame(temp = as.vector(t(nottem)))
     #' 
     #' # Create hidden state and observation models
-    #' hid <- MarkovChain$new(data = energy, n_states = 2)
-    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
-    #' obs <- Observation$new(data = energy, n_states = 2,
-    #'                        dists = list(Price = "norm"),
+    #' hid <- MarkovChain$new(data = data, n_states = 2)
+    #' par0 <- list(temp = list(mean = c(40, 60), sd = c(5, 5)))
+    #' obs <- Observation$new(data = data, n_states = 2, 
+    #'                        dists = list(temp = "norm"),
     #'                        par = par0)
-    #'                        
-    #' # Create HMM                      
+    #' 
+    #' # Create HMM
     #' hmm <- HMM$new(hid = hid, obs = obs)
     #' 
     #' # Fit HMM
@@ -1738,29 +1741,7 @@ HMM <- R6Class(
     #' confidence intervals; default: 1000. See \code{predict} function for 
     #' more detail.
     #' 
-    #' @return A ggplot object 
-    #' 
-    #' @examples
-    #' # Load data set from MSwM package
-    #' data(energy, package = "MSwM")
-    #' 
-    #' # Transition probabilities depend on Oil covariate
-    #' hid <- MarkovChain$new(data = energy, n_states = 2, 
-    #'                        formula = ~Oil)
-    #' # Create observation model
-    #' par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 3)))
-    #' obs <- Observation$new(data = energy, n_states = 2,
-    #'                        dists = list(Price = "norm"),
-    #'                        par = par0)
-    #'                        
-    #' # Create HMM                      
-    #' hmm <- HMM$new(hid = hid, obs = obs)
-    #' 
-    #' # Fit HMM
-    #' hmm$fit(silent = TRUE)
-    #' 
-    #' # Plot stationary state probs as functions of Oil price
-    #' hmm$plot(what = "delta", var = "Oil")
+    #' @return A ggplot object
     plot = function(what, var = NULL, covs = NULL, i = NULL, j = NULL, 
                     n_grid = 50, n_post = 1000) {
       # Get relevant model component 
