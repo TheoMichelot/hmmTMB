@@ -81,8 +81,7 @@ HMM <- R6Class(
                                formulas = spec$forms)
         hid <- MarkovChain$new(n_states = spec$nstates, 
                                formula = spec$tpm, 
-                               data = spec$data, 
-                               stationary = is.null(spec$delta0))
+                               data = spec$data)
         if(!is.null(spec$delta0)) hid$update_delta0(spec$delta0)
         if (!is.null(spec$fixed)) fixpar <- spec$fixed 
         if (!is.null(spec$tpm0))  hid$update_tpm(spec$tpm0)

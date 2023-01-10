@@ -85,7 +85,6 @@ MarkovChain <- R6Class(
       # Check arguments
       private$check_args(n_states = n_states, 
                          formula = formula, 
-                         stationary = stationary, 
                          data = data)
       private$nstates_ <- n_states
       private$ref_ <- ref
@@ -726,7 +725,7 @@ MarkovChain <- R6Class(
     
     # Check constructor arguments
     # (For argument description, see constructor)
-    check_args = function(n_states, formula, stationary, data) {
+    check_args = function(n_states, formula, data) {
       if(!is.null(n_states)) {
         if(!is.numeric(n_states) | n_states < 1) {
           stop("'n_states' should be a numeric >= 1")

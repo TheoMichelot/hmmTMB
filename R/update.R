@@ -67,7 +67,7 @@ update.HMM <- function(object, type, i, j, change, fit = TRUE,
     new_hid <- MarkovChain$new(n_states = object$hid()$nstates(), 
                                formula = new_formula, 
                                data = dat, 
-                               stationary = object$hid()$stationary()) 
+                               initial_state = object$hid()$initial_state()) 
   } else if (type == "obs") {
     # copy model components 
     copy_obs <- object$obs()$clone()
