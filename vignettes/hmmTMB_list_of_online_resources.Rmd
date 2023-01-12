@@ -1,0 +1,40 @@
+---
+title: "List of online resources for hmmTMB"
+author: "Théo Michelot"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document
+linkcolor: blue   
+header-includes:
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+vignette: >
+  %\VignetteIndexEntry{Online resources for hmmTMB}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+This document lists vignettes and other resources for the R package hmmTMB, which include details about its implementation, as well as several step-by-step analyses on various types of time series data. The vignettes are available on Github, rather than directly included in the CRAN version of the package, because generating them takes a long time.
+
+# Preprint
+
+A description of the statistical background, implementation details, and several detailed examples, are provided in the following arXiv preprint: ['hmmTMB: hidden Markov models with flexible covariate effects in R'](https://arxiv.org/abs/2211.14139) (@michelot2022).
+
+# Vignettes
+
+- ['Analysing time series data with hidden Markov models in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_workflow.pdf): Overview of package workflow, using detailed example based on analysis of energy prices. This is a good starting point to learn how to use the package.
+ 
+ - ['Bayesian inference in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_stan.pdf): Description of workflow for Bayesian analysis in hmmTMB, including specifying priors, and extracting posterior samples.
+ 
+ - ['Advanced features of hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_advanced_features.pdf): Description of some other useful functionalities, including (semi-)supervised learning, parameter constraints, selection of initial parameter values, etc.
+ 
+ - ['General dependence structures in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_general_structures.pdf): Implementation details for hidden Markov models (HMMs) with non-standard dependence structures, including hidden semi-Markov models, higher-order HMMs, autoregressive HMMs, and coupled HMMs.
+ 
+ - ['List of distributions in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_dist_list.pdf): List of observation distributions currently available in hmmTMB.
+  
+ - ['Flexible animal movement modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_movement.pdf): Description of wild haggis movement analysis, illustrating how non-parametric covariate effects can be included. This includes two different types of movement models: (1) correlated random walks based on step lengths and turning angles, and (2) correlated random walks based on locations directly.
+ 
+ - ['Occupancy modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_occupancy.pdf): Analysis of occupancy data set of crossbill from @kery2013.
+ 
+# References
