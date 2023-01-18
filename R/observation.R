@@ -676,7 +676,7 @@ Observation <- R6Class(
       # State-dependent parameters
       par <- self$par(t = "all", full_names = FALSE)
       # Indices of parameters for each variable in 'par'
-      par_ind <- c(1, cumsum(sapply(obs$dists(), function(x) x$npar())) + 1)
+      par_ind <- c(1, cumsum(sapply(self$dists(), function(x) x$npar())) + 1)
       
       # Get variable names 
       var_names <- names(self$obs_var())

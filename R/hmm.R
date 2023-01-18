@@ -933,7 +933,7 @@ HMM <- R6Class(
     #' @return List (of length the number of variables), where each element is
     #' a vector of pseudo-residuals (of length the number of data points)
     pseudores = function() {
-      ID <- obs$data()$ID
+      ID <- self$obs()$data()$ID
       n <- length(ID)
       # Matrix of CDFs at observations
       cat("Computing CDFs... ")

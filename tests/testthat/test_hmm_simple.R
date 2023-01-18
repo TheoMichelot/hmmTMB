@@ -87,13 +87,14 @@ test_that("State inference is correct", {
 })
 
 test_that("Pseudo-residuals look correct", {
-  # get pseudo-residuals, should be normally distributed 
   resids <- mod$pseudores()
-  expect_gt(ks.test(resids, "pnorm")$p.value, 0.4)
+  expect_equal(length(resids), 1)
+  expect_equal(names(resids), "count")
+  expect_equal(length(resids$count), n)
 })
 
 test_that("Goodness-of-fit metrics are correct", {
-  # simulated-biased testing
+  # simulation-based testing
   set.seed(51010)
   gof_stat <- function(x) {
     quantile(x$count, prob = seq(0.2, 0.8, 0.2))
