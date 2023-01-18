@@ -658,7 +658,11 @@ Observation <- R6Class(
     },
     
     #' @description Cumulative probabilities of observations
-    obs_cdf = function() {
+    #' 
+    #' @return List of cumulative probabilities, with one element for each
+    #' observed variable. Matrix rows correspond to time steps, and columns
+    #' correspond to states.
+    cdf = function() {
       # Data frame of observations
       data <- self$obs_var()
       

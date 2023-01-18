@@ -937,7 +937,7 @@ HMM <- R6Class(
       n <- length(ID)
       # Matrix of CDFs at observations
       cat("Computing CDFs... ")
-      cdfs <- self$obs()$obs_cdf()
+      cdfs <- self$obs()$cdf()
       cat("done\n")
       n_var <- length(cdfs)
       # Transition probability matrices
