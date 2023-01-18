@@ -657,6 +657,55 @@ Observation <- R6Class(
       return(prob)
     },
     
+    #' @description Cumulative probabilities of observations
+    obs_cdf = function() {
+      # Data frame of observations
+      data <- self$obs_var()
+      
+      # Number of observations
+      n <- nrow(data)
+      # Number of states
+      n_states <- self$nstates()
+      # Number of variables
+      n_var <- ncol(self$obs_var())
+      
+      # State-dependent parameters
+      par <- self$par(t = "all", full_names = FALSE)
+      # Indices of parameters for each variable in 'par'
+      par_ind <- c(1, cumsum(sapply(obs$dists(), function(x) x$npar())) + 1)
+      
+      # Get variable names 
+      var_names <- names(self$obs_var())
+      
+      # Initialise output list
+      cdf_list <- list()
+      
+      # Loop over observed variables
+      for(var in 1:n_var) {
+        # Initialise matrix of probabilities
+        cdf_mat <- matrix(NA, nrow = n, ncol = n_states)
+        colnames(cdf_mat) <- paste("state", 1:n_states)
+        # Loop over observed variables
+        obsdist <- self$dists()[[var]]
+        this_par_ind <- par_ind[var]:(par_ind[var + 1] - 1)
+        
+        # Loop over observations (rows of cdf_mat)
+        for (i in 1:n) {
+          # Loop over states (columns of cdf_mat)
+          for (s in 1:n_states) {
+            par_ls <- as.list(c(x = data[i, var_names[var]], 
+                                par[this_par_ind, s, i]))
+            cdf_mat[i, s] <- do.call(obsdist$cdf(), par_ls)
+          }
+        }
+        
+        cdf_list[[var]] <- cdf_mat
+      }
+      names(cdf_list) <- var_names
+
+      return(cdf_list)
+    },
+    
     #' @description Suggest initial observation parameters
     #' 
     #' The K-means algorithm is used to define clusters of observations
