@@ -923,122 +923,55 @@ HMM <- R6Class(
       return(list(logforward = lforw, logbackward = lback))
     }, 
     
-    # Conditional distributions -----------------------------------------------
-    
-    #' @description Compute conditional cumulative distribution functions 
-    #' 
-    #' @param ngrid how many cells on the grid that CDF is computed on 
-    #' @param silent if TRUE then no messages are printed 
-    #' 
-    #' @return cdfs on grid for each variable 
-    cond = function(ngrid = 1000, silent = FALSE) {
-      delta0 <- self$hid()$delta0()
-      vars <- self$obs()$obs_var()
-      nvars <- ncol(vars)
-      n <- nrow(self$obs()$data())
-      range <- matrix(0, nr = 2, nc = nvars)
-      range[1,] <- sapply(vars, min, na.rm = TRUE)  
-      range[2,] <- sapply(vars, max, na.rm = TRUE)
-      # get forward-backward probabilities
-      fb <- self$forward_backward() 
-      lforw <- fb$logforward
-      lback <- fb$logbackward
-      # get transition matrices
-      tpms <- self$hid()$tpm(t = "all")
-      # scaling 
-      forwscale <- apply(lforw, 2, max)
-      backscale <- apply(lback, 2, max)
-      # compute conditional state probabilities
-      if (!silent) cat("Computing conditional state probabilities...")
-      cond <- matrix(0, nr = n, nc = self$hid()$nstates()) 
-      k <- 1
-      for (i in 1:n) {
-        if (i == 1 || (self$obs()$data()$ID[i] != self$obs()$data()$ID[i - 1])) {
-          f <- log(delta0[k,])
-          k <- k + 1
-        } else {
-          f <- lforw[,i]
-        }
-        p <- (exp(f - forwscale[i]) %*% tpms[, , i]) * exp(lback[, i] - backscale[i])
-        cond[i, ] <- p / sum(p)
-      }
-      if(!silent) cat("done\n")
-      # list to store pdfs 
-      pdfs <- vector(mode = "list", length = nvars)
-      grids <- vector(mode = "list", length = nvars)
-      # compute cdf for each variable 
-      obsmats <- self$obs()$terms()
-      varnms <- names(vars)
-      for (i in 1:nvars) {
-        if (!silent) cat("Computing CDF for", varnms[i], "...")
-        grid <- seq(range[1, i], range[2, i], length = ngrid)
-        if (is_whole_number(vars[,i])) {
-          grid <- unique(floor(grid))
-        }
-        pdfs[[i]] <- matrix(0, nr = n, nc = length(grid))
-        grids[[i]] <- grid 
-        for (g in 1:length(grid)) {
-          tmp <- data.frame(var = rep(grid[g], n))
-          colnames(tmp) <- varnms[i]
-          probs <- self$obs()$obs_probs(data = tmp)
-          pdfs[[i]][, g] <- rowSums(probs * cond)
-        }
-        if (!silent) cat("done\n")
-      }
-      return(list(grids = grids, pdfs = pdfs))
-    }, 
-    
     # Pseudo-residuals --------------------------------------------------------
-    
     #' @description Pseudo-residuals
-    #' 
+    #'
     #' Compute pseudo-residuals for the fitted model. If the fitted model
-    #' is the "true" model, the pseudo-residuals follow a standard normal distribution.
-    #' Deviations from normality suggest lack of fit.
+    #' is the "true" model, the pseudo-residuals follow a standard normal 
+    #' distribution. Deviations from normality suggest lack of fit.
     #' 
-    #' @return Matrix of pseudo-residuals, with one row for each response variable
-    #' and one column for each observation
+    #' @return List (of length the number of variables), where each element is
+    #' a vector of pseudo-residuals (of length the number of data points)
     pseudores = function() {
-      n <- nrow(self$obs()$data())
-      cat("Computing conditional CDFs... ")
-      cond <- self$cond(silent = TRUE)
+      ID <- obs$data()$ID
+      n <- length(ID)
+      # Matrix of CDFs at observations
+      cat("Computing CDFs... ")
+      cdfs <- self$obs()$obs_cdf()
       cat("done\n")
-      pdfs <- cond$pdfs
-      grids <- cond$grids
-      vars <- self$obs()$obs_var()
-      nvars <- ncol(vars)
-      varnms <- names(vars)
-      # sum CDFs cumulatively 
-      cdfs <- vector(mode = "list", length = length(pdfs))
-      for (v in 1:nvars) {
-        # apply normalisation to PDFs to reduce effect of griding 
-        cdfs[[v]] <- t(apply(pdfs[[v]], 1, FUN = function(x) {cumsum(x)/sum(x)}))
-      }
-      # do residuals for each variable 
-      r <- matrix(0, nr = nvars, nc = n)
-      rownames(r) <- varnms 
-      for (v in 1:nvars) {
-        cat("Computing residuals for", varnms[v], "... ")
-        for (i in 1:length(vars[,v])) {
-          if (is.na(vars[i, v])) {
-            r[v, i] <- NA
-            next
-          }
-          dist <- vars[i, v] - grids[[v]]
-          wh <- which.min(abs(dist))
-          val <- cdfs[[v]][i, wh]
-          if ((dist[wh] < 1e-16 & wh > 1) | (wh > length(grids[[v]]) - 1)) {
-            wh2 <- wh - 1
+      n_var <- length(cdfs)
+      # Transition probability matrices
+      tpms <- self$hid()$tpm(t = "all")
+      # Log-forward probabilities
+      logforw <- self$forward_backward()$logforward
+      
+      # Loop over observed variables
+      res_ls <- list()
+      for(var in 1:n_var) {
+        cat("Computing residuals for", names(cdfs)[var], "... ")
+        # Vector of residuals for this variable
+        res <- rep(NA, n)
+
+        # Loop over time steps
+        res[1] <- qnorm(t(self$hid()$delta0()[1,]) %*% cdfs[[var]][1,])
+        for(i in 2:n) {
+          if(ID[i] != ID[i-1]) {
+            res[i] <- qnorm(t(self$hid()$delta0()[ID[i],]) %*% cdfs[[var]][i,])
           } else {
-            wh2 <- wh + 1
+            # c cancels out below (to avoid numerical issues)
+            c <- max(logforw[, i - 1])
+            a <- exp(logforw[, i - 1] - c)
+            res[i] <- qnorm(t(a) %*% (tpms[,,i]/sum(a)) %*% cdfs[[var]][i,])
           }
-          val <- (val + cdfs[[v]][i, wh2]) / 2
-          r[v, i] <- qnorm(val - 1e-16)
         }
+        
+        res_ls[[var]] <- res
         cat("done\n")
       }
-      return(r)
-    }, 
+      names(res_ls) <- names(cdfs)
+      
+      return(res_ls)
+    },
     
     # State estimation --------------------------------------------------------
     
