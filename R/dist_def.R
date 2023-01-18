@@ -35,6 +35,9 @@ dist_zipois <- Dist$new(
     if (log) l <- log(l)
     return(l)
   }, 
+  cdf = function(q, rate, z) {
+    return(NA)
+  },
   rng = function(n, rate, z) {
     zero <- rbinom(n, 1, z)
     y <- rpois(n, rate)
@@ -70,6 +73,9 @@ dist_ztpois <- Dist$new(
     if (log) l <- log(l)
     return(l)
   }, 
+  cdf = function(q, rate) {
+    return(NA)
+  },
   rng = function(n, rate) {
     y <- NULL 
     while (length(y) < n) {
@@ -117,6 +123,9 @@ dist_zibinom <- Dist$new(
     if (log) l <- log(l)
     return(l)
   }, 
+  cdf = function(q, size, prob, z) {
+    return(NA)
+  },
   rng = function(n, size, prob, z) {
     zero <- rbinom(n, 1, z)
     y <- rbinom(n, size, prob)
@@ -179,6 +188,9 @@ dist_cat <- Dist$new(
     if (log) val <- log(val)
     return(val)
   }, 
+  cdf = function(q, ...) {
+    return(NA)
+  },
   rng = function(n, ...) {
     # get class probabilities
     p <- c(...) 
@@ -223,6 +235,9 @@ dist_zinbinom <- Dist$new(
     if (log) l <- log(l)
     return(l)
   }, 
+  cdf = function(q, size, prob, z) {
+    return(NA)
+  },
   rng = function(n, size, prob, z) {
     zero <- rbinom(n, 1, z)
     y <- rnbinom(n, size, prob)
@@ -261,6 +276,9 @@ dist_ztnbinom <- Dist$new(
     if (log) l <- log(l)
     return(l)
   }, 
+  cdf = function(q, size, prob) {
+    return(NA)
+  },
   rng = function(n, size, prob) {
     y <- NULL 
     while (length(y) < n) {
@@ -316,6 +334,9 @@ dist_truncnorm <- Dist$new(
     if (log) p <- log(p)
     return(p)
   },
+  cdf = function(q, mean, sd, min, max) {
+    return(NA)
+  },
   rng = function(n, mean, sd, min = -Inf, max = Inf) {
     u <- runif(n)
     left <- pnorm((min - mean) / sd)
@@ -342,6 +363,9 @@ dist_foldednorm <- Dist$new(
     p <- dnorm(x, mean, sd) + dnorm(-x, mean, sd)
     if (log) p <- log(p)
     return(p)
+  },
+  cdf = function(q, mean, sd) {
+    return(NA)
   },
   rng = function(n, mean, sd) {
     x <- rnorm(n, mean, sd)
@@ -465,6 +489,9 @@ dist_zigamma <- Dist$new(
         if (log) l <- log(l)
         return(l)
     }, 
+    cdf = function(q, shape, scale, z) {
+      return(NA)
+    },
     rng = function(n, shape, scale, z) {
         zero <- rbinom(n, 1, z)
         y <- rgamma(n, shape = shape, scale = scale)
@@ -499,6 +526,9 @@ dist_zigamma2 <- Dist$new(
     if (log) l <- log(l)
     return(l)
   }, 
+  cdf = function(q, mean, sd, z) {
+    return(NA)
+  },
   rng = function(n, mean, sd, z) {
     shape <- mean^2 / sd^2
     scale <- sd^2 / mean
@@ -600,6 +630,9 @@ dist_tweedie <- Dist$new(
     if (!log) l <- exp(l)
     return(l)
   }, 
+  cdf = function(q, mean, p, phi) {
+    return(NA)
+  },
   rng = function(n, mean, p, phi) {
     return(rTweedie(rep(mean, n), p + 1, phi))
   }, 
@@ -725,6 +758,9 @@ dist_mvnorm <- Dist$new(
     if (!log) p <- exp(p)
     return(p)
   }, 
+  cdf = function(q, ...) {
+    return(NA)
+  },
   rng = function(n, ...) {
     par <- c(...)
     # Dimension
@@ -778,6 +814,9 @@ dist_dir <- Dist$new(
     if (log) p <- log(p)
     return(p)
   }, 
+  cdf = function(q, ...) {
+    return(NA)
+  },
   rng = function(n, ...) {
     alpha <- c(...)
     y <- rgamma(n * length(alpha), shape = alpha, scale = 1)
