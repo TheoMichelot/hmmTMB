@@ -693,7 +693,7 @@ Observation <- R6Class(
         for (i in 1:n) {
           # Loop over states (columns of cdf_mat)
           for (s in 1:n_states) {
-            par_ls <- as.list(c(x = data[i, var_names[var]], 
+            par_ls <- as.list(c(q = data[i, var_names[var]], 
                                 par[this_par_ind, s, i]))
             cdf_mat[i, s] <- do.call(obsdist$cdf(), par_ls)
           }

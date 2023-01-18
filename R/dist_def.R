@@ -10,6 +10,9 @@ dist_pois <- Dist$new(
   pdf = function(x, rate, log = FALSE) {
     dpois(x = x, lambda = rate, log = log)
   },
+  cdf = function(q, rate) {
+    ppois(q = q, lambda = rate)
+  },
   rng = function(n, rate) {
     rpois(n = n, lambda = rate)
   },
@@ -91,6 +94,7 @@ dist_binom <- Dist$new(
   name = "binom", 
   name_long = "binomial",
   pdf = dbinom, 
+  cdf = pbinom,
   rng = rbinom, 
   link = list(size = identity, prob = qlogis), 
   invlink = list(size = identity, prob = plogis),
@@ -145,6 +149,7 @@ dist_nbinom <- Dist$new(
   name = "nbinom", 
   name_long = "negative binomial",
   pdf = dnbinom, 
+  cdf = pnbinom,
   rng = rnbinom, 
   link = list(size = log, prob = qlogis), 
   invlink = list(size = exp, prob = plogis), 
@@ -285,6 +290,7 @@ dist_norm <- Dist$new(
   name = "norm", 
   name_long = "normal",
   pdf = dnorm,
+  cdf = pnorm,
   rng = rnorm,
   link = list(mean = identity, sd = log),
   invlink = list(mean = identity, sd = exp),
@@ -362,6 +368,9 @@ dist_t <- Dist$new(
     df <- 2 * scale^2 / (scale^2 - 1)
     return(dt(y, df = df, log = log))
   }, 
+  cdf = function(q, mean, scale) {
+    pt(q = q - mean, df = 2 * scale^2 / (scale^2 - 1))
+  },
   rng = function(n, mean, scale) {
     df <- 2 * scale^2 / (scale^2 - 1)
     y <- rt(n, df = df)
@@ -382,6 +391,7 @@ dist_lnorm <- Dist$new(
   name = "lnorm", 
   name_long = "log-normal",
   pdf = dlnorm,
+  cdf = plnorm,
   rng = rlnorm,
   link = list(meanlog = identity, sdlog = log),
   invlink = list(meanlog = identity, sdlog = exp),
@@ -396,6 +406,7 @@ dist_lnorm <- Dist$new(
 dist_gamma <- Dist$new(
   name = "gamma",
   pdf = dgamma,
+  cdf = pgamma,
   rng = rgamma,
   link = list(shape = log, scale = log),
   invlink = list(shape = exp, scale = exp),
@@ -419,6 +430,12 @@ dist_gamma2 <- Dist$new(
     shape <- mean / scale 
     l <- dgamma(x, shape = shape, scale = scale, log = log)
     return(l)
+  },
+  cdf = function(q, mean, sd) {
+    scale <- sd^2 / mean 
+    shape <- mean / scale 
+    p <- pgamma(q = q, shape = shape, scale = scale)
+    return(p)
   },
   rng = function(n, mean, sd) {
     scale <- sd^2 / mean 
@@ -508,6 +525,7 @@ dist_weibull <- Dist$new(
   name = "weibull", 
   name_long = "Weibull",
   pdf = dweibull,
+  cdf = pweibull,
   rng = rweibull,
   link = list(shape = log, scale = log),
   invlink = list(shape = exp, scale = exp),
@@ -532,6 +550,7 @@ dist_exp <- Dist$new(
   name = "exp", 
   name_long = "exponential",
   pdf = dexp, 
+  cdf = pexp,
   rng = rexp, 
   link = list(rate = log), 
   invlink = list(rate = exp), 
@@ -546,6 +565,7 @@ dist_exp <- Dist$new(
 dist_beta <- Dist$new(
   name = "beta",
   pdf = dbeta,
+  cdf = pbeta,
   rng = rbeta,
   link = list(shape1 = log, shape2 = log),
   invlink = list(shape1 = exp, shape2 = exp),
@@ -610,6 +630,9 @@ dist_vm <- Dist$new(
       val <- - log(2 * pi * b) + kappa * cos(x - mu)
     return(val)
   },
+  cdf = function(q, mu, kappa) {
+    return(NA)
+  },
   rng = function(n, mu, kappa) {
     # rvm and dvm use different parameter names
     # (also, translate rvm output from [0, 2pi] to [-pi, pi])
@@ -646,6 +669,9 @@ dist_wrpcauchy <- Dist$new(
       val <- log(val)
     }
     return(val)
+  },
+  cdf = function(q, mu, rho) {
+    return(NA)
   },
   rng = function(n, mu, rho) {
     samp <- rwrpcauchy(n, mu, rho)
