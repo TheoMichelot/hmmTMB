@@ -1026,11 +1026,12 @@ Observation <- R6Class(
           var_name <- names(self$dists())[i]
           # Observations for this variable
           obs <- self$data()[[var_name]]
-          
+          which_notNA <- which(!is.na(obs))
+          obs_notNA <- obs[which_notNA]
+                    
           # If factor/character, convert to 1:N where N = # categories
           if(is.factor(obs) | is.character(obs)) {
-            which_notNA <- which(!is.na(obs))
-            obs_notNA <- factor(obs[which_notNA])
+            obs_notNA <- factor(obs_notNA)
             lv <- levels(obs_notNA) # save to print below
             levels(obs_notNA) <- 1:length(unique(obs_notNA))
             obs_notNA <- as.numeric(as.character(obs_notNA))
@@ -1045,17 +1046,17 @@ Observation <- R6Class(
             message(paste0(as.character(lv), " = ", 1:length(unique(obs_notNA)), 
                            collapse = "\n"))
           } else if(is.numeric(obs)) {
-            if(any(obs != round(obs), na.rm = TRUE)) {
+            if(any(obs_notNA != round(obs_notNA))) {
               stop(paste0("Observations for variable '", var_name, "' must be ",
                           "integers to fit a categorical distribution."))
-            } else if(any(!obs %in% 1:length(unique(obs)), na.rm = TRUE)) {
+            } else if(any(!obs_notNA %in% 1:length(unique(obs_notNA)))) {
               stop(paste0("Observations for variable '", var_name, "' must be ",
                           "integers between 1 and the number of categories"))
             }
           }
           
           # Update number and names of parameters
-          npar <- length(unique(na.omit(obs))) - 1
+          npar <- length(unique(obs_notNA)) - 1
           parnames <- paste0("p", 2:(npar + 1))
           self$dists()[[i]]$set_npar(npar)
           self$dists()[[i]]$set_parnames(parnames)
