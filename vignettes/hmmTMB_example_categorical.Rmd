@@ -8,8 +8,14 @@ output:
   html_document:
     df_print: paged
 toc: no
-header-includes: \renewcommand{\baselinestretch}{1.2} \newcommand{\cat}{\text{Cat}}
+header-includes: 
+  \renewcommand{\baselinestretch}{1.2} 
+  \newcommand{\cat}{\text{Cat}}
 fontsize: 12pt
+vignette: >
+  %\VignetteIndexEntry{Categorical distribution}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
 ```{r setup, include = FALSE}

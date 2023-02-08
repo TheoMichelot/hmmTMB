@@ -221,14 +221,14 @@ Pseudo-residuals are one method to assess goodness-of-fit of the observation dis
 pr <- hmm1$pseudores()
 
 # Check normality; should be along 1:1 diagonal
-qqnorm(pr["Price",])
+qqnorm(pr$Price)
 abline(0, 1)
 
 # Check independence; should decay to zero
-acf(pr["Price",])
+acf(pr$Price)
 ```
 
-There is some slight deviation from the 1:1 diagonal in the upper part of the quantile-quantile plot, but the fit seems adequate overall, suggesting that a mixture of 2 normal distributions works well for this data set. On the other hand, the ACF plot indicates that there is strong residual autocorrelation; i.e., much of the autocorrelation in the data was not captured by the model. This is clearly apparent from the time series plots shown above: successive prices within each state are not independent. There is no single remedy for this problem, but several approaches could be considered, including increasing the number of states, or including covariates to account for this autocorrelation.
+There is some deviation from the 1:1 diagonal in the quantile-quantile plot, but the fit seems adequate overall, suggesting that a mixture of 2 normal distributions works well for this data set. On the other hand, the ACF plot indicates that there is strong residual autocorrelation; i.e., much of the autocorrelation in the data was not captured by the model. This is clearly apparent from the time series plots shown above: successive prices within each state are not independent. There is no single remedy for this problem, but several approaches could be considered, including increasing the number of states, or including covariates to account for this autocorrelation.
 
 ## Posterior predictive checks
 

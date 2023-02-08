@@ -547,7 +547,7 @@ This procedure is implemented in the function `predict()` in hmmTMB, which can r
 
 ```{r post1}
 # Create model
-hid <- MarkovChain$new(data = energy, n_states = 2, f = ~Oil)
+hid <- MarkovChain$new(data = energy, n_states = 2, formula = ~Oil)
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
 obs <- Observation$new(data = energy, n_states = 2, 
