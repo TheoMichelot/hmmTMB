@@ -4,11 +4,18 @@ This R package implements flexible hidden Markov models, based on Template Model
 
 ## Preprint
 
+The statistical background, as well as details about the implementation of the package, and several example analyses, are presented in the following preprint.
+
 [Michelot, T. (2022). hmmTMB: Hidden Markov models with flexible covariate effects in R. arXiv:2211.14139.](https://arxiv.org/abs/2211.14139)
 
 ## Package installation
 
-Install the package from Github using devtools,
+The package is available on CRAN, and the stable version can therefore be installed using
+```
+install.packages("hmmTMB")
+```
+
+The development version of the package can be installed from Github using devtools,
 ```
 devtools::install_github("TheoMichelot/hmmTMB")
 ```
