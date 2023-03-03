@@ -663,7 +663,7 @@ HMM <- R6Class(
                       log_lambda_hid_prior = priors$log_lambda_hid)
       
       # Create TMB model
-      obj <- MakeADFun(tmb_dat, tmb_par, dll = "hmmTMB", 
+      obj <- MakeADFun(tmb_dat, tmb_par, DLL = "hmmTMB", 
                        random = random,
                        map = map, 
                        silent = silent)
@@ -680,7 +680,7 @@ HMM <- R6Class(
       
       # Joint negative log-likelihood function
       tmb_dat$include_smooths <- -1
-      private$tmb_obj_joint_ <- MakeADFun(tmb_dat, tmb_par, dll = "hmmTMB", 
+      private$tmb_obj_joint_ <- MakeADFun(tmb_dat, tmb_par, DLL = "hmmTMB", 
                                           map = map, silent = silent)
     },
     
