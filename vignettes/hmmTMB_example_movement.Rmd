@@ -203,7 +203,7 @@ As an alternative to the model based on step lengths and turning angles, we turn
 $$
 \bm{Z}_t \mid \{ S_t = j \} \sim N \left[ \bm{Z}_{t-1} + \alpha_j (\bm{Z}_{t-1}- \bm{Z}_{t-2}),\  \sigma_j \bm{I}_2 \right],
 $$
-where $\bm{I}_2$ is the 2-by-2 identity matrix and, in state $j$, the parameter $\alpha_j \in \mathbb{R}$ measures the degree of autocorrelation in the location process, and $\sigma_j > 0$ measures variability. This model gives rise to correlated movement steps because, for $\alpha_j > 0$, the expected direction of change from $\bm{Z}_{t-1}$ to $\bm{Z}_t$ is aligned with the previous step from $\bm{Z}_{t-2}$ to $\bm{Z}_{t-1}$. If $\sigma_j = 0$, this reduces to a simple Gaussian random walk where each location is normally distributed around the previous location.
+where $\bm{I}_2$ is the 2-by-2 identity matrix and, in state $j$, the parameter $\alpha_j \in \mathbb{R}$ measures the degree of autocorrelation in the location process, and $\sigma_j > 0$ measures variability. This model gives rise to correlated movement steps because, for $\alpha_j > 0$, the expected direction of change from $\bm{Z}_{t-1}$ to $\bm{Z}_t$ is aligned with the previous step from $\bm{Z}_{t-2}$ to $\bm{Z}_{t-1}$. If $\alpha_j = 0$, this reduces to a simple Gaussian random walk where each location is normally distributed around the previous location.
 
 ## Data preparation
 
