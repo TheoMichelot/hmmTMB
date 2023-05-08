@@ -857,7 +857,7 @@ Observation <- R6Class(
       
       # Create ggplot histogram
       p <- ggplot(obs, aes(x = val)) + xlab(var) +
-        geom_histogram(breaks = breaks, aes(y=..density..), 
+        geom_histogram(breaks = breaks, aes(y = after_stat(density)), 
                        col = "white", bg = "lightgrey", na.rm = TRUE) + 
         geom_line(aes(grid, val, col = state, linetype = state), 
                   data = df_dens, size = 0.7) +

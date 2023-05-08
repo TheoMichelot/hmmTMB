@@ -8,7 +8,7 @@
 #' @importFrom mgcv gam rmvn dmvn
 #' @importFrom ggplot2 ggplot aes theme_light geom_line theme scale_colour_manual
 #' facet_wrap label_bquote xlab ylab ggtitle element_blank element_text geom_point
-#' geom_ribbon scale_size_manual geom_histogram geom_vline geom_errorbar
+#' geom_ribbon scale_size_manual geom_histogram geom_vline geom_errorbar after_stat
 #' @importFrom TMB MakeADFun sdreport
 #' @importFrom stringr str_trim str_split str_split_fixed
 #' @importFrom optimx optimx
@@ -1765,7 +1765,7 @@ HMM <- R6Class(
                           alpha = 0.5, width = 0.2) +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
         } else {
-          p <- p + geom_line(size = 0.7) +
+          p <- p + geom_line(linewidth = 0.7) +
             geom_ribbon(aes(ymin = lcl, ymax = ucl), alpha = 0.3)
         }
       } else {
@@ -1794,7 +1794,7 @@ HMM <- R6Class(
                           alpha = 0.5, width = 0.2) +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
         } else {
-          p <- p + geom_line(size = 0.7) +
+          p <- p + geom_line(linewidth = 0.7) +
             geom_ribbon(aes(ymin = lcl, ymax = ucl, fill = state), 
                         col = NA, alpha = 0.3)
         }
