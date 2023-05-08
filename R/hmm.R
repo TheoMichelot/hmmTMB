@@ -959,8 +959,8 @@ HMM <- R6Class(
         
         if(all(is.na(cdfs[[var]]))) {
           message(paste0("Pseudo-residuals not implemented for '", 
-                  hmm$obs()$dists()[[2]]$name(), "' distribution. ",
-                  "Returning NA."))
+                         hmm$obs()$dists()[[2]]$name(), "' distribution. ",
+                         "Returning NA."))
         } else {
           cat("Computing residuals for", names(cdfs)[var], "... ")
           
@@ -1823,6 +1823,11 @@ HMM <- R6Class(
         npar <- npar + length(self$coeff_list()$log_delta0)
       }
       
+      if(nrow(self$obs()$coeff_re()) + nrow(self$hid()$coeff_re()) > 0) {
+        warning("AIC functions are experimental for models with random effects",
+                " or splines. Use at your own risk.")
+      }
+      
       aic <- - 2 * llk + 2 * npar
       
       return(aic)
@@ -1844,6 +1849,11 @@ HMM <- R6Class(
       
       llk <- - self$tmb_obj_joint()$fn(par_all)
       npar <- self$edf()
+      
+      if(nrow(self$obs()$coeff_re()) + nrow(self$hid()$coeff_re()) > 0) {
+        warning("AIC functions are experimental for models with random effects",
+                " or splines. Use at your own risk.")
+      }
       
       aic <- - 2 * llk + 2 * npar
       
