@@ -640,7 +640,8 @@ Observation <- R6Class(
               # Loop over states (columns of prob)
               for (s in 1:n_states) {
                 prob[i, s] <- prob[i, s] * 
-                  obsdist$pdf_apply(x = data[i, varnms[var]], par = par[par_ind, s, i])
+                  obsdist$pdf_apply(x = data[[varnms[var]]][i], 
+                                    par = par[par_ind, s, i])
               }            
             }
           }
