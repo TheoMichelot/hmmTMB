@@ -954,25 +954,32 @@ HMM <- R6Class(
       # Loop over observed variables
       res_ls <- list()
       for(var in 1:n_var) {
-        cat("Computing residuals for", names(cdfs)[var], "... ")
         # Vector of residuals for this variable
         res <- rep(NA, n)
-
-        # Loop over time steps
-        res[1] <- qnorm(t(self$hid()$delta0()[1,]) %*% cdfs[[var]][1,])
-        for(i in 2:n) {
-          if(ID[i] != ID[i-1]) {
-            res[i] <- qnorm(t(self$hid()$delta0()[ID[i],]) %*% cdfs[[var]][i,])
-          } else {
-            # c cancels out below (to avoid numerical issues)
-            c <- max(logforw[, i - 1])
-            a <- exp(logforw[, i - 1] - c)
-            res[i] <- qnorm(t(a) %*% (tpms[,,i]/sum(a)) %*% cdfs[[var]][i,])
+        
+        if(all(is.na(cdfs[[var]]))) {
+          message(paste0("Pseudo-residuals not implemented for '", 
+                  hmm$obs()$dists()[[2]]$name(), "' distribution. ",
+                  "Returning NA."))
+        } else {
+          cat("Computing residuals for", names(cdfs)[var], "... ")
+          
+          # Loop over time steps
+          res[1] <- qnorm(t(self$hid()$delta0()[1,]) %*% cdfs[[var]][1,])
+          for(i in 2:n) {
+            if(ID[i] != ID[i-1]) {
+              res[i] <- qnorm(t(self$hid()$delta0()[ID[i],]) %*% cdfs[[var]][i,])
+            } else {
+              # c cancels out below (to avoid numerical issues)
+              c <- max(logforw[, i - 1])
+              a <- exp(logforw[, i - 1] - c)
+              res[i] <- qnorm(t(a) %*% (tpms[,,i]/sum(a)) %*% cdfs[[var]][i,])
+            }
           }
+          cat("done\n")
         }
         
         res_ls[[var]] <- res
-        cat("done\n")
       }
       names(res_ls) <- names(cdfs)
       
