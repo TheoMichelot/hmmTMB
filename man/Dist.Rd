@@ -18,6 +18,7 @@ functions for a probability distribution.
 \item \href{#method-Dist-new}{\code{Dist$new()}}
 \item \href{#method-Dist-name}{\code{Dist$name()}}
 \item \href{#method-Dist-pdf}{\code{Dist$pdf()}}
+\item \href{#method-Dist-cdf}{\code{Dist$cdf()}}
 \item \href{#method-Dist-rng}{\code{Dist$rng()}}
 \item \href{#method-Dist-link}{\code{Dist$link()}}
 \item \href{#method-Dist-invlink}{\code{Dist$invlink()}}
@@ -47,6 +48,7 @@ Create a Dist object
   name,
   pdf,
   rng,
+  cdf = NULL,
   link,
   invlink,
   npar,
@@ -67,6 +69,10 @@ Create a Dist object
 
 \item{\code{rng}}{Random generator function of the distribution (e.g.
 \code{rnorm} for normal distribution).}
+
+\item{\code{cdf}}{Cumulative distribution function of the distribution
+(e.g., \code{pnorm} for normal distribution). This is used to compute
+pseudo-residuals.}
 
 \item{\code{link}}{Named list of link functions for distribution parameters}
 
@@ -109,6 +115,16 @@ Return name of Dist object
 Return pdf of Dist object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dist$pdf()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Dist-cdf"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-cdf}{}}}
+\subsection{Method \code{cdf()}}{
+Return cdf of Dist object
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$cdf()}\if{html}{\out{</div>}}
 }
 
 }

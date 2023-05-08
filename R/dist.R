@@ -18,6 +18,9 @@ Dist <- R6Class(
     #' (e.g. \code{dnorm} for normal distribution).
     #' @param rng Random generator function of the distribution (e.g.
     #' \code{rnorm} for normal distribution).
+    #' @param cdf Cumulative distribution function of the distribution
+    #' (e.g., \code{pnorm} for normal distribution). This is used to compute
+    #' pseudo-residuals.
     #' @param link Named list of link functions for distribution parameters
     #' @param invlink Named list of inverse link functions for distribution
     #' parameters

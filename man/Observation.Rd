@@ -129,6 +129,7 @@ obs$par()
 \item \href{#method-Observation-w2n}{\code{Observation$w2n()}}
 \item \href{#method-Observation-linpred}{\code{Observation$linpred()}}
 \item \href{#method-Observation-obs_probs}{\code{Observation$obs_probs()}}
+\item \href{#method-Observation-cdf}{\code{Observation$cdf()}}
 \item \href{#method-Observation-suggest_initial}{\code{Observation$suggest_initial()}}
 \item \href{#method-Observation-plot_dist}{\code{Observation$plot_dist()}}
 \item \href{#method-Observation-formulation}{\code{Observation$formulation()}}
@@ -747,6 +748,21 @@ Observation likelihoods
 \subsection{Returns}{
 Matrix of likelihoods of observations, with one row for each 
 time step, and one column for each state.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Observation-cdf"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-cdf}{}}}
+\subsection{Method \code{cdf()}}{
+Cumulative probabilities of observations
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$cdf()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+List of cumulative probabilities, with one element for each
+observed variable. Matrix rows correspond to time steps, and columns
+correspond to states.
 }
 }
 \if{html}{\out{<hr>}}
