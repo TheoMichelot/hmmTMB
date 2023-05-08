@@ -127,6 +127,19 @@ MarkovChain <- R6Class(
         }
       }
       
+      # Should initial distribution be estimated? If there are many IDs,
+      # ask user to check that this is really the best option.
+      if(length(initial_state) == 1) {
+        if(initial_state == "estimated") {
+          if(length(self$unique_ID()) >= 8) {
+            message(paste("Large number of time series in the data.",
+                          "Consider changing the 'initial_state' argument",
+                          "to avoid estimating a different initial state",
+                          "distribution for each time series."))
+          }
+        }
+      }
+      
       # Save fixpar for use in HMM
       private$fixpar_user_ <- fixpar
       private$fixpar_ <- fixpar
