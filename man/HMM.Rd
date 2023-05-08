@@ -108,7 +108,6 @@ hmm$predict(what = "tpm", n_post = 1000)
 \item \href{#method-HMM-fit}{\code{HMM$fit()}}
 \item \href{#method-HMM-mle}{\code{HMM$mle()}}
 \item \href{#method-HMM-forward_backward}{\code{HMM$forward_backward()}}
-\item \href{#method-HMM-cond}{\code{HMM$cond()}}
 \item \href{#method-HMM-pseudores}{\code{HMM$pseudores()}}
 \item \href{#method-HMM-viterbi}{\code{HMM$viterbi()}}
 \item \href{#method-HMM-sample_states}{\code{HMM$sample_states()}}
@@ -564,11 +563,17 @@ posterior estimate, although this can be changed using
 Model fitting
 
 The negative log-likelihood of the model is minimised using the
-function \code{optimx}. TMB uses the Laplace approximation to integrate 
+function \code{optimx()}. TMB uses the Laplace approximation to integrate 
 the random effects out of the likelihood.
 
-After the model has been fitted, the output of \code{optim} can be
-accessed using the method \code{out}.
+After the model has been fitted, the output of \code{optimx()} can be
+accessed using the method \code{out()}. The estimated parameters can
+be accessed using the methods \code{par()} (for the HMM parameters, 
+possibly dependent on covariates), \code{predict()} (for uncertainty
+quantification and prediction of the HMM parameters for new covariate 
+values), \code{coeff_fe()} (for estimated fixed effect coefficients on
+the linear predictor scale), and \code{coeff_re()} (for estimated random
+effect coefficients on the linear predictor scale).
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$fit(silent = FALSE, ...)}\if{html}{\out{</div>}}
 }
@@ -644,43 +649,21 @@ Log-forward and log-backward probabilities
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-HMM-cond"></a>}}
-\if{latex}{\out{\hypertarget{method-HMM-cond}{}}}
-\subsection{Method \code{cond()}}{
-Compute conditional cumulative distribution functions
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$cond(ngrid = 1000, silent = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{ngrid}}{how many cells on the grid that CDF is computed on}
-
-\item{\code{silent}}{if TRUE then no messages are printed}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-cdfs on grid for each variable
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HMM-pseudores"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-pseudores}{}}}
 \subsection{Method \code{pseudores()}}{
 Pseudo-residuals
 
 Compute pseudo-residuals for the fitted model. If the fitted model
-is the "true" model, the pseudo-residuals follow a standard normal distribution.
-Deviations from normality suggest lack of fit.
+is the "true" model, the pseudo-residuals follow a standard normal 
+distribution. Deviations from normality suggest lack of fit.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$pseudores()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-Matrix of pseudo-residuals, with one row for each response variable
-and one column for each observation
+List (of length the number of variables), where each element is
+a vector of pseudo-residuals (of length the number of data points)
 }
 }
 \if{html}{\out{<hr>}}

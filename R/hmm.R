@@ -756,11 +756,17 @@ HMM <- R6Class(
     #' @description Model fitting
     #' 
     #' The negative log-likelihood of the model is minimised using the
-    #' function \code{optimx}. TMB uses the Laplace approximation to integrate 
+    #' function \code{optimx()}. TMB uses the Laplace approximation to integrate 
     #' the random effects out of the likelihood.
     #' 
-    #' After the model has been fitted, the output of \code{optim} can be
-    #' accessed using the method \code{out}.
+    #' After the model has been fitted, the output of \code{optimx()} can be
+    #' accessed using the method \code{out()}. The estimated parameters can
+    #' be accessed using the methods \code{par()} (for the HMM parameters, 
+    #' possibly dependent on covariates), \code{predict()} (for uncertainty
+    #' quantification and prediction of the HMM parameters for new covariate 
+    #' values), \code{coeff_fe()} (for estimated fixed effect coefficients on
+    #' the linear predictor scale), and \code{coeff_re()} (for estimated random
+    #' effect coefficients on the linear predictor scale).
     #' 
     #' @param silent Logical. If FALSE, all tracing outputs are shown (default).
     #' @param ... Other arguments to optimx which is used to optimise likelihood, 

@@ -139,7 +139,13 @@ hmm1
 
 Model fitting consists in estimating all model parameters, in particular the transition probabilities of the state process, and the state-dependent observation parameters. Fitting this simple model takes less than a second on a laptop. 
 
-Once it has been fitted, the model stores the estimated parameters, and we can see them by printing the model (or, alternatively, with `hmm$par()`). Here, we find
+```{r fit-hmm1}
+hmm1$fit(silent = TRUE)
+```
+
+## Accessing the estimated parameters
+
+Once it has been fitted, the model stores the estimated parameters, and we can see them by printing the model. Here, we find
 \begin{align*}
 \mu_1 = 3.4,\quad \mu_2 = 6.0 \\
 \sigma_1 = 0.8,\quad \sigma_2 = 1.1\\
@@ -150,15 +156,15 @@ Once it has been fitted, the model stores the estimated parameters, and we can s
 \end{pmatrix}
 \end{align*}
 
-The first state therefore captures periods with lower energy prices (with a mean of 3.4 cents/kWh), and the second state captures higher prices (mean = 6 cents/kWh). Note that, if covariates were included in the model, the parameters would be time-varying, and printing the model would show the parameters for the first time step of the data (as indicated by `t = 1`).
-
-```{r fit-hmm1}
-hmm1$fit(silent = TRUE)
-
+```{r print-hmm1}
 hmm1
 ```
 
-Just like for
+The first state therefore captures periods with lower energy prices (with a mean of 3.4 cents/kWh), and the second state captures higher prices (mean = 6 cents/kWh). 
+
+In this simple model, the transition probabilities and the observation parameters are not covariate-dependent, and so we can directly interpret the values shown in the printed output as the estimated parameter values. However, note that, if covariates were included (either in the `MarkovChain` or `Observation` model), the corresponding HMM parameters would be time-varying. In that case, printing the model would show the parameters for the first time step of the data (as indicated by `t = 1` in the output).
+
+In the case with covariates, a more flexible way to get estimated parameters is the method `HMM$par()`. By default, it returns the HMM parameters for the first row of data, but this can be changed with the argument `t`. For example, `hmm1$par(t = 10)` would return the estimated transition probabilities and observation parameters for the 10th data row. In a covariate-free model, the returned parameters are the same regardless of `t` because they are not time-varying. We discuss methods to access model parameters in the later section on "Including covariates in an HMM".
 
 # Model interpretation
 
@@ -483,11 +489,50 @@ The year-specific random intercepts $\gamma_k^{(j)}$ are also predicted, and can
 round(obs6$coeff_re(), 2)
 ```
 
-We see that the year-specific intercepts overall increase with time (negative for first three years, then positive), suggesting that, in each state, the mean energy price increased between 2002 and 2008. The mean energy price in each state can also be plotted against the year, to visualise the between-year heterogeneity with uncertainty bounds.
+There is no clear pattern in the predicted random intercepts here. The mean energy price in each state can also be plotted against the year, to visualise the between-year heterogeneity with uncertainty bounds.
 
 ```{r re-plot, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center"}
 hmm6$plot("obspar", "Year", i = "Price.mean")
 ```
+
+## Accessing the estimated parameters
+
+### Linear predictor coefficients and HMM parameters
+
+When covariates are included in any component of the HMM, it is important to distinguish between two types of parameters that can be extracted from the model:
+
+- The linear predictor coefficients, which describe the (fixed or random) effects of covariates on the HMM parameters. They can be accessed with the methods `HMM$coeff_fe()` (fixed effects) and `HMM$coeff_re()` (random effects). The fixed effect coefficients include for example the intercepts and linear effects. The random effect coefficients include things like random intercepts and basis coefficients for a non-linear effect.
+
+- The HMM parameters themselves, i.e., transition probabilities and parameters of the state-dependent observation distributions. Importantly, these parameters are covariate-dependent, and so, to get their values, we need to fix the covariates. The HMM parameters shown when the model is printed correspond to the first row of the data set, i.e., the covariates are set to their values in the first data row. (The output shows `t = 1` as a reminder.) The method `HMM$par()` can be used to get parameter values corresponding to any data row, using the argument `t`. For example, `t = 100` returns HMM parameters obtained by setting the covariates to their values in the 100th row of data. The argument `t` can also be a vector of multiple values, to get HMM parameters at several time steps, and `t = "all"` returns HMM parameters for all data rows. In the output of `HMM$par()`, the parameters are returned as an array, with one layer (one "slice") for each data row selected through `t`.
+
+### Illustration
+
+Let's use `hmm5`, in which the observation model contains the non-linear effect of a covariate, to go through the outputs of those different methods. 
+
+The method `coeff_fe()` returns a list with two elements: `obs` (for the observation model) and `hid` (for the hidden state model). Here, it only contains intercept coefficients (one for each estimated HMM parameter), because there are no linear covariate effects included. If the linear effect of a covariate was included, this is where we would find the estimated slope. Note that, although there are four transition probabilities in a two-state model, only two intercepts are shown for the hidden state model: one for the probability of a transition from state 1 to state 2, and one for the probability of a transition from state 2 to state 1. This is because these are the only two transition probabilities that are actually estimated; the other two transition probabilities (from 1 to 1, and from 2 to 2) are derived based on the constraint that rows of the transition probability matrix must sum to 1.
+
+```{r access-par1}
+# Fixed effect coefficients of the linear predictor
+hmm5$coeff_fe()
+```
+
+The method `coeff_re()` also returns a list with one element for `obs` and one for `hid`. The latter is empty here because there are no random effects or non-linear terms in the hidden state model. This model includes a non-linear effect of the covariate `EurDol` on the mean price in both states. In each state, this is modelled with a spline constructed with 9 basis functions (because we chose `k = 10` in the formula). So, `coeff_re()` shows the 18 estimated basis coefficients; the first 9 describe the relationship between mean price and covariate in state 1, and the last 9 describe the relationship in state 2.
+
+```{r access-par2}
+# Random effect coefficients of the linear predictor
+hmm5$coeff_re()
+```
+
+The method `par()` gives us a list with elements `obspar` (observation parameters) and `tpm` (transition probability matrix). Say that we want to know what the HMM parameters are for the 1st and 10th rows of data; to get these, we specify `t = c(1, 10)`. Each element of the list is an array with as many slice as there are time steps in the argument `t`, i.e., two layers in the example below because `t` is of length 2. The observation parameters are different at `t = 1` and `t = 10` because they depend on covariates. However, the transition probabilities are the same on both layers of the array, because they don't depend on covariates.
+
+```{r access-par3}
+# HMM parameters at t = 1 and t = 10
+hmm5$par(t = c(1, 10))
+```
+
+### Uncertainty quantification
+
+This distinction is also important for uncertainty quantification. The method `HMM$confint()` returns confidence intervals for the linear predictor coefficients, whereas `HMM$predict()` returns confidence intervals for the HMM parameters (for some given covariate values). Note that `HMM$predict()` can generally be useful in cases where we want to predict the HMM parameters for some new values of the covariates (rather than for a given row of the data set).
 
 # Extensions and other features
 
