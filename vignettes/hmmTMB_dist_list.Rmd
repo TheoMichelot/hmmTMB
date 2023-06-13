@@ -14,6 +14,13 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, error = FALSE, warning = FALSE,
+  comment = NA
+)
+```
+
 The hidden Markov models implemented in hmmTMB comprise two stochastic processes: an unobserved state process $(S_t)$, defined as a discrete-valued Markov chain, and an observation process $(Z_t)$. The observation depends on the hidden state as follows,
 $$
 Z_t \vert \{ S_t = j \} \sim \mathcal{D}(\theta_j),
