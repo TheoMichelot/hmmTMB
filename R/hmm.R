@@ -438,16 +438,8 @@ HMM <- R6Class(
       if(is.null(private$tmb_obj_)) {
         self$setup(silent = TRUE)
       }
-      # set parameter vector to current values
-      par <- c(self$obs()$coeff_fe(), 
-               self$obs()$lambda(), 
-               self$hid()$coeff_fe(), 
-               self$hid()$lambda())
-      if(!self$hid()$stationary()) {
-        par <- c(par, self$hid()$delta0(log = TRUE, as_matrix = FALSE))
-      }
       # compute log-likelihood
-      return(-self$tmb_obj()$fn(par))
+      return(-self$tmb_obj()$fn(self$tmb_obj()$par))
     },
     
     #' @description Effective degrees of freedom
@@ -596,14 +588,13 @@ HMM <- R6Class(
       for (i in seq_along(par_list)) {
         # Vector of parameters
         v <- par_list[[par_names[i]]]
-        fix_or_not <- rep(0, length(v))
-        names(fix_or_not) <- rep(par_names[i], length(v))
-        
+
+        # Map vector for TMB
+        tmp <- seq_along(v) 
         # Check if user-specified constraint
         fixed <- fixpar[[usernms[i]]]
-        if (!is.null(fixed)) {
-          # Map vector for TMB
-          tmp <- 1:length(v)
+        mode(fixed) <- "integer"
+        if (length(fixed) > 0) {
           # Increase fixed to make sure it's not between 1:length(v)
           fixed <- fixed + length(v)
           if(is.matrix(v)) {
@@ -612,16 +603,21 @@ HMM <- R6Class(
             nms <- names(v)
           }
           # Set map to user input
-          tmp[nms %in% names(fixed)] <- as.numeric(fixed)
-          tmp <- factor(as.vector(tmp))
+          tmp[nms %in% names(fixed)] <- fixed
+          tmp <- factor(as.vector(tmp), levels = unique(as.vector(tmp)))
           ls <- list(tmp)
           names(ls) <- par_names[i]
           map <- c(map, ls)
-          # Which parameters are fixed
-          if(any(is.na(tmp))) {
-            fix_or_not[which(is.na(tmp))] <- 1
-          }
+          # # Which parameters are fixed
+          # if(any(is.na(tmp))) {
+          #   fix_or_not[which(is.na(tmp))] <- 1
+          # }
         }
+        fix_or_not <- as.numeric(tmp) + 
+          ifelse(test = is.null(fixpar_vec) | all(is.na(fixpar_vec)), 
+                 yes = 0, 
+                 no = max(fixpar_vec, na.rm = TRUE))
+        names(fix_or_not) <- rep(par_names[i], length(v))
         fixpar_vec <- c(fixpar_vec, fix_or_not)
       }
       coeff_array <- cbind(fixpar_vec, unlist(par_list, use.names = FALSE))
@@ -725,7 +721,8 @@ HMM <- R6Class(
                       nrow = n_post, ncol = n_coeff)
       colnames(iters) <- rownames(self$coeff_array())
       # Fill non-fixed columns with posterior samples
-      iters[,which(self$coeff_array()[,"fixed"] == 0)] <- post
+      # Do I need to account for shared parameter values? See post_coeff
+      iters[,which(!is.na(self$coeff_array()[,"fixed"]))] <- post
       private$iters_ <- iters
       
       # Get iterations on response scale 
@@ -1187,7 +1184,8 @@ HMM <- R6Class(
       colnames(post_all) <- rownames(self$coeff_array())
       
       # Fill non-fixed columns with posterior samples
-      post_all[,which(self$coeff_array()[,"fixed"] == 0)] <- post
+      post_all[,which(!is.na(self$coeff_array()[,"fixed"]))] <- 
+        post[,na.omit(self$coeff_array()[,"fixed"])]
       
       return(post_all)
     },
