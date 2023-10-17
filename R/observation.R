@@ -1,6 +1,7 @@
 
-#' R6 class for HMM observation model
+#' @title R6 class for HMM observation model
 #'
+#' @description
 #' Contains the data, distributions, parameters, and formulas for
 #' the observation model from a hidden Markov model.
 #' 

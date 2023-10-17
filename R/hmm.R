@@ -1,6 +1,7 @@
 
-#' R6 class for hidden Markov model
+#' @title R6 class for hidden Markov model
 #'
+#' @description
 #' Encapsulates the observation and hidden state models for a hidden
 #' Markov model.
 #' 

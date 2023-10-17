@@ -4,11 +4,6 @@
 \alias{Dist}
 \title{R6 class for probability distribution}
 \description{
-R6 class for probability distribution
-
-R6 class for probability distribution
-}
-\details{
 Contains the probability density/mass function, and the link and inverse link 
 functions for a probability distribution.
 }

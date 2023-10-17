@@ -1,6 +1,7 @@
 
-#' R6 class for probability distribution
+#' @title R6 class for probability distribution
 #' 
+#' @description
 #' Contains the probability density/mass function, and the link and inverse link 
 #' functions for a probability distribution.
 #' 

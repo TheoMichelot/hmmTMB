@@ -4,11 +4,6 @@
 \alias{HMM}
 \title{R6 class for hidden Markov model}
 \description{
-R6 class for hidden Markov model
-
-R6 class for hidden Markov model
-}
-\details{
 Encapsulates the observation and hidden state models for a hidden
 Markov model.
 }

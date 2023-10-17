@@ -1,6 +1,7 @@
 
-#' R6 class for HMM hidden process model
+#' @title R6 class for HMM hidden process model
 #'
+#' @description
 #' Contains the parameters and model formulas for the hidden process model.
 #' 
 #' @export

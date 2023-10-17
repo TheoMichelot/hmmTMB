@@ -4,11 +4,6 @@
 \alias{Observation}
 \title{R6 class for HMM observation model}
 \description{
-R6 class for HMM observation model
-
-R6 class for HMM observation model
-}
-\details{
 Contains the data, distributions, parameters, and formulas for
 the observation model from a hidden Markov model.
 }
