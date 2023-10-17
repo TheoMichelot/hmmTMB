@@ -7,7 +7,7 @@
 \method{logLik}{HMM}(object, ...)
 }
 \arguments{
-\item{object}{SDE model object}
+\item{object}{HMM model object}
 
 \item{...}{For compatibility with S3 method}
 }
