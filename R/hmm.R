@@ -488,6 +488,20 @@ HMM <- R6Class(
     
     # Model fitting -----------------------------------------------------------
     
+    #' @description Suggest initial parameter values
+    #' 
+    #' Uses K-means clustering to split the data into naive "states", and
+    #' estimates observation parameters within each of these states. This is
+    #' meant to help with selecting initial parameter values before model
+    #' fitting, but users should still think about the values carefully,
+    #' and try multiple set of initial parameter values to ensure
+    #' convergence to the global maximum of the likelihood function.
+    #' 
+    #' @return List of initial parameters
+    suggest_initial = function() {
+      self$obs()$suggest_initial()
+    },
+    
     #' @description TMB setup
     #' 
     #' This creates an attribute \code{tmb_obj}, which can be used to 
@@ -589,7 +603,7 @@ HMM <- R6Class(
       for (i in seq_along(par_list)) {
         # Vector of parameters
         v <- par_list[[par_names[i]]]
-
+        
         # Map vector for TMB
         tmp <- seq_along(v) 
         # Check if user-specified constraint

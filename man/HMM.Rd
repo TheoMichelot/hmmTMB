@@ -98,6 +98,7 @@ hmm$predict(what = "tpm", n_post = 1000)
 \item \href{#method-HMM-out_stan}{\code{HMM$out_stan()}}
 \item \href{#method-HMM-llk}{\code{HMM$llk()}}
 \item \href{#method-HMM-edf}{\code{HMM$edf()}}
+\item \href{#method-HMM-suggest_initial}{\code{HMM$suggest_initial()}}
 \item \href{#method-HMM-setup}{\code{HMM$setup()}}
 \item \href{#method-HMM-fit_stan}{\code{HMM$fit_stan()}}
 \item \href{#method-HMM-fit}{\code{HMM$fit()}}
@@ -502,6 +503,26 @@ Effective degrees of freedom
 Number of effective degrees of freedom
 (accounting for flexibility in non-parametric 
 terms implied by smoothing)
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-suggest_initial"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-suggest_initial}{}}}
+\subsection{Method \code{suggest_initial()}}{
+Suggest initial parameter values
+
+Uses K-means clustering to split the data into naive "states", and
+estimates observation parameters within each of these states. This is
+meant to help with selecting initial parameter values before model
+fitting, but users should still think about the values carefully,
+and try multiple set of initial parameter values to ensure
+convergence to the global maximum of the likelihood function.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$suggest_initial()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+List of initial parameters
 }
 }
 \if{html}{\out{<hr>}}
