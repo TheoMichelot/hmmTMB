@@ -494,7 +494,7 @@ Observation <- R6Class(
     #' the design matrices are based on the original data frame. 
     #' 
     #' @return A list with elements:
-    #' \itemize{
+    #' \describe{
     #'   \item{X_fe}{Design matrix for fixed effects}
     #'   \item{X_re}{Design matrix for random effects}
     #'   \item{S}{Smoothness matrix for random effects}
@@ -507,7 +507,7 @@ Observation <- R6Class(
                     new_data = new_data)
     },
     
-    #' Design matrices for grid of covariates
+    #' @description Design matrices for grid of covariates
     #' 
     #' @param var Name of variable
     #' @param covs Optional named list for values of covariates (other than 'var') 

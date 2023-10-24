@@ -224,7 +224,7 @@ Output of optimiser after model fitting
 \subsection{Method \code{tmb_obj()}}{
 Model object created by TMB. This is the output of 
 the TMB function \code{MakeADFun}, and it is a list including elements
-\itemize{
+\describe{
   \item{\code{fn}}{Objective function}
   \item{\code{gr}}{Gradient function of fn}
   \item{\code{par}}{Vector of initial parameters on working scale}
@@ -241,7 +241,7 @@ the TMB function \code{MakeADFun}, and it is a list including elements
 Model object created by TMB for the joint likelihood of
 the fixed and random effects. This is the output of the TMB function 
 \code{MakeADFun}, and it is a list including elements
-\itemize{
+\describe{
   \item{\code{fn}}{Objective function}
   \item{\code{gr}}{Gradient function of fn}
   \item{\code{par}}{Vector of initial parameters on working scale}
@@ -407,7 +407,7 @@ Model parameters
 }
 \subsection{Returns}{
 A list with elements:
-\itemize{
+\describe{
   \item{\code{obspar}}{Parameters of observation model}
   \item{\code{tpm}}{Transition probability matrix of hidden state model}
 }
@@ -815,7 +815,7 @@ are returned}
 }
 \subsection{Returns}{
 A list with elements:
-\itemize{
+\describe{
   \item{post}{If return_post = TRUE, this is a vector (for scalar 
   outputs of fn) or matrix (for vector outputs) with a column for 
   each simulation}
@@ -991,7 +991,7 @@ will sample from posterior for each simulation}
 }
 \subsection{Returns}{
 List with elements:
-\itemize{
+\describe{
   \item{obs_stat: }{Vector of values of goodness-of-fit statistics for the
   observed data}
   \item{stats: }{Matrix of values of goodness-of-fit statistics for the

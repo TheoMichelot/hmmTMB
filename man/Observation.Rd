@@ -629,20 +629,20 @@ the design matrices are based on the original data frame.}
 }
 \subsection{Returns}{
 A list with elements:
-\itemize{
+\describe{
   \item{X_fe}{Design matrix for fixed effects}
   \item{X_re}{Design matrix for random effects}
   \item{S}{Smoothness matrix for random effects}
   \item{ncol_fe}{Number of columns of X_fe for each parameter}
   \item{ncol_re}{Number of columns of X_re and S for each random effect}
 }
-Design matrices for grid of covariates
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-make_newdata_grid"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-make_newdata_grid}{}}}
 \subsection{Method \code{make_newdata_grid()}}{
+Design matrices for grid of covariates
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$make_newdata_grid(var, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
 }

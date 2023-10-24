@@ -152,7 +152,7 @@ HMM <- R6Class(
     
     #' @description Model object created by TMB. This is the output of 
     #' the TMB function \code{MakeADFun}, and it is a list including elements
-    #' \itemize{
+    #' \describe{
     #'   \item{\code{fn}}{Objective function}
     #'   \item{\code{gr}}{Gradient function of fn}
     #'   \item{\code{par}}{Vector of initial parameters on working scale}
@@ -167,7 +167,7 @@ HMM <- R6Class(
     #' @description Model object created by TMB for the joint likelihood of
     #' the fixed and random effects. This is the output of the TMB function 
     #' \code{MakeADFun}, and it is a list including elements
-    #' \itemize{
+    #' \describe{
     #'   \item{\code{fn}}{Objective function}
     #'   \item{\code{gr}}{Gradient function of fn}
     #'   \item{\code{par}}{Vector of initial parameters on working scale}
@@ -337,7 +337,7 @@ HMM <- R6Class(
     #' @param t returns parameters at time t, default is t = 1 
     #' 
     #' @return A list with elements:
-    #' \itemize{
+    #' \describe{
     #'   \item{\code{obspar}}{Parameters of observation model}
     #'   \item{\code{tpm}}{Transition probability matrix of hidden state model}
     #' }
@@ -1259,7 +1259,7 @@ HMM <- R6Class(
     #' are returned
     #' 
     #' @return A list with elements:
-    #' \itemize{
+    #' \describe{
     #'   \item{post}{If return_post = TRUE, this is a vector (for scalar 
     #'   outputs of fn) or matrix (for vector outputs) with a column for 
     #'   each simulation}
@@ -1549,7 +1549,7 @@ HMM <- R6Class(
     #' (Default: TRUE)
     #' 
     #' @return List with elements:
-    #' \itemize{
+    #' \describe{
     #'   \item{obs_stat: }{Vector of values of goodness-of-fit statistics for the
     #'   observed data}
     #'   \item{stats: }{Matrix of values of goodness-of-fit statistics for the
@@ -1936,7 +1936,7 @@ HMM <- R6Class(
     ## @param file File location 
     ## 
     ## @return List with elements:
-    ## \itemize{
+    ## \describe{
     ##   \item{\code{data}}{Data frame}
     ##   \item{\code{nstates}}{Number of states}
     ##   \item{\code{dists}}{List of observation distributions}
