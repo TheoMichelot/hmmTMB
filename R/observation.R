@@ -751,7 +751,8 @@ Observation <- R6Class(
       var_noNA <- na.omit(self$obs_var(expand = TRUE))
       wh_noNA <- 1:nrow(self$obs_var())
       if(any(is.na(self$obs_var(expand = TRUE)))) {
-        wh_noNA <- wh_noNA[-which(is.na(foo), arr.ind = TRUE)[,"row"]]
+        obs_var <- self$obs_var(expand = TRUE)
+        wh_noNA <- wh_noNA[-which(is.na(obs_var), arr.ind = TRUE)[,"row"]]
       }
       cluster <- kmeans(var_noNA, centers = n_states, nstart = 100)
       states <- cluster$cluster
