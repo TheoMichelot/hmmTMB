@@ -28,7 +28,7 @@ The package hmmTMB implements hidden Markov models (HMMs) with flexible covariat
 
 - \url{https://stat.ethz.ch/R-manual/R-devel/library/mgcv/html/smooth.terms.html}
 
-All formulas presented in this vignette could be passed either to `MarkovChain` (to include as covariate on transition probabilities), or to `Observation` (for covariates on observation parameters). We denote as $\eta_i$ a generic linear predictor, which is the relevant HMM parameter transformed to its working scale (i.e., through link function).
+All formulas presented in this vignette could be passed either to `MarkovChain` (to include as covariate on transition probabilities), or to `Observation` (for covariates on observation parameters). We denote as $\eta_i$ a generic linear predictor, which is the relevant HMM parameter transformed to its working scale (i.e., through the link function).
 
 # Base R syntax
 
@@ -86,7 +86,7 @@ Such models can succinctly be specified with the special function `poly` (for "p
 f <- ~ poly(x1, 3)
 ```
 
-## Other transformations
+## Cyclical effect using trigonometric functions
 
 In some applications, it is useful to include other functions of a covariate. One common case is to use trigonometric functions for covariates with a cyclical effect. For example, if we assume that the continuous variable $x_2$ is the time of day (between 0 and 24), we might want its effect to be the same for $x_2 = 0$ and $x_2 = 24$. Mathematically, this constraint can be created with the model
 $$
@@ -97,7 +97,7 @@ which induces a cyclical pattern with period 24. In R, we use the formula
 f <- ~ cos(2 * pi * x2 / 24) + sin(2 * pi * x2 / 24)
 ```
 
-# Non-parametric effects
+# Non-linear relationships
 
 In some cases, linear or parametric terms might not be flexible enough to capture the relationship between a model parameter and a covariate. The package hmmTMB implements spline-based models to fit non-parametric smooth functions with automatic smoothness estimation. The heavy lifting of model formulation is done under the hood by mgcv, and hmmTMB uses the same syntax for formulas.
 
@@ -128,7 +128,7 @@ where the different smooth functions are estimated separately, and can have diff
 f <- ~ s(x1, k = 5, bs = "cs") + s(x2, k = 10, bs = "ts")
 ```
 
-## Interactions
+## Varying-coefficient model
 
 Interactions between a smooth function and a continuous covariate can be defined as
 $$
@@ -139,6 +139,8 @@ which is implemented through the `by` argument of `s`,
 f <- ~ s(x1, by = x2, k = 5, bs = "ts")
 ```
 
+## Factor-smooth interaction
+
 Similarly, the interaction between a smooth function and a categorical (factor) covariate is something like
 $$
 \eta_i = \beta_0 + f_{l1}(x_{1i})\quad \text{ if } \text{ID}_i = l
@@ -148,9 +150,7 @@ where a separate function $f_{l1}$ is estimated for each level $l$ of the catego
 f <- ~ s(x1, by = ID, k = 5, bs = "ts")
 ```
 
-## Tensor products
-
-## Other relevant splines
+## Cyclical splines
 
 Although describing every type of spline implemented in mgcv is beyond the scope of this document, one other relevant option is to have the model
 $$
@@ -160,6 +160,26 @@ with $f$ constrained to be cyclical. This is a more flexible version of the trig
 ```{r np5}
 f <- ~ s(x1, k = 5, bs = "cc")
 ```
+
+## Multivariate smooth
+
+Smooth interactions between two or more continuous variables can also be specified. For two covariates $x_1$ and $x_2$, we might represent this by the equation
+$$
+\eta_i = \beta_0 + f(x_{1i}, x_{2i})
+$$
+where $f$ is specified in terms of multidimensional basis functions similarly to one-dimensional smooths. There are two main options for this model in mgcv, depending on whether the variables are on the same scale or not.
+
+If $x_1$ and $x_2$ are on the same scale (e.g., x and y spatial coordinates), we might expect the interaction to be isotropic, and this can be modelled with
+```{r multidim1}
+f <- ~ s(x1, x2, k = 5, bs = "ts")
+```
+Note that this only works with thin plate regression splines (and not with cubic splines for example).
+
+If $x_1$ and $x_2$ are **not** on the same scale, tensor product splines are needed instead, and can be implemented with
+```{r multidim2}
+f <- ~ te(x1, x2, k = 5, bs = "ts")
+```
+
 
 # Random effects
 
@@ -176,11 +196,30 @@ $$
 \beta_{1l} \sim N(0, \sigma^2_\text{ID})
 $$
 
-In mgcv (and therefore hmmTMB), such a model is specified with the `"re"`` basis, i.e.,
+Here, $\beta_0$ is the population-level (fixed) intercept, and $\beta_{1l}$ is the deviation from the population mean for group/individual $l$.
+
+In mgcv (and therefore hmmTMB), such a model is specified with the `"re"` basis, i.e.,
 ```{r re}
 f <- ~ s(ID, bs = "re")
 ```
 
 ## Random slope
+
+We can also model the (linear) effect of variable $x_{1}$ as being ID-specific, i.e., use a random slope model of the form
+$$
+\eta_i = \beta_0 + (\beta_{1} + \beta_{2l}) x_{1i}\quad \text{if ID}_i = l 
+$$
+where the random slopes are independent and identically distributed as,
+$$
+\beta_{2l} \sim N(0, \sigma^2_\text{ID})
+$$
+
+Like for the random intercept, $\beta_1$ is a fixed effect for the population-level slope and $\beta_{2l}$ is a random deviation from it. This can also be specified with `bs = "re"`,
+```{r re2}
+f <- ~ s(ID, by = x1, bs = "re")
+```
+
+Note that the group variable `ID` comes first, and the continuous variable `x1` is passed through the `by` argument.
+
 
 # References
