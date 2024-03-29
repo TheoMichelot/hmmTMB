@@ -135,7 +135,7 @@ The first-order autoregressive ("AR(1)") model is widely used, in particular wit
 
 ### Higher-order models
 
-Higher-order AR models could similarly be implemented by included additional lagged variables as covariates, e.g., observed variable lagged by two time intervals for AR(2),
+Higher-order AR models could similarly be implemented by including additional lagged variables as covariates, e.g., observed variable lagged by two time intervals for AR(2),
 $$
 Z_t \mid \{ S_t = j, Z_{t-1} = z_{t-1}, Z_{t-2} = z_{t-2} \} \sim N(\alpha_{1j} z_{t-1} + \alpha_{2j} z_{t-2},\ \sigma_j^2)
 $$
@@ -147,11 +147,11 @@ $$
 
 # Semi-Markov models
 
-Hidden semi-Markov models (HSMMs) extend HMMs to allow for flexible distributions of dwell times (times spent in a state before switching). In a regular HMM, the dwell times follow a geometric distribution, whereas the distribution is modelled explicitly in an HSMM (e.g., using a Poisson or negative binomial distribution). @langrock2011 showed that an HSMM can be approximated by an HMM with a particular structure, and we use this approach here. We simulate some data from a hidden semi-Markov model using a negative binomial distribution of dwell times, and we then fit a regular HMM and an (approximate) HSMM using hmmTMB.
+Hidden semi-Markov models (HSMMs) extend HMMs to allow for flexible distributions of dwell times (also known as holding times, i.e., time spent in a state before switching). In a regular HMM, the dwell times follow a geometric distribution, whereas the distribution is modelled explicitly in an HSMM (e.g., using a Poisson or negative binomial distribution). @langrock2011 showed that an HSMM can be approximated by an HMM with a particular structure, and we use this approach here. We simulate some data from a hidden semi-Markov model using a negative binomial distribution of dwell times, and we then fit a regular HMM and an (approximate) HSMM using hmmTMB.
 
 ## Simulate data
 
-We first simulate a sequence of states from a semi-Markov chain. To do this, we initialise the first state at 1, and we then generate dwell times from a zero-truncated negative binomial distribution with size parameter 10 and mean parameter 5. These dwell times define the number of time steps that the state process stays in the current state before switching to the other one. A density plot of the dwell times shows that that their distribution is clearly not geometric (as geometric densities are decreasing with a mode at 1).
+We first simulate a sequence of states from a semi-Markov chain. To do this, we initialise the first state at 1, and we then generate dwell times from a zero-truncated negative binomial distribution with size parameter 10 and mean parameter 5. These dwell times define the number of time steps that the state process stays in the current state before switching to the other one. A density plot of the dwell times shows that their distribution is clearly not geometric (as geometric mass functions are decreasing with a mode at 1).
 
 ```{r sim-hid, fig.width = 6, fig.height = 4, out.width="90%", fig.align = "center"}
 # Number of observations
@@ -247,7 +247,7 @@ As expected, the dwell times in the state sequence simulated from the Markov pro
 
 ## (Approximate) hidden semi-Markov model analysis
 
-We do not describe the methodological approach of @langrock2011 in detail here, and refer to that paper for the details. The basic idea is that an HSMM can be approximated by an HMM with a higher-dimensional state space. Each HSMM state is made up of some number $m > 1$ of HMM states, and a particular structure is used for the resulting transition probability matrix. Larger values of $m$ lead to more flexibility in the dwell time distribution, but also increased computational cost. We apply this method with $m = 6$, leading to a 12-state HMM. There is a very large number of parameters in this model, but many of them will be constrained to be either fixed to zero, or to share a common value, such that the number of estimated parameters is much lower.
+We do not describe the methodological approach of @langrock2011 in detail here, and refer to that paper for more information. The basic idea is that an HSMM can be approximated by an HMM with a higher-dimensional state space. Each HSMM state is made up of some number $m > 1$ of HMM states, and a particular structure is used for the resulting transition probability matrix. Larger values of $m$ lead to more flexibility in the dwell time distribution, but also increased computational cost. We apply this method with $m = 6$, leading to a 12-state HMM. There is a very large number of parameters in this model, but many of them will be constrained to be either fixed to zero, or to share a common value, such that the number of estimated parameters is much lower.
 
 ```{r hsmm-tpm}
 # Transition matrix
@@ -286,7 +286,7 @@ obs2 <- Observation$new(data = data, dists = dists,
                         n_states = n_states * m, par = par0)
 ```
 
-Many parameter constraints are required in this model, and these can be enforced through the `fixpar` argument of `HMM$new()`. This should be a list with elements `hid` and `obs`, corresponding to constraints on the hidden state and observation models, respectively. Each element is a named vector filled with NAs (for parameters that should be fixed to their initial value) and integers (for parameters that should be estimated to a shared value). This uses the `map` argument of `TMB::MakeADFun()`, and the TMB documentation provides some details; also see the TMB vignette on "Advanced features".
+Many parameter constraints are required in this model, and these can be enforced through the `fixpar` argument of `HMM$new()`. This should be a list with elements `hid` and `obs`, corresponding to constraints on the hidden state and observation models, respectively. Each element is a named vector filled with NAs (for parameters that should be fixed to their initial value) and integers (for parameters that should be estimated to a shared value). This uses the `map` argument of `TMB::MakeADFun()`, and the TMB documentation provides some details; also see the hmmTMB vignette on "Advanced features".
 
 For the transition probability constraints, we:
 
@@ -306,7 +306,7 @@ For the observation parameter constraints, we:
 
 1. Create a vector of integers, with $m$ 1s (for mean in state 1), $m$ 2s (mean in state 2), $m$ 3s (SD in state 1), and $m$ 4s (SD in state 2). This will let TMB know that the $m$ first parameters should be estimated to a common value, and likewise the next $m$ parameters, and so on.
 
-2. Get the parameter names from `Observation$coef_fe()`.
+2. Get the parameter names from `Observation$coeff_fe()`.
 
 ```{r hsmm-fixpar2}
 # Parameter constraints for observation model
@@ -405,7 +405,7 @@ data <- data.frame(z = z)
 
 ## Second-order HMM
 
-We define the 4-state process $(\tilde{S}_t)$ described above, which requires specifying an initial transition probability matrix with zeros in the right place, and indices of the reference transition probabilities. 
+We define the 4-state process $(\tilde{S}_t)$ described above, which requires specifying an initial transition probability matrix with zeros in the right places, and indices of the reference transition probabilities. 
 
 ```{r sohmm-hid}
 tpm0 <- matrix(c(0.9, 0.1, 0, 0,
@@ -464,7 +464,7 @@ sum(vit == s)/n
 
 ## Cartesian product model
 
-A coupled HMM assumed that two observed variables are driven by two separate, but dependent, state processes (@pohle2021). There are several ways to specify them, based on different levels of assumptions about the dependence of the two state processes, and here we focus on the "Cartesian product model" of @pohle2021.
+A coupled HMM assumes that two observed variables are driven by two separate, but dependent, state processes (@pohle2021). There are several ways to specify them, based on different levels of assumptions about the dependence of the two state processes, and here we focus on the "Cartesian product model" of @pohle2021.
 
 Similarly to semi-Markov and higher-order models, the basic idea is to rewrite the model as a standard HMM with expanded state space. Consider two observed variables $Z_t^{(1)}$ and $Z_t^{(2)}$, and assume that they depend on the state processes $S_t^{(1)}$ and $S_t^{(2)}$, respectively. For simplicity, we focus on the 2-state case here, i.e., $S_t^{(1)} \in \{ 1, 2 \}$ and $S_t^{(2)} \in \{ 1, 2 \}$. We define the state variable $S_t$ in such a way that
 $$
@@ -476,7 +476,7 @@ $$
     4 & \text{ if } S_t^{(1)} = 2 \text{ and } S_t^{(2)} = 2.
   \end{cases}
 $$
-The Cartesian procuct model can be written as the 4-state multivariate HMM with state process $(S_t)$. 
+The Cartesian product model can be written as the 4-state multivariate HMM with state process $(S_t)$. 
 
 For this example, we further assume that the observations follow state-dependent normal distributions. The observation model is the following,
 $$
@@ -496,7 +496,7 @@ Note that some of the parameters are shared between states. This is because, for
 
 ## Simulate data
 
-We simulate from a 4-state Markov chain, where the states are as defined above. We choose transition probabilities such that it is likely for both processes $(S_t^{(1)})$ and $(S_t^{(2)})$ to switch simultaneously. From the 4-state sequence, we can derive the two 2-state sequences for $(S_t^{(1)})$ and $(S_t^{(2)}).
+We simulate from a 4-state Markov chain, where the states are as defined above. We choose transition probabilities such that it is likely for both processes $(S_t^{(1)})$ and $(S_t^{(2)})$ to switch simultaneously. From the 4-state sequence, we can derive the two 2-state sequences for $(S_t^{(1)})$ and $(S_t^{(2)})$.
 
 ```{r coupled-sim1}
 # Transition probabilities for simulation
