@@ -358,7 +358,7 @@ In the following, we consider an analysis similar to that of @langrock2017, wher
 We now assume that the mean energy price in each state is a linear function of the euro-dollar exchange rate. This corresponds to the Markov-switching generalised linear model, an extension of Markov-switching regression:
 \begin{align*}
   Z_t \vert \{ S_t = j \} & \sim N(\mu_j, \sigma_j) \\
-  \log(\mu_j) & = \beta_0^{(j)} + \beta_1^{(j)} x_{1t},
+  \mu_j & = \beta_0^{(j)} + \beta_1^{(j)} x_{1t},
 \end{align*}
 where $\beta_0^{(j)}$ is the intercept, and $\beta_1^{(j)}$ the slope for the exchange rate covariate $x_{1t}$ in state $j \in \{1, 2\}$.
 
@@ -397,7 +397,7 @@ The plot of `Price` against `EurDol` shown above indicates that the relationship
 To estimate the effect of the euro-dollar exchange rate on mean price, we adapt the linear model shown above to
 \begin{align*}
   Z_t \vert \{ S_t = j \} & \sim N(\mu_j, \sigma_j) \\
-  \log(\mu_j) & = \beta_0^{(j)} + f_1^{(j)}(x_{1t}),
+  \mu_j & = \beta_0^{(j)} + f_1^{(j)}(x_{1t}),
 \end{align*}
 where $f_1^{(j)}$ is a smooth function, modelled using splines. This defines a Markov-switching generalised additive model, as described for example by @langrock2017. For more details about spline-based models, see for example @wood2017. 
 
