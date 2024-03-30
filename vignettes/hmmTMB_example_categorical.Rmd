@@ -3,11 +3,12 @@ title: "The categorical distribution in hmmTMB"
 author: "Théo Michelot"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: null
-  number_sections: yes
+  pdf_document:
+    number_sections: true
   html_document:
     df_print: paged
 toc: no
+bibliography: refs.bib
 header-includes: 
   \renewcommand{\baselinestretch}{1.2} 
   \newcommand{\cat}{\text{Cat}}
@@ -20,16 +21,9 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-message = FALSE, error = FALSE, warning = FALSE,
-comment = NA
+  message = FALSE, error = FALSE, warning = FALSE,
+  comment = NA
 )
-```
-
-```{r load-stuff}
-# Load package
-library(hmmTMB)
-# Set random seed for reproducibility
-set.seed(2901)
 ```
 
 This vignette focuses on using the categorical distribution for the observation process of a hidden Markov model (HMM) in the package hmmTMB. Use of this distribution is a little different from others. If you are new to hmmTMB, a better starting point would be the general vignette 'Analysing time series data with hidden Markov models in hmmTMB'.
@@ -40,87 +34,138 @@ We consider an observation process $(Z_t)$ where, for any time step $t$, $Z_t$ c
 
 We model $Z_t$ using a state-dependent categorical distribution (where the state is determined by a Markov chain, following the usual HMM formulation). In state $j \in \{ 1, 2, \dots, J \}$, the observation process is
 $$
-Z_t \mid \{ S_t = j \} \sim \text{Cat}(p_{1j}, p_{2j}, \dots, p_{Kj}),
+Z_t \mid \{ S_t = j \} \sim \text{Cat}(p_{1}^{(j)}, p_{2}^{(j)}, \dots, p_{K}^{(j)}),
 $$
-where the parameter $p_{kj} \in [0, 1]$ is the probability of category $k$ in state $j$. That is, we have $\Pr(Z_t = k \mid S_t = j) = p_{kj}$. By definition, the probabilities must sum to one (because $Z_t$ has to be in one of the categories), i.e., $\sum_{k=1}^K p_{kj} = 1$ in each state.
+where the parameter $p_{k}^{(j)} \in [0, 1]$ is the probability of category $k$ in state $j$. That is, we have $\Pr(Z_t = k \mid S_t = j) = p_{k}^{(j)}$. By definition, the probabilities must sum to one (because $Z_t$ has to be in one of the categories), i.e., $\sum_{k=1}^K p_{k}^{(j)} = 1$ in each state.
 
 This formulation is useful in cases where the proportion of each category is expected to change through time, which can be captured by the HMM.
 
 # Analysis in hmmTMB
 
-The categorical distribution is called `cat` in hmmTMB, and here we demonstrate the simple case of a model with two states ($K = 2$) and three categories ($J = 3$). For this example, we use simulated data, i.e., the true parameters are known.
+The categorical distribution is called `cat` in hmmTMB, and here we demonstrate its use on a data set available in the mHMMbayes R package, on the non-verbal communication of patients and therapists (@aarts2023). This data set includes four categorical variables, describing the verbalising and looking behaviour of both the patients and therapists at a 1-sec resolution. For more details about the variables, please consult the vignette "Multilevel HMM tutorial" for the package mHMMbayes, available at \url{https://CRAN.R-project.org/package=mHMMbayes/vignettes/tutorial-mhmm.html}, which presents an HMM analysis of this data set.
 
-## Simulating data 
+## Data
 
-We simulate data from a 2-state categorical HMM with transition probability matrix
-$$
-\Gamma =
-\begin{pmatrix}
-0.9 & 0.1 \\
-0.03 & 0.97
-\end{pmatrix}
-$$
-and with observation parameters $(p_{11}, p_{21}, p_{31}) = (0.1, 0.2, 0.7)$ in state 1, and $(p_{12}, p_{22}, p_{32}) = (0.4, 0.5, 0.1)$ in state 2. We label the three categories as `group1`, `group2`, and `group3`.
+We load the data set from mHMMbayes. It is already in the format required by hmmTMB, except the identifier column is called `id` (rather than `ID` as required by hmmTMB).
 
-```{r sim-data}
-# True transition probability matrix (for simulation)
-tpm <- matrix(c(0.9, 0.1,
-                0.03, 0.97),
-              nrow = 2, byrow = TRUE)
-# True observation parameters (for simulation)
-p <- matrix(c(0.1, 0.2, 0.7,
-              0.4, 0.5, 0.1),
-            nrow = 2, byrow = TRUE)
-cats <- c("group1", "group2", "group3")
+```{r load-data}
+data("nonverbal", package = "mHMMbayes")
+data <- as.data.frame(nonverbal)
 
-# Setup simulation
-n <- 1e4
-s <- rep(1, n)
-x <- rep(NA, n)
-# Initial observation
-x[1] <- sample(cats, size = 1, prob = p[s[1],])
-# Loop over time steps
-for(i in 2:n) {
-  # Sample new state
-  s[i] <- sample(1:2, size = 1, prob = tpm[s[i-1],])
-  # Sample new observation
-  x[i] <- sample(cats, size = 1, prob = p[s[i],])
-}
-# Put observations into data frame for hmmTMB
-data <- data.frame(x = x)
+# Rename ID column as required by hmmTMB
+colnames(data)[1] <- "ID"
+data$ID <- factor(data$ID)
 
 head(data)
 ```
 
-In this example, the observations are character strings (`"group1", "group2", "group3"`), but they could also be factors, or integers. The package automatically transforms them to integers between 1 and the number of categories.
+The data set includes four categorical variables, and the interpretation of each value is described in the mHMMbayes documentation (`?mHMMbayes::nonverbal`):
+
+- `p_vocalizing`, $V^P_t\in \{ 1, 2, 3 \}$
+- `t_vocalizing`, $V^T_t\in \{ 1, 2, 3 \}$
+- `p_looking`, $L^P_t \in \{ 1, 2 \}$
+- `t_looking`, $L^T_t \in \{ 1, 2 \}$
+
+We want to fit the following model:
+$$
+\begin{aligned}
+V^P_t \mid S_t & = j \sim \text{Cat}(p_{11}^{(j)}, p_{12}^{(j)}, p_{13}^{(j)}) \\
+V^T_t \mid S_t & = j \sim \text{Cat}(p_{21}^{(j)}, p_{22}^{(j)}, p_{23}^{(j)}) \\
+L^P_t \mid S_t & = j \sim \text{Cat}(p_{31}^{(j)}, p_{32}^{(j)}) \\
+L^T_t \mid S_t & = j \sim \text{Cat}(p_{41}^{(j)}, p_{42}^{(j)}) \\
+\end{aligned}
+$$
+where $p_{ik}^{(j)}$ is the probability that variable $i$ takes the value $k$ in state $j$. For each $i, j$, we have the constraint that $\sum_k p_{ik}^{(j)} = 1$. 
 
 ## Model fitting
 
-Model specification in hmmTMB requires creating two objects, from the `MarkovChain` and `Observation` classes, respectively, for the hidden state and the observation model. The observation model takes a few arguments, including `dists` (list of observation distributions) and `par` (initial observation parameters). The categorical distribution is called `"cat"`, so this is what we pass for `dists`. The initial parameters are starting values for the state-dependent category probabilities. Here, there are three categories in the data, and this is automatically detected by the package. We only need to pass two probabilities for each state, because the third one can be deduced using $\sum_{k=1}^K p_{kj} = 1$. Specifically, hmmTMB uses the first category as the reference, i.e., the category for which the probability is not estimated (but instead derived from the others). So, we pass initial values for $p_{21}$, $p_{31}$, $p_{22}$, and $p_{32}$.
+Model specification in hmmTMB requires creating two objects, from the `MarkovChain` and `Observation` classes, respectively, for the hidden state and the observation model. To create the hidden state model, we specify that we want to use two states, we include a random effect for `ID`, i.e., transition probabilities include a random intercept for each patient-therapist pair, and we indicate that the initial state distribution should be fixed to the stationary of the process rather than estimated (to reduce numerical instability).
+
+```{r hid}
+# Load package
+library(hmmTMB)
+
+hid <- MarkovChain$new(data = data, 
+                       n_states = 2,
+                       formula = ~ s(ID, bs = "re"),
+                       initial_state = "stationary")
+```
+
+The observation model takes a few arguments, including `dists` (list of observation distributions) and `par` (starting values for observation parameters). The categorical distribution is called `"cat"`, so this is what we pass for `dists`. The initial parameters are starting values for the state-dependent category probabilities. 
+
+The number of categories for each variable is automatically detected by the package. For `p_vocalizing` and `t_vocalizing` (which have three categories), we only need to pass two probabilities for each state, because the third one can be deduced using $\sum_k p_{ik}^{(j)} = 1$. Likewise, there is only one parameter for each state for `p_looking` and `t_looking`. Specifically, hmmTMB uses the first category as the reference, i.e., the category for which the probability is not estimated (but instead derived from the others). Expected parameter names for this distribution take the form `p2` (probability of category 2), `p3` (probability of category 3), etc.
 
 ```{r obs}
-# Initial parameters
-par0 <- list(x = list(p2 = c(0.1, 0.4), p3 = c(0.5, 0.1)))
+# List of observation variables and distributions
+dists <- list(p_vocalizing = "cat",
+              t_vocalizing = "cat",
+              p_looking = "cat",
+              t_looking = "cat")
+
+# List of initial parameter values for categorical probabilities
+par0 <- list(p_vocalizing = list(p2 = c(0.3, 0.3),
+                                 p3 = c(0.3, 0.3)),
+             t_vocalizing = list(p2 = c(0.3, 0.3),
+                                 p3 = c(0.3, 0.3)),
+             p_looking = list(p2 = c(0.5, 0.5)),
+             t_looking = list(p2 = c(0.5, 0.5)))
 
 # Create observation model
-obs <- Observation$new(data = data, dists = list(x = "cat"), 
-                       n_states = 2, par = par0)
+obs <- Observation$new(data = data, 
+                       dists = dists,
+                       par = par0, 
+                       n_states = 2)
 ```
 
-We can now combine this `Observation` object with a `MarkovChain` object to create an HMM, and fit it to obtain parameter estimates.
+We can now combine the two model components to specify and fit the full HMM. Model fitting took around 30 seconds on a laptop.
 
 ```{r hmm}
-# Create hidden state model
-hid <- MarkovChain$new(data = data, n_states = 2)
-
-# Create HMM
 hmm <- HMM$new(obs = obs, hid = hid)
-
-# Fit HMM
 hmm$fit(silent = TRUE)
-
-# Look at parameter estimates
-hmm$par()
 ```
 
-We can compare the estimated parameters to the values used for simulation, to check that the estimation worked well. 
+## Results
+
+### Observation parameters
+
+We can extract all estimated observation parameters using `obs$par()`. Here, we also compute the probabilities for the reference categories based on the estimated parameters.
+
+```{r par}
+# Observation parameters
+par <- obs$par()[,,1]
+
+# Extract each parameter and deduce probability of reference category
+all_probs <- rbind(p_vocalizing.p1 = 1 - colSums(par[1:2,]), 
+                   par[1:2,],
+                   t_vocalizing.p1 = 1 - colSums(par[3:4,]), 
+                   par[3:4,],
+                   p_looking.p1 = 1 - par[5,], 
+                   par[5,,drop=FALSE],
+                   t_looking.p1 = 1 - par[6,], 
+                   par[6,,drop=FALSE])
+round(all_probs, 3)
+```
+
+We can read these results as follows:
+
+- In State 1, `p_vocalizing` is most likely to take the value 1 (patient is not vocalizing), `t_vocalizing` is most likely to take the value 2 (therapist is vocalizing), `p_looking` is very likely to take the value 2 (patient is looking at therapist) and `t_looking` is somewhat likely to take the value 2 (therapist is looking at patient).
+
+- In State 2, `p_vocalizing` is most likely to take the value 2 (patient is vocalizing), `t_vocalizing` is most likely to take the value 1 (therapist is not vocalizing), `p_looking` is somewhat likely to take the value 2 (patient is looking at therapist) and `t_looking` is very likely to take the value 2 (therapist is looking at patient).
+
+These are very similar to the two states identified in the mHMMbayes vignette "Multilevel HMM tutorial", and the authors conclude that "The resulting model indicates 2 well separated states: one in which the patient is speaking and one in which the therapist is speaking."
+
+### State process parameters and random effects
+
+We can also visualise the estimated parameters of the state process, which included a random effect for the patient-therapist pair (10 levels). We can plot the transition probabilities directly, or the stationary state probabilities, which capture the long-term proportion of time spent in each state. These plots can be used to assess inter-group heterogeneity. For example, here, it looks like patient-therapist pairs 6 and 8 tended to spend more time in state 2 ("patient is speaking") than others.
+
+```{r tpm, fig.width = 5, fig.height = 4, out.width="80%", fig.align = "center"}
+hmm$plot(what = "tpm", var = "ID") +
+  labs(title = "Individual-specific transition probabilities")
+```
+
+```{r delta, fig.width = 5, fig.height = 4, out.width="80%", fig.align = "center"}
+hmm$plot(what = "delta", var = "ID") +
+  labs(title = "Individual-specific stationary probabilities")
+```
+
+# References
