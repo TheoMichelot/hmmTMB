@@ -1,0 +1,283 @@
+---
+title: "Comparison of HMM packages"
+author: "Théo Michelot"
+date: "`r Sys.Date()`"
+output: 
+    pdf_document:
+        number_sections: true
+header-includes:
+    \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+vignette: >
+  %\VignetteIndexEntry{HMM package comparison}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+    
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    message = FALSE, error = FALSE, warning = FALSE,
+    comment = NA
+)
+
+library(reticulate)
+# virtualenv_create("r-reticulate")
+# virtualenv_install("r-reticulate", "pandas")
+# virtualenv_install("r-reticulate", "hmmlearn")
+use_virtualenv("r-reticulate")
+```
+
+This vignette presents the analysis of a simulated data set using several software packages for hidden Markov models, for comparison with hmmTMB. Specifically, we describe the syntax required to fit a 2-state hidden Markov model with normally-distributed observations in each package. That is, we consider the model
+$$
+\begin{aligned}
+    Z_t \mid S_t = j \sim N(\mu_j, \sigma_j^2),\quad j \in \{1, 2\},
+\end{aligned}
+$$
+where $(S_t)$ is a 2-state Markov process with transition probability matrix $\boldsymbol\Gamma$.
+
+# Simulated data
+
+We simulated five time series, each of length 200, from a 2-state normal HMM with parameters
+$$
+\begin{aligned}
+&\mu_1 = 1,\quad \mu_2 = 10 \\[2mm]
+&\sigma_1 = 1,\quad \sigma_2 = 5 \\[2mm]
+&\Gamma =
+    \begin{pmatrix}
+0.9 & 0.1 \\
+0.2 & 0.8
+\end{pmatrix}
+\end{aligned}
+$$
+    
+```{r sim, include = FALSE}
+# Simulation function for Gaussian HMM
+sim_hmm <- function(n, init, tpm, means, sds) {
+    S <- rep(NA, n)
+    S[1] <- sample(1:2, size = 1, prob = init)
+    for(i in 2:n) {
+        S[i] <- sample(1:2, size = 1, prob = tpm[S[i-1],])
+    }
+    Z <- rnorm(n, mean = means[S], sd = sds[S])
+    return(data.frame(Z = Z, S = S))
+}
+
+# Number of time series
+nID <- 5
+# Number of observations per time series
+n <- 200
+
+# HMM simulation parameters
+init <- c(0.5, 0.5)
+tpm <- matrix(c(0.9, 0.1, 
+                0.2, 0.8), 
+              nrow = 2, byrow = TRUE)
+means <- c(1, 10)
+sds <- c(1, 5)
+
+# Simulate multiple time series
+set.seed(39634)
+ls <- lapply(1:nID, function(id) {
+    sim <- sim_hmm(n = n, init = init, tpm = tpm, means = means, sds = sds)    
+    return(data.frame(ID = id, Z = sim$Z))
+})
+
+# Create data frame
+data <- do.call(rbind, ls)
+data$time <- 1:nrow(data)
+```
+
+```{r look-data, fig.width = 8, fig.height = 5, out.width="90%", fig.align = "center"}
+library(ggplot2)
+theme_set(theme_bw())
+
+ggplot(data, aes(time, Z)) +
+    geom_point(size = 0.5) +
+    geom_line(linewidth = 0.2) +
+    facet_wrap("ID", scales = "free_x")
+```
+
+# hmmTMB
+
+The package hmmTMB is described by @michelot2022, and its workflow is the following:
+    
+1. Create hidden state model object of class `MarkovChain`. This requires specifying a number of states, and optionally passing an initial transition probability matrix for the optimisation.
+
+2. Create observation model object of class `Observation`. This requires specifying the family of distributions used for the observation variables in each state (here, `"norm"` for normal distributions). A list of initial parameter values must be passed.
+
+3. Create the hidden Markov model object of class `HMM`.
+
+4. Call methods on `HMM` object, such as `$fit()` to estimate the model parameters, and `$viterbi()` to estimate the most likely state sequence.
+
+hmmTMB automatically detects the column named `ID` to identify the different time series in the data.
+
+```{r hmmtmb}
+library(hmmTMB)
+
+# Initial transition probabilities
+tpm0 <- matrix(c(0.7, 0.3, 
+                 0.3, 0.7), 
+               nrow = 2, byrow = TRUE)
+
+# Define hidden state model
+hid <- MarkovChain$new(data = data, 
+                       n_states = 2, 
+                       tpm = tpm0)
+
+# Define observation model
+obs <- Observation$new(data = data, 
+                       dists = list(Z = "norm"), 
+                       n_states = 2, 
+                       par = list(Z = list(mean = c(0, 15), sd = c(2, 10))))
+
+# Create and fit HMM
+mod1 <- HMM$new(obs = obs, hid = hid)
+mod1$fit(silent = TRUE)
+
+# Show parameters
+lapply(mod1$par(), round, 3)
+
+# Most likely state sequence
+s1 <- mod1$viterbi()
+head(s1)
+
+# Model visualisation
+mod1$plot_dist("Z")
+mod1$plot_ts("Z") + 
+    facet_wrap("ID", scale = "free_x")
+```
+
+
+# depmixS4
+
+depmixS4 is a flexible R package for hidden Markov models (@visser2010). Its main function is `depmix`, which is used to create a model object that can then be fitted. Its arguments include initial values for the transition probabilities and observation parameters, the family of observation distributions (`gaussian()`), and a vector of the lengths of the different time series in the data (`ntimes`). The functions `fit` and `viterbi` are used to estimate model parameters and decode the state process, respectively.
+
+```{r depmix}
+library(depmixS4)
+
+# Lengths of time series
+ntimes <- rle(data$ID)$lengths
+
+# Create model
+mod2 <- depmix(Z ~ 1, 
+               data = data, 
+               nstates = 2, 
+               family = gaussian(), 
+               ntimes = ntimes, 
+               trstart = tpm0, 
+               respstart = c(0, 2, 15, 10)) # mean1, sd1, mean2, sd2
+
+# Fit model
+fit2 <- fit(mod2)
+
+# Get estimated parameters
+summary(fit2, which = "all")
+
+# Most likely state sequence
+s2 <- viterbi(fit2)$state
+head(s2)
+```
+
+
+# momentuHMM
+
+The package momentuHMM was developed for the analysis of ecological data (in particular animal tracking data), but it is very general and can be used to implement many HMM formulations (@mcclintock2018). We first use the function `prepData`, which ensures that the data has the right format, with the argument `coordNames = NULL` to indicate that "coordinate" variables are not included. We then call `fitHMM`, passing initial values for the model parameters. Starting values for the transition probabilities need to be specified on the (multinomial logit) link scale, in a matrix with as many columns as there are non-diagonal transition probabilities. For a 2-state model, we can use `qlogis` to get the transformed parameters; in a model with more states, the multinomial logit link function would be needed to be implemented. (Note that `beta0` is an optional argument and, by default, `fitHMM` initialises the transition probability matrix to have large diagonal elements.)
+
+```{r momentuHMM}
+library(momentuHMM)
+
+# Prepare data for momentuHMM
+data_hmm <- prepData(data = data, coordNames = NULL)
+
+# Link-transformed initial transition probabilities
+beta0 <- matrix(qlogis(c(tpm0[1, 2], tpm0[2, 1])), nrow = 1)
+
+# Fit HMM
+mod3 <- fitHMM(data = data_hmm, 
+               nbStates = 2, 
+               dist = list(Z = "norm"), 
+               Par0 = list(Z = c(0, 15, 2, 10)),
+               beta0 = beta0)
+
+# Print parameters
+mod3$mle[c("Z", "gamma")]
+
+# Most likely state sequence
+s3 <- viterbi(mod3)
+head(s3)
+```
+# LMest
+
+LMest was developed by @bartolucci2017 for the "analysis of longitudinal continuous and categorical data" using hidden Markov models (also called latent Markov models by its authors). The function `lmestCont()` implements hidden Markov models for continuous data, using state-dependent normal distributions. One difference with other packages is that LMest does not seem to allow for state-specific variances (only state-specific means) for the observation distribution, so the results are a little different.
+
+
+```{r lmest}
+library(LMest)
+
+# Fit model
+mod4 <- lmestCont(responsesFormula = Z  ~ NULL,
+                  latentFormula = ~ 1,
+                  index = c("ID", "time"), 
+                  data = data,
+                  k = 2, 
+                  modBasic = 1,
+                  output = TRUE, 
+                  out_se = TRUE,
+                  tol = 10^-1)
+
+# State-dependent observation mean
+mod4$Mu
+
+# Observation variance
+mod4$Si
+
+# Coefficients for transition probs on logit scale
+mod4$Ga
+# Transform to transition probabilities
+hid$par2tpm(mod4$Ga)
+```
+
+# hmmlearn (Python)
+
+hmmlearn is one of the main Python packages for hidden Markov models (@hmmlearn2024). We demonstrate its workflow below, which is similar to the R packages described previously, and requires specifying the number of states, the initial parameters, and so on.
+
+```{python hmmlearn}
+import numpy as np
+import pandas as pd
+from itertools import groupby
+from hmmlearn import hmm
+
+# Load data and extract observation variable
+data = pd.read_csv('data.csv')
+z = data[['Z']]
+n = len(z)
+
+# Find length of each time series
+id = data[['ID']].values
+lengths = [(sum(1 for i in g)) for k,g in groupby(id)]
+
+# Create HMM
+mod4 = hmm.GaussianHMM(n_components = 2,
+                       init_params = 's')
+
+# Set initial parameters
+mod4.transmat_ = np.array([[0.7, 0.3],
+                           [0.3, 0.7]])
+mod4.means_ = np.array([[0], [15]])
+mod4.covars_ = np.array([[2 ** 2], [10 ** 2]])
+
+# Fit HMM
+mod4.fit(z, lengths)
+
+# Extract estimated parameters
+print(mod4.means_)
+print(mod4.covars_ ** 0.5)
+print(mod4.transmat_)
+
+# Most likely state sequence
+s4 = mod4.decode(z)[1]
+print(s4[:6])
+```
+
+# References
