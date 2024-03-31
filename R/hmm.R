@@ -193,9 +193,10 @@ HMM <- R6Class(
     #' been run
     states = function() {
       if(is.null(private$states_)) {
-        stop("Run viterbi first")
+        return(self$viterbi())
+      } else {
+        return(private$states_)        
       }
-      return(private$states_)
     },
     
     #' @description Coefficients for fixed effect parameters
@@ -349,10 +350,10 @@ HMM <- R6Class(
     
     #' @description Set priors for coefficients 
     #' 
-    #' @param new_priors is a list of matrices for optionally 
-    #' coeff_fe_obs, coeff_fe_hid, log_lambda_obs log_lambda_hid 
-    #' each matrix has two rows (first row = mean, second row = sd) 
-    #' specifying parameters for Normal priors 
+    #' @param new_priors is a named list of matrices with optional elements 
+    #' coeff_fe_obs, coeff_fe_hid, log_lambda_obs, andlog_lambda_hid.
+    #' Each matrix has two columns (first col = mean, second col = sd) 
+    #' specifying parameters for normal priors. 
     set_priors = function(new_priors = NULL) {
       fe <- self$coeff_fe()
       if (!is.null(new_priors$coeff_fe_obs)) {
@@ -1004,6 +1005,10 @@ HMM <- R6Class(
     #' 
     #' @return Most likely state sequence
     viterbi = function() {
+      if(!is.null(private$states_)) {
+        return(private$states_)
+      }
+      
       data <- self$obs()$data()
       ID <- data$ID
       
@@ -1026,7 +1031,7 @@ HMM <- R6Class(
       i0 <- c(1, which(ID[-1] != ID[-n]) + 1, n + 1)
       
       # Initialise state sequence
-      all_states <- NULL
+      all_states <- rep(NA, length = n)
       
       # Initial distribution
       delta0 <- self$hid()$delta0() 
@@ -1034,7 +1039,7 @@ HMM <- R6Class(
       # Loop over IDs
       for(id in 1:n_id) {
         # Subset to this ID
-        ind_this_id <- which(ID == unique(ID)[id])
+        ind_this_id <- i0[id]:(i0[id + 1] - 1)
         sub_obs_probs <- obs_probs[ind_this_id,]
         sub_tpm_all <- tpm_all[,,ind_this_id]
         
@@ -1058,7 +1063,7 @@ HMM <- R6Class(
         }
         
         # Append estimated states for this ID
-        all_states <- c(all_states, states)
+        all_states[ind_this_id] <- states
       }
       
       # Save state sequence
