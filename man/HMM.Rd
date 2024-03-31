@@ -425,10 +425,10 @@ Set priors for coefficients
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{new_priors}}{is a list of matrices for optionally 
-coeff_fe_obs, coeff_fe_hid, log_lambda_obs log_lambda_hid 
-each matrix has two rows (first row = mean, second row = sd) 
-specifying parameters for Normal priors}
+\item{\code{new_priors}}{is a named list of matrices with optional elements 
+coeff_fe_obs, coeff_fe_hid, log_lambda_obs, andlog_lambda_hid.
+Each matrix has two columns (first col = mean, second col = sd) 
+specifying parameters for normal priors.}
 }
 \if{html}{\out{</div>}}
 }
