@@ -1405,10 +1405,14 @@ HMM <- R6Class(
                             t = t,
                             level = level,
                             return_post = return_post)
+
+        # Replace posterior mean from post_fn() by MLE        
+        val$mle <- fn(linpred = self[[comp]]()$linpred(), t = t)
+        val$mean <- NULL
         
         # Format as array for nicer output
         if(!as_list & what %in% c("tpm", "obspar")) {
-          mle <- val$mean
+          mle <- val$mle
           names <- paste0(rep(rownames(mle), each = ncol(mle)), 
                           " - ", rep(colnames(mle), nrow(mle)))
           a <- array(NA, dim = c(length(names), 3, dim(mle)[3]), 
