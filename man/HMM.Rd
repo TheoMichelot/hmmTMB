@@ -841,7 +841,8 @@ to also get confidence intervals.
   newdata = NULL,
   n_post = 0,
   level = 0.95,
-  return_post = FALSE
+  return_post = FALSE,
+  as_list = TRUE
 )}\if{html}{\out{</div>}}
 }
 
@@ -865,6 +866,13 @@ will produce 95\% confidence intervals (default)}
 
 \item{\code{return_post}}{Logical. If TRUE, a list of posterior samples
 is returned.}
+
+\item{\code{as_list}}{Logical. If confidence intervals are required for the
+transition probabilities or observation parameters, this
+argument determines whether the MLE, lower confidence limit and upper
+confidence limit are returned as separate elements in a list (if
+TRUE; default), or whether they are combined into a single array (if
+FALSE). Ignored if \code{what = "delta"} or if \code{n_post = 0}.}
 
 \item{\code{...}}{Other arguments to the respective functions 
 for hid$tpm, hid$delta, obs$par}

@@ -1328,7 +1328,13 @@ HMM <- R6Class(
     #' @param level Level of the confidence intervals, e.g. CI = 0.95
     #' will produce 95\% confidence intervals (default) 
     #' @param return_post Logical. If TRUE, a list of posterior samples
-    #' is returned. 
+    #' is returned.
+    #' @param as_list Logical. If confidence intervals are required for the
+    #' transition probabilities or observation parameters, this
+    #' argument determines whether the MLE, lower confidence limit and upper
+    #' confidence limit are returned as separate elements in a list (if
+    #' TRUE; default), or whether they are combined into a single array (if
+    #' FALSE). Ignored if \code{what = "delta"} or if \code{n_post = 0}.
     #' 
     #' @return Named array of predictions and confidence intervals, 
     #' if requested
@@ -1354,7 +1360,7 @@ HMM <- R6Class(
     #' # Get transition probability matrix with confidence intervals
     #' hmm$predict(what = "tpm", n_post = 1000)
     predict = function(what, t = 1, newdata = NULL, n_post = 0, level = 0.95, 
-                       return_post = FALSE) {
+                       return_post = FALSE, as_list = TRUE) {
       if (is.null(private$out_) & n_post > 0) {
         stop("Fit model first")
       }
@@ -1396,6 +1402,19 @@ HMM <- R6Class(
                             t = t,
                             level = level,
                             return_post = return_post)
+        
+        # Format as array for nicer output
+        if(!as_list & what %in% c("tpm", "obspar")) {
+          mle <- val$mean
+          names <- paste0(rep(rownames(mle), each = ncol(mle)), 
+                          " - ", rep(colnames(mle), nrow(mle)))
+          a <- array(NA, dim = c(length(names), 3, dim(mle)[3]), 
+                     dimnames = list(names, c("mle", "lcl", "ucl"), NULL))
+          a[,1,] <- as.vector(aperm(mle, c(2, 1, 3)))
+          a[,2,] <- as.vector(aperm(val$lcl, c(2, 1, 3)))
+          a[,3,] <- as.vector(aperm(val$ucl , c(2, 1, 3)))
+          val <- a
+        }
       }
       
       # Reset to original model matrices
@@ -1459,7 +1478,7 @@ HMM <- R6Class(
                          lcl = self$lambda()$hid - quant * hidlam_se,
                          ucl = self$lambda()$hid + quant * hidlam_se,
                          se = hidlam_se)
-
+      
       out <- list(coeff_fe = list(obs = obspar_ci, hid = hidpar_ci),
                   lambda = list(obs = obslam_ci, hid = hidlam_ci)) 
       return(out)
