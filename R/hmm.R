@@ -1289,9 +1289,12 @@ HMM <- R6Class(
       
       # Compute confidence interval
       if (level > 0) {
-        alp <- (1 - level) / 2
+        alpha <- 1 - level
         arr <- simplify2array(res$post)
-        ci <- apply(arr, 1:(length(dim(arr)) - 1), quantile, prob = c(0.025, 0.975))
+        ci <- apply(X = arr, 
+                    MARGIN = 1:(length(dim(arr)) - 1), 
+                    FUN = quantile, 
+                    prob = c(alpha/2, 1 - alpha/2))
         nci <- length(dim(ci))
         ci <- aperm(ci, c(2:nci, 1))
         block <- prod(dim(ci)[-nci])
