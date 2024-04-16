@@ -925,11 +925,11 @@ confidence intervals.}
 }
 \subsection{Returns}{
 List of matrices with three columns: mle (maximum likelihood 
-estimate), lcl (lower confidence limit), and ucl (upper confidence
-limit). One such matrix is produced for the working parameters of the
-observation model, the working parameters of the hidden state model,
-the smoothness parameters of the observation model, and the smoothness
-parameters of the hidden state model.
+estimate), lcl (lower confidence limit), ucl (upper confidence
+limit), and se (standard error). One such matrix is produced for 
+the working parameters of the observation model, the working parameters
+of the hidden state model, the smoothness parameters of the observation 
+model, and the smoothness parameters of the hidden state model.
 }
 }
 \if{html}{\out{<hr>}}

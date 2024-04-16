@@ -1419,11 +1419,11 @@ HMM <- R6Class(
     #' confidence intervals.
     #' 
     #' @return List of matrices with three columns: mle (maximum likelihood 
-    #' estimate), lcl (lower confidence limit), and ucl (upper confidence
-    #' limit). One such matrix is produced for the working parameters of the
-    #' observation model, the working parameters of the hidden state model,
-    #' the smoothness parameters of the observation model, and the smoothness
-    #' parameters of the hidden state model.
+    #' estimate), lcl (lower confidence limit), ucl (upper confidence
+    #' limit), and se (standard error). One such matrix is produced for 
+    #' the working parameters of the observation model, the working parameters
+    #' of the hidden state model, the smoothness parameters of the observation 
+    #' model, and the smoothness parameters of the hidden state model.
     confint = function(level = 0.95) {
       # Get standard errors from covariance matrix
       rep <- self$tmb_rep()
@@ -1443,23 +1443,23 @@ HMM <- R6Class(
       
       # Get Wald-type confidence intervals
       quant <- qnorm(1 - (1 - level)/2)
-      obspar_ci <- cbind(self$coeff_fe()$obs,
-                         self$coeff_fe()$obs - quant * obspar_se,
-                         self$coeff_fe()$obs + quant * obspar_se)
-      hidpar_ci <- cbind(self$coeff_fe()$hid,
-                         self$coeff_fe()$hid - quant * hidpar_se,
-                         self$coeff_fe()$hid + quant * hidpar_se)
-      obslam_ci <- cbind(self$lambda()$obs,
-                         self$lambda()$obs - quant * obslam_se,
-                         self$lambda()$obs + quant * obslam_se)
-      hidlam_ci <- cbind(self$lambda()$hid,
-                         self$lambda()$hid - quant * hidlam_se,
-                         self$lambda()$hid + quant * hidlam_se)
-      colnames(obspar_ci) <- c("mle", "lcl", "ucl")
-      colnames(hidpar_ci) <- c("mle", "lcl", "ucl")
-      colnames(obslam_ci) <- c("mle", "lcl", "ucl")
-      colnames(hidlam_ci) <- c("mle", "lcl", "ucl")
-      
+      obspar_ci <- cbind(mle = self$coeff_fe()$obs,
+                         lcl = self$coeff_fe()$obs - quant * obspar_se,
+                         ucl = self$coeff_fe()$obs + quant * obspar_se,
+                         se = obspar_se)
+      hidpar_ci <- cbind(mle = self$coeff_fe()$hid,
+                         lcl = self$coeff_fe()$hid - quant * hidpar_se,
+                         ucl = self$coeff_fe()$hid + quant * hidpar_se,
+                         se = hidpar_se)
+      obslam_ci <- cbind(mle = self$lambda()$obs,
+                         lcl = self$lambda()$obs - quant * obslam_se,
+                         ucl = self$lambda()$obs + quant * obslam_se,
+                         se = obslam_se)
+      hidlam_ci <- cbind(mle = self$lambda()$hid,
+                         lcl = self$lambda()$hid - quant * hidlam_se,
+                         ucl = self$lambda()$hid + quant * hidlam_se,
+                         se = hidlam_se)
+
       out <- list(coeff_fe = list(obs = obspar_ci, hid = hidpar_ci),
                   lambda = list(obs = obslam_ci, hid = hidlam_ci)) 
       return(out)
