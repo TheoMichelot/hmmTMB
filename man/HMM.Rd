@@ -880,8 +880,11 @@ for hid$tpm, hid$delta, obs$par}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Named array of predictions and confidence intervals, 
-if requested
+Maximum likelihood estimates (\code{mle}) of predictions,
+and confidence limits (\code{lcl} and \code{ucl}) if requested. The
+format of the output depends on whether confidence intervals are
+required (specified through \code{n_post}), and on the argument
+\code{as_list}.
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}

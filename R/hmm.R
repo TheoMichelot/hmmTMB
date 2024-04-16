@@ -1303,6 +1303,8 @@ HMM <- R6Class(
         dim(lcl) <- dim(ucl) <- dim(ci)[-nci]
         res$lcl <- lcl
         res$ucl <- ucl
+        dimnames(res$lcl) <- dimnames(res$mean)
+        dimnames(res$ucl) <- dimnames(res$mean)
       }
       
       if(!return_post) {
@@ -1339,8 +1341,11 @@ HMM <- R6Class(
     #' TRUE; default), or whether they are combined into a single array (if
     #' FALSE). Ignored if \code{what = "delta"} or if \code{n_post = 0}.
     #' 
-    #' @return Named array of predictions and confidence intervals, 
-    #' if requested
+    #' @return Maximum likelihood estimates (\code{mle}) of predictions,
+    #' and confidence limits (\code{lcl} and \code{ucl}) if requested. The
+    #' format of the output depends on whether confidence intervals are
+    #' required (specified through \code{n_post}), and on the argument
+    #' \code{as_list}.
     #' 
     #' @examples
     #' # Load data set (included with R)
@@ -1407,8 +1412,8 @@ HMM <- R6Class(
                             return_post = return_post)
 
         # Replace posterior mean from post_fn() by MLE        
-        val$mle <- fn(linpred = self[[comp]]()$linpred(), t = t)
-        val$mean <- NULL
+        val$mean <- fn(linpred = self[[comp]]()$linpred(), t = t)
+        names(val)[1] <- "mle"
         
         # Format as array for nicer output
         if(!as_list & what %in% c("tpm", "obspar")) {
