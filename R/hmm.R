@@ -1659,9 +1659,12 @@ HMM <- R6Class(
     #' 
     #' @param var Name of the variable to plot.
     #' @param var2 Optional name of a second variable, for 2-d plot.
+    #' @param line Logical. If TRUE (default), lines are drawn between
+    #' successive data points. Can be set to FALSE if another geom is
+    #' needed (e.g., geom_point).
     #' 
     #' @return A ggplot object
-    plot_ts = function(var, var2 = NULL) {
+    plot_ts = function(var, var2 = NULL, line = TRUE) {
       if(is.null(private$states_)) {
         self$viterbi()
       }
@@ -1680,7 +1683,10 @@ HMM <- R6Class(
                          x = data[[var]])
         
         p <- ggplot(data = df, mapping = aes(index, x, col = state, group = ID)) +
-          geom_line() + xlab("time") + ylab(var)
+          xlab("time") + ylab(var)
+        if(line) {
+          p <- p + geom_line()          
+        }
       } else {
         # 2d plot
         df <- data.frame(ID = ID,
@@ -1688,7 +1694,10 @@ HMM <- R6Class(
                          y = data[[var2]])
         
         p <- ggplot(data = df, mapping = aes(x, y, col = state, group = ID)) +
-          geom_path() + xlab(var) + ylab(var2)
+          xlab(var) + ylab(var2)
+        if(line) {
+          p <- p + geom_path()          
+        }
       }
       
       p <- p + 

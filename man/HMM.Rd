@@ -1023,7 +1023,7 @@ as estimated by the Viterbi algorithm. If one variable name is passed
 as input, it is plotted against time. If two variables are passed, they
 are plotted against each other.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_ts(var, var2 = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_ts(var, var2 = NULL, line = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -1032,6 +1032,10 @@ are plotted against each other.
 \item{\code{var}}{Name of the variable to plot.}
 
 \item{\code{var2}}{Optional name of a second variable, for 2-d plot.}
+
+\item{\code{line}}{Logical. If TRUE (default), lines are drawn between
+successive data points. Can be set to FALSE if another geom is
+needed (e.g., geom_point).}
 }
 \if{html}{\out{</div>}}
 }
