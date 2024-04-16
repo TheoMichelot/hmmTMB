@@ -35,7 +35,7 @@ We describe functionalities of the package in several vignettes, which are liste
 
 - ['Analysing time series data with hidden Markov models in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_workflow.pdf): Overview of package workflow, using detailed example based on analysis of energy prices. This is a good starting point to learn how to use the package.
  
-### Some advanced features
+### Other features
  
 - ['Bayesian inference in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_stan.pdf): Description of workflow for Bayesian analysis in hmmTMB, including specifying priors, and extracting posterior samples.
  
@@ -50,6 +50,8 @@ We describe functionalities of the package in several vignettes, which are liste
 - ['Occupancy modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_occupancy.pdf): Analysis of occupancy data set of crossbill from [Kéry et al. (2013)](https://onlinelibrary.wiley.com/doi/10.1111/jbi.12087).
 
 - ['The categorical distribution in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_categorical.pdf): The categorical distribution is slightly different from others, in that the number of parameters depends on the data (specifically, on the number of categories in the data). This vignette shows an example analysis for a data set on patient-therapist interactions from the [mHMMbayes](https://cran.r-project.org/package=mHMMbayes) package.
+ 
+ - ['The multivariate normal distribution in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_mvn.pdf): We illustrate the state-dependent multivariate normal distribution for modelling correlated variables, using time series of log-returns. The vignette describes the formulation in terms of standard deviations and correlation parameters, and compares this approach to using multiple univariate normal distributions.
  
 ### Reference vignettes
  

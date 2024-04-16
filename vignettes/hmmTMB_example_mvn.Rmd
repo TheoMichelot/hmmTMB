@@ -1,0 +1,234 @@
+---
+title: "The multivariate distribution in hmmTMB"
+author: "Théo Michelot"
+date: "`r Sys.Date()`"
+output: 
+    pdf_document:
+        number_sections: true
+header-includes:
+    \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+vignette: >
+    %\VignetteIndexEntry{Advanced features of hmmTMB}
+    %\VignetteEncoding{UTF-8}
+    %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    message = FALSE, error = FALSE, warning = FALSE,
+    comment = NA
+)
+```
+
+
+This vignette describes the use of the multivariate normal distribution as an observation distribution for a hidden Markov model (HMM) in the R package hmmTMB. We illustrate it using an application to stock prices, and compare it to the use of several univariate normal distributions.
+
+It is common to say that an HMM is "multivariate" when it has more than one observation variable, even when those variables are not modelled with a multivariate distribution. This is because the dependence of the observation distributions on the state process can create correlation between observed variables even when they are assumed to be conditionally independent (given the state). Here, we focus specifically on the case where dependence between variables _within each state_ of the HMM should be modelled explicitly. 
+
+# Model description
+
+We consider the observation vector $\boldsymbol{Z}_t = (Z_{t1}, Z_{t2}, \dots, Z_{td})$ at time $t = 1, 2, \dots$. Further, we assume that $\boldsymbol{Z}_t$ follows a multivariate normal distribution with parameters dependent on the current value of the hidden state $S_t$, i.e.,
+$$
+\boldsymbol{Z}_t \mid S_t = k \sim MVN(\boldsymbol\mu_k, \boldsymbol\Sigma_k)
+$$
+where, in state $k$, the observation distribution is parameterised by the mean vector
+$$
+    \boldsymbol\mu_k = (\mu_{1k}, \mu_{2k}, \dots, \mu_{dk})
+$$
+and the covariance matrix
+$$
+    \boldsymbol\Sigma_k =
+    \begin{pmatrix}
+        \sigma_{1k}^2 & \sigma_{1k}\sigma_{2k}\rho_{12k} & 
+        \sigma_{1k}\sigma_{3k}\rho_{13k} & \cdots & \sigma_{1k}\sigma_{dk} \rho_{1dk} \\
+        \sigma_{2k}\sigma_{1k}\rho_{21k} & \sigma_{2k}^2 & \sigma_{2k}\sigma_{3k}\rho_{23k} & \cdots & \sigma_{2k}\sigma_{dk} \rho_{2dk} \\
+        \sigma_{3k}\sigma_{1k}\rho_{31k} & \sigma_{3k}\sigma_{2k}\rho_{32k} & \sigma_{3k}^2 & \cdots & \sigma_{3k}\sigma_{dk} \rho_{3dk} \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        \sigma_{dk}\sigma_{1k}\rho_{d1k} & \sigma_{dk}\sigma_{2k}\rho_{d2k} & \sigma_{dk}\sigma_{3k}\rho_{d3k} & \cdots & \sigma_{dk}^2
+    \end{pmatrix}
+$$
+
+Here, $\sigma_{ik} > 0$ is the standard deviation of the $i$-th variable in state $k$, and $\rho_{ijk} = \rho_{jik} \in [0, 1]$ is the correlation coefficient between the $i$-th and $j$-th variables in state $k$. 
+
+In each state, there are therefore $d$ mean parameters, $d$ standard deviation parameters, and $d(d-1)/2$ correlation parameters to estimate for this observation model. (For example, there are 5 parameters when $d = 2$, and 9 parameters when $d = 3$.) In hmmTMB, all those parameters can be modelled as functions of covariates, although care may be needed to avoid numerical and computational problems in large models.
+
+# Example data
+
+We consider a bivariate data set of daily log-returns for the stock prices of the Coca-Cola Company and PepsiCo Inc, between 2000 and 2024. We use the package quantmod to download the data from Yahoo (@ryan2024), and we derive the log-returns $R_t$ from the time series $(Z_t)$ (where $Z_t$ is the stock price for Coca-Cola or PepsiCo) as $R_t = 100 \times (\log(Z_{t+1}) - \log(Z_t))$.
+
+```{r prep-data}
+library(ggplot2)
+theme_set(theme_bw())
+library(quantmod)
+
+start <- as.Date('2000-01-01')
+end <- as.Date('2024-04-01')
+
+# Get stock prices from Yahoo
+names <- c("KO", "PEP")
+raw <- lapply(names, function(name) {
+    dat <- getSymbols(name, src = 'yahoo',
+                      auto.assign = FALSE, 
+                      from = start,
+                      to = end)
+    return(as.data.frame(dat))
+})
+
+# Transform to log-returns
+n <- nrow(raw[[1]])
+logret <- 100*sapply(raw, function(x) {
+    log(x[-1,4]) - log(x[-n,4])
+})
+data <- as.data.frame(logret)
+colnames(data) <- names
+# Add time column
+data$time <-  lubridate::ymd(rownames(raw[[1]]))[-n]
+
+head(data)
+```
+
+The data frame has 6097 rows, and two columns: one for Coca-Cola (`KO`) and one for PepsiCo (`PEP`). In hmmTMB, the multivariate distribution requires that a single column of the input data frame include all variables. That column should be a list where each entry is a vector of observations at that time point (one observation for each variable). This can be done with the function `asplit()`, which we use to combine `KO` and `PEP` into a single column `z`.
+
+```{r asplit-data}
+# Create multivariate column for HMM analysis
+data$z <- asplit(data[,names], MARGIN = 1)
+
+head(data)
+```
+
+A time series plot of the data suggests that the stocks alternate between periods of high variance and periods of low variance, which can be modelled with a hidden Markov model.
+
+```{r plot1, fig.width = 5, fig.height = 2.5, out.width="70%", fig.align = "center"}
+# Time series of KO log-returns
+ggplot(data, aes(time, KO)) +
+    geom_line(linewidth = 0.3)
+```
+
+We can also look at a scatterplot of the two observation variables, to see that they are correlated (correlation $\approx$ 0.6). This correlation could not be captured by univariate observation distributions, so we decide to use a multivariate normal model.
+
+```{r plot2, fig.width = 3, fig.height = 3, out.width="50%", fig.align = "center"}
+# Scatterplot of KO vs PEP log-returns
+ggplot(data, aes(KO, PEP)) +
+    geom_point(size = 0.5) +
+    coord_equal(xlim = c(-14, 14), ylim = c(-14, 14))
+```
+
+# Multivariate normal HMM
+
+Model definition is similar to other models, and more details can be found in the general vignette "_Analysing time series data with hidden Markov models in hmmTMB_". We first create an object of class `MarkovChain` for the hidden state process. We will use a 2-state HMM in the hope that the two states will capture "low variance" and "high variance" periods, so we specify `n_states = 2`.
+
+```{r mvn-hid}
+library(hmmTMB)
+
+# Create state model
+hid <- MarkovChain$new(data = data, 
+                       n_states = 2)
+```
+
+To create the `Observation` model object, we need to specify an observation distribution. We set this to `mvnorm` to model the multivariate variable `z` with a multivariate normal distribution. We also need to enter initial parameter values for the model fitting. As described above, this model has five parameters in each state $k$:
+
+- $\mu_{1k}$ is the mean log-return for `KO`, and $\mu_{2k}$ is the mean log-return for `PEP`;
+- $\sigma_{1k}$ is the standard deviation for `KO`, and $\sigma_{2k}$ is the standard deviation for `PEP`;
+- $\rho_{12k}$ is the correlation coefficient between the log-returns of `KO` and `PEP`.
+
+Log-returns are typically centred around zero, and we don't expect the means to depend on the state much, so we set the starting values for $\mu_{1k}$ (`mu1`) and $\mu_{2k}$ (`mu2`) to 0. We expect the two states to capture low-variance and high-variance periods, respectively, so we use a larger standard deviation in the second state than for the first state. Here, we use the same initial values for the standard deviations for the two variables (`sd1` for `KO` and `sd2` for `PEP`), because they seem to have the same order of magnitude of variance in the data, but this need not be the case. Finally, we initialise the correlation coefficient `corr12` to 0.6 in both states, as this is the overall correlation between the two variables. If we expected the two states to display different correlations, we could use two different values here.
+
+```{r mvn-obs}
+# Create observation model
+dists <- list(z = "mvnorm")
+par0 <- list(z = list(mu1 = c(0, 0), 
+                      mu2 = c(0, 0),
+                      sd1 = c(0.5, 2), 
+                      sd2 = c(0.5, 2),
+                      corr12 = c(0.6, 0.6)))
+obs1 <- Observation$new(data = data, 
+                       dists = dists, 
+                       n_states = 2, 
+                       par = par0)
+```
+
+We can now combine the two model components into one `HMM` object, and fit it to estimate all model parameters. Fitting this model to around 6000 observations takes 3 seconds on a laptop. We use the method `$par()` to output the estimated parameters for the observation model (`$obspar`) and for the state process (`$tpm`). 
+
+```{r mvn-fit}
+# Create HMM
+hmm1 <- HMM$new(obs = obs1, hid = hid)
+hmm1$fit(silent = TRUE)
+
+# Estimated parameters
+lapply(hmm1$par(), round, 3)
+```
+
+We find
+$$
+\begin{aligned}
+  & \boldsymbol{\mu}_1 = (0.044, 0.047) \\
+  & \boldsymbol{\mu}_2 = (-0.112, -0.059) \\
+  & \sigma_{11} = 0.819,\quad \sigma_{12} = 2.4\\
+  & \sigma_{21} = 0.804,\quad \sigma_{22} = 2.305\\
+  & \rho_{121} = 0.654,\quad \rho_{122} = 0.567
+\end{aligned}
+$$
+
+The two states have mean log-returns close to 1 (although log-returns are on average slightly positive in state 1 and slightly negative in state 2). As expected, state 1 has lower variance than state 2 for both variables, perhaps corresponding to periods when the market was more stable. There is strong positive correlation between the two variables in both states (slightly stronger in state 1).
+
+# Comparison to univariate normal distributions
+
+An alternative approach for this data set would be to treat the log-returns for Coca-Cola and PepsiCo as conditionally independent given the state. That is, we could model each variable with a univariate normal distribution in each state. This is equivalent to the multivariate model presented above, but with the correlation parameter $\rho_{12k}$ fixed to zero. We use the observation distribution `norm`, and choose starting parameter values as we did before. Fitting this model is around 6 times quicker than the multivariate formulation; the difference is inconsequential here, but could become a limitation of multivariate models for large data sets or more complex model formulations.
+
+```{r univar}
+# Observation model for two univariate normal dists
+par0 <- list(KO = list(mean = c(0, 0), sd = c(0.5, 2)),
+             PEP = list(mean = c(0, 0), sd = c(0.5, 2)))
+dists <- list(KO = "norm", PEP = "norm")
+obs2 <- Observation$new(data = data,  n_states = 2,
+                        dists = dists, par = par0)
+
+# Fit model
+hmm2 <- HMM$new(obs = obs2, hid = hid)
+hmm2$fit(silent = TRUE)
+
+# Show estimated parameters
+lapply(hmm2$par(), round, 3)
+```
+
+The estimated parameters are very similar in both states, with the exception that no correlation parameters were estimated in this case. We can also check that the two models return fairly similar state classifications using the `$viterbi()` method. Around 93.7% of observations were classified identically by the two models.
+
+```{r vit}
+states_hmm1 <- hmm1$viterbi()
+states_hmm2 <- hmm2$viterbi()
+length(which(states_hmm1 == states_hmm2))/nrow(data)
+```
+
+The two models seem to capture similar patterns in the data, i.e., periods of low and high variability. However, the AIC indicates that the multivariate normal model (which accounts for correlation between the variables) is a much better fit, even accounting for the additional complexity.
+
+```{r aic}
+AIC(hmm1, hmm2)
+```
+
+We can also simulate from the two fitted models to check which features of the data are not captured appropriately. We simulate a time series of the same length as the data set from each model, and plot a heatmap of the simulated points. Contrasting this with the observed points, it is clear that the multivariate model captures the correlation well (whereas the univariate model does not, as expected).
+
+```{r sim-comp, fig.width = 8, fig.height = 3, out.width="100%", fig.align = "center"}
+# Simulate from multivariate normal dist
+sim1 <- hmm1$simulate(n = nrow(data), silent = TRUE)
+sim1 <- cbind(sim1, do.call(rbind, sim1$z))
+colnames(sim1)[3:4] <- names
+
+# Simulate from two univariate normal dists
+sim2 <- hmm2$simulate(n = nrow(data), silent = TRUE)
+
+# Data frame for plots
+df <- data.frame(KO = c(data$KO, sim1$KO, sim2$KO),
+                 PEP = c(data$PEP, sim1$PEP, sim2$PEP),
+                 group = rep(c("data", "multivariate", "univariate"), 
+                             each = nrow(data)))
+
+ggplot(df, aes(KO, PEP)) +
+    geom_hex(bins = 50) +
+    facet_wrap("group") +
+    coord_equal() +
+    scale_fill_gradient(low = "wheat", high = "brown")
+```
+
+# References
