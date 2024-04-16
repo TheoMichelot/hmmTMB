@@ -296,11 +296,13 @@ HMM <- R6Class(
       }
       
       # Update initial distribution delta0
-      n_ID <- length(unique(self$obs()$data()$ID))
+      ID <- self$obs()$data()$ID
+      n_ID <- length(unique(ID))
       n_states <- self$hid()$nstates()
       if (self$hid()$stationary()) {
-        delta <- self$hid()$delta(t = 1)
-        delta0 <- matrix(delta, ncol = n_states, nrow = n_ID, byrow = TRUE)
+        # Find stationary distribution for each ID
+        first_indices <- c(1, which(ID[-1] != ID[-length(ID)]) + 1)
+        delta0 <- self$hid()$delta(t = first_indices)
       } else {
         # Fill delta0 except reference elements
         delta0 <- t(sapply(1:n_ID, function(i) {
