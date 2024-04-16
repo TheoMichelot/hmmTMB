@@ -59,7 +59,7 @@ test_that("Parameters are reasonable", {
 test_that("Predictions can be made over time", {
   pred <- mod$predict("obspar", t = c(2, 3, 12), n_post = 3000)
   expect_equal(
-    as.numeric(pred$mean), 
+    as.numeric(pred$mle), 
     c(5.0, 20.9, 5.8, 17.4, 5.9, 17.1), 
     tolerance = 0.1)
   expect_equal(
@@ -74,7 +74,7 @@ test_that("Predictions can be made over time", {
   
   pred2 <- mod$predict("tpm", t = c(5, 1, 12), n_post = 3000)
   expect_equal(
-    as.numeric(pred2$mean), 
+    as.numeric(pred2$mle), 
     c(0.8, 0.14, 0.2, 0.86, 0.8, 0.14, 0.2, 0.86, 0.81, 0.14, 0.19, 0.86), 
     tolerance = 0.01)
   expect_equal(

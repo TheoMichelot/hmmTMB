@@ -1757,7 +1757,7 @@ HMM <- R6Class(
                             level = 0.95, n_post = n_post)
       
       # Data frame for plot
-      df <- as.data.frame.table(preds$mean)
+      df <- as.data.frame.table(preds$mle)
       df$lcl <- as.vector(preds$lcl)
       df$ucl <- as.vector(preds$ucl)
       if (what == "tpm") {
