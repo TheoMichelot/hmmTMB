@@ -213,8 +213,8 @@ dist_cat <- Dist$new(
   }, 
   # npar and parnames are updated based on data values in 
   # Observation$setup_cat()
-  npar = 1,
-  parnames = c("..."), 
+  npar = 3,
+  parnames = c("p2", "p3", "..."), 
   parapprox = function(x) {
     stop("parapprox() not implemented yet for categorical distribution")
     # # This would require parapprox knowing how many categories there are
@@ -797,8 +797,8 @@ dist_mvnorm <- Dist$new(
     ymat <- t(apply(xmat, 1, mvnorm_invlink))
     return(as.vector(ymat))
   }, 
-  npar = 5, 
-  parnames = c("mu1", "mu2", "sd1", "sd2", "corr12"), 
+  npar = 8, 
+  parnames = c("mu1", "mu2", "...", "sd1", "sd2", "...", "corr12", "..."), 
   parapprox = function(x) {
     y <- do.call(cbind, as.matrix(x))
     mu <- rowMeans(y)
