@@ -152,8 +152,8 @@ and par) and covariates (named in formulas)}
 with the following options: beta, binom, cat, dir, exp, foldednorm, 
 gamma, gamma2, lnorm, mvnorm, nbinom, norm, pois, t, truncnorm, tweedie, 
 vm, weibull, wrpcauchy, zibinom, zigamma, zigamma2, zinbinom, zipois, 
-ztnbinom, ztpois. See vignette about list of distributions for more 
-detail, e.g., list of parameters for each distribution.}
+zoibeta, ztnbinom, ztpois. See vignette about list of distributions for 
+more details, e.g., list of parameters for each distribution.}
 
 \item{\code{formulas}}{List of formulas for observation parameters. This should
 be a nested list, where the outer list has one element for each

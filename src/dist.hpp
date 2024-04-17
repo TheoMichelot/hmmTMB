@@ -61,8 +61,10 @@ std::unique_ptr<Dist<Type>> dist_generator(const int& code) {
   case 23: 
     return(std::unique_ptr<Dist<Type>>(new ZeroInflatedPoisson<Type>));
   case 24: 
-    return(std::unique_ptr<Dist<Type>>(new ZeroTruncatedNegativeBinomial<Type>));
+    return(std::unique_ptr<Dist<Type>>(new ZeroOneInflatedBeta<Type>));
   case 25: 
+    return(std::unique_ptr<Dist<Type>>(new ZeroTruncatedNegativeBinomial<Type>));
+  case 26: 
     return(std::unique_ptr<Dist<Type>>(new ZeroTruncatedPoisson<Type>));
   default: 
     return(std::unique_ptr<Dist<Type>>(new Normal<Type>)); 

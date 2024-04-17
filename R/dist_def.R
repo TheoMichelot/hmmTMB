@@ -485,37 +485,37 @@ dist_gamma2 <- Dist$new(
 
 # Zero-inflated gamma (shape, scale) ===================================
 dist_zigamma <- Dist$new(
-    name = "zigamma", 
-    name_long = "zero-inflated gamma",
-    pdf = function(x, shape, scale, z, log = FALSE) {
-        l <- ifelse(x == 0, 
-                    yes = z,
-                    no = (1 - z) * dgamma(x, shape = shape, scale = scale))
-        if (log) l <- log(l)
-        return(l)
-    }, 
-    cdf = function(q, shape, scale, z) {
-      return(NA)
-    },
-    rng = function(n, shape, scale, z) {
-        zero <- rbinom(n, 1, z)
-        y <- rgamma(n, shape = shape, scale = scale)
-        y[zero == 1] <- 0
-        return(y)},
-    link = list(shape = log, scale = log, z = qlogis), 
-    invlink = list(shape = exp, scale = exp, z = plogis), 
-    npar = 3, 
-    parnames = c("shape", "scale", "z"), 
-    parapprox = function(x) {
-        z <- length(which(x < 1e-10))/length(x)
-        y <- x[which(x > 1e-10)]
-        # method of moments estimators
-        mean <- mean(y)
-        sd <- sd(y)
-        scale <- sd^2 / mean 
-        shape <- mean / scale 
-        return(c(shape, scale, z))
-    }
+  name = "zigamma", 
+  name_long = "zero-inflated gamma",
+  pdf = function(x, shape, scale, z, log = FALSE) {
+    l <- ifelse(x == 0, 
+                yes = z,
+                no = (1 - z) * dgamma(x, shape = shape, scale = scale))
+    if (log) l <- log(l)
+    return(l)
+  }, 
+  cdf = function(q, shape, scale, z) {
+    return(NA)
+  },
+  rng = function(n, shape, scale, z) {
+    zero <- rbinom(n, 1, z)
+    y <- rgamma(n, shape = shape, scale = scale)
+    y[zero == 1] <- 0
+    return(y)},
+  link = list(shape = log, scale = log, z = qlogis), 
+  invlink = list(shape = exp, scale = exp, z = plogis), 
+  npar = 3, 
+  parnames = c("shape", "scale", "z"), 
+  parapprox = function(x) {
+    z <- length(which(x < 1e-10))/length(x)
+    y <- x[which(x > 1e-10)]
+    # method of moments estimators
+    mean <- mean(y)
+    sd <- sd(y)
+    scale <- sd^2 / mean 
+    shape <- mean / scale 
+    return(c(shape, scale, z))
+  }
 )
 
 # Zero-inflated gamma (mean, sd) ===================================
@@ -622,6 +622,51 @@ dist_beta <- Dist$new(
   }
 )
 
+# Zero-one-inflated beta ========================
+dist_zoibeta <- Dist$new(
+  name = "zoibeta",
+  pdf = function(x, shape1, shape2, zeromass, onemass, log = FALSE) {
+    l <- rep(NA, length(x))
+    l[which(x == 0)] <- zeromass
+    l[which(x == 1)] <- onemass
+    l[which(x > 0 & x < 1)] <- (1 - zeromass - onemass) * 
+      dbeta(x = x, shape1 = shape1, shape2 = shape2)
+    if(log) l <- log(l)
+    return(l)
+  },
+  cdf = function(q, shape1, shape2, zeromass, onemass) {
+    return(NA)
+  },
+  rng = function(n, shape1, shape2, zeromass, onemass) {
+    y <- sample(0:2, size = n, replace = TRUE, 
+                prob = c(zeromass, onemass, 1 - zeromass - onemass))
+    # Indices of non-0 and non-1 observations
+    ind <- which(y == 2)
+    y[ind] <- rbeta(n = length(ind), shape1 = shape1, shape2 = shape2)
+    return(y)
+  },
+  link = list(shape1 = log, shape2 = log, zeromass = qlogis, onemass = qlogis),
+  invlink = list(shape1 = exp, shape2 = exp, zeromass = plogis, onemass = plogis),
+  npar = 4,
+  parnames = c("shape1", "shape2", "zeromass", "onemass"), 
+  parapprox = function(x) {
+    zeromass <- length(which(x == 0))/length(x)
+    onemass <- length(which(x == 1))/length(x)
+    x <- x[which(x > 0 & x < 1)]
+    # method of moments 
+    mu <- mean(x)
+    s2 <- var(x)
+    tmp <- mu * (1 - mu) / s2 - 1
+    if (tmp < 1e-10) {
+      shape1 <- 1e-3
+      shape2 <- 1e-3
+    } else {
+      shape1 <- mu * tmp
+      shape2 <- (1 - mu) * tmp      
+    }
+    return(c(shape1, shape2, zeromass, onemass))
+  }
+)
 
 # Mixed distributions -----------------------------------------------------
 
@@ -888,7 +933,8 @@ dist_list <- list(beta = dist_beta,
                   zigamma = dist_zigamma,
                   zigamma2 = dist_zigamma2,
                   zinbinom = dist_zinbinom,
-                  zipois = dist_zipois, 
+                  zipois = dist_zipois,
+                  zoibeta = dist_zoibeta,
                   ztnbinom = dist_ztnbinom, 
                   ztpois = dist_ztpois)
 

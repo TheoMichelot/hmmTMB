@@ -725,7 +725,7 @@ public:
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size()); 
-    // shape and scale
+    // shape1 and shape2
     wpar = log(par); 
     return(wpar); 
   } 
@@ -733,9 +733,9 @@ public:
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
-    // shape 
+    // shape1
     for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
-    // scale
+    // shape2
     for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
     return(par); 
   }
@@ -745,6 +745,52 @@ public:
     return(val); 
   }
 };
+
+template<class Type> 
+class ZeroOneInflatedBeta : public Dist<Type> {
+public:
+  // Constructor
+  ZeroOneInflatedBeta() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size()); 
+    // shape1 and shape2
+    for(int i = 0; i < 2 * n_states; i++) wpar(i) = log(par(i));
+    // zeromass and onemass
+    for(int i = 2 * n_states; i < 4 * n_states; i++) wpar(i) = log(par(i) / (1.0 - par(i)));
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    // shape1
+    for (int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    // shape2
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
+    // zeromass
+    for (int i = 0; i < n_states; ++i) par(i, 2) = 1.0 / (1.0 + exp(-wpar(i + 2*n_states)));
+    // onemass
+    for (int i = 0; i < n_states; ++i) par(i, 3) = 1.0 / (1.0 + exp(-wpar(i + 3*n_states)));
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type val = 0.0;
+    if(x == Type(0)) {
+      val = par(2);
+    } else if(x == Type(1)) {
+      val = par(3);
+    } else {
+      val = (1 - par(2) - par(3)) * dbeta(x, par(0), par(1), 0);
+    }
+    if(logpdf) {
+      val = log(val);
+    }
+    return(val); 
+  }
+};
+
 
 // MIXED DISTRIBUTIONS -------------------------
 
