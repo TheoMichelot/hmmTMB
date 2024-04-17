@@ -173,6 +173,12 @@ $$
 
 The two states have mean log-returns close to 1 (although log-returns are on average slightly positive in state 1 and slightly negative in state 2). As expected, state 1 has lower variance than state 2 for both variables, perhaps corresponding to periods when the market was more stable. There is strong positive correlation between the two variables in both states (slightly stronger in state 1).
 
+Alternatively, we can use the function `obs1$par_alt()` to output the covariance matrix in each state (rather than the standard deviations and correlations).
+
+```{r par-alt}
+rapply(object = obs1$par_alt(var = "z"), f = round, how = "list", digits = 3)
+```
+
 # Comparison to univariate normal distributions
 
 An alternative approach for this data set would be to treat the log-returns for Coca-Cola and PepsiCo as conditionally independent given the state. That is, we could model each variable with a univariate normal distribution in each state. This is equivalent to the multivariate model presented above, but with the correlation parameter $\rho_{12k}$ fixed to zero. We use the observation distribution `norm`, and choose starting parameter values as we did before. Fitting this model is around 6 times quicker than the multivariate formulation; the difference is inconsequential here, but could become a limitation of multivariate models for large data sets or more complex model formulations.

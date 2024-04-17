@@ -128,22 +128,14 @@ hmm$fit(silent = TRUE)
 
 ### Observation parameters
 
-We can extract all estimated observation parameters using `obs$par()`. Here, we also compute the probabilities for the reference categories based on the estimated parameters.
+We can extract all estimated observation parameters using `obs$par()` or `obs$par_alt()`. The latter will automatically compute the probabilities for the reference categories based on the estimated parameters.
 
 ```{r par}
 # Observation parameters
-par <- obs$par()[,,1]
-
-# Extract each parameter and deduce probability of reference category
-all_probs <- rbind(p_vocalizing.p1 = 1 - colSums(par[1:2,]), 
-                   par[1:2,],
-                   t_vocalizing.p1 = 1 - colSums(par[3:4,]), 
-                   par[3:4,],
-                   p_looking.p1 = 1 - par[5,], 
-                   par[5,,drop=FALSE],
-                   t_looking.p1 = 1 - par[6,], 
-                   par[6,,drop=FALSE])
-round(all_probs, 3)
+round(as.data.frame(obs$par_alt("p_vocalizing")), 3)
+round(as.data.frame(obs$par_alt("t_vocalizing")), 3)
+round(as.data.frame(obs$par_alt("p_looking")), 3)
+round(as.data.frame(obs$par_alt("t_looking")), 3)
 ```
 
 We can read these results as follows:
