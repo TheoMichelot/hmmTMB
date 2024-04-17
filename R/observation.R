@@ -117,8 +117,9 @@ Observation <- R6Class(
         private$dists_ <- dists        
       }
       
-      # If categorical distribution, setup parameters based on data
+      # If categorical or MVN distribution, setup parameters based on data
       private$setup_cat()
+      private$setup_mvn()
       
       # Check if user-provided parameters match distribution definition
       n_var <- length(dists)
@@ -336,7 +337,7 @@ Observation <- R6Class(
         par_this_state <- par[par_ind, i, 1]
         res[[i]] <- self$dists()[[which_var]]$par_alt(par_this_state)
       }
-      names(res) <- paste0("S", 1:n_states)
+      names(res) <- paste0("state ", 1:n_states)
       
       return(res)
     },
@@ -1098,6 +1099,32 @@ Observation <- R6Class(
           # Update number and names of parameters
           npar <- length(unique(obs_notNA)) - 1
           parnames <- paste0("p", 2:(npar + 1))
+          self$dists()[[i]]$set_npar(npar)
+          self$dists()[[i]]$set_parnames(parnames)
+        }
+      }
+    },
+    
+    # Setup MVN distributions
+    setup_mvn = function() {
+      # Find MVN distributions
+      which_mvn <- which(sapply(self$dists(), function(d) d$name()) == "mvnorm")
+      
+      if(length(which_mvn > 0)) {
+        # Loop through MVN variables
+        for(i in which_mvn) {
+          var_name <- names(self$dists())[i]
+          # Get number of dimensions
+          obs <- do.call(rbind, self$data()[[var_name]])
+          n_dim <- ncol(obs)
+          
+          # Update number and names of parameters
+          npar <- 2 * n_dim + n_dim * (n_dim - 1) / 2
+          V <- matrix(1:n_dim, nrow = n_dim, ncol = n_dim)
+          tV <- t(V)
+          parnames <- c(paste0("mu", 1:n_dim), 
+                        paste0("sd", 1:n_dim), 
+                        paste0("corr", V[upper.tri(V)], tV[upper.tri(tV)]))
           self$dists()[[i]]$set_npar(npar)
           self$dists()[[i]]$set_parnames(parnames)
         }
