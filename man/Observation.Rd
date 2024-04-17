@@ -98,6 +98,7 @@ obs$par()
 \item \href{#method-Observation-dists}{\code{Observation$dists()}}
 \item \href{#method-Observation-nstates}{\code{Observation$nstates()}}
 \item \href{#method-Observation-par}{\code{Observation$par()}}
+\item \href{#method-Observation-par_alt}{\code{Observation$par_alt()}}
 \item \href{#method-Observation-inipar}{\code{Observation$inipar()}}
 \item \href{#method-Observation-coeff_fe}{\code{Observation$coeff_fe()}}
 \item \href{#method-Observation-coeff_re}{\code{Observation$coeff_re()}}
@@ -305,6 +306,34 @@ obs$par(t = c(1, 10, 20))
 
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Observation-par_alt"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-par_alt}{}}}
+\subsection{Method \code{par_alt()}}{
+Alternative parameter output
+
+This function is only useful for the categorical and multivariate
+normal distributions, and it formats the parameters in a slightly nicer
+way.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$par_alt(var = NULL, t = 1)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var}}{Name of observation variable for which parameters are 
+required. By default, the first variable in 'dists' is used.}
+
+\item{\code{t}}{Time index for covariate values. Only one value should be
+provided.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+List of distribution parameters, with one element for each state
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-inipar"></a>}}

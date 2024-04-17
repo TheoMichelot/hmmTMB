@@ -304,6 +304,43 @@ Observation <- R6Class(
       return(par)
     },
     
+    #' @description Alternative parameter output
+    #' 
+    #' This function is only useful for the categorical and multivariate
+    #' normal distributions, and it formats the parameters in a slightly nicer
+    #' way.
+    #' 
+    #' @param var Name of observation variable for which parameters are 
+    #' required. By default, the first variable in 'dists' is used.
+    #' @param t Time index for covariate values. Only one value should be
+    #' provided.
+    #' 
+    #' @return List of distribution parameters, with one element for each state
+    par_alt = function(var = NULL, t = 1) {
+      # Use first variable by default
+      if(is.null(var)) {
+        var <- names(self$dists())[1]
+      }
+      which_var <- which(names(self$dists()) == var)
+      
+      # State-dependent parameters
+      par <- self$par(t = t, full_names = FALSE)
+      # Indices of parameters for each variable
+      par_ind_all <- c(1, cumsum(sapply(self$dists(), function(x) x$npar())) + 1)
+      par_ind <- par_ind_all[which_var]:(par_ind_all[which_var + 1] - 1)
+      
+      # Loop over states
+      n_states <- self$nstates()
+      res <- vector(mode = "list", length = n_states)
+      for(i in 1:n_states) {
+        par_this_state <- par[par_ind, i, 1]
+        res[[i]] <- self$dists()[[which_var]]$par_alt(par_this_state)
+      }
+      names(res) <- paste0("S", 1:n_states)
+      
+      return(res)
+    },
+    
     #' @description Return initial parameter values supplied 
     inipar = function() {return(private$inipar_)}, 
     
@@ -708,7 +745,7 @@ Observation <- R6Class(
         cdf_list[[var]] <- cdf_mat
       }
       names(cdf_list) <- var_names
-
+      
       return(cdf_list)
     },
     
@@ -1031,7 +1068,7 @@ Observation <- R6Class(
           obs <- self$data()[[var_name]]
           which_notNA <- which(!is.na(obs))
           obs_notNA <- obs[which_notNA]
-                    
+          
           # If factor/character, convert to 1:N where N = # categories
           if(is.factor(obs) | is.character(obs)) {
             obs_notNA <- factor(obs_notNA)

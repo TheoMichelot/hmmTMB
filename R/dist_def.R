@@ -222,6 +222,11 @@ dist_cat <- Dist$new(
     # tab <- prop.table(table(x))
     # p[as.numeric(names(tab))] <- as.numeric(tab)
     # return(p[-1])
+  },
+  par_alt = function(par) {
+    p <- c(1 - sum(par), par)
+    names(p) <- paste0("p", 1:length(p))
+    return(p)
   }
 )
 
@@ -800,6 +805,25 @@ dist_mvnorm <- Dist$new(
     sds <- apply(y, 1, sd)
     corr <- cor(t(y))
     return(c(mu, sds, corr[upper.tri(corr)]))
+  },
+  par_alt = function(par) {
+    # Dimension
+    m <- quad_pos_solve(1, 3, - 2 * length(par))
+    # Unpack parameters
+    mu <- par[1:m]
+    sds <- par[(m + 1) : (2 * m)]
+    corr <- par[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
+    # Create covariance matrix
+    V <- diag(m)
+    V[lower.tri(V)] <- corr 
+    V[upper.tri(V)] <- t(V)[upper.tri(V)]
+    for (i in 1:ncol(V)) {
+      V[i,] <- V[i,] * sds[i]
+      V[,i] <- V[,i] * sds[i]
+    }
+    names(mu) <- paste0("mu", 1:m)
+    rownames(V) <- colnames(V) <- 1:m
+    return(list(mu = mu, Sigma = V))
   }
 )
 

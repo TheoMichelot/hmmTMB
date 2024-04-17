@@ -10,7 +10,7 @@ Dist <- R6Class(
   classname = "Dist",
   
   public = list(
-
+    
     # Constructor -------------------------------------------------------------
     #' @description Create a Dist object
     #' 
@@ -33,6 +33,10 @@ Dist <- R6Class(
     #' parameter is fixed
     #' @param name_long Long version of the name of the distribution, possibly 
     #' more user-readable than name.
+    #' @param par_alt Function that takes a vector of the distribution
+    #' parameters as input and returns them in a different format. Only
+    #' relevant for some distributions (e.g., MVN, where the SDs and
+    #' correlations can be reformatted into a covariance matrix)
     #' 
     #' @return A new Dist object
     initialize = function(name, 
@@ -45,7 +49,8 @@ Dist <- R6Class(
                           parnames, 
                           parapprox = NULL, 
                           fixed = NULL, 
-                          name_long = name) {
+                          name_long = name,
+                          par_alt = NULL) {
       # Check arguments
       private$check_args(name = name, 
                          pdf = pdf, 
@@ -67,10 +72,20 @@ Dist <- R6Class(
       private$parapprox_ <- parapprox 
       private$fixed_ <- fixed
       private$name_long_ <- name_long
+      private$par_alt_ <- par_alt
       
       # All parameters are unfixed by default
       if (is.null(fixed)) {
         private$fixed_ <- rep(FALSE, npar)
+      }
+      
+      # Most distributions don't have par_alt
+      if(is.null(par_alt)) {
+        private$par_alt_ <- function(...) {
+          message(paste0("There is no par_alt() function for the ", 
+                         "distribution '", name, "'"))
+          return(NA)
+        }
       }
     },
     
@@ -101,18 +116,18 @@ Dist <- R6Class(
     
     #' @description Return function that approximates parameters
     parapprox = function() {return(private$parapprox_)}, 
-  
+    
     #' @description Return which parameters are fixed 
     fixed = function() {return(private$fixed_)}, 
     
     #' @description Return code of Dist object
     code = function() {return(private$code_)},
-  
+    
     #' @description Human-readable name of Dist object
     name_long = function() {return(private$name_long_)},
     
     # Mutators ----------------------------------------------------------------
-
+    
     #' @description Set number of parameters this distribution has
     #' 
     #' @param new_npar Number of parameters
@@ -122,14 +137,14 @@ Dist <- R6Class(
     #' 
     #' @param new_parnames Parameter names
     set_parnames = function(new_parnames) {private$parnames_ <- new_parnames}, 
-
+    
     #' @description Set distribution code
     #' 
     #' @param new_code Distribution code
     set_code = function(new_code) {private$code_ <- new_code},
     
     # Other methods -----------------------------------------------------------
-
+    
     #' @description Evaluate probability density/mass function
     #' 
     #' This method is used in the Dist$obs_probs() method. It is a wrapper 
@@ -166,6 +181,15 @@ Dist <- R6Class(
       args <- list(n = n)
       args <- c(args, par)
       do.call(self$rng(), args)
+    },
+    
+    #' @description Alternative parameter formatting
+    #' 
+    #' @param par Vector of distribution parameters
+    #'
+    #' @return Formatted parameters
+    par_alt = function(par) {
+      private$par_alt_(par)
     },
     
     #' @description Natural to working parameter transformation
@@ -246,7 +270,7 @@ Dist <- R6Class(
   ),
   
   private = list(
-
+    
     # Data members ------------------------------------------------------------
     name_ = NULL, # name of distribution 
     pdf_ = NULL, # pdf 
@@ -260,7 +284,8 @@ Dist <- R6Class(
     fixed_ = NULL,  # TRUE/FALSE for each parameter on whether it is fixed or estimated
     code_ = NULL, # unique distribution code
     name_long_ = NULL, # human-readable name of distribution 
-  
+    par_alt_ = NULL, # function to display parameters in nice format
+    
     # (For argument description, see constructor)
     check_args = function(name, pdf, rng, link, invlink, npar, parnames) {
       if(!is.character(name)) {

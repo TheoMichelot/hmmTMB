@@ -28,6 +28,7 @@ functions for a probability distribution.
 \item \href{#method-Dist-set_code}{\code{Dist$set_code()}}
 \item \href{#method-Dist-pdf_apply}{\code{Dist$pdf_apply()}}
 \item \href{#method-Dist-rng_apply}{\code{Dist$rng_apply()}}
+\item \href{#method-Dist-par_alt}{\code{Dist$par_alt()}}
 \item \href{#method-Dist-n2w}{\code{Dist$n2w()}}
 \item \href{#method-Dist-w2n}{\code{Dist$w2n()}}
 \item \href{#method-Dist-clone}{\code{Dist$clone()}}
@@ -50,7 +51,8 @@ Create a Dist object
   parnames,
   parapprox = NULL,
   fixed = NULL,
-  name_long = name
+  name_long = name,
+  par_alt = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -86,6 +88,11 @@ parameter is fixed}
 
 \item{\code{name_long}}{Long version of the name of the distribution, possibly 
 more user-readable than name.}
+
+\item{\code{par_alt}}{Function that takes a vector of the distribution
+parameters as input and returns them in a different format. Only
+relevant for some distributions (e.g., MVN, where the SDs and
+correlations can be reformatted into a covariance matrix)}
 }
 \if{html}{\out{</div>}}
 }
@@ -321,6 +328,26 @@ shape/scale rather than shape/rate for gamma distribution.)}
 }
 \subsection{Returns}{
 Vector of \code{n} realisations of this distribution
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Dist-par_alt"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-par_alt}{}}}
+\subsection{Method \code{par_alt()}}{
+Alternative parameter formatting
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Dist$par_alt(par)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{par}}{Vector of distribution parameters}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Formatted parameters
 }
 }
 \if{html}{\out{<hr>}}
