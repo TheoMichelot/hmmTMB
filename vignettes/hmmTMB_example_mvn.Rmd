@@ -1,5 +1,5 @@
 ---
-title: "The multivariate distribution in hmmTMB"
+title: "The multivariate normal distribution in hmmTMB"
 author: "Théo Michelot"
 date: "`r Sys.Date()`"
 output: 
@@ -10,7 +10,7 @@ header-includes:
 fontsize: 12pt
 bibliography: refs.bib
 vignette: >
-    %\VignetteIndexEntry{Advanced features of hmmTMB}
+    %\VignetteIndexEntry{Multivariate normal HMMs in hmmTMB}
     %\VignetteEncoding{UTF-8}
     %\VignetteEngine{knitr::rmarkdown}
 ---
