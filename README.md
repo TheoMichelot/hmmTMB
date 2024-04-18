@@ -56,6 +56,8 @@ We describe functionalities of the package in several vignettes, which are liste
 ### Reference vignettes
  
 - ['List of distributions in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_dist_list.pdf): List of observation distributions currently available in hmmTMB.
+
+- ['Adding new distributions in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_adding_distributions.pdf): Technical vignette about adding new observation distributions to hmmTMB, with detailed instructions to add the required R and C++ code.
   
 - ['Syntax of model formulas in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_formula_syntax.pdf): Flexible covariate dependence can be specified using the syntax of mgcv formulas, and this vignette describes a few special cases, including random effects (intercepts or slopes), smooth non-linear relationships, factor-smooth interactions, multidimensional smooths, varying-coefficient models, cyclical effects, etc.
 
