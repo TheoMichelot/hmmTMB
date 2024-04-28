@@ -806,7 +806,7 @@ Observation <- R6Class(
       # Loop over observed variables 
       par_count <- 1 
       for (i in 1:length(self$dists())) {
-        var <- self$obs_var()[wh_noNA, i]
+        var <- self$obs_var()[[i]][wh_noNA]
         
         # Possibly pass fixed parameters to parapprox function within dist
         par_ind <- par_count:(par_count + self$dists()[[i]]$npar() - 1)
