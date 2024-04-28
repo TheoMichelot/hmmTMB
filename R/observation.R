@@ -850,7 +850,12 @@ Observation <- R6Class(
     #' @param t Index of time step to use for covariates (default: 1).
     #' 
     #' @return A ggplot object
-    plot_dist = function(var, weights = NULL, t = 1) {
+    plot_dist = function(var = NULL, weights = NULL, t = 1) {
+      if(is.null(var)) {
+        return(lapply(names(self$dists()), function(this_var)
+          self$plot_dist(var = this_var, weights = weights, t = t)))
+      }
+      
       # Extract observed values for relevant variable
       obs <- data.frame(val = self$data()[[var]])
       

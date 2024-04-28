@@ -1713,10 +1713,11 @@ HMM <- R6Class(
     #' distribution for each state is weighted by the proportion of time
     #' spent in that state (according to the Viterbi state sequence).
     #'
-    #' @param var Name of data variable
+    #' @param var Name of data variable. If NULL, a list of plots are
+    #' returned (one for each observation variable)
     #' 
-    #' @return Plot of distribution with data histogram 
-    plot_dist = function(var) {
+    #' @return Plot of distributions with data histogram 
+    plot_dist = function(var = NULL) {
       if(is.null(private$states_)) {
         self$viterbi()
       }
