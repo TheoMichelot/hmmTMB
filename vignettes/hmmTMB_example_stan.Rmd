@@ -71,8 +71,9 @@ hid_sim <- MarkovChain$new(data = data_sim, n_states = 2,
 
 # Observation process
 par_sim <- list(z = list(mean = c(0, 5), sd = c(3, 1)))
-obs_sim <- Observation$new(data = data_sim, dists = list(z = "norm"), 
-                           n_states = 2, par = par_sim)
+obs_sim <- Observation$new(data = data_sim, 
+                           dists = list(z = "norm"), 
+                           par = par_sim)
 
 # Create HMM and simulate observations
 hmm_sim <- HMM$new(hid = hid_sim, obs = obs_sim)
@@ -103,8 +104,9 @@ hid <- MarkovChain$new(data = data_sim, n_states = 2,
 
 # Initial parameters for observation process
 par <- list(z = list(mean = c(2, 7), sd = c(4, 0.5)))
-obs <- Observation$new(data = data_sim, dists = list(z = "norm"), 
-                       n_states = 2, par = par)
+obs <- Observation$new(data = data_sim, 
+                       dists = list(z = "norm"), 
+                       par = par)
 
 # Create HMM object
 hmm <- HMM$new(hid = hid, obs = obs)

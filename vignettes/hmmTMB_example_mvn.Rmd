@@ -144,8 +144,7 @@ par0 <- list(z = list(mu1 = c(0, 0),
                       sd2 = c(0.5, 2),
                       corr12 = c(0.6, 0.6)))
 obs1 <- Observation$new(data = data, 
-                       dists = dists, 
-                       n_states = 2, 
+                       dists = dists,
                        par = par0)
 ```
 
@@ -188,8 +187,7 @@ An alternative approach for this data set would be to treat the log-returns for 
 par0 <- list(KO = list(mean = c(0, 0), sd = c(0.5, 2)),
              PEP = list(mean = c(0, 0), sd = c(0.5, 2)))
 dists <- list(KO = "norm", PEP = "norm")
-obs2 <- Observation$new(data = data,  n_states = 2,
-                        dists = dists, par = par0)
+obs2 <- Observation$new(data = data, dists = dists, par = par0)
 
 # Fit model
 hmm2 <- HMM$new(obs = obs2, hid = hid)

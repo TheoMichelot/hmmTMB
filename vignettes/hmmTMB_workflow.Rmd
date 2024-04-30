@@ -122,7 +122,7 @@ dists <- list(Price = "norm")
 # List of initial parameter values
 par0_2s <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
 # Create observation model object
-obs1 <- Observation$new(data = energy, n_states = 2, dists = dists, par = par0_2s)
+obs1 <- Observation$new(data = energy, dists = dists, par = par0_2s)
 ```
 
 ## Hidden Markov model
@@ -265,7 +265,7 @@ The observed values of the 0%, 25%, 50%, and 75% quantiles are well within the r
 
 # Changing the number of states
 
-Using a different number of states requires very little changes in the code shown above. Consider that we now want to use $N = 3$ states. We need to specify `n_states = 3` when creating the `MarkovChain` and `Observation` components of the model. We also need to change the initial values, as we now need three values of each parameter. Everything else is identical.
+Using a different number of states requires very little changes in the code shown above. Consider that we now want to use $N = 3$ states. We need to specify `n_states = 3` when creating the `MarkovChain` component of the model. We also need to change the initial values for the `Observation` object, as we now need three values of each parameter. Everything else is identical.
 
 ```{r hmm2, fig.width = 4, fig.height = 3, out.width="49%", fig.align = "center", fig.show = "hold"}
 # Hidden state process
@@ -273,8 +273,7 @@ hid2 <- MarkovChain$new(data = energy, n_states = 3)
 
 # Observation model
 par0_3s <- list(Price = list(mean = c(2.5, 4, 6), sd = c(0.5, 0.5, 1)))
-obs2 <- Observation$new(data = energy, n_states = 3, 
-                        dists = dists, par = par0_3s)
+obs2 <- Observation$new(data = energy, dists = dists, par = par0_3s)
 
 # Create and fit HMM
 hmm2 <- HMM$new(obs = obs2, hid = hid2)
@@ -315,8 +314,7 @@ f <- ~ Oil
 hid3 <- MarkovChain$new(data = energy, n_states = 2, formula = f)
 
 # Observation model
-obs3 <- Observation$new(data = energy, n_states = 2, 
-                        dists = dists, par = par0_2s)
+obs3 <- Observation$new(data = energy, dists = dists, par = par0_2s)
 
 # Fit HMM
 hmm3 <- HMM$new(obs = obs3, hid = hid3)
@@ -370,7 +368,7 @@ hid4 <- MarkovChain$new(data = energy, n_states = 2)
 
 # Observation model
 f <- list(Price = list(mean = ~ EurDol))
-obs4 <- Observation$new(data = energy, n_states = 2, dists = dists, 
+obs4 <- Observation$new(data = energy, dists = dists, 
                         par = par0_2s, formulas = f)
 
 # Fit HMM
@@ -406,7 +404,7 @@ We update the linear formula passed to the `Observation` object, following the m
 ```{r hmm5, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center"}
 hid5 <- MarkovChain$new(data = energy, n_states = 2)
 f <- list(Price = list(mean = ~s(EurDol, k = 10, bs = "cs")))
-obs5 <- Observation$new(data = energy, n_states = 2, dists = dists,
+obs5 <- Observation$new(data = energy, dists = dists,
                         par = par0_2s, formulas = f)
 hmm5 <- HMM$new(obs = obs5, hid = hid5)
 
@@ -461,9 +459,8 @@ To implement the model described above, we need to include `Year` as a random ef
 # Formula for RE of year on mean price
 f <- list(Price = list(mean = ~ s(Year, bs = "re")))
 # Create Observation object with RE formula
-obs6 <- Observation$new(data = energy, n_states = 2,
-                        dists = dists, par = par0_2s, 
-                        formula = f)
+obs6 <- Observation$new(data = energy, dists = dists, 
+                        par = par0_2s, formula = f)
 
 # Create hidden state process
 hid6 <- MarkovChain$new(data = energy, n_states = 2)

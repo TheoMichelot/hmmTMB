@@ -72,8 +72,7 @@ data_supervised$state <- known_states
 hid <- MarkovChain$new(data = data_supervised, n_states = 2)
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
-obs <- Observation$new(data = data_supervised, n_states = 2, 
-                       dists = dists, par = par0)
+obs <- Observation$new(data = data_supervised, dists = dists, par = par0)
 hmm <- HMM$new(hid = hid, obs = obs)
 
 # Fit model
@@ -106,15 +105,13 @@ In hmmTMB, the trick to achieve this is to pass the trained model as `init` when
 hid_train <- MarkovChain$new(data = energy_train, n_states = 2)
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
-obs_train <- Observation$new(data = energy_train, n_states = 2, 
-                             dists = dists, par = par0)
+obs_train <- Observation$new(data = energy_train, dists = dists, par = par0)
 hmm_train <- HMM$new(hid = hid_train, obs = obs_train)
 hmm_train$fit(silent = TRUE)
 
 # Create model for new data, but don't fit
 hid_new <- MarkovChain$new(data = energy_new, n_states = 2)
-obs_new <- Observation$new(data = energy_new, n_states = 2, 
-                           dists = dists, par = par0)
+obs_new <- Observation$new(data = energy_new, dists = dists, par = par0)
 hmm_new <- HMM$new(hid = hid_new, obs = obs_new, init = hmm_train)
 
 # Check parameters
@@ -165,8 +162,7 @@ We first turn to the case where some of the state-dependent observation paramete
 hid <- MarkovChain$new(data = energy, n_states = 3)
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(2, 5, 7), sd = c(0.5, 0.5, 0.5)))
-obs <- Observation$new(data = energy, n_states = 3, 
-                       dists = dists, par = par0)
+obs <- Observation$new(data = energy, dists = dists, par = par0)
 ```
 
 Then, we use the argument `fixpar` to indicate that they should be kept fixed. The names of the working parameters corresponding to the three standard deviations can be found using `obs$coeff_fe()`.
@@ -238,8 +234,7 @@ hid <- MarkovChain$new(data = energy, n_states = 3, tpm = tpm0)
 # Create observation model
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(2, 5, 7), sd = c(0.5, 0.5, 0.5)))
-obs <- Observation$new(data = energy, n_states = 3, 
-                       dists = dists, par = par0)
+obs <- Observation$new(data = energy, dists = dists, par = par0)
 
 # Find names of working parameters for transition probabilities
 hid$coeff_fe()
@@ -289,8 +284,7 @@ In the same way, we can manually modify the parameters (including the working pa
 # Create observation model with some initial parameters
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(2, 7), sd = c(0.5, 0.5)))
-obs <- Observation$new(data = energy, n_states = 2, 
-                       dists = dists, par = par0)
+obs <- Observation$new(data = energy, dists = dists, par = par0)
 obs$par()
 
 # Update parameters
@@ -310,8 +304,7 @@ The formulas on any model parameters can also be updated for an existing model, 
 hid <- MarkovChain$new(data = energy, n_states = 2)
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(2, 7), sd = c(0.5, 0.5)))
-obs <- Observation$new(data = energy, n_states = 2, 
-                       dists = dists, par = par0)
+obs <- Observation$new(data = energy, dists = dists, par = par0)
 hmm <- HMM$new(obs = obs, hid = hid)
 
 # Check model formulation
@@ -382,8 +375,7 @@ hid <- MarkovChain$new(data = energy, n_states = 2)
 # Create observation model
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
-obs <- Observation$new(data = energy, n_states = 2, 
-                       dists = dists, par = par0)
+obs <- Observation$new(data = energy, dists = dists, par = par0)
 
 # Create HMM
 hmm <- HMM$new(hid = hid, obs = obs)
@@ -409,8 +401,7 @@ The key assumption behind this approach is that the K-means clusters are a good 
 dists <- list(Price = "gamma2")
 # These initial values don't matter, we will update them
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
-obs <- Observation$new(data = energy, n_states = 2, 
-                       dists = dists, par = par0)
+obs <- Observation$new(data = energy, dists = dists, par = par0)
 
 # Get suggested initial parameters
 par0 <- obs$suggest_initial()
@@ -437,8 +428,7 @@ hid1 <- MarkovChain$new(data = energy, n_states = 2)
 # Create observation model
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
-obs1 <- Observation$new(data = energy, n_states = 2, 
-                       dists = dists, par = par0)
+obs1 <- Observation$new(data = energy, dists = dists, par = par0)
 # Create HMM
 hmm1 <- HMM$new(hid = hid1, obs = obs1)
 hmm1$fit(silent = TRUE)
@@ -452,8 +442,7 @@ hmm1$coeff_fe()
 # Create hidden state process
 hid2 <- MarkovChain$new(data = energy, n_states = 2, formula = ~Oil)
 # Create observation model
-obs2 <- Observation$new(data = energy, n_states = 2, 
-                       dists = dists, par = par0)
+obs2 <- Observation$new(data = energy, dists = dists, par = par0)
 # Create HMM with initial values from hmm1
 hmm2 <- HMM$new(hid = hid2, obs = obs2, init = hmm1)
 hmm2$coeff_fe()
@@ -468,8 +457,8 @@ hmm2$coeff_fe()
 hid3 <- MarkovChain$new(data = energy, n_states = 2, formula = ~Oil)
 # Create observation model
 f <- list(Price = list(mean = ~poly(EurDol, 2)))
-obs3 <- Observation$new(data = energy, n_states = 2, 
-                       dists = dists, par = par0, formula = f)
+obs3 <- Observation$new(data = energy, dists = dists, 
+                        par = par0, formula = f)
 # Create HMM with initial values from hmm1
 hmm3 <- HMM$new(hid = hid3, obs = obs3, init = hmm2)
 hmm3$coeff_fe()
@@ -489,8 +478,7 @@ Model fitting in hmmTMB is done using the Template Model Builder (TMB) package (
 hid <- MarkovChain$new(data = energy, n_states = 2)
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
-obs <- Observation$new(data = energy, n_states = 2, 
-                       dists = dists, par = par0)
+obs <- Observation$new(data = energy, dists = dists, par = par0)
 hmm <- HMM$new(hid = hid, obs = obs)
 # Fit model
 hmm$fit(silent = TRUE)
@@ -550,8 +538,7 @@ This procedure is implemented in the function `predict()` in hmmTMB, which can r
 hid <- MarkovChain$new(data = energy, n_states = 2, formula = ~Oil)
 dists <- list(Price = "gamma2")
 par0 <- list(Price = list(mean = c(3, 6), sd = c(1, 1)))
-obs <- Observation$new(data = energy, n_states = 2, 
-                       dists = dists, par = par0)
+obs <- Observation$new(data = energy, dists = dists, par = par0)
 hmm <- HMM$new(hid = hid, obs = obs)
 # Fit model
 hmm$fit(silent = TRUE)

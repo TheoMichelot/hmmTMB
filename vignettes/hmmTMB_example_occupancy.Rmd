@@ -121,8 +121,7 @@ dists <- list(y2 = "binom", y3 = "binom")
 par0 <- list(y2 = list(size = c(2, 2), prob = c(0, 0.5)),
              y3 = list(size = c(3, 3), prob = c(0, 0.5)))
 
-obs1 <- Observation$new(data = data, dists = dists, 
-                       n_states = 2, par = par0)
+obs1 <- Observation$new(data = data, dists = dists, par = par0)
 ```
 
 We can now create an `HMM` object, which combines the hidden state and observation components. We use the argument `fixpar` to indicate that the detection probabilities in state 1 do not need to be estimated (and should be kept fixed to their initial value, zero). To find the name of the parameter that needs to be fixed, we can use the following command:
@@ -185,8 +184,7 @@ hid2 <- MarkovChain$new(data = data, n_states = 2,
 The rest of the model specification is unchanged. This time, fitting the model takes a few minutes, as the non-parametric relationship between elevation and transition probabilities needs to be estimated.
 
 ```{r mod2-spec2}
-obs2 <- Observation$new(data = data, dists = dists, 
-                       n_states = 2, par = par0)
+obs2 <- Observation$new(data = data, dists = dists, par = par0)
 hmm2 <- HMM$new(obs = obs2, hid = hid2, fixpar = fixpar)
 hmm2$fit(silent = TRUE)
 ```

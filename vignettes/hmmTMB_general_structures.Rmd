@@ -35,7 +35,7 @@ options(scipen = 1, digits = 2)
 The package hmmTMB can be used to implement a wide range of extensions of hidden Markov models (HMMs), and we describe a few of them here. This document is not intended to be introductory, and one of the other vignettes might be a better place to start learning about hmmTMB. All dependence structures that we mention in this document are described in more detail by @zucchini2017 (in particular Chapters 10 and 12).
 
 \begin{tcolorbox}[title=\textbf{Do I really need a more complex model?}]
-This vignette showcases the flexibility of hmmTMB to create complex models, and those come with increased likelihood to run into numerical problems. This may include prohibitive memory or computing requirements for models with very many parameters or, more often, numerical instability in the estimation. Complex models are also more difficult to interpret. It is therefore useful to carefully consider the necessity for increased complexity, for a given data set and research question.
+This vignette showcases the flexibility of hmmTMB to create complex models, and those come with increased risk of running into numerical problems. This may include prohibitive memory or computing requirements for models with very many parameters or, more often, numerical instability in the estimation. Complex models are also more difficult to interpret. It is therefore useful to carefully consider the necessity for increased complexity, for a given data set and research question.
 \end{tcolorbox}
 
 ```{r load-stuff}
@@ -97,8 +97,8 @@ hid <- MarkovChain$new(data = data, n_states = 2)
 dists <- list(z = "norm")
 par0 <- list(z = list(mean = c(0, 0), sd = c(0.5, 10)))
 f <- list(z = list(mean = ~ z_lag - 1))
-obs <- Observation$new(data = data, dists = dists, formulas = f,
-                       n_states = 2, par = par0)
+obs <- Observation$new(data = data, dists = dists, 
+                       formulas = f, par = par0)
 obs$update_coeff_fe(c(1, 1, log(1), log(5)))
 
 # Parameter constraints
@@ -193,7 +193,7 @@ hid <- MarkovChain$new(data = data, n_states = 2)
 dists <- list(z = "norm")
 par0 <- list(z = list(mean = c(-1, 1), sd = c(5, 5)))
 # Observation model
-obs <- Observation$new(data = data, dists = dists, n_states = 2, par = par0)
+obs <- Observation$new(data = data, dists = dists, par = par0)
 # HMM
 hmm <- HMM$new(obs = obs, hid = hid)
 hmm$fit(silent = TRUE)
@@ -282,8 +282,7 @@ par0 <- list(z = list(mean = c(rep(-1, m), rep(1, m)),
                       sd = rep(5, n_states * m)))
 par0
 
-obs2 <- Observation$new(data = data, dists = dists,
-                        n_states = n_states * m, par = par0)
+obs2 <- Observation$new(data = data, dists = dists, par = par0)
 ```
 
 Many parameter constraints are required in this model, and these can be enforced through the `fixpar` argument of `HMM$new()`. This should be a list with elements `hid` and `obs`, corresponding to constraints on the hidden state and observation models, respectively. Each element is a named vector filled with NAs (for parameters that should be fixed to their initial value) and integers (for parameters that should be estimated to a shared value). This uses the `map` argument of `TMB::MakeADFun()`, and the TMB documentation provides some details; also see the hmmTMB vignette on "Advanced features".
@@ -422,7 +421,7 @@ Note from the definition of $\tilde{S}_t$ that $S_t = 1$ when $\tilde{S}_t =$ 1 
 ```{r sohmm-obs}
 dists <- list(z = "norm")
 par0 <- list(z = list(mean = c(-1, 1, -1, 1), sd = c(3, 3, 3, 3)))
-obs <- Observation$new(data = data, dists = dists, n_states = 4, par = par0)
+obs <- Observation$new(data = data, dists = dists, par = par0)
 ```
 
 We define parameter constraints to ensure that some transition probabilities are fixed to zero, and that observation parameters have common values in states 1 and 3 and states 2 and 4.
@@ -560,8 +559,7 @@ dists <- list(z1 = "norm", z2 = "norm")
 par0 <- list(z1 = list(mean = c(-3, -3, 3, 3), sd = c(1, 1, 1, 1)),
              z2 = list(mean = c(-5, 5, -5, 5), sd = c(2, 3, 2, 3)))
 
-obs <- Observation$new(data = data, dists = dists, 
-                       n_states = 4, par = par0)
+obs <- Observation$new(data = data, dists = dists, par = par0)
 ```
 
 We set constraints on the observation parameters using the `fixpar` argument in `HMM$new()`, by defining a vector with one integer for each estimated parameter. The value of the integer is used to determine which parameters should be estimated to a common value. To find the list of estimated observation parameters, we can use `obs$coeff_fe()`; this is also handy to set the names of the vector of constraints.

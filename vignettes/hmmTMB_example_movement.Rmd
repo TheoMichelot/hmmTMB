@@ -106,8 +106,7 @@ dists <- list(step = "gamma2", angle = "vm")
 par0 <- list(step = list(mean = c(1, 5), sd = c(1, 5)),
              angle = list(mu = c(0, 0), kappa = c(1, 5)))
 
-obs1 <- Observation$new(data = hmm_data, dists = dists, 
-                        par = par0, n_states = 2)
+obs1 <- Observation$new(data = hmm_data, dists = dists, par = par0)
 ```
 
 ## Model fitting
@@ -177,8 +176,7 @@ formula <- ~ temp + s(slope, k = 8, bs = "ts")
 hid2 <- MarkovChain$new(data = hmm_data, n_states = 2, formula = formula)
 
 # Same observation model as before
-obs2 <- Observation$new(data = hmm_data, dists = dists, 
-                        par = par0, n_states = 2)
+obs2 <- Observation$new(data = hmm_data, dists = dists, par = par0)
 
 # Create and fit model
 hmm2 <- HMM$new(obs = obs2, hid = hid2)
@@ -243,8 +241,8 @@ f <- list(x = list(mean = ~ x_lag + x_diff - 1),
           y = list(mean = ~ y_lag + y_diff - 1))
 par0 <- list(x = list(mean = c(0, 0), sd = c(0.3, 3)),
              y = list(mean = c(0, 0), sd = c(0.3, 3)))
-obs3 <- Observation$new(data = hmm_data, dists = dists, formulas = f, 
-                       n_states = 2, par = par0)
+obs3 <- Observation$new(data = hmm_data, dists = dists, 
+                        formulas = f, par = par0)
 ```
 
 We need to add parameter constraints to ensure that the coefficient in from of the lagged covariate $\bm{Z}_{t-1}$ is not estimated (fixed to 1), and that $\alpha_j$ and $\sigma_j$ have the same value for the two observed variables (i.e., same movement parameters along x and y dimensions). We update the parameters stored in `obs` to set the slope parameters for $\bm{Z}_{t-1}$ to 1. The function `obs3$coeff_fe()` can be used to remember what the order of the coefficients is. Then, we define a vector of `NA`s and integers that indicates which parameters are fixed (`NA`s), and which share a common value (integers). 

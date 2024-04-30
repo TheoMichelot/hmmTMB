@@ -113,8 +113,7 @@ par0 <- list(p_vocalizing = list(p2 = c(0.3, 0.3),
 # Create observation model
 obs <- Observation$new(data = data, 
                        dists = dists,
-                       par = par0, 
-                       n_states = 2)
+                       par = par0)
 ```
 
 We can now combine the two model components to specify and fit the full HMM. Model fitting took around 30 seconds on a laptop.

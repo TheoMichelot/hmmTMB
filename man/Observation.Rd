@@ -22,21 +22,18 @@ par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
 # Model "energy" with normal distributions
 obs <- Observation$new(data = energy, 
                        dists = list(Price = "norm"),
-                       par = par0,
-                       n_states = 2)
+                       par = par0)
                        
 # Model "energy" with gamma distributions
 obs <- Observation$new(data = energy, 
                        dists = list(Price = "gamma2"),
-                       par = par0,
-                       n_states = 2)
+                       par = par0)
                        
 # Model with non-linear effect of EurDol on mean price
 f <- list(Price = list(mean = ~ s(EurDol, k = 5, bs = "cs")))
 obs <- Observation$new(data = energy, 
                        dists = list(Price = "norm"),
-                       par = par0,
-                       n_states = 2, 
+                       par = par0, 
                        formula = f)
 
 ## ------------------------------------------------
@@ -139,7 +136,14 @@ obs$par()
 \subsection{Method \code{new()}}{
 Create new Observation object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$new(data, dists, formulas = NULL, n_states, par, fixpar = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$new(
+  data,
+  dists,
+  formulas = NULL,
+  n_states = NULL,
+  par,
+  fixpar = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -162,7 +166,8 @@ parameter. Any parameter that is not included is assumed to have the
 formula ~1. By default, all parameters have the formula ~1 (i.e., no
 covariate effects).}
 
-\item{\code{n_states}}{Number of states (needed to construct model formulas)}
+\item{\code{n_states}}{Number of states (optional). If not provided, the number
+of states is derived from the length of entries of \code{par}.}
 
 \item{\code{par}}{List of initial observation parameters. This should
 be a nested list, where the outer list has one element for each
@@ -193,21 +198,18 @@ par0 <- list(Price = list(mean = c(3, 6), sd = c(2, 2)))
 # Model "energy" with normal distributions
 obs <- Observation$new(data = energy, 
                        dists = list(Price = "norm"),
-                       par = par0,
-                       n_states = 2)
+                       par = par0)
                        
 # Model "energy" with gamma distributions
 obs <- Observation$new(data = energy, 
                        dists = list(Price = "gamma2"),
-                       par = par0,
-                       n_states = 2)
+                       par = par0)
                        
 # Model with non-linear effect of EurDol on mean price
 f <- list(Price = list(mean = ~ s(EurDol, k = 5, bs = "cs")))
 obs <- Observation$new(data = energy, 
                        dists = list(Price = "norm"),
-                       par = par0,
-                       n_states = 2, 
+                       par = par0, 
                        formula = f)
 }
 \if{html}{\out{</div>}}

@@ -128,7 +128,6 @@ hid <- MarkovChain$new(data = data,
 # Define observation model
 obs <- Observation$new(data = data, 
                        dists = list(Z = "norm"), 
-                       n_states = 2, 
                        par = list(Z = list(mean = c(0, 15), sd = c(2, 10))))
 
 # Create and fit HMM

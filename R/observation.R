@@ -28,7 +28,8 @@ Observation <- R6Class(
     #' parameter. Any parameter that is not included is assumed to have the
     #' formula ~1. By default, all parameters have the formula ~1 (i.e., no
     #' covariate effects).
-    #' @param n_states Number of states (needed to construct model formulas)
+    #' @param n_states Number of states (optional). If not provided, the number
+    #' of states is derived from the length of entries of \code{par}.
     #' @param par List of initial observation parameters. This should
     #' be a nested list, where the outer list has one element for each
     #' observed variable, and the inner lists have one element for each
@@ -53,26 +54,23 @@ Observation <- R6Class(
     #' # Model "energy" with normal distributions
     #' obs <- Observation$new(data = energy, 
     #'                        dists = list(Price = "norm"),
-    #'                        par = par0,
-    #'                        n_states = 2)
+    #'                        par = par0)
     #'                        
     #' # Model "energy" with gamma distributions
     #' obs <- Observation$new(data = energy, 
     #'                        dists = list(Price = "gamma2"),
-    #'                        par = par0,
-    #'                        n_states = 2)
+    #'                        par = par0)
     #'                        
     #' # Model with non-linear effect of EurDol on mean price
     #' f <- list(Price = list(mean = ~ s(EurDol, k = 5, bs = "cs")))
     #' obs <- Observation$new(data = energy, 
     #'                        dists = list(Price = "norm"),
-    #'                        par = par0,
-    #'                        n_states = 2, 
+    #'                        par = par0, 
     #'                        formula = f)
     initialize = function(data, 
                           dists, 
                           formulas = NULL, 
-                          n_states, 
+                          n_states = NULL, 
                           par,
                           fixpar = NULL) {
       private$check_args(data = data, 
@@ -86,6 +84,11 @@ Observation <- R6Class(
         data$ID <- factor(1)
       } else {
         data$ID <- factor(data$ID)
+      }
+      
+      # Automatically detect the number of states from par
+      if(is.null(n_states)) {
+        n_states <- unique(rapply(par, length))
       }
       
       # Set data and nstates attributes
@@ -1031,22 +1034,21 @@ Observation <- R6Class(
         stop("Variable name in 'dists' not found in data")
       }
       
-      if(!is.numeric(n_states) | n_states < 1) {
-        stop("'n_states' should be a numeric >= 1")
-      }
-      
-      if(!is.null(par)) {
-        if(!is.list(par) | length(par) != length(dists)) {
-          stop("'par' should be a list of same length as 'dists'")
-        }
-        
+      if(!is.null(n_states)) {
+        if(!is.numeric(n_states) | n_states < 1) {
+          stop("'n_states' should be a numeric >= 1")
+        }        
         if(!all(rapply(par, length) == n_states) | !all(rapply(par, is.numeric))) {
           stop("Elements of 'par' should be numeric vectors of length 'n_states'")
         }
-        
-        if(!all(names(par) == names(dists))) {
-          stop("'par' should have the same names as 'dists'")
-        }
+      }
+      
+      if(!is.list(par) | length(par) != length(dists)) {
+        stop("'par' should be a list of same length as 'dists'")
+      }
+      
+      if(!all(names(par) == names(dists))) {
+        stop("'par' should have the same names as 'dists'")
       }
       
       if(!is.null(formulas)) {
