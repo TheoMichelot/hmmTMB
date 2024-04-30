@@ -579,10 +579,10 @@ posterior estimate, although this can be changed using
 Model fitting
 
 The negative log-likelihood of the model is minimised using the
-function \code{optimx()}. TMB uses the Laplace approximation to integrate 
+function \code{nlminb()}. TMB uses the Laplace approximation to integrate 
 the random effects out of the likelihood.
 
-After the model has been fitted, the output of \code{optimx()} can be
+After the model has been fitted, the output of \code{nlminb()} can be
 accessed using the method \code{out()}. The estimated parameters can
 be accessed using the methods \code{par()} (for the HMM parameters, 
 possibly dependent on covariates), \code{predict()} (for uncertainty
@@ -599,8 +599,10 @@ effect coefficients on the linear predictor scale).
 \describe{
 \item{\code{silent}}{Logical. If FALSE, all tracing outputs are shown (default).}
 
-\item{\code{...}}{Other arguments to optimx which is used to optimise likelihood, 
-see ?optimx}
+\item{\code{...}}{Other arguments to nlminb which is used to optimise the
+likelihood. This currently only supports the additional argument
+\code{control}, which is a list of control parameters such as 
+\code{eval.max} and \code{iter.max} (see \code{?nlminb})}
 }
 \if{html}{\out{</div>}}
 }
@@ -1053,18 +1055,19 @@ This is a wrapper around Observation$plot_dist, where the
 distribution for each state is weighted by the proportion of time
 spent in that state (according to the Viterbi state sequence).
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_dist(var)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_dist(var = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{var}}{Name of data variable}
+\item{\code{var}}{Name of data variable. If NULL, a list of plots are
+returned (one for each observation variable)}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-Plot of distribution with data histogram
+Plot of distributions with data histogram
 }
 }
 \if{html}{\out{<hr>}}

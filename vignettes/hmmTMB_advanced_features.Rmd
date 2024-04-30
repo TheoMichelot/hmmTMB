@@ -354,7 +354,7 @@ Here, we only decided to fit the final model. However, it can sometimes be a str
 
 # Selecting initial parameters
 
-In hmmTMB, the models are fitted using numerical optimisation of the log-likelihood function, based on the `optimx` function. This procedure essentially consists of exploring the parameter space to find the maximum of the log-likelihood, and it requires a starting point from where to start the search. This starting point should be provided by the user, and poorly chosen initial starting values can lead to numerical problems. In particular, if the starting point is too far from the maximum, the optimiser can get stuck in a local maximum of the log-likelihood, and fail to converge to the global maximum. This issue is discussed in more detail in the following vignette of the package moveHMM: \url{https://cran.r-project.org/package=moveHMM/vignettes/moveHMM-starting-values.pdf}.
+In hmmTMB, the models are fitted using numerical optimisation of the log-likelihood function, based on the `nlminb` function. This procedure essentially consists of exploring the parameter space to find the maximum of the log-likelihood, and it requires a starting point from where to start the search. This starting point should be provided by the user, and poorly chosen initial starting values can lead to numerical problems. In particular, if the starting point is too far from the maximum, the optimiser can get stuck in a local maximum of the log-likelihood, and fail to converge to the global maximum. This issue is discussed in more detail in the following vignette of the package moveHMM: \url{https://cran.r-project.org/package=moveHMM/vignettes/moveHMM-starting-values.pdf}.
 
 Here, we discuss three strategies for selecting initial parameter values. 
 
@@ -498,7 +498,7 @@ hmm$fit(silent = TRUE)
 
 ## `HMM$tmb_obj()`
 
-The method `tmb_obj()` returns the object created by `TMB::MakeADFun()`, a list with elements that can be used to evaluate the negative log-likelihood function of the model and its gradient. In hmmTMB, these are passed to `optimx()` for model fitting. Consult the TMB documentation (and particularly `?TMB::MakeADFun`) for more details about what the list components are.
+The method `tmb_obj()` returns the object created by `TMB::MakeADFun()`, a list with elements that can be used to evaluate the negative log-likelihood function of the model and its gradient. In hmmTMB, these are passed to `nlminb()` for model fitting. Consult the TMB documentation (and particularly `?TMB::MakeADFun`) for more details about what the list components are.
 
 ```{r tmb-obj2}
 # Names of TMB object
@@ -567,6 +567,6 @@ The functions `post_linpred()` and `post_fn()` build on `post_coeff()` to genera
 
 <!-- # Custom optimiser settings -->
 
-<!-- [This could describe how to change the settings of `optimx`, focusing on some of the more important options. For example, this might include using `nlm` rather than `optim`, etc. It might also be relevant to describe SANN approaches if they are available through `optimx`, as a method for models with complex likelihoods. It looks like they are not available, though.] -->
+<!-- [This could describe how to change the settings of `nlminb`, focusing on some of the more important options. For example, number of function/gradient evaluations.] -->
 
 # References

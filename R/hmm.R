@@ -12,7 +12,7 @@
 #' geom_ribbon scale_size_manual geom_histogram geom_vline geom_errorbar after_stat
 #' @importFrom TMB MakeADFun sdreport
 #' @importFrom stringr str_trim str_split str_split_fixed
-#' @importFrom optimx optimx
+#' @importFrom stats nlminb
 #' @importFrom tmbstan tmbstan
 #' 
 #' @useDynLib hmmTMB, .registration = TRUE
@@ -771,10 +771,10 @@ HMM <- R6Class(
     #' @description Model fitting
     #' 
     #' The negative log-likelihood of the model is minimised using the
-    #' function \code{optimx()}. TMB uses the Laplace approximation to integrate 
+    #' function \code{nlminb()}. TMB uses the Laplace approximation to integrate 
     #' the random effects out of the likelihood.
     #' 
-    #' After the model has been fitted, the output of \code{optimx()} can be
+    #' After the model has been fitted, the output of \code{nlminb()} can be
     #' accessed using the method \code{out()}. The estimated parameters can
     #' be accessed using the methods \code{par()} (for the HMM parameters, 
     #' possibly dependent on covariates), \code{predict()} (for uncertainty
@@ -784,8 +784,10 @@ HMM <- R6Class(
     #' effect coefficients on the linear predictor scale).
     #' 
     #' @param silent Logical. If FALSE, all tracing outputs are shown (default).
-    #' @param ... Other arguments to optimx which is used to optimise likelihood, 
-    #' see ?optimx
+    #' @param ... Other arguments to nlminb which is used to optimise the
+    #' likelihood. This currently only supports the additional argument
+    #' \code{control}, which is a list of control parameters such as 
+    #' \code{eval.max} and \code{iter.max} (see \code{?nlminb})
     #'
     #' @examples
     #' # Load data set (included with R)
@@ -812,51 +814,44 @@ HMM <- R6Class(
         self$setup(silent = silent)
       }
       
-      # Number of states
-      n_states <- self$hid()$nstates()
-      
-      # Fit model
+      # Check extra arguments
       args <- list(...)
       if (any(c("par", "fn", "gr", "he", "hessian") %in% names(args))) {
         stop(paste("Cannot supply arguments to HMM$fit() with name par,",
                    "fn, gr, he, or hessian. These are reserved by TMB."))
       }
       if (any(c("lower", "upper") %in% names(args))) {
-        warning("'lower' and 'upper' arguments to optimx are ignored in hmmTMB")
+        warning("'lower' and 'upper' arguments to nlminb are ignored in hmmTMB")
       }
-      # change default method to nlminb
-      private$tmb_obj_$method <- "nlminb"
-      if ("method" %in% names(args)) {
-        private$tmb_obj_$method <- args$method 
-        args <- args[which(names(args) != "method")]
+      
+      # Defaults eval.max and iter.max to 1e4
+      if("control" %in% names(args)) {
+        if(!("eval.max" %in% names(args$control))) {
+          args$control$eval.max <- 1e4
+        }
+        if(!("iter.max" %in% names(args$control))) {
+          args$control$iter.max <- 1e4
+        }
+      } else {
+        args$control <- list(eval.max = 1e4, iter.max = 1e4)
       }
-      if (!("control" %in% names(args))) {
-        args$control <- list(kkt = FALSE, 
-                             starttests = FALSE,
-                             dowarn = FALSE)
-      }
-      # create temporary optimization function
-      opt_fn <- function(par) {as.vector(args$fn(par))}
-      opt_gr <- function(par) {as.vector(args$gr(par))}
-      # fit model 
+
+      # Fit model
       args <- c(private$tmb_obj_, args)
-      private$out_ <- optimx(par = args$par, 
-                             fn = opt_fn, 
-                             gr = opt_gr, 
-                             method = args$method,
-                             itnmax = args$itnmax, 
-                             hessian = args$hessian, 
+      private$out_ <- nlminb(start = args$par, 
+                             objective = args$fn,
+                             gradient = args$gr, 
                              control = args$control)
-      best <- which.min(private$out_$value)
-      if (private$out_$convcode[best] != 0) {
+      
+      if (private$out_$convergence != 0) {
         warning(paste("Convergence code was not zero, indicating that the",
                       "optimizer may not have converged to the correct",
                       "estimates. Please check by consulting the out() function",
-                      "which shows what optimx returned."))
+                      "which shows what nlminb returned."))
       }
       
       # Get estimates and precision matrix for all parameters
-      best_par <- as.vector(private$out_[best, 1:length(private$tmb_obj_$par)])
+      best_par <- private$out_$par
       rownames(best_par) <- NULL
       names(best_par) <- names(private$tmb_obj_$par)
       private$tmb_obj_$par <- best_par
@@ -865,7 +860,7 @@ HMM <- R6Class(
                                    skip.delta.method = FALSE)
       par_list <- as.list(private$tmb_rep_, "Estimate")
       
-      # update parameters 
+      # Update parameters 
       self$update_par(par_list)
       
     },
@@ -1875,7 +1870,7 @@ HMM <- R6Class(
     #' 
     #' @return Marginal AIC
     AIC_marginal = function() {
-      llk <- -self$out()$value
+      llk <- -self$out()$objective
       npar <- nrow(self$obs()$coeff_fe()) + 
         nrow(self$hid()$coeff_fe()) +
         length(self$obs()$lambda()) +

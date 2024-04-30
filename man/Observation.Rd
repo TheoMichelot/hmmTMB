@@ -847,7 +847,7 @@ overlaid with the pdf of the specified distribution for that data stream.
 Helpful to select initial parameter values for model fitting, or to visualise 
 fitted state-dependent distributions.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$plot_dist(var, weights = NULL, t = 1)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Observation$plot_dist(var = NULL, weights = NULL, t = 1)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
