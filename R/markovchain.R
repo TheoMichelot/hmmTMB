@@ -76,7 +76,7 @@ MarkovChain <- R6Class(
     #'                     ncol = 2, byrow = TRUE)
     #' hid <- MarkovChain$new(data = energy, n_states = 2,
     #'                        formula = structure)
-    initialize = function(data,
+    initialize = function(data = NULL,
                           formula = NULL, 
                           n_states,
                           tpm = NULL,
@@ -89,6 +89,17 @@ MarkovChain <- R6Class(
                          data = data)
       private$nstates_ <- n_states
       private$ref_ <- ref
+      
+      # If no data is passed, create data frame with two rows (minimum
+      # required by mgcv::gam for initialisation)
+      if(is.null(data)) {
+        message(paste("No 'data' argument -- creating empty model", 
+                      "(should be used for simulation only)"))
+        data <- data.frame(ID = c(1, 1))
+        private$empty_ <- TRUE
+      } else {
+        private$empty_ <- FALSE
+      }
       
       # Matrix with 1 for reference element and 0 elsewhere
       # (used later to select relevant entries of tpm)
@@ -391,6 +402,9 @@ MarkovChain <- R6Class(
     
     #' @description Initial state (see constructor argument)
     initial_state = function() {return(private$initial_state_)},
+    
+    #' @description Empty model? (for simulation only)
+    empty = function() {return(private$empty_)},
     
     # Mutators ----------------------------------------------------------------
     
@@ -707,6 +721,7 @@ MarkovChain <- R6Class(
     fixpar_user_ = NULL,
     fixpar_ = NULL,
     initial_state_ = NULL,
+    empty_ = NULL,
     
     # Setup fixed parameters
     setup_fixpar = function() {

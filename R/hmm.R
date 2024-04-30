@@ -512,6 +512,10 @@ HMM <- R6Class(
     #' 
     #' @param silent Logical. If TRUE, all tracing outputs are hidden (default).
     setup = function(silent = TRUE) {
+      if(self$hid()$empty() | self$obs()$empty()) {
+        stop("Empty models (no data) should only be used for simulation.")
+      }
+      
       # Vector of codes of observation distributions
       distcode <- as.vector(sapply(self$obs()$dists(), function(d) d$code()))
       # Vector of number of parameters for observation distributions

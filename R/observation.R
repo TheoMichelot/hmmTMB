@@ -67,7 +67,7 @@ Observation <- R6Class(
     #'                        dists = list(Price = "norm"),
     #'                        par = par0, 
     #'                        formula = f)
-    initialize = function(data, 
+    initialize = function(data = NULL, 
                           dists, 
                           formulas = NULL, 
                           n_states = NULL, 
@@ -79,16 +79,28 @@ Observation <- R6Class(
                          par = par, 
                          formulas = formulas)
       
+      # Automatically detect the number of states from par
+      if(is.null(n_states)) {
+        n_states <- unique(rapply(par, length))
+      }
+      
+      # If no data is passed, create data frame with two rows (minimum
+      # required by mgcv::gam for initialisation)
+      if(is.null(data)) {
+        message(paste("No 'data' argument -- creating empty model", 
+                      "(should be used for simulation only)"))
+        data <- as.data.frame(lapply(seq_along(dists), function(d) c(NA, NA)))
+        names(data) <- names(dists)
+        private$empty_ <- TRUE
+      } else {
+        private$empty_ <- FALSE
+      }
+      
       # Make sure there is an ID column in the data and it's a factor
       if(is.null(data$ID)) {
         data$ID <- factor(1)
       } else {
         data$ID <- factor(data$ID)
-      }
-      
-      # Automatically detect the number of states from par
-      if(is.null(n_states)) {
-        n_states <- unique(rapply(par, length))
       }
       
       # Set data and nstates attributes
@@ -447,6 +459,9 @@ Observation <- R6Class(
         return(private$fixpar_user_)        
       }
     },
+    
+    #' @description Empty model? (for simulation only)
+    empty = function() {return(private$empty_)},
     
     # Mutators ----------------------------------------------------------------
     
@@ -986,12 +1001,19 @@ Observation <- R6Class(
     mats_ = NULL, 
     fixpar_user_ = NULL,
     fixpar_ = NULL,
+    empty_ = NULL,
     
     #' Check constructor arguments 
     # (For argument description, see constructor)
     check_args = function(data, dists, n_states, par, formulas) {
-      if(!inherits(data, "data.frame")) {
-        stop("'data' should be a data.frame")
+      if(!is.null(data)) {
+        if(!inherits(data, "data.frame")) {
+          stop("'data' should be a data.frame")
+        }
+        
+        if(!all(names(dists) %in% colnames(data))) {
+          stop("Variable name in 'dists' not found in data")
+        }
       }
       
       # Check that time intervals are regular if 'time' is provided
@@ -1028,10 +1050,6 @@ Observation <- R6Class(
       if(!all(sapply(dists, inherits, "Dist")) & !all(sapply(dists, is.character))) {
         stop(paste("Elements of 'dists' should all be either character strings",
                    "(i.e., distribution names), or Dist objects"))
-      }
-      
-      if(!all(names(dists) %in% colnames(data))) {
-        stop("Variable name in 'dists' not found in data")
       }
       
       if(!is.null(n_states)) {

@@ -108,6 +108,7 @@ obs$par()
 \item \href{#method-Observation-obs_var}{\code{Observation$obs_var()}}
 \item \href{#method-Observation-known_states}{\code{Observation$known_states()}}
 \item \href{#method-Observation-fixpar}{\code{Observation$fixpar()}}
+\item \href{#method-Observation-empty}{\code{Observation$empty()}}
 \item \href{#method-Observation-update_par}{\code{Observation$update_par()}}
 \item \href{#method-Observation-update_coeff_fe}{\code{Observation$update_coeff_fe()}}
 \item \href{#method-Observation-update_coeff_re}{\code{Observation$update_coeff_re()}}
@@ -137,7 +138,7 @@ obs$par()
 Create new Observation object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$new(
-  data,
+  data = NULL,
   dists,
   formulas = NULL,
   n_states = NULL,
@@ -496,6 +497,16 @@ for some other reason (e.g., size of binomial distribution)}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Observation-empty"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-empty}{}}}
+\subsection{Method \code{empty()}}{
+Empty model? (for simulation only)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$empty()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_par"></a>}}

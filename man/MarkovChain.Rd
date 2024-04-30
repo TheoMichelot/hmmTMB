@@ -56,6 +56,7 @@ hid <- MarkovChain$new(data = energy, n_states = 2,
 \item \href{#method-MarkovChain-terms}{\code{MarkovChain$terms()}}
 \item \href{#method-MarkovChain-unique_ID}{\code{MarkovChain$unique_ID()}}
 \item \href{#method-MarkovChain-initial_state}{\code{MarkovChain$initial_state()}}
+\item \href{#method-MarkovChain-empty}{\code{MarkovChain$empty()}}
 \item \href{#method-MarkovChain-update_tpm}{\code{MarkovChain$update_tpm()}}
 \item \href{#method-MarkovChain-update_coeff_fe}{\code{MarkovChain$update_coeff_fe()}}
 \item \href{#method-MarkovChain-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
@@ -82,7 +83,7 @@ hid <- MarkovChain$new(data = energy, n_states = 2,
 Create new MarkovChain object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$new(
-  data,
+  data = NULL,
   formula = NULL,
   n_states,
   tpm = NULL,
@@ -433,6 +434,16 @@ Number of time series
 Initial state (see constructor argument)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$initial_state()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-empty"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-empty}{}}}
+\subsection{Method \code{empty()}}{
+Empty model? (for simulation only)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$empty()}\if{html}{\out{</div>}}
 }
 
 }
