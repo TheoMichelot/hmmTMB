@@ -97,7 +97,7 @@ Observation <- R6Class(
       }
       
       # Make sure there is an ID column in the data and it's a factor
-      if(is.null(data$ID)) {
+      if(!("ID" %in% names(data))) {
         data$ID <- factor(1)
       } else {
         data$ID <- factor(data$ID)
@@ -1017,9 +1017,9 @@ Observation <- R6Class(
       }
       
       # Check that time intervals are regular if 'time' is provided
-      if(!is.null(data$time)) {
+      if("time" %in% names(data)) {
         # Get indices of start and end of time series
-        if(!is.null(data$ID)) {
+        if("ID" %in% names(data)) {
           i0 <- which(data$ID[-1] != data$ID[-nrow(data)])
           start <- c(1, i0 + 1)
           end <- c(i0, nrow(data))

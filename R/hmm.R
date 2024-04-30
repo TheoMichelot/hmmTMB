@@ -1510,7 +1510,7 @@ HMM <- R6Class(
     simulate = function(n, data = NULL, silent = FALSE) {
       if(is.null(data)) {
         data <- data.frame(ID = rep(factor(1), n))
-      } else if(is.null(data$ID)) {
+      } else if(!("ID" %in% names(data))) {
         data$ID <- rep(factor(1), n)
       }
       
