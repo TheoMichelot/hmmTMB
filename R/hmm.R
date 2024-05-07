@@ -842,10 +842,13 @@ HMM <- R6Class(
 
       # Fit model
       args <- c(private$tmb_obj_, args)
-      private$out_ <- nlminb(start = args$par, 
+      systime <- system.time(
+        private$out_ <- nlminb(start = args$par, 
                              objective = args$fn,
                              gradient = args$gr, 
                              control = args$control)
+      )
+      private$out_$systime <- systime
       
       if (private$out_$convergence != 0) {
         warning(paste("Convergence code was not zero, indicating that the",
