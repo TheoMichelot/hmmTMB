@@ -1417,7 +1417,7 @@ HMM <- R6Class(
 
         # Replace posterior mean from post_fn() by MLE        
         val$mean <- fn(linpred = self[[comp]]()$linpred(), t = t)
-        names(val)[1] <- "mle"
+        names(val)[which(names(val) == "mean")] <- "mle"
         
         # Format as array for nicer output
         if(!as_list & what %in% c("tpm", "obspar")) {
