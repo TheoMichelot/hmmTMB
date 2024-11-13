@@ -118,7 +118,16 @@ make_matrices = function(formulas, data, new_data = NULL) {
   colnames(X_re) <- names_re
   S <- bdiag_check(S_list)
   
-  return(list(X_fe = X_fe, X_re = X_re, S = S, 
-              X_list_fe = X_list_fe, X_list_re = X_list_re, S_list = S_list, 
-              ncol_fe = ncol_fe, ncol_re = ncol_re))
+  # Get (log-)determinants of penalty matrices
+  log_det_S <- sapply(S_list, gdeterminant)
+  
+  return(list(X_fe = X_fe, 
+              X_re = X_re, 
+              S = S,
+              log_det_S = log_det_S,
+              X_list_fe = X_list_fe, 
+              X_list_re = X_list_re, 
+              S_list = S_list, 
+              ncol_fe = ncol_fe, 
+              ncol_re = ncol_re))
 }

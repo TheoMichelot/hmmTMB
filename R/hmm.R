@@ -538,6 +538,7 @@ HMM <- R6Class(
       X_fe_obs <- mod_mat_obs$X_fe
       X_re_obs <- mod_mat_obs$X_re
       S_obs <- mod_mat_obs$S
+      log_det_S_obs <- mod_mat_obs$log_det_S
       ncol_re_obs <- mod_mat_obs$ncol_re
       
       # Create model matrices of hidden state process
@@ -546,6 +547,7 @@ HMM <- R6Class(
       X_fe_hid <- mod_mat_hid$X_fe
       X_re_hid <- mod_mat_hid$X_re
       S_hid <- mod_mat_hid$S
+      log_det_S_hid <- mod_mat_hid$log_det_S
       ncol_re_hid <- mod_mat_hid$ncol_re
       
       # Prepare initial distribution delta0
@@ -571,6 +573,7 @@ HMM <- R6Class(
         map <- c(map, list(coeff_re_obs = factor(NA),
                            log_lambda_obs = factor(NA)))
         S_obs <- as_sparse(matrix(0, 1, 1))
+        log_det_S_obs <- -1
         ncol_re_obs <- matrix(-1, nr = 1, nc = 1)
         X_re_obs <- as_sparse(rep(0, nrow(X_fe_obs)))
       } else {
@@ -588,6 +591,7 @@ HMM <- R6Class(
         map <- c(map, list(coeff_re_hid = factor(NA),
                            log_lambda_hid = factor(NA)))
         S_hid <- as_sparse(matrix(0, 1, 1))
+        log_det_S_hid <- -1
         ncol_re_hid <- matrix(-1, nr = 1, nc = 1)
         X_re_hid <- as_sparse(rep(0, nrow(X_fe_hid)))
       } else {
@@ -668,10 +672,12 @@ HMM <- R6Class(
                       X_fe_obs = as_sparse(X_fe_obs),
                       X_re_obs = as_sparse(X_re_obs),
                       S_obs = as_sparse(S_obs),
+                      log_det_S_obs = log_det_S_obs,
                       ncol_re_obs = ncol_re_obs,
                       X_fe_hid = as_sparse(X_fe_hid),
                       X_re_hid = as_sparse(X_re_hid),
                       S_hid = as_sparse(S_hid),
+                      log_det_S_hid = log_det_S_hid,
                       ncol_re_hid = ncol_re_hid,
                       include_smooths = 1, 
                       ref_tpm = self$hid()$ref(),

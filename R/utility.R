@@ -30,6 +30,34 @@ bdiag_check <- function(...) {
     return(bdiag(args[check]))
 }
 
+#' Generalized matrix determinant
+#' 
+#' Generalized determinant = product of non-zero eigenvalues 
+#' (see e.g., Wood 2017). Used for (log)determinant of penalty matrices,
+#' required in log-likelihood function. 
+#' 
+#' @param x Numeric matrix
+#' @param eps Threshold below which eigenvalues are ignored (default: 1e-10)
+#' @param log Logical: should the log-determinant be returned?
+#' 
+#' @return Generalized determinant of input matrix
+gdeterminant <- function(x, eps = 1e-10, log = TRUE) {
+    if(is.null(x)) {
+        return(NULL)
+    } else {
+        # Compute sum of log of non-zero eigenvalues
+        # (i.e., log generalized determinant)
+        eigenpairs <- eigen(x)
+        eigenvalues <- eigenpairs$values
+        logdet <- sum(log(eigenvalues[eigenvalues > eps]))
+        if(!log) {
+            return(exp(logdet))
+        } else{
+            return(logdet)
+        }        
+    }
+}
+
 #' Fill in NAs
 #' 
 #' Replace NA entries in a vector by the last non-NA value. If the first

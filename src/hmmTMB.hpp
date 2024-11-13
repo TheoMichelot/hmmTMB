@@ -25,11 +25,13 @@
    DATA_SPARSE_MATRIX(X_fe_obs); // design matrix for fixed effects
    DATA_SPARSE_MATRIX(X_re_obs); // design matrix for random effects
    DATA_SPARSE_MATRIX(S_obs); // penalty matrix
+   DATA_VECTOR(log_det_S_obs); // log-determinant of penalty matrix
    DATA_IMATRIX(ncol_re_obs); // number of columns of S and X_re for each random effect
    // model matrices for hidden state process
    DATA_SPARSE_MATRIX(X_fe_hid); // design matrix for fixed effects
    DATA_SPARSE_MATRIX(X_re_hid); // design matrix for random effects
    DATA_SPARSE_MATRIX(S_hid); // penalty matrix
+   DATA_VECTOR(log_det_S_hid); // log-determinant of penalty matrix
    DATA_IMATRIX(ncol_re_hid); // number of columns of S and X_re for each random effect
    DATA_INTEGER(include_smooths); // > 0 = include penalty in likelihood evaluation
    DATA_IVECTOR(ref_tpm); // indices of reference transition probabilities
@@ -260,22 +262,15 @@
        int Sn = ncol_re_obs(1, i) - ncol_re_obs(0, i) + 1;
        
        // Penalty matrix for this smooth
-       // (dense matrix for matinvpd and sparse matrix for Quadform)
-       matrix<Type> this_S_dense = S_obs.block(S_start, S_start, Sn, Sn);
-       Eigen::SparseMatrix<Type> this_S = asSparseMatrix(this_S_dense);
+       Eigen::SparseMatrix<Type> this_S = S_obs.block(S_start, S_start, Sn, Sn);
        
        // Coefficients for this smooth
        vector<Type> this_coeff_re = coeff_re_obs.segment(ncol_re_obs(0, i) - 1, Sn);
        
-       // Get log-determinant of S^(-1) for additive constant
-       Type log_det = 0;
-       matrix<Type> inv_this_S = atomic::matinvpd(this_S_dense, log_det);
-       log_det = - log_det; // det(S^(-1)) = 1/det(S)
-       
        // Add penalty
        nllk = nllk +
-         Type(0.5) * Sn * log(2*M_PI) +
-         Type(0.5) * log_det -
+         Type(0.5) * Sn * log(2*M_PI) -
+         Type(0.5) * log_det_S_obs(i) -
          Type(0.5) * Sn * log_lambda_obs(i) +
          Type(0.5) * exp(log_lambda_obs(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
        
@@ -295,22 +290,15 @@
        int Sn = ncol_re_hid(1, i) - ncol_re_hid(0, i) + 1;
        
        // Penalty matrix for this smooth
-       // (dense matrix for matinvpd and sparse matrix for Quadform)
-       matrix<Type> this_S_dense = S_hid.block(S_start, S_start, Sn, Sn);
-       Eigen::SparseMatrix<Type> this_S = asSparseMatrix(this_S_dense);
+       Eigen::SparseMatrix<Type> this_S = S_hid.block(S_start, S_start, Sn, Sn);
        
        // Coefficients for this smooth
        vector<Type> this_coeff_re = coeff_re_hid.segment(ncol_re_hid(0, i) - 1, Sn);
        
-       // Get log-determinant of S^(-1) for additive constant
-       Type log_det = 0;
-       matrix<Type> inv_this_S = atomic::matinvpd(this_S_dense, log_det);
-       log_det = - log_det; // det(S^(-1)) = 1/det(S)
-       
        // Add penalty
        nllk = nllk +
-         Type(0.5) * Sn * log(2*M_PI) +
-         Type(0.5) * log_det -
+         Type(0.5) * Sn * log(2*M_PI) -
+         Type(0.5) * log_det_S_hid(i) -
          Type(0.5) * Sn * log_lambda_hid(i) +
          Type(0.5) * exp(log_lambda_hid(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
        
