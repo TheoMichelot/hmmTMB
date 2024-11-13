@@ -164,13 +164,50 @@ dist_nbinom <- Dist$new(
   invlink = list(size = exp, prob = plogis), 
   npar = 2, 
   parnames = c("size", "prob"), 
-  parapprox = function(x, size = 1) {
-    # use minimum variance unbiased estimate of p
-    k <- sum(x)
-    n <- length(x)
-    prob <- (n * size - 1) / (n * size + k - 1)
+  parapprox = function(x) {
+    mean <- mean(x)
+    var <- var(x)
+    if(var <= mean) {
+        # needs overdispersion
+        var <- 1.01 * mean
+    }
+    size <- mean^2 / (var - mean)
+    prob <- mean / var
     return(c(size, prob))
   }
+)
+
+dist_nbinom2 <- Dist$new(
+    name = "nbinom2", 
+    name_long = "negative binomial",
+    pdf = function(x, mean, shape, log = FALSE) {
+        size <- shape
+        prob <- shape / (mean + shape)
+        dnbinom(x = x, size = size, prob = prob, log = log)
+    }, 
+    cdf = function(q, mean, shape) {
+        size <- shape
+        prob <- shape / (mean + shape)
+        pnbinom(x = x, size = size, prob = prob)
+    },
+    rng = function(n, mean, shape) {
+        size <- shape
+        prob <- shape / (mean + shape)
+        rnbinom(n = n, size = size, prob = prob)
+    }, 
+    link = list(mean = log, shape = log), 
+    invlink = list(mean = exp, shape = exp), 
+    npar = 2, 
+    parnames = c("mean", "shape"), 
+    parapprox = function(x) {
+        mean <- mean(x)
+        var <- var(x)
+        # needs overdispersion
+        shape <- ifelse(mean < var, 
+                        yes = mean^2/(var-mean), 
+                        no = 10000)
+        return(c(mean, shape))
+    }
 )
 
 # Categorical ============================
@@ -920,7 +957,8 @@ dist_list <- list(beta = dist_beta,
                   gamma2 = dist_gamma2,
                   lnorm = dist_lnorm,
                   mvnorm = dist_mvnorm, 
-                  nbinom = dist_nbinom, 
+                  nbinom = dist_nbinom,
+                  nbinom2 = dist_nbinom2,
                   norm = dist_norm,
                   pois = dist_pois,
                   t = dist_t, 

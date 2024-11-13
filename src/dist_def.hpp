@@ -294,6 +294,39 @@ public:
 };
 
 template<class Type> 
+class NegativeBinomial2 : public Dist<Type> {
+public:
+    // Constructor
+    NegativeBinomial2() {}; 
+    // Link function 
+    vector<Type> link(const vector<Type>& par, const int& n_states) {
+        vector<Type> wpar(par.size());
+        // mean
+        for (int i = 0; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+        // shape
+        for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+        return(wpar); 
+    } 
+    // Inverse link function 
+    matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+        int n_par = wpar.size()/n_states;
+        matrix<Type> par(n_states, n_par);
+        // mean
+        for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+        // shape
+        for(int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
+        return(par); 
+    }
+    // Probability density/mass function
+    Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+        Type size = par(1);
+        Type prob = par(1) / (par(0) + par(1));
+        Type val = dnbinom(x, size, prob, logpdf);
+        return(val); 
+    }
+};
+
+template<class Type> 
 class Categorical : public Dist<Type> {
 public:
   // Constructor
