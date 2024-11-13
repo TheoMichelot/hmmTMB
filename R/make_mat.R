@@ -14,6 +14,7 @@
 #'   \item X_fe Design matrix for fixed effects
 #'   \item X_re Design matrix for random effects
 #'   \item S Smoothness matrix
+#'   \item log_det_S Vector of log-determinants of smoothness matrices
 #'   \item ncol_fe Number of columns of X_fe for each parameter
 #'   \item ncol_re Number of columns of X_re and S for each random effect
 #' }
@@ -51,18 +52,18 @@ make_matrices = function(formulas, data, new_data = NULL) {
     
     # Create matrices based on this formula
     if(is.null(new_data)) {
-      gam_setup <- gam(formula = update(form, dummy ~ .), 
-                       data = cbind(dummy = 1, data), 
+      gam_setup <- gam(formula = update(form, dummy_response ~ .), 
+                       data = cbind(dummy_response = 1, data), 
                        fit = FALSE)
       Xmat <- gam_setup$X
       # Extract column names for design matrices
       term_names <- gam_setup$term.names
     } else {
       # Get design matrix for new data set
-      gam_setup0 <- gam(formula = update(form, dummy ~ .), 
-                       data = cbind(dummy = 1, data))
-      gam_setup <- gam(formula = update(form, dummy ~ .), 
-                        data = cbind(dummy = 1, data),
+      gam_setup0 <- gam(formula = update(form, dummy_response ~ .), 
+                       data = cbind(dummy_response = 1, data))
+      gam_setup <- gam(formula = update(form, dummy_response ~ .), 
+                        data = cbind(dummy_response = 1, data),
                        fit = FALSE)
       Xmat <- predict(gam_setup0, newdata = new_data, type = "lpmatrix")
       # Extract column names for design matrices
