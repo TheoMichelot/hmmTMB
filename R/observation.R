@@ -1016,33 +1016,6 @@ Observation <- R6Class(
         }
       }
       
-      # Check that time intervals are regular if 'time' is provided
-      if("time" %in% names(data)) {
-        # Get indices of start and end of time series
-        if("ID" %in% names(data)) {
-          i0 <- which(data$ID[-1] != data$ID[-nrow(data)])
-          start <- c(1, i0 + 1)
-          end <- c(i0, nrow(data))
-        } else {
-          start <- 1
-          end <- nrow(data)
-        }
-        
-        # Time intervals between data rows
-        dt <- data$time[-start] - data$time[-end]
-        
-        # Length of range of time intervals
-        dt_range <- as.numeric(diff(range(dt, na.rm = TRUE)))
-        # Median time interval
-        dt_median <- as.numeric(median(dt, na.rm = TRUE))
-        
-        # If (max - min) is longer than 0.5*median, send warning (arbitrary threshold)
-        if(dt_range/dt_median > 0.5) {
-          warning(paste("'data$time' seems to be irregular. Data rows should be at",
-                        "regular time intervals."))
-        }
-      }
-      
       if(!is.list(dists)) {
         stop("'dists' should be a list")
       }
