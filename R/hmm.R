@@ -1484,22 +1484,26 @@ HMM <- R6Class(
       
       # Get Wald-type confidence intervals
       quant <- qnorm(1 - (1 - level)/2)
-      obspar_ci <- cbind(mle = self$coeff_fe()$obs,
-                         lcl = self$coeff_fe()$obs - quant * obspar_se,
-                         ucl = self$coeff_fe()$obs + quant * obspar_se,
-                         se = obspar_se)
-      hidpar_ci <- cbind(mle = self$coeff_fe()$hid,
-                         lcl = self$coeff_fe()$hid - quant * hidpar_se,
-                         ucl = self$coeff_fe()$hid + quant * hidpar_se,
-                         se = hidpar_se)
-      obslam_ci <- cbind(mle = self$lambda()$obs,
-                         lcl = self$lambda()$obs - quant * obslam_se,
-                         ucl = self$lambda()$obs + quant * obslam_se,
-                         se = obslam_se)
-      hidlam_ci <- cbind(mle = self$lambda()$hid,
-                         lcl = self$lambda()$hid - quant * hidlam_se,
-                         ucl = self$lambda()$hid + quant * hidlam_se,
-                         se = hidlam_se)
+      obspar_ci <- cbind(self$coeff_fe()$obs,
+                         self$coeff_fe()$obs - quant * obspar_se,
+                         self$coeff_fe()$obs + quant * obspar_se,
+                         obspar_se)
+      hidpar_ci <- cbind(self$coeff_fe()$hid,
+                         self$coeff_fe()$hid - quant * hidpar_se,
+                         self$coeff_fe()$hid + quant * hidpar_se,
+                         hidpar_se)
+      obslam_ci <- cbind(self$lambda()$obs,
+                         self$lambda()$obs - quant * obslam_se,
+                         self$lambda()$obs + quant * obslam_se,
+                         obslam_se)
+      hidlam_ci <- cbind(self$lambda()$hid,
+                         self$lambda()$hid - quant * hidlam_se,
+                         self$lambda()$hid + quant * hidlam_se,
+                         hidlam_se)
+      colnames(obspar_ci) <- c("mle", "lcl", "ucl", "se")
+      colnames(hidpar_ci) <- c("mle", "lcl", "ucl", "se")
+      colnames(obslam_ci) <- c("mle", "lcl", "ucl", "se")
+      colnames(hidlam_ci) <- c("mle", "lcl", "ucl", "se")
       
       out <- list(coeff_fe = list(obs = obspar_ci, hid = hidpar_ci),
                   lambda = list(obs = obslam_ci, hid = hidlam_ci)) 
