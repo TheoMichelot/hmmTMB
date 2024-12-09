@@ -134,7 +134,7 @@ Observation <- R6Class(
       
       # If categorical or MVN distribution, setup parameters based on data
       private$setup_cat()
-      private$setup_mvn()
+      private$setup_mvn(formulas = formulas)
       
       # Check if user-provided parameters match distribution definition
       n_var <- length(dists)
@@ -1104,11 +1104,18 @@ Observation <- R6Class(
     },
     
     # Setup MVN distributions
-    setup_mvn = function() {
+    setup_mvn = function(formulas = NULL) {
       # Find MVN distributions
       which_mvn <- which(sapply(self$dists(), function(d) d$name()) == "mvnorm")
       
       if(length(which_mvn > 0)) {
+        if(!is.null(formulas)) {
+          warning(paste("Formulas should only be used on *mean* parameters of",
+                        "mvnorm distribution. Standard deviations and",
+                        "correlations have complex transformations which",
+                        "preclude this."))
+        }
+        
         # Loop through MVN variables
         for(i in which_mvn) {
           var_name <- names(self$dists())[i]
