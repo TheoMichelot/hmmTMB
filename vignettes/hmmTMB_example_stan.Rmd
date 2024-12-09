@@ -15,7 +15,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
-This vignette describes functionalities of the package hmmTMB for Bayesian inference, which are based on Stan (@stan2019; @rstan2022). The package tmbstan conveniently integrates TMB with Stan, such that a TMB model object (such as the one created inside the `HMM` class in hmmTMB) can directly be used to run MCMC in Stan (@monnahan2018).
+This vignette describes functionalities of the package hmmTMB for Bayesian inference, which are based on Stan (@stan2019; @rstan2022). The package tmbstan conveniently integrates TMB with Stan, such that a TMB model object (such as the one created inside the `HMM` class in hmmTMB) can directly be used to run MCMC in Stan (@monnahan2018). For a more general introduction to hmmTMB, consult the vignette "Analysing time series data with hidden Markov models in hmmTMB".
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
@@ -33,83 +33,74 @@ pal <- hmmTMB:::hmmTMB_cols
 set.seed(34564529)
 ```
 
-# Generating data
+# Data
 
-For the sake of demonstration, we use simulated data in this vignette. You can skip this section if you are not interested in the procedure used to generate artificial data. In the following chunk of code, we:
+As an example, we will use a set of elephant seal movement tracks included in the R package aniMotum (@jonsen2020), for which installation instructions can be found at \url{https://ianjonsen.github.io/aniMotum/index.html}. Our aim is not to provide a thorough ecological analysis, but only to illustrate features of the hmmTMB package. 
 
-1. create an empty data set, just as a way to define the number of observations;
+The first chunk of code below predicts elephant seal positions at regular intervals using aniMotum, which is required for the hidden Markov model (HMM) analysis, and computes relevant movement variables with moveHMM.
 
-2. create a `MarkovChain` object for a 2-state hidden process $(S_t)$, with transition probability matrix
+```{r data-prep}
+library(aniMotum)
+library(lubridate)
+library(moveHMM)
 
-$$
-\Gamma =
-\begin{pmatrix}
-0.95 & 0.05 \\
-0.2 & 0.8
-\end{pmatrix}
-$$
+# Predict positions at regular time intervals
+fit <- fit_ssm(sese, model = "crw", time.step = 8)
+track_pred <- grab(fit, what = "predicted")
 
-3. create an `Observation` object for the observation process $(Z_t)$, defined such that
-\begin{align*}
-Z_t & \vert \{ S_t = 1 \} \sim N(0, 3) \\
-Z_t & \vert \{ S_t = 2 \} \sim N(5, 1)
-\end{align*}
-That is, the observations follow a state-dependent normal distribution.
-
-4. create an `HMM` object from the two model components;
-
-5. simulate observations from the `HMM` object.
-
-```{r sim-data, fig.width = 6, fig.height = 3, out.width="80%", fig.align = "center"}
-# Create empty data set to specify number of observations
-n <- 500
-data_sim <- data.frame(z = rep(NA, n))
-
-# Hidden state process
-hid_sim <- MarkovChain$new(data = data_sim, n_states = 2, 
-                           tpm = matrix(c(0.95, 0.2, 0.05, 0.8), 2, 2))
-
-# Observation process
-par_sim <- list(z = list(mean = c(0, 5), sd = c(3, 1)))
-obs_sim <- Observation$new(data = data_sim, 
-                           dists = list(z = "norm"), 
-                           par = par_sim)
-
-# Create HMM and simulate observations
-hmm_sim <- HMM$new(hid = hid_sim, obs = obs_sim)
-data_sim <- hmm_sim$simulate(n = n, silent = TRUE)
-
-head(data_sim)
-
-# Plot simulated time series
-state_sim <- factor(attr(data_sim, "state"))
-ggplot(data_sim, aes(1:nrow(data_sim), z, col = state_sim)) +
-  geom_point() +
-  labs(x = "time", y = "observation") +
-  scale_color_manual(values = pal, name = "state")
+# Format for HMM analysis and get relevant variables
+data <- data.frame(ID = track_pred$id,
+                   x = track_pred$x,
+                   y = track_pred$y,
+                   time = track_pred$date,
+                   day = yday(track_pred$date)/365)
+data <- prepData(data, type = "UTM")
+head(data)
 ```
+
+The three important columns in this data frame are the time series identifier `ID` (one value for each movement track), the step length `step` (which we will use as response variable), and the ordinal day `day` (which we will use as a covariate).
 
 # Model specification 
 
-We now turn to the specification of the model used for analysis.
+The step length is the distance travelled by the animal between two observed locations and, as a positive variable, it can for example be modelled with a gamma distribution. To allow for time-varying dynamics, we will consider a 2-state HMM for the step length $L_t$ such that
+$$
+    L_t \mid \{ S_t = j \} \sim \text{gamma}(\mu_j, \sigma_j)
+$$
+where $\mu_j > 0$ and $\sigma_j > 0$ are state-dependent mean and standard deviation parameters, respectively. That is, the step length is assumed to follow a different gamma distribution in each state. This is a common model in movement ecology to capture different behavioural phases based on an animal's speed (as measured by the step length). We can expect that one state will capture short steps (slow movement), and one state will capture long steps (fast movement).
+
+We also want to understand how the elephant seals' behaviour changes through the year. We will include the effect of the ordinal day on the transition probabilities. In this simple 2-state model, there are two of them: $\gamma_{12} = \Pr(S_{t+1} = 2 \mid S_t = 1)$ and $\gamma_{21} = \Pr(S_{t+1} = 1 \mid S_t = 2)$. We model them as time-varying, with a quadratic effect of ordinal day $d_t$, i.e.,
+$$
+\text{logit}(\gamma_{ij}^{(t)}) = \beta_{ij0} + \beta_{ij1} d_t + \beta_{ij2} d_t^2
+$$
+where the logit function ensures that the probability is between 0 and 1, and the parameters $\beta_{ij0}, \beta_{ij1}, \beta_{ij2}$ are to be estimated.
 
 ## Model structure
 
-The steps used to create the model object are similar to the above. This time, the parameters passed as input are starting values, i.e., from where the sampler will start exploring parameter space. We choose values that are somwhat different from the ones used for simulation, but within a plausible range based on the simulated data. For the hidden state process, we use the default initial values (a matrix with 0.9 on the diagonal). We also set `initial_state = "stationary"`, which means that the initial distribution of the hidden state process is fixed to the stationary distribution of the Markov chain, rather than estimated. We do this here because the initial distribution parameters are often not well identified, which can lead to convergence issues in the MCMC sampling.
+Model specification is identical whether maximum likelihood estimation or MCMC sampling is used for model fitting. As such, both methods can easily both be applied and contrasted for a given model object.
+
+We create a `MarkovChain` object for the hidden state model, specifying the number of states and the formula for the transition probabilities (quadratic effect of ordinal day). We use the option `initial_state = 2` to fix the state process to 2 for all individuals. (We will later interpret state 2 to be the "fast movement" state.) We do this here because the initial distribution parameters are often not well identified, which can lead to convergence issues in the MCMC sampling. We could specify initial parameter values through the `tpm0` argument, which would be used as starting points for the MCMC algorithm, but we use the default values here (a transition probability matrix with 0.9 on the diagonal, and covariate effects equal to 0).
 
 ```{r mod-spec1}
-# Hidden state model
-hid <- MarkovChain$new(data = data_sim, n_states = 2, 
-                       initial_state = "stationary")
+hid <- MarkovChain$new(data = data, 
+                       n_states = 2, 
+                       formula = ~day + I(day^2), 
+                       initial_state = 2)
+```
 
-# Initial parameters for observation process
-par <- list(z = list(mean = c(2, 7), sd = c(4, 0.5)))
-obs <- Observation$new(data = data_sim, 
-                       dists = list(z = "norm"), 
-                       par = par)
+For the `Observation` model, we use the `gamma2` distribution, which is parameterised in terms of mean and standard deviation rather than shape and rate. We provide initial parameters with the argument `par`, corresponding to plausible parameter values. We choose a larger mean in state 2, with the expectation that state 2 will capture longer step lengths (i.e., fast movement).
 
-# Create HMM object
-hmm <- HMM$new(hid = hid, obs = obs)
+```{r mod-spec2}
+dists <- list(step = "gamma2")
+par0 <- list(step = list(mean = c(10, 50), sd = c(10, 50)))
+obs <- Observation$new(data = data, 
+                       dists = dists, 
+                       par = par0)
+```
+
+We finally combine the two model components into an `HMM` object.
+
+```{r mod-spec3}
+hmm <- HMM$new(obs = obs, hid = hid)
 ```
 
 ## Priors
@@ -125,36 +116,43 @@ hmm$priors()
 hmm$coeff_fe()
 ```
 
-The observation model has four working parameters: the mean in each state (which is not transformed because its domain is already the real line), and the log standard deviation in each state. In hmmTMB, only normal priors can be defined, and they should be specified in a matrix with one row for each working parameter, and two columns (mean and standard deviation of prior). In this example, we choose the following priors:
+The observation model has four working parameters: the log mean and the log standard deviation in each state (both log-transformed because the mean and standard deviation are positive). In hmmTMB, only normal priors can be defined, and they should be specified in a matrix with one row for each working parameter, and two columns for the hyperparameters of the prior distribution (mean and standard deviation of normal prior). In this example, we choose the following priors:
 \begin{align*}
-\mu_1 & \sim N(0, 5^2)\\
-\mu_2 & \sim N(0, 5^2)\\
-\log(\sigma_1) & \sim N(\log(2), 5^2)\\
-\log(\sigma_2) & \sim N(\log(2), 5^2)
+\log(\mu_1) & \sim N(\log(10), 5^2)\\
+\log(\mu_2) & \sim N(\log(30), 5^2)\\
+\log(\sigma_1) & \sim N(\log(10), 5^2)\\
+\log(\sigma_2) & \sim N(\log(30), 5^2)
 \end{align*}
-where $\mu_j$ and $\sigma_j$ are the mean and standard deviation of the observation distribution for state $j \in \{1, 2\}$.
+where $\mu_j$ and $\sigma_j$ are the mean and standard deviation of the step length distribution for state $j \in \{1, 2\}$.
 
 ```{r set-priors1}
 # Parameter of normal priors for observation parameters
-prior_obs <- matrix(c(0, 5, 
-                      0, 5,
-                      log(2), 5,
-                      log(2), 5), 
+prior_obs <- matrix(c(log(10), 5, 
+                      log(30), 5,
+                      log(10), 5,
+                      log(30), 5), 
                     ncol = 2, byrow = TRUE)
 ```
 
-In a 2-state model, the two working parameters for the hidden state process are $\text{logit}(\gamma_{12})$ and $\text{logit}(\gamma_{21})$, where $\gamma_{ij} = \Pr(S_t = j \vert S_{t-1} = j)$ is the transition probability from state $i$ to state $j$. As above, we can define a matrix with two columns to specify parameters of normal priors. We use the following priors,
+In a 2-state model, the working parameters for the hidden state process are the coefficients $(\beta_{120}, \beta_{121}, \beta_{122}, \beta_{210}, \beta_{211}, \beta_{212})$ defined above. For $i \neq j \in \{ 1, 2\}$, $\beta_{ij0}$ is an intercept parameter, $\beta_{ij1}$ is the linear effect of ordinal day, and $\beta_{ij2}$ is the quadratic effect of ordinal day. 
+
+We use the following priors,
 \begin{align*}
-\text{logit}(\gamma_{12}) \sim N(-2, 1) \\
-\text{logit}(\gamma_{21}) \sim N(-2, 1)
+\beta_{ij0} \sim N(-2, 1) \\
+\beta_{ij1} \sim N(0, 100) \\
+\beta_{ij2} \sim N(0, 100) \\
 \end{align*}
 
-The mean is chosen as $-2$ because $\text{logit}(0.1) \approx -2$, i.e., the prior suggests that the off-diagonal elements of the transition probability matrix should be small (as is often the case in practice due to autocorrelation in the hidden process). Note that the definition of the working parameters is a little more complicated in models with more than 2 states.
+The mean for the intercept is chosen as $-2$ because $\text{logit}(0.1) \approx -2$, i.e., the prior suggests that the off-diagonal elements of the transition probability matrix should be small (as is often the case in practice due to autocorrelation in the hidden process). The coefficient for day and day squared have priors centered on zero with large variance; one could use prior predictive checks to ensure that these cover a reasonable range of possible relationships between ordinal day and transition probabilities. Note that the definition of the working parameters is a little more complicated in models with more than 2 states.
 
 ```{r set-priors2}
 # Parameter of normal priors for transition probabilities
 prior_hid <- matrix(c(-2, 1,
-                      -2, 1),
+                      0, 100,
+                      0, 100,
+                      -2, 1,
+                      0, 100,
+                      0, 100),
                     ncol = 2, byrow = TRUE)
 ```
 
@@ -170,7 +168,7 @@ hmm$priors()
 
 # Fitting the model
 
-The main function to fit a model using Stan in hmmTMB is `fit_stan`. It takes the same arguments as `tmbstan()` from the tmbstan package, and documentation for that function should be consulted for more details. Here, we pass two arguments: the number of chains (`chains`) and the number of MCMC iterations in each chain (`iter`). In practice, these arguments should be chosen carefully to ensure convergence of the sampler to the stationary distribution (see Stan documentation for more information); the values below were merely chosen for speed. In this example, running the sampler for 2000 iterations takes about 30 sec on a laptop.
+The main function to fit a model using Stan in hmmTMB is `HMM$fit_stan()`. It takes the same arguments as `tmbstan()` from the tmbstan package, and documentation for that function should be consulted for more details. Here, we pass two arguments: the number of chains (`chains`) and the number of MCMC iterations in each chain (`iter`). In practice, these arguments should be chosen carefully to ensure convergence of the sampler to the stationary distribution (see Stan documentation for more information); the values below were merely chosen for speed. In this example, running the sampler for 2000 iterations takes about one minute on a laptop.
 
 ```{r fit-hmm, results = 'hide'}
 hmm$fit_stan(chains = 1, iter = 2000)
@@ -180,7 +178,7 @@ hmm$fit_stan(chains = 1, iter = 2000)
 
 ## Working parameters
 
-After running `fit_stan()`, the output of Stan is accessible with the `out_stan()` function. This is an object of class `stanfit`, and it can directly be used with functions from the rstan package, e.g., to create traceplots or density plots of the posterior samples. Note that these plots show the working parameters.
+After running `fit_stan()`, the output of Stan is accessible with the `out_stan()` function. This is an object of class `stanfit`, and it can directly be used with functions from the rstan package, e.g., to create trace plots or density plots of the posterior samples. Note that these plots show the working parameters.
 
 ```{r rstan-plots, fig.width = 6, fig.height = 4, out.width="80%", fig.align = "center", fig.show = "hold"}
 rstan::traceplot(hmm$out_stan())
@@ -189,7 +187,9 @@ rstan::stan_dens(hmm$out_stan())
 
 ## Natural parameters
 
-To inspect the posterior distributions of the natural parameters, which is often more interesting, we can extract posterior samples using `iters()`. This returns a matrix with one column for each parameter and one row for each MCMC iteration. It can directly be used to make traceplots, histograms, etc. It looks like the model successfully captured the true parameter values used for simulation. Note that this is an example of label switching, where states 1 and 2 are swapped compared to their order in the simulation model. This can often happen in HMMs, because the labelling of states is arbitrary.
+To inspect the posterior distributions of the natural parameters, which is often more interesting, we can extract posterior samples using `iters()`. This returns a matrix with one column for each parameter and one row for each MCMC iteration. It can directly be used to make traceplots, histograms, etc., or to produce credible intervals. 
+
+Note that, if a parameter depends on a covariate, the first row of the data set is used to predict the parameter value in `iters()`, so the output should be interpreted with care. In our analysis, the transition probabilities depend on the ordinal day, and they are computed for March 2nd in the plot below. We visualise the effect of ordinal day on the transition probabilities in a later section.
 
 ```{r iters-hist, fig.width = 8, fig.height = 4, out.width="100%", fig.align = "center"}
 iters <- hmm$iters()
@@ -198,15 +198,88 @@ head(iters)
 iters_df <- as.data.frame.table(iters)
 ggplot(iters_df, aes(x = Freq)) + 
     geom_histogram(bins = 20, fill = "lightgrey", col = "white") + 
-    facet_wrap("Var2", nrow = 2, scales = "free_x")
+    facet_wrap("Var2", nrow = 2, scales = "free_x") +
+    labs(x = "parameter value", y = "posterior density")
 ```
 
-## Plotting functions
+For credible intervals, we can use quantiles of the posterior samples. As the transition probabilities depend on a covariate, we only compute credible intervals for the parameters of the step length distributions.
 
-We can also use other plotting functions as we would for a model fitted using `fit()`. By default, the parameter values used in that case are the posterior means. For example, we can plot the state-dependent distributions over a histogram of the data:
+```{r credible-intervals}
+# 95% equal-tail credible intervals for observation parameters
+apply(iters[,1:4], 2, quantile, probs = c(0.025, 0.975))
+```
+
+## Posterior samples of observation distributions
+
+Based on the posterior samples that we have for all model parameters, we can get visualise the posterior distribution of various model components, such as the observation distributions. That is, we compute the density function of the step length distribution in each state, for each posterior sample, and plot them to visualise the uncertainty in the distributions. For clearer visualisation, we only select 100 random posterior samples here.
 
 ```{r plot-dist, fig.width = 6, fig.height = 3, out.width="80%", fig.align = "center"}
-hmm$plot_dist("z")
+# Select 100 random posterior samples from the
+# 1000 post-warmup samples
+ind_post <- sort(sample(1:1000, size = 100))
+
+# Grid of step lengths
+step_grid <- seq(0, max(data$step, na.rm = TRUE), length = 100)
+# Loop over 100 random posterior samples
+obsdist_list <- lapply(ind_post, function(i_post) {
+    # Get gamma mean and SD
+    par_post1 <- matrix(hmm$iters()[i_post,1:4], nrow = 2)
+    # Get gamma scale and rate for R dgamma function
+    par_post2 <- cbind(par_post1[,1] ^ 2 / par_post1[,2] ^ 2,
+                       par_post1[,1] / par_post1[,2] ^ 2)
+    
+    # Compute gamma density in each state
+    dens_state1 <- dgamma(step_grid,
+                          shape = par_post2[1,1], 
+                          rate = par_post2[1,2])
+    dens_state2 <- dgamma(step_grid, 
+                          shape = par_post2[2,1], 
+                          rate = par_post2[2,2])
+    
+    dens <- data.frame(step = step_grid,
+                       value = c(dens_state1, dens_state2),
+                       state = rep(paste0("state ", 1:2), each = 100))
+    dens$group <- paste0("iter ", i_post, " - ", dens$state)
+    return(dens)
+})
+# Combine data frames for plot
+obsdist_df <- do.call(what = rbind, args = obsdist_list)
+ggplot(obsdist_df, aes(step, value, group = group, col = state)) +
+    geom_line(linewidth = 0.1, alpha = 0.5) +
+    scale_color_manual(values = hmmTMB:::hmmTMB_cols, name = NULL) +
+    labs(x = "step length", y = "density")
+```
+
+## Posterior samples of transition probabilities
+
+Likewise, we can visualise the uncertainty in the relationship between the transition probabilities and the covariate (ordinal day). The code below show how we can use posterior samples of the regression coefficients to get posterior samples of the relationship.
+
+```{r plot-tpm, fig.width = 6, fig.height = 3, out.width="90%", fig.align = "center"}
+# Grid of ordinal day
+newdata <- data.frame(day = seq(min(data$day), max(data$day), length = 100))
+
+# Loop over randomly selected posterior samples
+probs_list <- lapply(ind_post, function(i_post) {
+    # Set parameters to a given posterior sample
+    hmm$update_par(iter = i_post)
+    
+    # Relationship between transition probabilities and 
+    # covariate for these parameters
+    tpm_post <- hmm$predict(what = "tpm", newdata = newdata)
+    probs <- data.frame(prob = c(tpm_post[1,2,], tpm_post[2,1,]))
+    
+    probs$transition <- rep(paste0("Pr(", 1:2, " -> ", 2:1, ")"), each = 100)
+    probs$group <- paste0("iter ", i_post, " - ", probs$transition)
+    return(probs)
+})
+
+# Combine data frames for plot
+probs_df <- do.call(what = rbind, args = probs_list)
+probs_df$day <- newdata$day
+ggplot(probs_df, aes(day, prob, group = group)) +
+    geom_line(linewidth = 0.1, alpha = 0.5) +
+    labs(x = "ordinal day", y = "transition probabilities") +
+    facet_wrap("transition")
 ```
 
 # References
