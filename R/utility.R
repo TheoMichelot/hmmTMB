@@ -42,20 +42,20 @@ bdiag_check <- function(...) {
 #' 
 #' @return Generalized determinant of input matrix
 gdeterminant <- function(x, eps = 1e-10, log = TRUE) {
-    if(is.null(x)) {
-        return(NULL)
-    } else {
-        # Compute sum of log of non-zero eigenvalues
-        # (i.e., log generalized determinant)
-        eigenpairs <- eigen(x)
-        eigenvalues <- eigenpairs$values
-        logdet <- sum(log(eigenvalues[eigenvalues > eps]))
-        if(!log) {
-            return(exp(logdet))
-        } else{
-            return(logdet)
-        }        
-    }
+  if(is.null(x)) {
+    return(NULL)
+  } else {
+    # Compute sum of log of non-zero eigenvalues
+    # (i.e., log generalized determinant)
+    eigenpairs <- eigen(x)
+    eigenvalues <- eigenpairs$values
+    logdet <- sum(log(eigenvalues[eigenvalues > eps]))
+    if(!log) {
+      return(exp(logdet))
+    } else{
+      return(logdet)
+    }        
+  }
 }
 
 #' Fill in NAs
@@ -237,6 +237,25 @@ invmlogit <- function(x) {
   return(y)
 }
 
+#' Make covariance matrix from standard deviations and correlations
+#' 
+#' @param sds Vector of standard deviations
+#' @param corr Vector of correlations (must be of length m*(m-1)/2 if
+#' sds is of length m)
+#' 
+#' @return An m by m covariance matrix
+make_cov <- function(sds, corr) {
+  m <- length(sds)
+  V <- diag(m)
+  V[lower.tri(V)] <- corr 
+  V[upper.tri(V)] <- t(V)[upper.tri(V)]
+  for (i in 1:ncol(V)) {
+    V[i,] <- V[i,] * sds[i]
+    V[,i] <- V[,i] * sds[i]
+  }
+  return(V)
+}
+
 #' Multivariate Normal link function 
 #'
 #' @param x Vector of parameters on natural scale (in the order: means,
@@ -246,12 +265,27 @@ invmlogit <- function(x) {
 #' 
 #' @importFrom stats qlogis
 mvnorm_link <- function(x) {
-  # get dimension 
+  # Get dimension 
   m <- quad_pos_solve(1, 3, - 2 * length(x))
+  
+  # Mean parameters (untransformed)
   mu <- x[1:m]
-  sds <- log(x[(m + 1) : (2 * m)])
-  corr <- qlogis((x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)] + 1) / 2)
-  return(c(mu, sds, corr))
+  
+  # Standard deviations and correlations
+  sds <- x[(m + 1) : (2 * m)]
+  corr <- x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
+  
+  # Cholesky decomposition of covariance matrix
+  cov_mat <- make_cov(sds, corr)
+  cov_chol <- t(chol(cov_mat))
+  
+  # Diagonal elements of Cholesky factor are positive, so log
+  # transform them to get unconstrained parameters
+  # See: https://mc-stan.org/docs/reference-manual/transforms.html#cholesky-factors-of-covariance-matrices
+  cov_par_diag <- log(diag(cov_chol))
+  cov_par_offdiag <- cov_chol[lower.tri(cov_chol)]
+  
+  return(c(mu, cov_par_diag, cov_par_offdiag))
 }
 
 #' Multivariate Normal inverse link function 
@@ -263,11 +297,29 @@ mvnorm_link <- function(x) {
 #'
 #' @importFrom stats plogis
 mvnorm_invlink = function(x) {
-  # get dimension 
+  # Get dimension 
   m <- quad_pos_solve(1, 3, - 2 * length(x))
+  
+  # Mean parameters (untransformed)
   mu <- x[1:m]
-  sds <- exp(x[(m + 1) : (2 * m)])
-  corr <- 2 * plogis(x[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]) - 1
+  
+  # Unpack parameters of Cholesky factor of covariance matrix
+  # Diagonal elements of factor must be positive so we 
+  # exponentiate them here
+  # See: https://mc-stan.org/docs/reference-manual/transforms.html#cholesky-factors-of-covariance-matrices
+  cov_par_diag <- exp(x[(m+1):(2*m)])
+  cov_par_offdiag <- x[(2*m+1):(2*m+(m^2-m)/2)]
+  cov_chol <- diag(cov_par_diag)
+  cov_chol[lower.tri(cov_chol)] <- cov_par_offdiag
+  
+  # Get covariance matrix from Cholesky factor
+  cov_mat <- cov_chol %*% t(cov_chol)
+  
+  # Get standard deviations and correlations from covariance matrix
+  sds <- sqrt(diag(cov_mat))
+  corr_mat <- cov_mat / rep(sds, each = m) / rep(sds, m)
+  corr <- corr_mat[lower.tri(corr_mat)]
+  
   return(c(mu, sds, corr))
 }
 

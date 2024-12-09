@@ -1122,7 +1122,7 @@ Observation <- R6Class(
           tV <- t(V)
           parnames <- c(paste0("mu", 1:n_dim), 
                         paste0("sd", 1:n_dim), 
-                        paste0("corr", V[upper.tri(V)], tV[upper.tri(tV)]))
+                        paste0("corr", tV[lower.tri(tV)], V[lower.tri(V)]))
           self$dists()[[i]]$set_npar(npar)
           self$dists()[[i]]$set_parnames(parnames)
         }

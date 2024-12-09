@@ -296,34 +296,34 @@ public:
 template<class Type> 
 class NegativeBinomial2 : public Dist<Type> {
 public:
-    // Constructor
-    NegativeBinomial2() {}; 
-    // Link function 
-    vector<Type> link(const vector<Type>& par, const int& n_states) {
-        vector<Type> wpar(par.size());
-        // mean
-        for (int i = 0; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
-        // shape
-        for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
-        return(wpar); 
-    } 
-    // Inverse link function 
-    matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
-        int n_par = wpar.size()/n_states;
-        matrix<Type> par(n_states, n_par);
-        // mean
-        for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
-        // shape
-        for(int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
-        return(par); 
-    }
-    // Probability density/mass function
-    Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
-        Type size = par(1);
-        Type prob = par(1) / (par(0) + par(1));
-        Type val = dnbinom(x, size, prob, logpdf);
-        return(val); 
-    }
+  // Constructor
+  NegativeBinomial2() {}; 
+  // Link function 
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size());
+    // mean
+    for (int i = 0; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+    // shape
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); 
+    return(wpar); 
+  } 
+  // Inverse link function 
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size()/n_states;
+    matrix<Type> par(n_states, n_par);
+    // mean
+    for(int i = 0; i < n_states; ++i) par(i, 0) = exp(wpar(i));
+    // shape
+    for(int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
+    return(par); 
+  }
+  // Probability density/mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    Type size = par(1);
+    Type prob = par(1) / (par(0) + par(1));
+    Type val = dnbinom(x, size, prob, logpdf);
+    return(val); 
+  }
 };
 
 template<class Type> 
@@ -938,66 +938,122 @@ class MultivariateNormal : public Dist<Type> {
 public:
   // Constructor
   MultivariateNormal() {}; 
+  
   // Link function 
   vector<Type> link(const vector<Type>& par, const int& n_states) {
     vector<Type> wpar(par.size());
     int n_par = wpar.size()/n_states;
     int dim = this->dim(n_par); 
-    int k = 0; 
-    // means
-    for (int d = 0; d < dim; ++d) {
-      for (int i = 0; i < n_states; ++i) {
-        wpar(k) = par(k); 
-        ++k; 
+    
+    // Split natural parameters by state
+    matrix<Type> par_by_state(n_states, n_par);
+    par_by_state.setZero();
+    int k = 0;
+    for(int j = 0; j < n_states; j++) {
+      for(int i = 0; i < n_par; i++) {
+        par_by_state(i, j) = par(k);
+        k = k + 1;
       }
     }
-    // sds 
-    for (int d = 0; d < dim; ++d) {
-      for (int i = 0; i < n_states; ++i) {
-        wpar(k) = log(par(k)); 
-        ++k; 
+    
+    // Matrix of working parameters, split by state
+    matrix<Type> wpar_by_state = par_by_state;
+    
+    // Loop over states for covariance matrix components
+    for(int state = 0; state < n_states; state++) {
+      // Make covariance matrix
+      vector<Type> sds = par_by_state.row(state).segment(dim, dim);
+      vector<Type> corr = par_by_state.row(state).segment(2*dim, dim*(dim-1)/2);
+      matrix<Type> cov_mat = this->make_cov(sds, corr);
+      
+      // Get Cholesky factor
+      matrix<Type> L = cov_mat.llt().matrixL();
+      
+      // Log-transform diagonal elements of Cholesky factor
+      // and leave non-diagonal elements untransformed
+      k = dim;
+      for(int i = 0; i < dim; i++) {
+        wpar_by_state(state, k) = log(L(i, i));
+        k = k + 1;
+      }
+      for(int j = 0; j < dim; j ++) {
+        for(int i = j + 1; i < dim; j++) {
+          wpar_by_state(state, k) = L(i, j);
+        }
       }
     }
-    // corr 
-    for (int d = 0; d < 0.5*(dim * dim - dim); ++d) {
-      for (int i = 0; i < n_states; ++i) {
-        Type tmp = 0.5 * (par(k) + 1); 
-        wpar(k) = log(tmp / (1 - tmp)); 
-        ++k; 
+    
+    // Fill vector of working parameters
+    k = 0;
+    for(int j = 0; j < n_par; j++) {
+      for(int i = 0; i < n_states; i++) {
+        wpar(k) = wpar_by_state(i, j);
+        k = k + 1;
       }
     }
+    
     return(wpar); 
   } 
+  
   // Inverse link function 
   matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
     int n_par = wpar.size()/n_states;
     matrix<Type> par(n_states, n_par);
     int dim = this->dim(n_par);
-    int k = 0; 
-    // means
-    for (int d = 0; d < dim; ++d) {
-      for (int i = 0; i < n_states; ++i) {
-        par(i, d) = wpar(k); 
-        ++k; 
+    
+    // Split working parameters by state
+    matrix<Type> wpar_by_state(n_states, n_par);
+    wpar_by_state.setZero();
+    int k = 0;
+    for(int j = 0; j < n_par; j++) {
+      for(int i = 0; i < n_states; i++) {
+        wpar_by_state(i, j) = wpar(k);
+        k = k + 1;
       }
     }
-    // sds 
-    for (int d = 0; d < dim; ++d) {
-      for (int i = 0; i < n_states; ++i) {
-        par(i, d + dim) = exp(wpar(k)); 
-        ++k; 
+    
+    matrix<Type> par_by_state = wpar_by_state;
+    
+    // Loop over states for covariance transformation
+    for(int state = 0; state < n_states; state++) {
+      matrix<Type> L(dim, dim);
+      L.setZero();
+      k = dim;
+      // Exponentiate diagonal elements of Cholesky factor
+      for(int i = 0; i < dim; i++) {
+        L(i, i) = exp(wpar_by_state(state, k));
+        k = k + 1;
+      }
+      // Leave non-diagonal elements of Cholesky factor untransformed
+      for(int j = 0; j < dim; j++) {
+        for(int i = j + 1; i < dim; i++) {
+          L(i, j) = wpar_by_state(state, k);
+          k = k + 1;
+        }
+      }
+      
+      // Get covariance
+      matrix<Type> cov_mat = L * L.transpose();
+      
+      k = dim;
+      for(int j = 0; j < dim; j++) {
+        // standard deviations
+        par_by_state(state, k) = sqrt(cov_mat(j, j));
+        k = k + 1;
+      }
+      for(int j = 0; j < dim; j++) {
+        for(int i = j + 1; i < dim; i++) {
+          // correlations
+          par_by_state(state, k) = cov_mat(i, j) / 
+            (sqrt(cov_mat(i, i)) * sqrt(cov_mat(j, j)));
+          k = k + 1;
+        }
       }
     }
-    // corr 
-    for (int d = 0; d < 0.5*(dim * dim - dim); ++d) {
-      for (int i = 0; i < n_states; ++i) {
-        par(i, d + 2 * dim) = 1 / (1 + exp(-wpar(k))); 
-        par(i, d + 2 * dim) = 2 * par(i, d + 2 * dim) - 1; 
-        ++k; 
-      }
-    }
-    return(par); 
+
+    return(par_by_state); 
   }
+  
   // Univariate Probability density function
   Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
     Type val = dnorm(x, par(0), par(1), logpdf); 
@@ -1006,30 +1062,21 @@ public:
   
   // Multivariate Probability density function 
   Type pdf(const vector<Type>& x, const vector<Type>& par, const bool& logpdf) {
-    int dim = this->dim(par.size()); 
+    int dim = this->dim(par.size());
+    
+    // Subtract means
     vector<Type> y(dim);
     for (int i = 0; i < dim; ++i) y(i) = x(i) - par(i); 
+    
+    // Unpack covariance matrix
     vector<Type> sds(dim); 
     for (int i = 0; i < dim; ++i) sds(i) = par(i + dim); 
     vector<Type> corr((dim * dim - dim) / 2); 
     for (int i = 0; i < (dim * dim - dim) / 2; ++i) corr(i) = par(i + 2 * dim);
-    matrix<Type> Sigma(dim, dim); 
-    int k = 0; 
-    for (int i = 0; i < dim; ++i) {
-      for (int j = i; j < dim; ++j) {
-        Sigma(j, i) = sds(j) * sds(i); 
-        if (i != j) {
-          Sigma(j, i) *= corr(k); 
-          ++k; 
-        }
-      }
-    }
-    for (int i = 0; i < dim; ++i) {
-      for (int j = 0; j < i; ++j) {
-        Sigma(j, i) = Sigma(i, j); 
-      }
-    }
-    Type val = density::MVNORM(Sigma)(y); 
+    matrix<Type> Sigma = this->make_cov(sds, corr);
+    
+    // Get negative log-density and transform to density
+    Type val = density::MVNORM(Sigma)(y);
     val = -val; 
     if (!logpdf) val = exp(val); 
     return(val); 
@@ -1043,6 +1090,30 @@ public:
     double d = b * b - 4 * a * c; 
     double root = (-b + sqrt(d)) / (2 * a); 
     return(int(root)); 
+  }
+  
+  // Make covariance matrix from standard deviations and correlations
+  matrix<Type> make_cov(const vector<Type>& sds, const vector<Type>& corr) {
+    int dim = sds.size();
+    matrix<Type> Sigma(dim, dim); 
+    int k = 0; 
+    // Fill lower triangular matrix
+    for (int j = 0; j < dim; j++) {
+      for (int i = j; i < dim; i++) {
+        Sigma(i, j) = sds(i) * sds(j); 
+        if (i != j) {
+          Sigma(i, j) = Sigma(i, j) * corr(k); 
+          k++;
+        }
+      }
+    }
+    // Fill lower triangular matrix
+    for (int j = 0; j < dim; j++) {
+      for (int i = 0; i < j; i++) {
+        Sigma(i, j) = Sigma(j, i); 
+      }
+    }
+    return Sigma;
   }
 };
 

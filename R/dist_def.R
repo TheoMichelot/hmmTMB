@@ -168,8 +168,8 @@ dist_nbinom <- Dist$new(
     mean <- mean(x)
     var <- var(x)
     if(var <= mean) {
-        # needs overdispersion
-        var <- 1.01 * mean
+      # needs overdispersion
+      var <- 1.01 * mean
     }
     size <- mean^2 / (var - mean)
     prob <- mean / var
@@ -178,36 +178,36 @@ dist_nbinom <- Dist$new(
 )
 
 dist_nbinom2 <- Dist$new(
-    name = "nbinom2", 
-    name_long = "negative binomial",
-    pdf = function(x, mean, shape, log = FALSE) {
-        size <- shape
-        prob <- shape / (mean + shape)
-        dnbinom(x = x, size = size, prob = prob, log = log)
-    }, 
-    cdf = function(q, mean, shape) {
-        size <- shape
-        prob <- shape / (mean + shape)
-        pnbinom(x = x, size = size, prob = prob)
-    },
-    rng = function(n, mean, shape) {
-        size <- shape
-        prob <- shape / (mean + shape)
-        rnbinom(n = n, size = size, prob = prob)
-    }, 
-    link = list(mean = log, shape = log), 
-    invlink = list(mean = exp, shape = exp), 
-    npar = 2, 
-    parnames = c("mean", "shape"), 
-    parapprox = function(x) {
-        mean <- mean(x)
-        var <- var(x)
-        # needs overdispersion
-        shape <- ifelse(mean < var, 
-                        yes = mean^2/(var-mean), 
-                        no = 10000)
-        return(c(mean, shape))
-    }
+  name = "nbinom2", 
+  name_long = "negative binomial",
+  pdf = function(x, mean, shape, log = FALSE) {
+    size <- shape
+    prob <- shape / (mean + shape)
+    dnbinom(x = x, size = size, prob = prob, log = log)
+  }, 
+  cdf = function(q, mean, shape) {
+    size <- shape
+    prob <- shape / (mean + shape)
+    pnbinom(x = x, size = size, prob = prob)
+  },
+  rng = function(n, mean, shape) {
+    size <- shape
+    prob <- shape / (mean + shape)
+    rnbinom(n = n, size = size, prob = prob)
+  }, 
+  link = list(mean = log, shape = log), 
+  invlink = list(mean = exp, shape = exp), 
+  npar = 2, 
+  parnames = c("mean", "shape"), 
+  parapprox = function(x) {
+    mean <- mean(x)
+    var <- var(x)
+    # needs overdispersion
+    shape <- ifelse(mean < var, 
+                    yes = mean^2/(var-mean), 
+                    no = 10000)
+    return(c(mean, shape))
+  }
 )
 
 # Categorical ============================
@@ -834,13 +834,7 @@ dist_mvnorm <- Dist$new(
     sds <- par[(m + 1) : (2 * m)]
     corr <- par[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
     # Create covariance matrix
-    V <- diag(m)
-    V[lower.tri(V)] <- corr 
-    V[upper.tri(V)] <- t(V)[upper.tri(V)]
-    for (i in 1:ncol(V)) {
-      V[i,] <- V[i,] * sds[i]
-      V[,i] <- V[,i] * sds[i]
-    }
+    V <- make_cov(sds, corr)
     p <- dmvn(y, mu, V)
     if (!log) p <- exp(p)
     return(p)
@@ -856,14 +850,7 @@ dist_mvnorm <- Dist$new(
     mu <- par[1:m]
     sds <- par[(m + 1) : (2 * m)]
     corr <- par[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
-    # Create covariance matrix
-    V <- diag(m)
-    V[lower.tri(V)] <- corr 
-    V[upper.tri(V)] <- t(V)[upper.tri(V)]
-    for (i in 1:ncol(V)) {
-      V[i,] <- V[i,] * sds[i]
-      V[,i] <- V[,i] * sds[i]
-    }
+    V <- make_cov(sds, corr)
     sims <- rmvn(n, mu, V)
     sims <- split(sims, 1:n)
     return(sims)
@@ -896,13 +883,7 @@ dist_mvnorm <- Dist$new(
     sds <- par[(m + 1) : (2 * m)]
     corr <- par[(2 * m + 1) : (2 * m + (m^2 - m) / 2)]
     # Create covariance matrix
-    V <- diag(m)
-    V[lower.tri(V)] <- corr 
-    V[upper.tri(V)] <- t(V)[upper.tri(V)]
-    for (i in 1:ncol(V)) {
-      V[i,] <- V[i,] * sds[i]
-      V[,i] <- V[,i] * sds[i]
-    }
+    V <- make_cov(sds, corr)
     names(mu) <- paste0("mu", 1:m)
     rownames(V) <- colnames(V) <- 1:m
     return(list(mu = mu, Sigma = V))
