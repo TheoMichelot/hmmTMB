@@ -120,7 +120,7 @@ make_matrices = function(formulas, data, new_data = NULL) {
   S <- bdiag_check(S_list)
   
   # Get (log-)determinants of penalty matrices
-  log_det_S <- sapply(S_list, gdeterminant)
+  log_det_S <- unlist(sapply(S_list, gdeterminant))
   
   return(list(X_fe = X_fe, 
               X_re = X_re, 
