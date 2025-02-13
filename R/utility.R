@@ -429,3 +429,17 @@ as_sparse <- function(x) {
   mat <- suppressMessages(as(x, "dgTMatrix"))
   return(mat)
 }
+
+#' Check values in vector are contiguous
+#' 
+#' @param x Vector of values (can be numeric, character, factor)
+#' 
+#' @return Logical: are values contiguous?
+check_contiguous <- function(x) {
+  vals <- unique(x)
+  is_contiguous <- sapply(vals, function(val) {
+    ind <- which(x == val)
+    (ind[length(ind)] - ind[1]) == (length(ind) - 1)
+  })
+  return(all(is_contiguous))
+}

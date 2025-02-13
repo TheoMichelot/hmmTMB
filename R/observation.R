@@ -106,9 +106,7 @@ Observation <- R6Class(
       if(!("ID" %in% names(data))) {
         data$ID <- factor(1)
       } else {
-        # Check how many separate times each ID shows up in data$ID
-        # If any > 1, observations are not contiguous
-        if(max(table(rle(data$ID)$values)) > 1) {
+        if(!check_contiguous(data$ID)) {
           stop("Observations for each ID must be contiguous in data.")
         }
         data$ID <- factor(data$ID)
