@@ -57,6 +57,7 @@ hid <- MarkovChain$new(data = energy, n_states = 2,
 \item \href{#method-MarkovChain-unique_ID}{\code{MarkovChain$unique_ID()}}
 \item \href{#method-MarkovChain-initial_state}{\code{MarkovChain$initial_state()}}
 \item \href{#method-MarkovChain-empty}{\code{MarkovChain$empty()}}
+\item \href{#method-MarkovChain-gam_args}{\code{MarkovChain$gam_args()}}
 \item \href{#method-MarkovChain-update_tpm}{\code{MarkovChain$update_tpm()}}
 \item \href{#method-MarkovChain-update_coeff_fe}{\code{MarkovChain$update_coeff_fe()}}
 \item \href{#method-MarkovChain-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
@@ -89,7 +90,8 @@ Create new MarkovChain object
   tpm = NULL,
   initial_state = "estimated",
   fixpar = NULL,
-  ref = 1:n_states
+  ref = 1:n_states,
+  gam_args = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -141,6 +143,9 @@ example, ref = c(1, 1) means that the first element of the first row
 Pr(1>1) and the first element of the second row Pr(2>1) are used as 
 reference elements and are not estimated. If this is not provided,
 the diagonal transition probabilities are used as references.}
+
+\item{\code{gam_args}}{Named list of arguments passed to \code{mgcv::gam()} in
+\code{MarkovChain$make_mat()}, e.g., "knots". Use at your own risk.}
 }
 \if{html}{\out{</div>}}
 }
@@ -444,6 +449,16 @@ Initial state (see constructor argument)
 Empty model? (for simulation only)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MarkovChain$empty()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MarkovChain-gam_args"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-gam_args}{}}}
+\subsection{Method \code{gam_args()}}{
+Extra arguments for mgcv::gam (passed to make_matrices)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$gam_args()}\if{html}{\out{</div>}}
 }
 
 }

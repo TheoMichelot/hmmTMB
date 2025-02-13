@@ -109,6 +109,7 @@ obs$par()
 \item \href{#method-Observation-known_states}{\code{Observation$known_states()}}
 \item \href{#method-Observation-fixpar}{\code{Observation$fixpar()}}
 \item \href{#method-Observation-empty}{\code{Observation$empty()}}
+\item \href{#method-Observation-gam_args}{\code{Observation$gam_args()}}
 \item \href{#method-Observation-update_par}{\code{Observation$update_par()}}
 \item \href{#method-Observation-update_coeff_fe}{\code{Observation$update_coeff_fe()}}
 \item \href{#method-Observation-update_coeff_re}{\code{Observation$update_coeff_re()}}
@@ -143,7 +144,8 @@ Create new Observation object
   formulas = NULL,
   n_states = NULL,
   par,
-  fixpar = NULL
+  fixpar = NULL,
+  gam_args = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -182,6 +184,9 @@ observation parameters), and "lambda_obs" (fixed smoothness parameters),
 Each element is a named vector of coefficients that should either be 
 fixed (if the corresponding element is set to NA) or estimated to a 
 common value (using integers or factor levels).}
+
+\item{\code{gam_args}}{Named list of arguments passed to \code{mgcv::gam()} in
+\code{Observation$make_mat()}, e.g., "knots". Use at your own risk.}
 }
 \if{html}{\out{</div>}}
 }
@@ -505,6 +510,16 @@ for some other reason (e.g., size of binomial distribution)}
 Empty model? (for simulation only)
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$empty()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Observation-gam_args"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-gam_args}{}}}
+\subsection{Method \code{gam_args()}}{
+Extra arguments for mgcv::gam (passed to make_matrices)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Observation$gam_args()}\if{html}{\out{</div>}}
 }
 
 }

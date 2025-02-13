@@ -8,6 +8,8 @@
 #' to the argument '\code{data}', for cases where smooth terms or factor
 #' covariates are included, and the original data set is needed to determine
 #' the full range of covariate values.
+#' @param gam_args Named list of additional arguments for \code{mgcv::gam()},
+#' such as knots.
 #' 
 #' @return A list of
 #' \itemize{
@@ -20,7 +22,7 @@
 #' }
 #' 
 #' @importFrom stats update predict
-make_matrices = function(formulas, data, new_data = NULL) {
+make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
   # Initialise lists of matrices
   X_list_fe <- list()
   X_list_re <- list()
@@ -50,21 +52,23 @@ make_matrices = function(formulas, data, new_data = NULL) {
       }
     }
     
+    # Prepare gam() arguments
+    gam_args_list <- c(list(formula = update(form, dummy_response ~ .), 
+                            data = cbind(dummy_response = 1, data)),
+                       gam_args)
+    
     # Create matrices based on this formula
     if(is.null(new_data)) {
-      gam_setup <- gam(formula = update(form, dummy_response ~ .), 
-                       data = cbind(dummy_response = 1, data), 
-                       fit = FALSE)
+      gam_setup <- do.call(what = gam,
+                           args = c(gam_args_list, list(fit = FALSE)))
       Xmat <- gam_setup$X
       # Extract column names for design matrices
       term_names <- gam_setup$term.names
     } else {
       # Get design matrix for new data set
-      gam_setup0 <- gam(formula = update(form, dummy_response ~ .), 
-                       data = cbind(dummy_response = 1, data))
-      gam_setup <- gam(formula = update(form, dummy_response ~ .), 
-                        data = cbind(dummy_response = 1, data),
-                       fit = FALSE)
+      gam_setup0 <- do.call(what = gam, args = gam_args_list)
+      gam_setup <- do.call(what = gam,
+                           args = c(gam_args_list, list(fit = FALSE)))
       Xmat <- predict(gam_setup0, newdata = new_data, type = "lpmatrix")
       # Extract column names for design matrices
       term_names <- gam_setup$term.names

@@ -52,7 +52,9 @@ MarkovChain <- R6Class(
     #' example, ref = c(1, 1) means that the first element of the first row
     #' Pr(1>1) and the first element of the second row Pr(2>1) are used as 
     #' reference elements and are not estimated. If this is not provided,
-    #' the diagonal transition probabilities are used as references. 
+    #' the diagonal transition probabilities are used as references.
+    #' @param gam_args Named list of arguments passed to \code{mgcv::gam()} in
+    #' \code{MarkovChain$make_mat()}, e.g., "knots". Use at your own risk.
     #' 
     #' @return A new MarkovChain object
     #' 
@@ -82,7 +84,8 @@ MarkovChain <- R6Class(
                           tpm = NULL,
                           initial_state = "estimated",
                           fixpar = NULL,
-                          ref = 1:n_states) {
+                          ref = 1:n_states,
+                          gam_args = NULL) {
       # Check arguments
       private$check_args(n_states = n_states, 
                          formula = formula, 
@@ -100,6 +103,9 @@ MarkovChain <- R6Class(
       } else {
         private$empty_ <- FALSE
       }
+      
+      # Save user-specified arguments for mgcv::gam()
+      private$gam_args_ <- gam_args
       
       # Matrix with 1 for reference element and 0 elsewhere
       # (used later to select relevant entries of tpm)
@@ -406,6 +412,9 @@ MarkovChain <- R6Class(
     #' @description Empty model? (for simulation only)
     empty = function() {return(private$empty_)},
     
+    #' @description Extra arguments for mgcv::gam (passed to make_matrices)
+    gam_args = function() {return(private$gam_args_)},
+    
     # Mutators ----------------------------------------------------------------
     
     #' @description Update transition probability matrix
@@ -548,7 +557,8 @@ MarkovChain <- R6Class(
     make_mat = function(data, new_data = NULL) {
       make_matrices(formulas = self$formulas(), 
                     data = data, 
-                    new_data = new_data)
+                    new_data = new_data,
+                    gam_args = self$gam_args())
     },
     
     #' @description Design matrices for grid of covariates
@@ -722,6 +732,7 @@ MarkovChain <- R6Class(
     fixpar_ = NULL,
     initial_state_ = NULL,
     empty_ = NULL,
+    gam_args_ = NULL,
     
     # Setup fixed parameters
     setup_fixpar = function() {

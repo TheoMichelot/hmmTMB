@@ -4,7 +4,7 @@
 \alias{make_matrices}
 \title{Create model matrices}
 \usage{
-make_matrices(formulas, data, new_data = NULL)
+make_matrices(formulas, data, new_data = NULL, gam_args = NULL)
 }
 \arguments{
 \item{formulas}{List of formulas (possibly nested, e.g. for use within Observation)}
@@ -16,6 +16,9 @@ the design matrices should be created. This needs to be passed in addition
 to the argument '\code{data}', for cases where smooth terms or factor
 covariates are included, and the original data set is needed to determine
 the full range of covariate values.}
+
+\item{gam_args}{Named list of additional arguments for \code{mgcv::gam()},
+such as knots.}
 }
 \value{
 A list of
