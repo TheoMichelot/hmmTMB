@@ -1476,11 +1476,17 @@ HMM <- R6Class(
       }
       se <- sqrt(diag(V)[1:length(par)])
       
+      # Add standard errors for fixed parameters (SE = 0)
+      se_all <- rep(0, nrow(self$coeff_array()))
+      se_all[which(!is.na(self$coeff_array()[,"fixed"]))] <-
+        se[na.omit(self$coeff_array()[,"fixed"])]
+      names(se_all) <- row.names(self$coeff_array())
+      
       # Unpack model components
-      obspar_se <- se[which(names(par) == "coeff_fe_obs")]
-      hidpar_se <- se[which(names(par) == "coeff_fe_hid")]
-      obslam_se <- se[which(names(par) == "log_lambda_obs")]
-      hidlam_se <- se[which(names(par) == "log_lambda_hid")]
+      obspar_se <- se_all[which(names(se_all) == "coeff_fe_obs")]
+      hidpar_se <- se_all[which(names(se_all) == "coeff_fe_hid")]
+      obslam_se <- se_all[which(names(se_all) == "log_lambda_obs")]
+      hidlam_se <- se_all[which(names(se_all) == "log_lambda_hid")]
       
       # Get Wald-type confidence intervals
       quant <- qnorm(1 - (1 - level)/2)
