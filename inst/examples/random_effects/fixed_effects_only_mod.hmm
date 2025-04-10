@@ -7,7 +7,7 @@ count ~ pois
 
 INITIAL 
 count:
-  lambda = 5, 10
+  rate = 5, 10
 tpm:
   0.95, 0.05
   0.05, 0.95

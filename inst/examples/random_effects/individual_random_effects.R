@@ -59,7 +59,7 @@ fxmod$par()
 mod$par()
  
 # look at random effect standard deviations
-mod$vcomp()
+mod$sd_re()
 
 # look at BLUP estimates of random effects
 mod$coeff_re()
