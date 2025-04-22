@@ -629,7 +629,8 @@ HMM <- R6Class(
             nms <- names(v)
           }
           # Set map to user input
-          tmp[nms %in% names(fixed)] <- fixed
+          names_fixed <- nms %in% names(fixed)
+          tmp[names_fixed] <- fixed[nms[names_fixed]]
           tmp <- factor(as.vector(tmp), levels = unique(as.vector(tmp)))
           ls <- list(tmp)
           names(ls) <- par_names[i]
