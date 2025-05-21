@@ -39,7 +39,7 @@ The most common approach is to assume that, within each state, the animal's move
 
 We need to make two key assumptions about the data, which may be limiting in some animal movement applications: (a) the locations are observed at regular time intervals, and (b) the locations are observed with negligible measurement error.
 
-In cases where these assumptions are not satisfied, another modelling approach will be needed. Various state-space models have been developed to accommodate noisy, irregular animal trajectories (@jonsen2005; @johnson2008). Relevant R packages include crawl (@johnson2008) and foieGras (@jonsen2020), and momentuHMM has dedicated functions to prepare the data using crawl before an HMM analysis.
+In cases where these assumptions are not satisfied, another modelling approach will be needed. Various state-space models have been developed to accommodate noisy, irregular animal trajectories (@jonsen2005; @johnson2008). Relevant R packages include crawl (@johnson2008) and aniMotum (@jonsen2023), and momentuHMM has dedicated functions to prepare the data using crawl before an HMM analysis.
 \endtcolorbox
 
 We start by loading a few packages, including moveHMM, which contains a data set of wild haggis movement that we will use here, as well as functions for data preparation. 

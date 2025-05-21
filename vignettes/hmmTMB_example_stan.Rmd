@@ -35,7 +35,7 @@ set.seed(34564529)
 
 # Data
 
-As an example, we will use a set of elephant seal movement tracks included in the R package aniMotum (@jonsen2020), for which installation instructions can be found at \url{https://ianjonsen.github.io/aniMotum/index.html}. Our aim is not to provide a thorough ecological analysis, but only to illustrate features of the hmmTMB package. 
+As an example, we will use a set of elephant seal movement tracks included in the R package aniMotum (@jonsen2020, @jonsen2023), for which installation instructions can be found at \url{https://ianjonsen.github.io/aniMotum/index.html}. Our aim is not to provide a thorough ecological analysis, but only to illustrate features of the hmmTMB package. 
 
 The first chunk of code below predicts elephant seal positions at regular intervals using aniMotum, which is required for the hidden Markov model (HMM) analysis, and computes relevant movement variables with moveHMM.
 
@@ -91,7 +91,7 @@ For the `Observation` model, we use the `gamma2` distribution, which is paramete
 
 ```{r mod-spec2}
 dists <- list(step = "gamma2")
-par0 <- list(step = list(mean = c(10, 50), sd = c(10, 50)))
+par0 <- list(step = list(mean = c(10, 40), sd = c(10, 20)))
 obs <- Observation$new(data = data, 
                        dists = dists, 
                        par = par0)
@@ -116,31 +116,47 @@ hmm$priors()
 hmm$coeff_fe()
 ```
 
-The observation model has four working parameters: the log mean and the log standard deviation in each state (both log-transformed because the mean and standard deviation are positive). In hmmTMB, only normal priors can be defined, and they should be specified in a matrix with one row for each working parameter, and two columns for the hyperparameters of the prior distribution (mean and standard deviation of normal prior). In this example, we choose the following priors:
+### Priors for observation parameters
+
+The observation model has four working parameters: the log mean and the log standard deviation in each state (both log-transformed because the mean and standard deviation are positive). Denote as $\mu_j$ and $\sigma_j$ the mean and standard deviation of the step length distribution for state $j \in \{1, 2\}$. In hmmTMB, only normal priors can be defined, and they should be specified in a matrix with one row for each working parameter, and two columns for the hyperparameters of the prior distribution (mean and standard deviation of normal prior). 
+
+Here is how we might choose prior hyperparameters for the log-mean in state 1, $\log(\mu_1)$. We suspect that state 1 will capture shorter step lengths, and, looking at the data, we can make an educated guess that the mean in state 1 will be somewhere between 0 and 30km. (This is also why we chose an initial parameter value of 10 for $\mu_1$ above.) So, we might set the mean of the prior distribution of $\log(\mu_1)$ to $\log(10)$. Choosing the standard deviation of the normal prior is less straightforward, but we can sample from the prior distribution and transform to an interpretable quantity to check whether a given value seems reasonable (similar to prior predictive checks). Below, we compare the prior distributions on $\mu_1$ (i.e., $\exp(\log(\mu_1))$) obtained for three different values of the prior standard deviation: 0.1, 0.5, and 3.
+
+```{r prior-check1, fig.width = 3, fig.height = 3, out.width="32%", fig.align = "center", fig.show = "hold"}
+plot(density(exp(rnorm(1e4, mean = log(10), sd = 0.1))), 
+     main = "SD = 0.1", xlab = NA)
+plot(density(exp(rnorm(1e4, mean = log(10), sd = 0.5))), 
+     main = "SD = 0.5", xlab = NA)
+plot(density(exp(rnorm(1e4, mean = log(10), sd = 3))), 
+     main = "SD = 3", xlab = NA)
+```
+
+The prior distribution for SD = 0.1 is quite narrow around 10, and would perhaps constrain the model too much. On the other extreme, the prior for SD = 3 is extremely wide and gives high probability to unrealistically large values for $\mu_1$ (in the 1000s of km). The middle option, SD = 0.5, seems like a good compromise. We use a similar reasoning to choose the following priors:
 \begin{align*}
-\log(\mu_1) & \sim N(\log(10), 5^2)\\
-\log(\mu_2) & \sim N(\log(30), 5^2)\\
-\log(\sigma_1) & \sim N(\log(10), 5^2)\\
-\log(\sigma_2) & \sim N(\log(30), 5^2)
+\log(\mu_1) & \sim N(\log(10), 0.5^2)\\
+\log(\mu_2) & \sim N(\log(40), 1^2)\\
+\log(\sigma_1) & \sim N(\log(10), 0.5^2)\\
+\log(\sigma_2) & \sim N(\log(20), 0.5^2)
 \end{align*}
-where $\mu_j$ and $\sigma_j$ are the mean and standard deviation of the step length distribution for state $j \in \{1, 2\}$.
 
 ```{r set-priors1}
 # Parameter of normal priors for observation parameters
-prior_obs <- matrix(c(log(10), 5, 
-                      log(30), 5,
-                      log(10), 5,
-                      log(30), 5), 
+prior_obs <- matrix(c(log(10), 0.5, 
+                      log(40), 1,
+                      log(10), 0.5,
+                      log(20), 0.5), 
                     ncol = 2, byrow = TRUE)
 ```
+
+### Priors for the transition probabilities
 
 In a 2-state model, the working parameters for the hidden state process are the coefficients $(\beta_{120}, \beta_{121}, \beta_{122}, \beta_{210}, \beta_{211}, \beta_{212})$ defined above. For $i \neq j \in \{ 1, 2\}$, $\beta_{ij0}$ is an intercept parameter, $\beta_{ij1}$ is the linear effect of ordinal day, and $\beta_{ij2}$ is the quadratic effect of ordinal day. 
 
 We use the following priors,
 \begin{align*}
 \beta_{ij0} \sim N(-2, 1) \\
-\beta_{ij1} \sim N(0, 100) \\
-\beta_{ij2} \sim N(0, 100) \\
+\beta_{ij1} \sim N(0, 20) \\
+\beta_{ij2} \sim N(0, 20) \\
 \end{align*}
 
 The mean for the intercept is chosen as $-2$ because $\text{logit}(0.1) \approx -2$, i.e., the prior suggests that the off-diagonal elements of the transition probability matrix should be small (as is often the case in practice due to autocorrelation in the hidden process). The coefficient for day and day squared have priors centered on zero with large variance; one could use prior predictive checks to ensure that these cover a reasonable range of possible relationships between ordinal day and transition probabilities. Note that the definition of the working parameters is a little more complicated in models with more than 2 states.
@@ -148,13 +164,15 @@ The mean for the intercept is chosen as $-2$ because $\text{logit}(0.1) \approx 
 ```{r set-priors2}
 # Parameter of normal priors for transition probabilities
 prior_hid <- matrix(c(-2, 1,
-                      0, 100,
-                      0, 100,
+                      0, 20,
+                      0, 20,
                       -2, 1,
-                      0, 100,
-                      0, 100),
+                      0, 20,
+                      0, 20),
                     ncol = 2, byrow = TRUE)
 ```
+
+### Updating the priors
 
 Finally, we update the priors stored in the model object using `set_priors()`, and we check that they have been correctly set.
 
@@ -168,7 +186,7 @@ hmm$priors()
 
 # Fitting the model
 
-The main function to fit a model using Stan in hmmTMB is `HMM$fit_stan()`. It takes the same arguments as `tmbstan()` from the tmbstan package, and documentation for that function should be consulted for more details. Here, we pass two arguments: the number of chains (`chains`) and the number of MCMC iterations in each chain (`iter`). In practice, these arguments should be chosen carefully to ensure convergence of the sampler to the stationary distribution (see Stan documentation for more information); the values below were merely chosen for speed. In this example, running the sampler for 2000 iterations takes about one minute on a laptop.
+The main function to fit a model using Stan in hmmTMB is `HMM$fit_stan()`. It takes the same arguments as `tmbstan()` from the tmbstan package, and documentation for that function should be consulted for more details. Here, we pass two arguments: the number of chains (`chains`) and the number of MCMC iterations in each chain (`iter`). In practice, these arguments should be chosen carefully to ensure convergence of the sampler to the stationary distribution (see Stan documentation for more information); the values below were merely chosen for speed. In this example, running the sampler for 2000 iterations takes a few minutes on a desktop computer.
 
 ```{r fit-hmm, results = 'hide'}
 hmm$fit_stan(chains = 1, iter = 2000)

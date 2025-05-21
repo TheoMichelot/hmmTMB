@@ -161,9 +161,9 @@ with $f$ constrained to be cyclical. This is a more flexible version of the trig
 f <- ~ s(x1, k = 5, bs = "cc")
 ```
 
-## Multivariate smooth
+## Isotropic multivariate smooth
 
-Smooth interactions between two or more continuous variables can also be specified. For two covariates $x_1$ and $x_2$, we might represent this by the equation
+Isootropic smooth interactions between two or more continuous variables can also be specified. For two covariates $x_1$ and $x_2$, we might represent this by the equation
 $$
 \eta_i = \beta_0 + f(x_{1i}, x_{2i})
 $$
@@ -175,10 +175,7 @@ f <- ~ s(x1, x2, k = 5, bs = "ts")
 ```
 Note that this only works with thin plate regression splines (and not with cubic splines for example).
 
-If $x_1$ and $x_2$ are **not** on the same scale, tensor product splines are needed instead, and can be implemented with
-```{r multidim2}
-f <- ~ te(x1, x2, k = 5, bs = "ts")
-```
+If $x_1$ and $x_2$ are **not** on the same scale, tensor product splines are needed instead, but this is not currently supported in hmmTMB.
 
 
 # Random effects
