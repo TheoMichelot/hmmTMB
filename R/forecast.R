@@ -177,9 +177,9 @@ forecast <- R6::R6Class(
         model_params   <- names(self$obs_par_forecast[, 1, 1])
         current_params <- intersect(pdf_params, model_params)
 
-        x_vals <- self$x_vals[[dimension]]
+        dim_x_vals <- self$x_vals[[dimension]]
         self$forecasted_pdfs[[dimension]] <-
-          array(NA_real_, dim = c(length(x_vals), n_steps))
+          array(NA_real_, dim = c(length(dim_x_vals), n_steps))
 
         for (i in seq_len(n_steps)) {
 
@@ -189,19 +189,19 @@ forecast <- R6::R6Class(
             seq_len(self$hmm$hid()$nstates()),   # loop over hidden states
             function(s) {                       # compute pdf for state s
               obs_dists$pdf_apply(
-                x   = x_vals,
+                x   = dim_x_vals,
                 par = stats::setNames(
                   self$obs_par_forecast[current_params, s, i],
                   obs_dists$parnames()
                 )
               )
             },
-            numeric(length(x_vals))              # vapply template: numeric vector of length |x_vals|
-          )   
+            numeric(length(dim_x_vals))        # vapply template: numeric vector of length |x_vals|
+          )
 
           # Compute the weighted sum over states to get the unconditional forecasted pdf
-          self$forecasted_pdfs[[dimension]][, i] <-
-            as.vector(pdf_matrix %*% self$hidden_state_forecast[, i])
+          un_normalised_pdf <- pdf_matrix %*% self$hidden_state_forecast[, i]
+          self$forecasted_pdfs[[dimension]][, i] <- un_normalised_pdf / sum(un_normalised_pdf)
         }
       }
     }
