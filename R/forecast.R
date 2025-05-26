@@ -177,6 +177,12 @@ forecast <- R6::R6Class(
         model_params   <- names(self$obs_par_forecast[, 1, 1])
         current_params <- intersect(pdf_params, model_params)
 
+        if (is.null(current_params)) {
+          # Edge case: when obs_par_forecast has only 1 parameter it is unnamed
+          # Use current_params = 1 to unpack the matrix correctly
+          current_params <- 1
+        }
+
         dim_x_vals <- self$x_vals[[dimension]]
         self$forecasted_pdfs[[dimension]] <-
           array(NA_real_, dim = c(length(dim_x_vals), n_steps))
@@ -232,9 +238,12 @@ forecast <- R6::R6Class(
         stop("`forecast_data` must be a data.frame", call. = FALSE)
 
       # Covariate coverage -----------------------------------------------------
-      covariates <- unique(c(
-        sapply(hmm$hid()$formulas(), all.vars),
-        rapply(hmm$obs()$formulas(), all.vars)
+      covariates <- unique(Filter(
+        function(x) !is.null(x) && x != "",     # remove NULLs and empty strings
+        c(
+          sapply(hmm$hid()$formulas(), all.vars),
+          rapply(hmm$obs()$formulas(), all.vars)
+        )
       ))
 
       if (length(covariates)) {
@@ -267,8 +276,8 @@ forecast <- R6::R6Class(
 
       if (!is.character(starting_state_distribution) &&
           (!is.numeric(starting_state_distribution) ||
-             length(starting_state_distribution) != hmm$hid()$n_states()))
-        stop("`starting_state_distribution` must have length n_states()",
+             length(starting_state_distribution) != hmm$hid()$nstates()))
+        stop("`starting_state_distribution` must have length nstates()",
              call. = FALSE)
     },
 
