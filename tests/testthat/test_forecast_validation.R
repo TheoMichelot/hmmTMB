@@ -14,28 +14,28 @@ mod_simple <- HMM$new(obs = obs_simple, hid = hid_simple)
 
 test_that("`hmm` must be provided", {
   expect_error(
-    forecast$new(hmm = NULL, n = 5),
+    Forecast$new(hmm = NULL, n = 5),
     "`hmm` must be provided"
   )
 })
 
 test_that("Supply either `n` or `forecast_data`", {
   expect_error(
-    forecast$new(hmm = mod_simple),
+    Forecast$new(hmm = mod_simple),
     "Supply either `n` or `forecast_data`"
   )
 })
 
 test_that("`n` must be a positive integer", {
   expect_error(
-    forecast$new(hmm = mod_simple, n = 0),
+    Forecast$new(hmm = mod_simple, n = 0),
     "`n` must be a positive integer"
   )
 })
 
 test_that("`forecast_data` must be a data.frame", {
   expect_error(
-    forecast$new(hmm = mod_simple, forecast_data = list(a = 1)),
+    Forecast$new(hmm = mod_simple, forecast_data = list(a = 1)),
     "`forecast_data` must be a data.frame"
   )
 })
@@ -57,21 +57,21 @@ bad_df <- data.frame(ID = rep(1, 5), count = rep(0, 5)) # missing 'x'
 
 test_that("Provide `forecast_data` when covariates are in the model", {
   expect_error(
-    forecast$new(hmm = mod_cov, n = 5),
+    Forecast$new(hmm = mod_cov, n = 5),
     "Provide `forecast_data` when covariates are in the model"
   )
 })
 
 test_that("`forecast_data` is missing required covariates", {
   expect_error(
-    forecast$new(hmm = mod_cov, forecast_data = bad_df),
+    Forecast$new(hmm = mod_cov, forecast_data = bad_df),
     "`forecast_data` is missing covariates: x"
   )
 })
 
 test_that("`preset_x_vals` must be a *named* list", {
   expect_error(
-    forecast$new(
+    Forecast$new(
       hmm           = mod_cov,
       forecast_data = good_df,
       preset_x_vals = list(runif(5))
@@ -82,7 +82,7 @@ test_that("`preset_x_vals` must be a *named* list", {
 
 test_that("`starting_state_distribution` must be provided", {
   expect_error(
-    forecast$new(
+    Forecast$new(
       hmm                          = mod_cov,
       forecast_data                = good_df,
       starting_state_distribution  = NULL
@@ -93,7 +93,7 @@ test_that("`starting_state_distribution` must be provided", {
 
 test_that("`starting_state_distribution` must be 'last' or 'stationary'", {
   expect_error(
-    forecast$new(
+    Forecast$new(
       hmm                          = mod_cov,
       forecast_data                = good_df,
       starting_state_distribution  = "foo"
@@ -104,7 +104,7 @@ test_that("`starting_state_distribution` must be 'last' or 'stationary'", {
 
 test_that("`starting_state_distribution` numeric vector must have length n_states()", {
   expect_error(
-    forecast$new(
+    Forecast$new(
       hmm                          = mod_cov,
       forecast_data                = good_df,
       starting_state_distribution  = c(0.5, 0.5, 0.5)
@@ -115,11 +115,11 @@ test_that("`starting_state_distribution` numeric vector must have length n_state
 
 # -- 3. A valid call succeeds ------------------------------------------------
 test_that("Valid arguments create a forecast object", {
-  fc <- forecast$new(
+  fc <- Forecast$new(
     hmm           = mod_cov,
     forecast_data = good_df
   )
-  expect_true(inherits(fc, "forecast"))
+  expect_true(inherits(fc, "Forecast"))
   expect_equal(nrow(fc$forecast_data), 5)
   expect_equal(names(fc$forecast_data), names(good_df))
 })

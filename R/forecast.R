@@ -48,7 +48,7 @@
 #'   mod <- HMM$new(file = "pois_mod.hmm")
 #'   mod$fit()
 #'
-#'   fc  <- forecast$new(hmm = mod, n = 12)
+#'   fc  <- Forecast$new(hmm = mod, n = 12)
 #'
 #'   # Plot the nth forecasted pdf for the first observation variable
 #'   step <- 1
@@ -69,8 +69,8 @@
 #' }
 #'
 #' @export
-forecast <- R6::R6Class(
-  "forecast",
+Forecast <- R6::R6Class(
+  classname = "Forecast",
 
   ## Public fields -------------------------------------------------------------
   public = list(
@@ -169,23 +169,33 @@ forecast <- R6::R6Class(
       self$forecasted_pdfs <- vector("list", length(self$observation_vars))
       names(self$forecasted_pdfs) <- self$observation_vars
 
-      for (dimension in self$observation_vars) {
+      for (obs_var in self$observation_vars) {
 
-        obs_dists      <- hmm$obs()$dists()[[dimension]]
+        # Get the distribution and parameters for the current observation variable
+        obs_dists      <- hmm$obs()$dists()[[obs_var]]
 
-        pdf_params     <- paste0(dimension, ".", names(formals(obs_dists$pdf())))
         model_params   <- names(self$obs_par_forecast[, 1, 1])
-        current_params <- intersect(pdf_params, model_params)
-
-        if (is.null(current_params)) {
+        if (is.null(model_params)) {
           # Edge case: when obs_par_forecast has only 1 parameter it is unnamed
           # Use current_params = 1 to unpack the matrix correctly
           current_params <- 1
+        } else {
+          # Otherwise, obtain the parameters for the current dimension
+          current_params <- grep(paste0("^", obs_var, "(\\.)"), model_params, value = TRUE)
         }
 
-        dim_x_vals <- self$x_vals[[dimension]]
-        self$forecasted_pdfs[[dimension]] <-
-          array(NA_real_, dim = c(length(dim_x_vals), n_steps))
+        obs_x_vals <- self$x_vals[[obs_var]]
+
+        # In the case where distribution is multivariate, (dirichlet) we need a
+        # list where each element is a vector of x-values instead of a matrix.
+        if (is.matrix(obs_x_vals)) {
+          obs_x_vals <- as.list(
+            as.data.frame(obs_x_vals, stringsAsFactors = FALSE)
+          )
+        }
+
+        self$forecasted_pdfs[[obs_var]] <-
+          array(NA_real_, dim = c(length(obs_x_vals), n_steps))
 
         for (i in seq_len(n_steps)) {
 
@@ -195,19 +205,19 @@ forecast <- R6::R6Class(
             seq_len(self$hmm$hid()$nstates()),   # loop over hidden states
             function(s) {                       # compute pdf for state s
               obs_dists$pdf_apply(
-                x   = dim_x_vals,
+                x   = obs_x_vals,
                 par = stats::setNames(
                   self$obs_par_forecast[current_params, s, i],
                   obs_dists$parnames()
                 )
               )
             },
-            numeric(length(dim_x_vals))        # vapply template: numeric vector of length |x_vals|
+            numeric(length(obs_x_vals)) # vapply template: numeric vector of length |x_vals|
           )
 
           # Compute the weighted sum over states to get the unconditional forecasted pdf
           un_normalised_pdf <- pdf_matrix %*% self$hidden_state_forecast[, i]
-          self$forecasted_pdfs[[dimension]][, i] <- un_normalised_pdf / sum(un_normalised_pdf)
+          self$forecasted_pdfs[[obs_var]][, i] <- un_normalised_pdf / sum(un_normalised_pdf)
         }
       }
     }
