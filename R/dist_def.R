@@ -188,7 +188,7 @@ dist_nbinom2 <- Dist$new(
   cdf = function(q, mean, shape) {
     size <- shape
     prob <- shape / (mean + shape)
-    pnbinom(x = x, size = size, prob = prob)
+    pnbinom(q = q, size = size, prob = prob)
   },
   rng = function(n, mean, shape) {
     size <- shape
