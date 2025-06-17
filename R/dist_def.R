@@ -738,25 +738,17 @@ dist_tweedie <- Dist$new(
 # Angular distributions ---------------------------------------------------
 
 # Von Mises ====================================
-#' @importFrom CircStats rvm
 dist_vm <- Dist$new(
   name = "vm",
   name_long = "von Mises",
   pdf = function(x, mu = 0, kappa = 1, log = FALSE) {
-    b <- besselI(kappa, 0)
-    if(!log)
-      val <- 1/(2 * pi * b) * exp(kappa * cos(x - mu))
-    else
-      val <- - log(2 * pi * b) + kappa * cos(x - mu)
-    return(val)
+    dvonmises(x = x, mu = mu, kappa = kappa, log = log)
   },
   cdf = function(q, mu, kappa) {
     return(NA)
   },
   rng = function(n, mu, kappa) {
-    # rvm and dvm use different parameter names
-    # (also, translate rvm output from [0, 2pi] to [-pi, pi])
-    rvm(n = n, mean = mu + pi, k = kappa) - pi
+    rvonmises(n = n, mu = mu, kappa = kappa)
   },
   link = list(mu = function(x) qlogis((x + pi) / (2 * pi)),
               kappa = log),
@@ -779,24 +771,17 @@ dist_vm <- Dist$new(
 )
 
 # Wrapped Cauchy ====================================
-#' @importFrom CircStats dwrpcauchy rwrpcauchy
 dist_wrpcauchy <- Dist$new(
   name = "wrpcauchy",
   name_long = "wrapped Cauchy",
   pdf = function(x, mu, rho, log = FALSE) {
-    val <- dwrpcauchy(theta = x, mu = mu, rho = rho)
-    if(log) {
-      val <- log(val)
-    }
-    return(val)
+    dwrpcauchy(x = x, mu = mu, rho = rho, log = log)
   },
   cdf = function(q, mu, rho) {
     return(NA)
   },
   rng = function(n, mu, rho) {
-    samp <- rwrpcauchy(n, mu, rho)
-    samp <- ifelse(samp > pi, samp - 2 * pi, samp)
-    return(samp)
+    rwrpcauchy(n = n, mu = mu, rho = rho)
   },
   link = list(mu = function(x) qlogis((x + pi) / (2 * pi)),
               rho = qlogis),
