@@ -742,13 +742,13 @@ dist_vm <- Dist$new(
   name = "vm",
   name_long = "von Mises",
   pdf = function(x, mu = 0, kappa = 1, log = FALSE) {
-    dvonmises(x = x, mu = mu, kappa = kappa, log = log)
+    dvm(x = x, mu = mu, kappa = kappa, log = log)
   },
   cdf = function(q, mu, kappa) {
     return(NA)
   },
   rng = function(n, mu, kappa) {
-    rvonmises(n = n, mu = mu, kappa = kappa)
+    rvm(n = n, mu = mu, kappa = kappa)
   },
   link = list(mu = function(x) qlogis((x + pi) / (2 * pi)),
               kappa = log),

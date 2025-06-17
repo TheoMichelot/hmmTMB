@@ -452,7 +452,7 @@ check_contiguous <- function(x) {
 #' @param log Should log-density be returned?
 #' 
 #' @return Von Mises density
-dvonmises <- function(x, mu, kappa, log = FALSE) {
+dvm <- function(x, mu, kappa, log = FALSE) {
   b <- besselI(kappa, 0)
   val <- - log(2 * pi * b) + kappa * cos(x - mu)
   if(!log) {
@@ -469,17 +469,17 @@ dvonmises <- function(x, mu, kappa, log = FALSE) {
 #' 
 #' @return Vector of n samples from vm(mu, kappa)
 #' 
-#' @details Uses basic rejection sampling, based on dvonmises(), which might
+#' @details Uses basic rejection sampling, based on dvm(), which might
 #' be inefficient for large kappa. Could be improved following Best & Fisher 
 #' (1979), Efficient simulation of the von Mises distribution, JRSSC, 28(2), 
 #' 152-157.
-rvonmises <- function(n, mu, kappa) {
+rvm <- function(n, mu, kappa) {
   x <- rep(NA, n)
   n_accept <- 0
-  pdf_max <- dvonmises(x = mu, mu = mu, kappa = kappa)
+  pdf_max <- dvm(x = mu, mu = mu, kappa = kappa)
   while(n_accept < n) {
     x_star <- runif(1, min = -pi, max = pi)
-    pdf_star <- dvonmises(x = x_star, mu = mu, kappa = kappa)
+    pdf_star <- dvm(x = x_star, mu = mu, kappa = kappa)
     accept_prob <- pdf_star/pdf_max
     if(runif(1) < accept_prob) {
       n_accept <- n_accept + 1
