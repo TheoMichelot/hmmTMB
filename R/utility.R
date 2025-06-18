@@ -474,6 +474,8 @@ dvm <- function(x, mu, kappa, log = FALSE) {
 #' be inefficient for large kappa. Could be improved following Best & Fisher 
 #' (1979), Efficient simulation of the von Mises distribution, JRSSC, 28(2), 
 #' 152-157.
+#' 
+#' @importFrom stats runif
 rvm <- function(n, mu, kappa) {
   x <- rep(NA, n)
   n_accept <- 0

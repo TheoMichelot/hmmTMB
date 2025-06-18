@@ -18,7 +18,7 @@ Description: Fitting hidden Markov models using automatic differentiation
 URL: https://github.com/TheoMichelot/hmmTMB
 License: GPL-3
 Depends: R6, mgcv, TMB, ggplot2
-Imports: Matrix, stringr, CircStats, MASS, tmbstan, methods
+Imports: Matrix, stringr, MASS, tmbstan, methods
 LinkingTo: TMB, RcppEigen
 Suggests: 
     rstan,
