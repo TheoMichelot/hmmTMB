@@ -17,13 +17,19 @@ vignette: >
 
 This document lists vignettes and other resources for the R package hmmTMB, which include details about its implementation, as well as several step-by-step analyses on various types of time series data. The vignettes are available on Github, rather than directly included in the CRAN version of the package, because generating them takes a long time.
 
-# Preprint
+The vignettes are subject to change, and you should consult the Github repository of the package for the latest documentation: https://github.com/TheoMichelot/hmmTMB.
+
+# Article
 
 A description of the statistical background, implementation details, and several detailed examples, are provided in the following arXiv preprint: ['hmmTMB: hidden Markov models with flexible covariate effects in R'](https://arxiv.org/abs/2211.14139) (@michelot2022).
 
 # Vignettes
 
+## Main vignette
+
 - ['Analysing time series data with hidden Markov models in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_workflow.pdf): Overview of package workflow, using detailed example based on analysis of energy prices. This is a good starting point to learn how to use the package.
+ 
+## Other features
  
  - ['Bayesian inference in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_stan.pdf): Description of workflow for Bayesian analysis in hmmTMB, including specifying priors, and extracting posterior samples.
  
@@ -31,10 +37,22 @@ A description of the statistical background, implementation details, and several
  
  - ['General dependence structures in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_general_structures.pdf): Implementation details for hidden Markov models (HMMs) with non-standard dependence structures, including hidden semi-Markov models, higher-order HMMs, autoregressive HMMs, and coupled HMMs.
  
- - ['List of distributions in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_dist_list.pdf): List of observation distributions currently available in hmmTMB.
-  
+## Case studies
+
  - ['Flexible animal movement modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_movement.pdf): Description of wild haggis movement analysis, illustrating how non-parametric covariate effects can be included. This includes two different types of movement models: (1) correlated random walks based on step lengths and turning angles, and (2) correlated random walks based on locations directly.
  
  - ['Occupancy modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_occupancy.pdf): Analysis of occupancy data set of crossbill from @kery2013.
  
+ - ['The categorical distribution in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_categorical.pdf): The categorical distribution is slightly different from others, in that the number of parameters depends on the data (specifically, on the number of categories in the data). This vignette shows an example analysis for a data set on patient-therapist interactions from the mHMMbayes package.
+
+ - ['The multivariate normal distribution in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_mvn.pdf): We illustrate the state-dependent multivariate normal distribution for modelling correlated variables, using time series of log-returns. The vignette describes the formulation in terms of standard deviations and correlation parameters, and compares this approach to using multiple univariate normal distributions.
+
+## Reference vignettes
+ 
+ - ['List of distributions in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_dist_list.pdf): List of observation distributions currently available in hmmTMB.
+  
+ - ['Adding new distributions in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_adding_distributions.pdf): Technical vignette about adding new observation distributions to hmmTMB, with detailed instructions to add the required R and C++ code.
+ 
+ - ['Syntax of model formulas in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_formula_syntax.pdf): Flexible covariate dependence can be specified using the syntax of mgcv formulas, and this vignette describes a few special cases, including random effects (intercepts or slopes), smooth non-linear relationships, factor-smooth interactions, multidimensional smooths, varying-coefficient models, cyclical effects, etc.
+
 # References
