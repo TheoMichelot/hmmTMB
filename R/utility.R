@@ -453,8 +453,9 @@ check_contiguous <- function(x) {
 #' 
 #' @return Von Mises density
 dvm <- function(x, mu, kappa, log = FALSE) {
-  b <- besselI(kappa, 0)
-  val <- - log(2 * pi * b) + kappa * cos(x - mu)
+  # The "- kappa" term below cancels out the expon.scaled
+  b <- besselI(kappa, 0, expon.scaled = TRUE)
+  val <- - log(2 * pi * b) + kappa * cos(x - mu) - kappa
   if(!log) {
     val <- exp(val)        
   }
