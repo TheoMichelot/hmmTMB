@@ -10,6 +10,7 @@
 #' @importFrom ggplot2 ggplot aes theme_light geom_line theme scale_colour_manual
 #' facet_wrap label_bquote xlab ylab ggtitle element_blank element_text geom_point
 #' geom_ribbon scale_size_manual geom_histogram geom_vline geom_errorbar after_stat
+#' coord_cartesian
 #' @importFrom TMB MakeADFun sdreport
 #' @importFrom stringr str_trim str_split str_split_fixed
 #' @importFrom stats nlminb
