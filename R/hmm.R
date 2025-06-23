@@ -847,14 +847,14 @@ HMM <- R6Class(
       } else {
         args$control <- list(eval.max = 1e4, iter.max = 1e4)
       }
-
+      
       # Fit model
       args <- c(private$tmb_obj_, args)
       systime <- system.time(
         private$out_ <- nlminb(start = args$par, 
-                             objective = args$fn,
-                             gradient = args$gr, 
-                             control = args$control)
+                               objective = args$fn,
+                               gradient = args$gr, 
+                               control = args$control)
       )
       private$out_$systime <- systime
       
@@ -1422,7 +1422,7 @@ HMM <- R6Class(
                             t = t,
                             level = level,
                             return_post = return_post)
-
+        
         # Replace posterior mean from post_fn() by MLE        
         val$mean <- fn(linpred = self[[comp]]()$linpred(), t = t)
         names(val)[which(names(val) == "mean")] <- "mle"
