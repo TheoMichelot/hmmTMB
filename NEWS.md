@@ -1,4 +1,4 @@
-# hmmTMB 1.0.3
+# hmmTMB 1.1.0
 
 - Add standard error to output of `HMM$confint()`
 - Use ID-specific `delta0` when `initial_state = "stationary"`
