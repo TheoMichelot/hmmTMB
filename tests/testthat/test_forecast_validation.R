@@ -1,3 +1,8 @@
+library(testthat)
+library(devtools)
+
+load_all("../../../hmmTMB")
+
 context("Forecast parameter validation")
 
 # -- 1. Setup a simple HMM without covariates -------------------------------

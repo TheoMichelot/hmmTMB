@@ -1,0 +1,22 @@
+DATA 
+dataset = double_obs_df
+nstates = 2 
+
+DISTRIBUTION
+obs_1 ~ pois
+obs_2 ~ pois
+
+FORMULAS
+obs_1:
+    rate ~ cov_1
+obs_2:
+    rate ~ cov_1
+
+INITIAL 
+obs_1:
+  rate = 4, 10
+obs_2:
+  rate = 4, 10
+tpm:
+  0.9, 0.1
+  0.1, 0.9

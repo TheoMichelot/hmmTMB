@@ -21,7 +21,7 @@
 #' }
 #'
 #' @param hmm A fitted HMM object.
-#' @param n Integer. Forecast horizon (ignored when `forecast_data` is supplied).
+#' @param n Integer. Forecast horizon (ignored when `forecast_data` exists).
 #' @param forecast_data `data.frame` of future covariates / IDs.
 #'        Must contain every covariate used in the fitted `hmm`.
 #' @param preset_x_vals *Named* list whose elements are numeric vectors giving
@@ -91,7 +91,7 @@ Forecast <- R6::R6Class(
                           preset_x_vals     = NULL,
                           starting_state_distribution = "last") {
 
-      ## -- 1  Input checking ---------------------------------------------------
+      ## -- 1  Input checking --------------------------------------------------
       private$validate_params(
         hmm                       = hmm,
         n                         = n,
@@ -147,7 +147,9 @@ Forecast <- R6::R6Class(
           dist_0 <- self$hmm$hid()$stationary()
         }
 
-      } else dist_0 <- starting_state_distribution
+      } else {
+        dist_0 <- starting_state_distribution
+      }
 
       ## -- 7  Forward-propagate hidden states ---------------------------------
       n_steps <- nrow(self$forecast_data)
@@ -171,7 +173,7 @@ Forecast <- R6::R6Class(
 
       for (obs_var in self$observation_vars) {
 
-        # Get the distribution and parameters for the current observation variable
+        # Get distribution and parameters for the current observation variable
         obs_dists      <- hmm$obs()$dists()[[obs_var]]
 
         model_params   <- names(self$obs_par_forecast[, 1, 1])
@@ -181,17 +183,22 @@ Forecast <- R6::R6Class(
           current_params <- 1
         } else {
           # Otherwise, obtain the parameters for the current dimension
-          current_params <- grep(paste0("^", obs_var, "(\\.)"), model_params, value = TRUE)
+          current_params <- grep(
+            paste0("^", obs_var, "(\\.)"), model_params, value = TRUE
+          )
         }
 
         obs_x_vals <- self$x_vals[[obs_var]]
 
-        # In the case where distribution is multivariate, (dirichlet) we need a
-        # list where each element is a vector of x-values instead of a matrix.
+        # In the case where distribution is multivariate, (dirichlet, mvnorm) we
+        # need a list where each element is a vector of x-values.
         if (is.matrix(obs_x_vals)) {
+          multi_variate <- TRUE
           obs_x_vals <- as.list(
             as.data.frame(obs_x_vals, stringsAsFactors = FALSE)
           )
+        } else {
+          multi_variate <- FALSE
         }
 
         self$forecasted_pdfs[[obs_var]] <-
@@ -212,20 +219,21 @@ Forecast <- R6::R6Class(
                 )
               )
             },
-            numeric(length(obs_x_vals)) # vapply template: numeric vector of length |x_vals|
+            # vapply template: numeric vector of length |x_vals|
+            numeric(length(obs_x_vals))
           )
 
-          # Compute the weighted sum over states to get the unconditional forecasted pdf
-          un_normalised_pdf <- pdf_matrix %*% self$hidden_state_forecast[, i]
-          self$forecasted_pdfs[[obs_var]][, i] <- un_normalised_pdf / sum(un_normalised_pdf)
+          # Compute forecasted pdf
+          self$forecasted_pdfs[[obs_var]][, i] <- pdf_matrix %*% self$hidden_state_forecast[, i]
+
         }
       }
     }
   ),
 
-  ## --------------------------------------------------------------------------
+  ## ---------------------------------------------------------------------------
   ## Private helpers -----------------------------------------------------------
-  ## --------------------------------------------------------------------------
+  ## ---------------------------------------------------------------------------
   private = list(
     ## -- 1  Comprehensive argument checks -------------------------------------
     validate_params = function(hmm = NULL, n = NULL, forecast_data = NULL,
@@ -237,7 +245,7 @@ Forecast <- R6::R6Class(
       if (!inherits(hmm, "HMM"))
         stop("`hmm` must inherit from class 'HMM'", call. = FALSE)
 
-      # n  vs  forecast_data ----------------------------------------------------
+      # n  vs  forecast_data ---------------------------------------------------
       if (is.null(n) && is.null(forecast_data))
         stop("Supply either `n` or `forecast_data`", call. = FALSE)
 
