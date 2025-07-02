@@ -3,6 +3,7 @@
 S3method(logLik,HMM)
 S3method(update,HMM)
 export(Dist)
+export(Forecast)
 export(HMM)
 export(MarkovChain)
 export(Observation)

@@ -1,0 +1,17 @@
+DATA 
+dataset = single_obs_df
+nstates = 2 
+
+DISTRIBUTION
+obs_1 ~ pois
+
+FORMULAS
+obs_1:
+    rate ~ cov_1
+
+INITIAL 
+obs_1:
+  rate = 4, 10
+tpm:
+  0.9, 0.1
+  0.1, 0.9
