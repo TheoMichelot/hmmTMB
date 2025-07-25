@@ -4,35 +4,30 @@
 \alias{Forecast}
 \title{Forecast R6 Class for Hidden Markov Models}
 \value{
-An R6 object with the following **notable public fields**:  
+An R6 object with notable public accessor methods (invoke with ()):
 \describe{
-  \item{hidden_state_forecast}{`nstates × T` matrix of forward state
-        probabilities.}
+  \item{hidden_state_forecast}{nstates × T matrix of forward state probabilities.}
   \item{obs_par_forecast}{Array of time-varying observation parameters.}
   \item{tpm_forecast}{Array of time-varying transition matrices.}
-  \item{forecast_dists}{List of unconditional pdf matrices, one per
-        observation variable.}
+  \item{forecast_dists}{List of unconditional pdf matrices, one per observation variable.}
   \item{eval_range}{List of grids on which each pdf was evaluated.}
 }
 }
 \description{
-Creates a *forecast* object from a fitted HMM model, projecting
+Creates a forecast object from a fitted HMM model, projecting
 future state probabilities and unconditional observation densities for a
 user-defined horizon or covariate data-frame.
-The forecasting is executed in the constructor; afterwards the results live
-in public fields that can be queried or plotted directly.
+Forecasting occurs in the constructor; results are accessible via public methods.
 }
 \details{
-**Algorithm overview**
+Algorithm overview
 \enumerate{
-  \item Validate inputs (`private$validate_params()`).
-  \item Build or accept a future design matrix (`forecast_data`).
-  \item Obtain time-varying transition matrices (`tpm_forecast`) and
-        observation parameters (`obs_par_forecast`) via `hmm$predict()`.
-  \item Forward-propagate the hidden-state distribution
-        (`hidden_state_forecast`).
-  \item Marginalise over states to derive unconditional pdfs of each
-        observation variable at a user-defined grid (`forecast_dists`).
+  \item Validate inputs (private$validate_params()).
+  \item Build or accept future design matrix (forecast_data).
+  \item Obtain time-varying transition matrices (tpm_forecast) and
+        observation parameters (obs_par_forecast) via hmm$predict().
+  \item Forward-propagate hidden-state distribution (hidden_state_forecast).
+  \item Marginalise over states for unconditional pdfs on user-defined grid (forecast_dists).
 }
 }
 \examples{
@@ -47,15 +42,15 @@ in public fields that can be queried or plotted directly.
   ggplot() +
   geom_ridgeline(
     aes(
-      x = fc$eval_range[[1]],
+      x = fc$eval_range()[[1]],
       y = 1,
-      height = fc$forecast_dists[[1]][, step]
+      height = fc$forecast_dists()[[1]][, step]
     ),
     scale = 0.5
   ) +
   labs(
     title = sprintf("PDF for the \%d Time Step", step),
-    x = sprintf("Observation Value: \%s", fc$observation_vars[[1]]),
+    x = sprintf("Observation Value: \%s", names(fc$forecast_dists())[[1]]),
     y = "Probability Density"
   )
 }
@@ -65,6 +60,13 @@ in public fields that can be queried or plotted directly.
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-Forecast-new}{\code{Forecast$new()}}
+\item \href{#method-Forecast-obs_par_forecast}{\code{Forecast$obs_par_forecast()}}
+\item \href{#method-Forecast-tpm_forecast}{\code{Forecast$tpm_forecast()}}
+\item \href{#method-Forecast-eval_range}{\code{Forecast$eval_range()}}
+\item \href{#method-Forecast-forecast_data}{\code{Forecast$forecast_data()}}
+\item \href{#method-Forecast-update_eval_range}{\code{Forecast$update_eval_range()}}
+\item \href{#method-Forecast-hidden_state_forecast}{\code{Forecast$hidden_state_forecast()}}
+\item \href{#method-Forecast-forecast_dists}{\code{Forecast$forecast_dists()}}
 \item \href{#method-Forecast-clone}{\code{Forecast$clone()}}
 }
 }
@@ -88,22 +90,104 @@ Construct a forecast object.
 \describe{
 \item{\code{hmm}}{A fitted HMM object.}
 
-\item{\code{n}}{Integer. Forecast horizon (ignored when `forecast_data` is supplied).}
+\item{\code{n}}{Integer. Forecast horizon (ignored if forecast_data provided).}
 
-\item{\code{forecast_data}}{`data.frame` of future covariates / IDs.
-Must contain every covariate used in the fitted `hmm`.}
+\item{\code{forecast_data}}{data.frame of future covariates / IDs.
+Must include all covariates in fitted hmm.}
 
-\item{\code{preset_eval_range}}{*Named* list whose elements are numeric vectors giving
-the evaluation grid for each observation variable.  
-Missing names fall back to a 90–110 % range of the training data.}
+\item{\code{preset_eval_range}}{Named list: elements are numeric vectors (univariate) or matrices
+(multivariate, rows as points, columns as dimensions) for evaluation grids per observation variable.
+Missing entries default to 90–110% range of training data.}
 
-\item{\code{starting_state_distribution}}{Numeric vector of length `nstates()`, or
-the string `"last"` (use the filtered distribution of the final
-training row) or `"stationary"` (use the model’s stationary
-distribution).}
+\item{\code{starting_state_distribution}}{Numeric vector of length nstates(), or
+"last" (filtered distribution at final training row, propagated one step) or
+"stationary" (model’s stationary distribution).}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-obs_par_forecast"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-obs_par_forecast}{}}}
+\subsection{Method \code{obs_par_forecast()}}{
+Get predicted observation parameters.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$obs_par_forecast()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-tpm_forecast"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-tpm_forecast}{}}}
+\subsection{Method \code{tpm_forecast()}}{
+Get predicted transition matrices.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$tpm_forecast()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-eval_range"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-eval_range}{}}}
+\subsection{Method \code{eval_range()}}{
+Get the evaluation grid for each response variable.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$eval_range()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-forecast_data"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-forecast_data}{}}}
+\subsection{Method \code{forecast_data()}}{
+Get the forecast data used for predictions.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$forecast_data()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-update_eval_range"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-update_eval_range}{}}}
+\subsection{Method \code{update_eval_range()}}{
+Update the evaluation grid for forecast pdfs.
+This method reconfigures the evaluation range used to compute unconditional predictive pdfs.
+It validates the new eval_range, updates internal state, reinitializes forecast densities,
+and returns the object invisibly for chaining.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$update_eval_range(eval_range)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{eval_range}}{A named list specifying the new evaluation grid for each observation variable.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The Forecast object (invisibly), allowing method chaining.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-hidden_state_forecast"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-hidden_state_forecast}{}}}
+\subsection{Method \code{hidden_state_forecast()}}{
+Get the forward state probabilities.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$hidden_state_forecast()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-forecast_dists"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-forecast_dists}{}}}
+\subsection{Method \code{forecast_dists()}}{
+Get the unconditional predictive pdfs.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$forecast_dists()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-clone"></a>}}
