@@ -17,14 +17,14 @@
 #'   \item Forward-propagate the hidden-state distribution
 #'         (`hidden_state_forecast`).
 #'   \item Marginalise over states to derive unconditional pdfs of each
-#'         observation variable at a user-defined grid (`forecasted_pdfs`).
+#'         observation variable at a user-defined grid (`forecast_dists`).
 #' }
 #'
 #' @param hmm A fitted HMM object.
 #' @param n Integer. Forecast horizon (ignored when `forecast_data` exists).
 #' @param forecast_data `data.frame` of future covariates / IDs.
 #'        Must contain every covariate used in the fitted `hmm`.
-#' @param preset_x_vals *Named* list whose elements are numeric vectors giving
+#' @param preset_eval_range *Named* list whose elements are numeric vectors giving
 #'        the evaluation grid for each observation variable.  
 #'        Missing names fall back to a 90–110 % range of the training data.
 #' @param starting_state_distribution Numeric vector of length `nstates()`, or
@@ -38,9 +38,9 @@
 #'         probabilities.}
 #'   \item{obs_par_forecast}{Array of time-varying observation parameters.}
 #'   \item{tpm_forecast}{Array of time-varying transition matrices.}
-#'   \item{forecasted_pdfs}{List of unconditional pdf matrices, one per
+#'   \item{forecast_dists}{List of unconditional pdf matrices, one per
 #'         observation variable.}
-#'   \item{x_vals}{List of grids on which each pdf was evaluated.}
+#'   \item{eval_range}{List of grids on which each pdf was evaluated.}
 #' }
 #'
 #' @examples
@@ -55,9 +55,9 @@
 #'   ggplot() +
 #'   geom_ridgeline(
 #'     aes(
-#'       x = fc$x_vals[[1]],
+#'       x = fc$eval_range[[1]],
 #'       y = 1,
-#'       height = fc$forecasted_pdfs[[1]][, step]
+#'       height = fc$forecast_dists[[1]][, step]
 #'     ),
 #'     scale = 0.5
 #'   ) +
@@ -69,26 +69,17 @@
 #' }
 #'
 #' @export
-Forecast <- R6::R6Class(
+Forecast <- R6Class(
   classname = "Forecast",
 
   ## Public fields -------------------------------------------------------------
   public = list(
-    hmm                   = NULL,  # fitted HMM model
-    observation_vars      = NULL,  # names of response variables
-    forecast_data         = NULL,  # future covariate data-frame
-    obs_par_forecast      = NULL,  # predicted observation parameters
-    tpm_forecast          = NULL,  # predicted transition matrices
-    x_vals                = NULL,  # grid for each response variable
-    hidden_state_forecast = NULL,  # forward state probabilities
-    forecasted_pdfs       = NULL,  # unconditional predictive pdfs
-
     #' @description
     #' Construct a forecast object.
     initialize = function(hmm               = NULL,
                           n                 = NULL,
                           forecast_data     = NULL,
-                          preset_x_vals     = NULL,
+                          preset_eval_range     = NULL,
                           starting_state_distribution = "last") {
 
       ## -- 1  Input checking --------------------------------------------------
@@ -96,41 +87,42 @@ Forecast <- R6::R6Class(
         hmm                       = hmm,
         n                         = n,
         forecast_data             = forecast_data,
-        preset_x_vals             = preset_x_vals,
+        preset_eval_range             = preset_eval_range,
         starting_state_distribution = starting_state_distribution
       )
 
       ## -- 2  Store the fitted model & basic metadata -------------------------
-      self$hmm             <- hmm
-      self$observation_vars <- colnames(self$hmm$obs()$obs_var())
+      private$hmm_             <- hmm
+      private$observation_vars_ <- colnames(private$hmm_$obs()$obs_var())
+      private$starting_state_distribution_ <- starting_state_distribution
 
       ## -- 3  Build or accept the future design matrix ------------------------
-      self$forecast_data <- if (!is.null(forecast_data)) {
+      private$forecast_data_ <- if (!is.null(forecast_data)) {
         forecast_data
       } else {
         as.data.frame(
           c(
             list(ID = rep(1, n)),
             stats::setNames(
-              replicate(length(self$observation_vars), rep(NA, n),
+              replicate(length(private$observation_vars_), rep(NA, n),
                         simplify = FALSE),
-              self$observation_vars
+              private$observation_vars_
             )
           )
         )
       }
 
       ## -- 4  Predict forward-looking parameters ------------------------------
-      self$obs_par_forecast <- self$hmm$predict("obspar",
-                                                newdata = self$forecast_data)
-      self$tpm_forecast     <- self$hmm$predict("tpm",
-                                                newdata = self$forecast_data)
+      private$obs_par_forecast_ <- private$hmm_$predict("obspar",
+                                                newdata = private$forecast_data_)
+      private$tpm_forecast_     <- private$hmm_$predict("tpm",
+                                                newdata = private$forecast_data_)
 
       ## -- 5  Establish evaluation grids for each response variable -----------
-      self$x_vals <- private$configure_x_vals(
-        x_vals   = preset_x_vals,
-        obs_vars = self$observation_vars,
-        data     = self$hmm$obs()$data()
+      private$eval_range_ <- private$configure_eval_range(
+        eval_range   = preset_eval_range,
+        obs_vars = private$observation_vars_,
+        data     = private$hmm_$obs()$data()
       )
 
       ## -- 6  Choose the initial hidden-state distribution --------------------
@@ -138,45 +130,45 @@ Forecast <- R6::R6Class(
 
         if (starting_state_distribution == "last") {
           # one-step-ahead distribution conditional on final training point
-          last_sp  <- utils::tail(self$hmm$state_probs(), 1)
-          last_tpm <- self$hmm$hid()$tpm(nrow(self$hmm$obs()$data()))[, , 1]
+          last_sp  <- utils::tail(private$hmm_$state_probs(), 1)
+          last_tpm <- private$hmm_$hid()$tpm(nrow(private$hmm_$obs()$data()))[, , 1]
           dist_0   <- last_sp %*% last_tpm
+        } else if (starting_state_distribution == "stationary") {
+          dist_0 <- private$hmm_$hid()$stationary()
+        } else {
+          stop("Character `starting_state_distribution` must be ",
+               "'last' or 'stationary'", call. = FALSE)
         }
-
-        if (starting_state_distribution == "stationary") {
-          dist_0 <- self$hmm$hid()$stationary()
-        }
-
       } else {
         dist_0 <- starting_state_distribution
       }
 
       ## -- 7  Forward-propagate hidden states ---------------------------------
-      n_steps <- nrow(self$forecast_data)
+      n_steps <- nrow(private$forecast_data_)
       hidden_state_forecast <-
         array(NA_real_,
-              dim = c(self$hmm$hid()$nstates(), n_steps))
+              dim = c(private$hmm_$hid()$nstates(), n_steps))
 
       hidden_state_forecast[, 1] <- dist_0
 
       if (n_steps > 1) {
         for (t in 2:n_steps) {
           hidden_state_forecast[, t] <-
-            hidden_state_forecast[, t - 1] %*% self$tpm_forecast[, , t - 1]
+            hidden_state_forecast[, t - 1] %*% private$tpm_forecast_[, , t - 1]
         }
       }
-      self$hidden_state_forecast <- hidden_state_forecast
+      private$hidden_state_forecast_ <- hidden_state_forecast
 
       ## -- 8  Build unconditional predictive pdfs -----------------------------
-      self$forecasted_pdfs <- vector("list", length(self$observation_vars))
-      names(self$forecasted_pdfs) <- self$observation_vars
+      private$forecast_dists_ <- vector("list", length(private$observation_vars_))
+      names(private$forecast_dists_) <- private$observation_vars_
 
-      for (obs_var in self$observation_vars) {
+      for (obs_var in private$observation_vars_) {
 
         # Get distribution and parameters for the current observation variable
-        obs_dists      <- hmm$obs()$dists()[[obs_var]]
+        obs_dists      <- private$hmm_$obs()$dists()[[obs_var]]
 
-        model_params   <- names(self$obs_par_forecast[, 1, 1])
+        model_params   <- names(private$obs_par_forecast_[, 1, 1])
         if (is.null(model_params)) {
           # Edge case: when obs_par_forecast has only 1 parameter it is unnamed
           # Use current_params = 1 to unpack the matrix correctly
@@ -188,46 +180,113 @@ Forecast <- R6::R6Class(
           )
         }
 
-        obs_x_vals <- self$x_vals[[obs_var]]
+        obs_eval_range <- private$eval_range_[[obs_var]]
 
         # In the case where distribution is multivariate, (dirichlet, mvnorm) we
         # need a list where each element is a vector of x-values.
-        if (is.matrix(obs_x_vals)) {
+        if (is.matrix(obs_eval_range)) {
           multi_variate <- TRUE
-          obs_x_vals <- as.list(
-            as.data.frame(obs_x_vals, stringsAsFactors = FALSE)
+          obs_eval_range <- as.list(
+            as.data.frame(obs_eval_range, stringsAsFactors = FALSE)
           )
         } else {
           multi_variate <- FALSE
         }
 
-        self$forecasted_pdfs[[obs_var]] <-
-          array(NA_real_, dim = c(length(obs_x_vals), n_steps))
+        private$forecast_dists_[[obs_var]] <-
+          array(NA_real_, dim = c(length(obs_eval_range), n_steps))
 
         for (i in seq_len(n_steps)) {
 
-          # Evaluate each state's pdf at x_vals for time step i
-          # pdf_matrix: matrix with dimensions |x_vals| x n_states
+          # Evaluate each state's pdf at eval_range for time step i
+          # pdf_matrix: matrix with dimensions |eval_range| x n_states
           pdf_matrix <- vapply(
-            seq_len(self$hmm$hid()$nstates()),   # loop over hidden states
+            seq_len(private$hmm_$hid()$nstates()),   # loop over hidden states
             function(s) {                       # compute pdf for state s
               obs_dists$pdf_apply(
-                x   = obs_x_vals,
+                x   = obs_eval_range,
                 par = stats::setNames(
-                  self$obs_par_forecast[current_params, s, i],
+                  private$obs_par_forecast_[current_params, s, i],
                   obs_dists$parnames()
                 )
               )
             },
-            # vapply template: numeric vector of length |x_vals|
-            numeric(length(obs_x_vals))
+            # vapply template: numeric vector of length |eval_range|
+            numeric(length(obs_eval_range))
           )
 
           # Compute forecasted pdf
-          self$forecasted_pdfs[[obs_var]][, i] <- pdf_matrix %*% self$hidden_state_forecast[, i]
+          private$forecast_dists_[[obs_var]][, i] <- pdf_matrix %*% private$hidden_state_forecast_[, i]
 
         }
       }
+    },
+
+    # Accessors ---------------------------------------------------------------
+    #' @description Get predicted observation parameters.
+    obs_par_forecast = function() {
+      return(private$obs_par_forecast_)
+    },
+
+    #' @description Get predicted transition matrices.
+    tpm_forecast = function() {
+      return(private$tpm_forecast_)
+    },
+
+    #' @description Get the evaluation grid for each response variable.
+    eval_range = function() {
+      return(private$eval_range_)
+    },
+
+    #' @description Get the forecast data used for predictions.
+    forecast_data = function() {
+      return(private$forecast_data_)
+    },
+
+    #' @description Update the evaluation grid for forecast pdfs.
+    #' This method reconfigures the evaluation range used to compute unconditional predictive pdfs.
+    #' It validates the new eval_range, updates internal state, reinitializes forecast densities,
+    #' and returns the object invisibly for chaining.
+    #'
+    #' @param eval_range A named list specifying the new evaluation grid for each observation variable.
+    #' @return The Forecast object (invisibly), allowing method chaining.
+    update_eval_range = function(eval_range) {
+      
+      # Validate the new evaluation range along with forecast data and model
+      private$validate_params(
+        hmm               = private$hmm_,
+        forecast_data     = private$forecast_data_,
+        preset_eval_range = eval_range
+      )
+
+      # Configure and update the internal evaluation grid using new input
+      private$eval_range_ <- private$configure_eval_range(
+        eval_range = eval_range,
+        obs_vars   = private$observation_vars_,
+        data       = private$hmm_$obs()$data()
+      )
+
+      # Recompute forecast distributions with the updated evaluation grid.
+      # Note: This call to initialize() recalculates dependent quantities such as forecast_dists.
+      self$initialize(
+        hmm                         = private$hmm_,
+        forecast_data               = private$forecast_data_,
+        preset_eval_range           = eval_range,
+        starting_state_distribution = private$hidden_state_forecast_[, 1]
+      )
+
+      # Return the forecast object invisibly for potential method chaining.
+      invisible(self)
+    },
+
+    #' @description Get the forward state probabilities.
+    hidden_state_forecast = function() {
+      return(private$hidden_state_forecast_)
+    },
+
+    #' @description Get the unconditional predictive pdfs.
+    forecast_dists = function() {
+      return(private$forecast_dists_)
     }
   ),
 
@@ -235,9 +294,21 @@ Forecast <- R6::R6Class(
   ## Private helpers -----------------------------------------------------------
   ## ---------------------------------------------------------------------------
   private = list(
+
+    # Private data members
+    hmm_                   = NULL,  # fitted HMM model
+    observation_vars_      = NULL,  # names of response variables
+    forecast_data_         = NULL,  # future covariate data-frame
+    obs_par_forecast_      = NULL,  # predicted observation parameters
+    tpm_forecast_          = NULL,  # predicted transition matrices
+    eval_range_            = NULL,  # grid for each response variable
+    hidden_state_forecast_ = NULL,  # forward state probabilities
+    forecast_dists_        = NULL,  # unconditional predictive pdfs
+    starting_state_distribution_ = NULL,  # initial state distribution
+
     ## -- 1  Comprehensive argument checks -------------------------------------
     validate_params = function(hmm = NULL, n = NULL, forecast_data = NULL,
-                               preset_x_vals = NULL,
+                               preset_eval_range = NULL,
                                starting_state_distribution = NULL) {
 
       if (is.null(hmm))
@@ -276,11 +347,11 @@ Forecast <- R6::R6Class(
       }
 
       # x-grid list ------------------------------------------------------------
-      if (!is.null(preset_x_vals) &&
-          (!is.list(preset_x_vals) ||
-             is.null(names(preset_x_vals)) ||
-             any(names(preset_x_vals) == ""))) {
-        stop("`preset_x_vals` must be a *named* list", call. = FALSE)
+      if (!is.null(preset_eval_range) &&
+          (!is.list(preset_eval_range) ||
+             is.null(names(preset_eval_range)) ||
+             any(names(preset_eval_range) == ""))) {
+        stop("`preset_eval_range` must be a *named* list", call. = FALSE)
       }
 
       # starting_state_distribution -------------------------------------------
@@ -300,20 +371,20 @@ Forecast <- R6::R6Class(
     },
 
     ## -- 2  Build default x-grids if needed -----------------------------------
-    configure_x_vals = function(x_vals   = NULL,
+    configure_eval_range = function(eval_range   = NULL,
                                 obs_vars = NULL,
                                 data     = NULL) {
 
-      if (is.null(x_vals)) x_vals <- list()
+      if (is.null(eval_range)) eval_range <- list()
 
       for (obs_var in obs_vars) {
-        if (is.null(x_vals[[obs_var]])) {
+        if (is.null(eval_range[[obs_var]])) {
           max_range <- max(data[[obs_var]], na.rm = TRUE) * 1.1
           min_range <- min(data[[obs_var]], na.rm = TRUE) * 0.9
-          x_vals[[obs_var]] <- seq(min_range, max_range, length.out = 100)
+          eval_range[[obs_var]] <- seq(min_range, max_range, length.out = 100)
         }
       }
-      x_vals
+      eval_range
     }
   )
 )

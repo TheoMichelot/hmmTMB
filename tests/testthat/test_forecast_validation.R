@@ -45,7 +45,7 @@ test_that("`forecast_data` must be a data.frame", {
   )
 })
 
-# -- 2. Setup an HMM with covariates (from example file) ---------------------
+# -- 2. Setup an HMM with covariates ---------------------
 mod_df <- data.frame(ID = rep(1, 5), count = rep(0, 5))
 mod_df$x <- runif(5)
 cov_hid <- MarkovChain$new(data = mod_df, n_states = 2, 
@@ -74,14 +74,14 @@ test_that("`forecast_data` is missing required covariates", {
   )
 })
 
-test_that("`preset_x_vals` must be a *named* list", {
+test_that("`preset_eval_range` must be a *named* list", {
   expect_error(
     Forecast$new(
       hmm           = mod_cov,
       forecast_data = good_df,
-      preset_x_vals = list(runif(5))
+      preset_eval_range = list(runif(5))
     ),
-    "`preset_x_vals` must be a \\*named\\* list"
+    "`preset_eval_range` must be a \\*named\\* list"
   )
 })
 
@@ -125,6 +125,6 @@ test_that("Valid arguments create a forecast object", {
     forecast_data = good_df
   )
   expect_true(inherits(fc, "Forecast"))
-  expect_equal(nrow(fc$forecast_data), 5)
-  expect_equal(names(fc$forecast_data), names(good_df))
+  expect_equal(ncol(fc$forecast_dists()[[1]]), nrow(good_df))
+  expect_equal(names(fc$forecast_dists()), c('count'))
 })

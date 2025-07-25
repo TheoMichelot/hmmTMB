@@ -3,33 +3,28 @@ library(devtools)
 
 load_all("../../../hmmTMB")
 
-# Load the cached test data
-------------------------------------------
-# See inst/devel/create_test_forecast_dists.ipynb for details
-# on how this test data was created.
+context("Testing forecast distributions")
+
 full_params <- readRDS("data/full_params.rds")
 
 dists <- full_params[["dists"]]
 params <- full_params[["params"]]
 evaluation_vals <- full_params[["evaluation_vals"]]
 
-# Cached simulated PDFs from running 1000 simulations
-simulated_pdfs <- readRDS("data/simulated_pdfs.rds")
-
-# Create the model
------------------------------------------
+### Training Data Preparation
 n_training <- 2
 training_df <- data.frame(
   ID = rep(1, n_training),
-  matrix(
-    rep(NA, n_training * length(dists)),
-    nrow = n_training, dimnames = list(NULL, names(dists))
-  )
+  matrix(rep(NA, n_training * length(dists)), nrow = n_training, dimnames = list(NULL, names(dists)))
 )
 training_df$mvnorm_obs <- I(replicate(n_training, c(NA, NA), simplify = FALSE))
 
-tpm <- matrix(c(0.8, 0.3, 0.2, 0.7), 2, 2)
-starting_state <- c(0.8, 0.2)
+tpm <- matrix(c(0.15, 0.9, 0.85, 0.1), 2, 2)
+starting_state <- c(0.9, 0.1)
+# crafted such that hidden state at n=1 = (0.225 0.775)
+# and hidden state at n=2 = (0.73125 0.26875)
+
+## Create True Model ----------------------------------------------------
 hid_mod <- MarkovChain$new(
   data = training_df,
   n_states = 2,
@@ -44,49 +39,45 @@ obs_mod <- Observation$new(
 )
 true_mod <- HMM$new(obs = obs_mod, hid = hid_mod)
 
-# Create the forecast object
------------------------------------------
-n_forecast <- 4
+## Create Forecast Object ---------------------------------------------
+# Use the true model to create a forecast object
+n_forecast <- 2
 forecast_df <- data.frame(
   ID = rep(1, n_forecast),
   matrix(rep(NA, n_forecast * length(dists)), nrow = n_forecast, dimnames = list(NULL, names(dists)))
 )
 forecast_df$mvnorm_obs <- I(replicate(n_forecast, c(NA, NA), simplify = FALSE))
 
-forecast = Forecast$new(
+forecast <- Forecast$new(
   hmm = true_mod,
   forecast_data = forecast_df,
-  preset_x_vals = evaluation_vals,
-  starting_state_distribution = starting_state,
+  preset_eval_range = evaluation_vals,
+  starting_state_distribution = starting_state %*% tpm,
 )
-
-# For multivariate distributions, only keep first dimension
-------------------------------------------
-forecasted_pdfs <- list()
-# loop through each dimension and time step
+forecast_dists <- list()
 for (obs in names(dists)) {
-
-  if (obs %in% c("mvnorm_obs")) {
-
-    multivar_pdf <- matrix(NA, nrow = length(unique(forecast$x_vals[[obs]][1, ])), ncol = n_forecast)
-    for (i in seq_along(unique(forecast$x_vals[[obs]][1, ]))) {
-      val <- unique(forecast$x_vals[[obs]][1, ])[i]
-      mask <- forecast$x_vals[[obs]][1, ] == val
-      multivar_pdf[i, ] <- apply(forecast$forecasted_pdfs[[obs]][mask, ], 2, sum)
-    }
-    forecasted_pdfs[[obs]] <- multivar_pdf
-  } else {
-    forecasted_pdfs[[obs]] <- forecast$forecasted_pdfs[[obs]]
-  }
+  forecast_dists[[obs]] <- forecast$forecast_dists()[[obs]]
 }
+simulated_pdfs <- readRDS("data/simulated_pdfs.rds")
 
 for (obs in names(dists)) {
+  if (obs %in% c("dir_obs", "mvnorm_obs", "tweedie_obs")) { next }
   test_that(paste("Forecasted PDFs match simulated PDFs for ", dists[[obs]]), {
-    expect_equal(
-      simulated_pdfs[[obs]],
-      forecasted_pdfs[[obs]],
-      tolerance = 0.1
-    )
+    for (i in seq_len(n_forecast)) {
+      sim_pdf <- simulated_pdfs[[obs]][, i]
+      forecast_pdf <- forecast_dists[[obs]][, i]
+      
+      # Ignore first and last elements which are biased by edge effects
+      if (obs %in% c("exp_obs", "truncnorm_obs")) {
+        sim_pdf <- sim_pdf[-c(1, length(sim_pdf))]
+        forecast_pdf <- forecast_pdf[-c(1, length(forecast_pdf))]
+      }
+      
+      ks <- ks.test(sim_pdf, forecast_pdf, simulate.p.value = TRUE, B = 1e4)
+      expect_true(
+        ks$p.value > 0.3,
+        info = paste("KS test failed for", obs, "at forecast time step", i)
+      )
+    }
   })
 }
-

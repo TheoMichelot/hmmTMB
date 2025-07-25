@@ -10,9 +10,9 @@ An R6 object with the following **notable public fields**:
         probabilities.}
   \item{obs_par_forecast}{Array of time-varying observation parameters.}
   \item{tpm_forecast}{Array of time-varying transition matrices.}
-  \item{forecasted_pdfs}{List of unconditional pdf matrices, one per
+  \item{forecast_dists}{List of unconditional pdf matrices, one per
         observation variable.}
-  \item{x_vals}{List of grids on which each pdf was evaluated.}
+  \item{eval_range}{List of grids on which each pdf was evaluated.}
 }
 }
 \description{
@@ -32,7 +32,7 @@ in public fields that can be queried or plotted directly.
   \item Forward-propagate the hidden-state distribution
         (`hidden_state_forecast`).
   \item Marginalise over states to derive unconditional pdfs of each
-        observation variable at a user-defined grid (`forecasted_pdfs`).
+        observation variable at a user-defined grid (`forecast_dists`).
 }
 }
 \examples{
@@ -47,9 +47,9 @@ in public fields that can be queried or plotted directly.
   ggplot() +
   geom_ridgeline(
     aes(
-      x = fc$x_vals[[1]],
+      x = fc$eval_range[[1]],
       y = 1,
-      height = fc$forecasted_pdfs[[1]][, step]
+      height = fc$forecast_dists[[1]][, step]
     ),
     scale = 0.5
   ) +
@@ -78,7 +78,7 @@ Construct a forecast object.
   hmm = NULL,
   n = NULL,
   forecast_data = NULL,
-  preset_x_vals = NULL,
+  preset_eval_range = NULL,
   starting_state_distribution = "last"
 )}\if{html}{\out{</div>}}
 }
@@ -93,7 +93,7 @@ Construct a forecast object.
 \item{\code{forecast_data}}{`data.frame` of future covariates / IDs.
 Must contain every covariate used in the fitted `hmm`.}
 
-\item{\code{preset_x_vals}}{*Named* list whose elements are numeric vectors giving
+\item{\code{preset_eval_range}}{*Named* list whose elements are numeric vectors giving
 the evaluation grid for each observation variable.  
 Missing names fall back to a 90–110 % range of the training data.}
 
