@@ -22,7 +22,7 @@
 #' @param forecast_data data.frame of future covariates / IDs.
 #'        Must include all covariates in fitted hmm.
 #' @param preset_eval_range Named list: elements are numeric vectors (univariate) or matrices
-#'        (multivariate, rows as points, columns as dimensions) for evaluation grids per observation variable.
+#'        (multivariate, rows as dimension ex. mu1, mu2, columns as points) for evaluation grids per observation variable.
 #'        Missing entries default to 90–110% range of training data.
 #' @param starting_state_distribution Numeric vector of length nstates(), or
 #'        "last" (filtered distribution at final training row, propagated one step) or
@@ -30,7 +30,7 @@
 #'
 #' @return An R6 object with notable public accessor methods (invoke with ()):
 #' \describe{
-#'   \item{hidden_state_forecast}{nstates × T matrix of forward state probabilities.}
+#'   \item{hidden_state_forecast}{nstates × n forecast steps.}
 #'   \item{obs_par_forecast}{Array of time-varying observation parameters.}
 #'   \item{tpm_forecast}{Array of time-varying transition matrices.}
 #'   \item{forecast_dists}{List of unconditional pdf matrices, one per observation variable.}
@@ -152,7 +152,7 @@ Forecast <- R6Class(
         }
       }
       private$hidden_state_forecast_ <- hidden_state_forecast
-
+      
       ## -- 8  Build unconditional predictive pdfs -----------------------------
       private$forecast_dists_ <- vector("list", length(private$observation_vars_))
       names(private$forecast_dists_) <- private$observation_vars_
@@ -310,6 +310,12 @@ Forecast <- R6Class(
       if (!inherits(hmm, "HMM"))
         stop("`hmm` must inherit from class 'HMM'", call. = FALSE)
 
+      dist_names <- lapply(hmm$obs()$dists(), function(x) x$name())
+      if (any(unlist(dist_names) %in% c("cat", "dirc", "tweedie"))) {
+        stop("Forecasting not currently supported for 'cat', 'dirc', or 'tweedie' distributions",
+             call. = FALSE)
+      }
+
       # n  vs  forecast_data ---------------------------------------------------
       if (is.null(n) && is.null(forecast_data))
         stop("Supply either `n` or `forecast_data`", call. = FALSE)
@@ -372,9 +378,19 @@ Forecast <- R6Class(
       if (is.null(eval_range)) eval_range <- list()
 
       for (obs_var in obs_vars) {
+
+        if (!is.null(eval_range[[obs_var]])) {
+          warning(sprintf(
+            "Using 100 evaluation points in range ±10%% of training data for observation variable '%s'. Setting eval_range explicitly is recommended.",
+            obs_var
+          ), call. = FALSE)
+        }
+
         if (is.null(eval_range[[obs_var]])) {
-          max_range <- max(data[[obs_var]], na.rm = TRUE) * 1.1
-          min_range <- min(data[[obs_var]], na.rm = TRUE) * 0.9
+            max_range <- max(data[[obs_var]], na.rm = TRUE)
+            min_range <- min(data[[obs_var]], na.rm = TRUE)
+            max_range <- if (max_range > 0) max_range * 0.1 else max_range * 0.9
+            min_range <- if (min_range > 0) min_range * 0.9 else min_range * 1.1
           eval_range[[obs_var]] <- seq(min_range, max_range, length.out = 100)
         }
       }

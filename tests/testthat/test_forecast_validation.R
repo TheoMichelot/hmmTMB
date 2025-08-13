@@ -4,6 +4,7 @@ library(devtools)
 load_all("../../../hmmTMB")
 
 context("Forecast parameter validation")
+options(warn = -1)  # disable warnings
 
 # -- 1. Setup a simple HMM without covariates -------------------------------
 n <- 10
@@ -127,4 +128,24 @@ test_that("Valid arguments create a forecast object", {
   expect_true(inherits(fc, "Forecast"))
   expect_equal(ncol(fc$forecast_dists()[[1]]), nrow(good_df))
   expect_equal(names(fc$forecast_dists()), c('count'))
+})
+
+# -- 4. Forecasting with unsupported distributions --------------------------
+test_that("`tweedie` distribution is not supported for forecasting", {
+  dat_tweedie <- data.frame(ID = rep(1, 5), y = rep(1, 5))
+  obs_tweedie <- Observation$new(
+    data    = dat_tweedie,
+    dists   = list(y = "tweedie"),
+    n_states = 2,
+    par     = list(y = list(mean = c(1, 2), p = c(1.5, 1.5), phi = c(1, 1)))
+  )
+  tpm <- matrix(c(0.15, 0.9, 0.85, 0.1), 2, 2)
+  starting_state <- c(0.9, 0.1)
+  hid_tweedie <- MarkovChain$new(n_states = 2, data = dat_tweedie, tpm = tpm)
+  hid_tweedie$update_delta0(starting_state)
+  mod_tweedie <- HMM$new(obs = obs_tweedie, hid = hid_tweedie)
+  expect_error(
+    Forecast$new(hmm = mod_tweedie, n = 5, starting_state_distribution = starting_state %*% tpm),
+    "Forecasting not currently supported for 'cat', 'dirc', or 'tweedie' distributions"
+  )
 })

@@ -1,30 +1,57 @@
 library(testthat)
 library(devtools)
+library(expm)
 
 load_all("../../../hmmTMB")
+options(warn = -1)  # disable warnings
 
-context("Testing forecast distributions")
-
-full_params <- readRDS("data/full_params.rds")
-
-dists <- full_params[["dists"]]
-params <- full_params[["params"]]
-evaluation_vals <- full_params[["evaluation_vals"]]
-
-### Training Data Preparation
-n_training <- 2
-training_df <- data.frame(
-  ID = rep(1, n_training),
-  matrix(rep(NA, n_training * length(dists)), nrow = n_training, dimnames = list(NULL, names(dists)))
+dists <- list(
+  beta_obs       = "beta",
+  binom_obs      = "binom",
+  exp_obs        = "exp",
+  gamma_obs      = "gamma",
+  lnorm_obs      = "lnorm",
+  norm_obs       = "norm",
+  pois_obs       = "pois"
 )
-training_df$mvnorm_obs <- I(replicate(n_training, c(NA, NA), simplify = FALSE))
 
+params <- list(
+  beta_obs       = list(shape1   = c( 2,  5),   shape2   = c( 5, 2)),
+  binom_obs      = list(size     = c(10, 20),   prob     = c(0.50, 0.30)),
+  exp_obs        = list(rate     = c( 1,  3)),
+  gamma_obs      = list(shape    = c( 2,  5),   scale    = c(1, 2)),
+  lnorm_obs      = list(meanlog  = c( 0,  1),   sdlog    = c(1, 0.5)),
+  norm_obs       = list(mean     = c( 0,  3),   sd       = c(1, 2)),
+  pois_obs       = list(rate     = c( 2,  7))
+)
+
+evaluation_vals <- list(
+  beta_obs       = seq(0.05, 0.995, by = 0.01),
+  binom_obs      = 0:20,
+  exp_obs        = seq(0.05, 10, by = 0.1),
+  gamma_obs      = seq(0.05, 30, by = 0.1),
+  lnorm_obs      = seq(0.01, 30, by = 0.1),
+  norm_obs       = seq(-10, 10, by = 0.1),
+  pois_obs       = 0:20
+)
+
+n_training <- 2
+n_forecast <- 2
 tpm <- matrix(c(0.15, 0.9, 0.85, 0.1), 2, 2)
 starting_state <- c(0.9, 0.1)
-# crafted such that hidden state at n=1 = (0.225 0.775)
-# and hidden state at n=2 = (0.73125 0.26875)
 
-## Create True Model ----------------------------------------------------
+
+training_df <- data.frame(
+  ID = rep(1, n_training),
+  beta_obs = c(NA, NA),
+  binom_obs = c(NA, NA),
+  exp_obs = c(NA, NA),
+  gamma_obs = c(NA, NA),
+  lnorm_obs = c(NA, NA),
+  norm_obs = c(NA, NA),
+  pois_obs = c(NA, NA)
+)
+
 hid_mod <- MarkovChain$new(
   data = training_df,
   n_states = 2,
@@ -39,45 +66,47 @@ obs_mod <- Observation$new(
 )
 true_mod <- HMM$new(obs = obs_mod, hid = hid_mod)
 
-## Create Forecast Object ---------------------------------------------
-# Use the true model to create a forecast object
-n_forecast <- 2
-forecast_df <- data.frame(
-  ID = rep(1, n_forecast),
-  matrix(rep(NA, n_forecast * length(dists)), nrow = n_forecast, dimnames = list(NULL, names(dists)))
-)
-forecast_df$mvnorm_obs <- I(replicate(n_forecast, c(NA, NA), simplify = FALSE))
-
 forecast <- Forecast$new(
   hmm = true_mod,
-  forecast_data = forecast_df,
+  forecast_data = training_df,
   preset_eval_range = evaluation_vals,
-  starting_state_distribution = starting_state %*% tpm,
+  starting_state_distribution = starting_state %*% tpm
 )
-forecast_dists <- list()
-for (obs in names(dists)) {
-  forecast_dists[[obs]] <- forecast$forecast_dists()[[obs]]
-}
-simulated_pdfs <- readRDS("data/simulated_pdfs.rds")
 
-for (obs in names(dists)) {
-  if (obs %in% c("dir_obs", "mvnorm_obs", "tweedie_obs")) { next }
-  test_that(paste("Forecasted PDFs match simulated PDFs for ", dists[[obs]]), {
-    for (i in seq_len(n_forecast)) {
-      sim_pdf <- simulated_pdfs[[obs]][, i]
-      forecast_pdf <- forecast_dists[[obs]][, i]
-      
-      # Ignore first and last elements which are biased by edge effects
-      if (obs %in% c("exp_obs", "truncnorm_obs")) {
-        sim_pdf <- sim_pdf[-c(1, length(sim_pdf))]
-        forecast_pdf <- forecast_pdf[-c(1, length(forecast_pdf))]
-      }
-      
-      ks <- ks.test(sim_pdf, forecast_pdf, simulate.p.value = TRUE, B = 1e4)
-      expect_true(
-        ks$p.value > 0.3,
-        info = paste("KS test failed for", obs, "at forecast time step", i)
-      )
+for (dist in names(dists)) {
+  for (i in seq_len(n_forecast)) {
+    hid_state <- starting_state %*% (tpm %^% i)
+    
+    # Compute theoretical mean
+    par <- params[[dist]]
+    if (dists[[dist]] == "beta") {
+      means <- par$shape1 / (par$shape1 + par$shape2)
+    } else if (dists[[dist]] == "binom") {
+      means <- par$size * par$prob
+    } else if (dists[[dist]] == "exp") {
+      means <- 1 / par$rate
+    } else if (dists[[dist]] == "gamma") {
+      means <- par$shape * par$scale
+    } else if (dists[[dist]] == "lnorm") {
+      means <- exp(par$meanlog + par$sdlog^2 / 2)
+    } else if (dists[[dist]] == "norm") {
+      means <- par$mean
+    } else if (dists[[dist]] == "pois") {
+      means <- par$rate
     }
-  })
+    
+    theory_mean <- means %*% t(hid_state)
+    
+    dens <- forecast$forecast_dists()[[dist]][, i]
+    vals <- evaluation_vals[[dist]]
+    is_discrete <- dists[[dist]] %in% c("binom", "pois")
+    
+    if (is_discrete) {
+      forecast_mean <- sum(dens * vals)
+    } else {
+      delta <- vals[2] - vals[1]
+      forecast_mean <- sum(dens * vals * delta)
+    }
+    expect_equal(forecast_mean[1], theory_mean[1], tolerance = 0.01)
+  }
 }

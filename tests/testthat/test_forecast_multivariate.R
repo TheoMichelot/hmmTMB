@@ -5,26 +5,16 @@ library(expm)
 load_all("../../../hmmTMB")
 
 dists <- list(
-  # norm_obs       = "norm",
-  # dir_obs        = "dir",
-  # tweedie_obs    = "tweedie",
   mvnorm_obs     = "mvnorm"
 )
 
 params <- list(
-  # norm_obs       = list(mean     = c( 0,  3),   sd       = c(1, 2)),
-  # dir_obs        = list(alpha1   = c( 2,  5),   alpha2   = c( 3, 1)),
-  # tweedie_obs    = list(mean     = c( 5,  10),  p        = c(0.8, 0.5),
-  #                     phi      = c( 1,  2)),
-  mvnorm_obs     = list(mu1      = c( 0,  2),   mu2      = c( 0, -2),
-                      sd1      = c( 1,  1),   sd2      = c(1, 1),
-                      corr12   = c( 0,  0))
+  mvnorm_obs = list(mu1      = c( 0,  2),   mu2      = c( 0, -2),
+                    sd1      = c( 1,  1),   sd2      = c(1, 1),
+                    corr12   = c( 0,  0))
 )
 
 evaluation_vals <- list(
-  # norm_obs       = seq(-3, 3, by = 0.10),
-  # dir_obs        = sapply(seq(0, 1, 0.05), function(x) {c(x, 1 - x)}),
-  # tweedie_obs    = seq(0, 5, by = 0.10),
   mvnorm_obs     = t(as.matrix(expand.grid(seq(-4,4,1), seq(-4,4,1))))
 )
 
@@ -33,10 +23,7 @@ n_training <- 2
 n_forecast <- 2
 training_df <- data.frame(
   ID = rep(1, n_training),
-  norm_obs = c(NA, NA),
-  dir_obs = c(NA, NA),
-  mvnorm_obs = I(replicate(n_training, c(NA, NA), simplify = FALSE)),
-  tweedie_obs = c(NA, NA)
+  mvnorm_obs = I(replicate(n_training, c(NA, NA), simplify = FALSE))
 )
 
 tpm <- matrix(c(0.15, 0.9, 0.85, 0.1), 2, 2)
