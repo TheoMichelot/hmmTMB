@@ -2,59 +2,64 @@
 % Please edit documentation in R/forecast.R
 \name{Forecast}
 \alias{Forecast}
-\title{Forecast R6 Class for Hidden Markov Models}
-\value{
-An R6 object with notable public accessor methods (invoke with ()):
-\describe{
-  \item{hidden_state_forecast}{nstates × T matrix of forward state probabilities.}
-  \item{obs_par_forecast}{Array of time-varying observation parameters.}
-  \item{tpm_forecast}{Array of time-varying transition matrices.}
-  \item{forecast_dists}{List of unconditional pdf matrices, one per observation variable.}
-  \item{eval_range}{List of grids on which each pdf was evaluated.}
-}
-}
+\title{R6 Class for Forecast in Hidden Markov Models}
 \description{
-Creates a forecast object from a fitted HMM model, projecting
-future state probabilities and unconditional observation densities for a
-user-defined horizon or covariate data-frame.
-Forecasting occurs in the constructor; results are accessible via public methods.
-}
-\details{
-Algorithm overview
-\enumerate{
-  \item Validate inputs (private$validate_params()).
-  \item Build or accept future design matrix (forecast_data).
-  \item Obtain time-varying transition matrices (tpm_forecast) and
-        observation parameters (obs_par_forecast) via hmm$predict().
-  \item Forward-propagate hidden-state distribution (hidden_state_forecast).
-  \item Marginalise over states for unconditional pdfs on user-defined grid (forecast_dists).
-}
+Creates a forecast object from a fitted HMM model, projecting future state probabilities and unconditional observation densities for a user-defined horizon using a covariate data-frame if applicable. Forecasting occurs in the constructor; results are accessible via public methods.
 }
 \examples{
+
+## ------------------------------------------------
+## Method `Forecast$new`
+## ------------------------------------------------
+
 \dontrun{
-  mod <- HMM$new(file = "pois_mod.hmm")
-  mod$fit()
+data(faithful)
 
-  fc  <- Forecast$new(hmm = mod, n = 12)
+# Create training and forecast data frames
+training_fraction <- 0.8
+n_training <- floor(nrow(faithful) * training_fraction)
+training_df <- data.frame(
+  ID = rep(1, n_training),
+  waiting = faithful$waiting[1:n_training],
+  eruptions = faithful$eruptions[1:n_training]
+)
+forecast_df <- data.frame(
+  ID = rep(1, nrow(faithful) - n_training),
+  waiting = faithful$waiting[(n_training + 1):nrow(faithful)],
+  eruptions = faithful$eruptions[(n_training + 1):nrow(faithful)]
+)
+# Create 2-state model with non-linear effect of waiting on all transitions
+hid_model <- MarkovChain$new(
+  data = training_df,
+  n_states = 2,
+  formula = ~ s(waiting, k = 10, bs = "cs")
+)
 
-  # Plot the nth forecasted pdf for the first observation variable
-  step <- 1
-  ggplot() +
-  geom_ridgeline(
-    aes(
-      x = fc$eval_range()[[1]],
-      y = 1,
-      height = fc$forecast_dists()[[1]][, step]
-    ),
-    scale = 0.5
-  ) +
-  labs(
-    title = sprintf("PDF for the \%d Time Step", step),
-    x = sprintf("Observation Value: \%s", names(fc$forecast_dists())[[1]]),
-    y = "Probability Density"
+# Create observation model with normal distribution for duration
+obs_model <- Observation$new(
+  data = training_df,
+  n_states = 2,
+  dists = list(eruptions = "norm"),
+  par = list(eruptions = list(
+    mean = c(0, 0),
+    sd = c(1, 1)
+  ))
+)
+# Update model parameters to suggested
+obs_model$update_par(par = obs_model$suggest_initial())
+# Create HMM model
+hmm <- HMM$new(
+  hid = hid_model,
+  obs = obs_model
+)
+hmm$fit(silent = TRUE)
+# Create forecast object
+forecast <- Forecast$new(
+  hmm = hmm,
+  forecast_data = forecast_df,
+  starting_state_distribution = "last"
   )
 }
-
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -96,15 +101,92 @@ Construct a forecast object.
 Must include all covariates in fitted hmm.}
 
 \item{\code{preset_eval_range}}{Named list: elements are numeric vectors (univariate) or matrices
-(multivariate, rows as points, columns as dimensions) for evaluation grids per observation variable.
+(multivariate, rows as dimension ex. mu1, mu2, columns as points).
 Missing entries default to 90–110% range of training data.}
 
 \item{\code{starting_state_distribution}}{Numeric vector of length nstates(), or
-"last" (filtered distribution at final training row, propagated one step) or
+"last" (Fitted model at final training row, propagated one step) or
 "stationary" (model’s stationary distribution).}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Details}{
+Algorithm overview
+\enumerate{
+  \item Validate inputs (private$validate_params()).
+  \item Build or accept future design matrix (forecast_data).
+  \item Obtain time-varying transition matrices (tpm_forecast) and
+        observation parameters (obs_par_forecast) via hmm$predict().
+  \item Forward-propagate hidden-state distribution (hidden_state_forecast).
+  \item Marginalise over states for unconditional pdfs on user-defined grid (forecast_dists).
+}
+}
+
+\subsection{Returns}{
+An R6 object with notable public accessor methods (invoke with ()):
+\describe{
+  \item{hidden_state_forecast}{nstates × n forecast steps.}
+  \item{obs_par_forecast}{Array of time-varying observation parameters.}
+  \item{tpm_forecast}{Array of time-varying transition matrices.}
+  \item{forecast_dists}{List of unconditional pdf matrices, one per observation variable.}
+  \item{eval_range}{List of grids on which each pdf was evaluated.}
+}
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{\dontrun{
+data(faithful)
+
+# Create training and forecast data frames
+training_fraction <- 0.8
+n_training <- floor(nrow(faithful) * training_fraction)
+training_df <- data.frame(
+  ID = rep(1, n_training),
+  waiting = faithful$waiting[1:n_training],
+  eruptions = faithful$eruptions[1:n_training]
+)
+forecast_df <- data.frame(
+  ID = rep(1, nrow(faithful) - n_training),
+  waiting = faithful$waiting[(n_training + 1):nrow(faithful)],
+  eruptions = faithful$eruptions[(n_training + 1):nrow(faithful)]
+)
+# Create 2-state model with non-linear effect of waiting on all transitions
+hid_model <- MarkovChain$new(
+  data = training_df,
+  n_states = 2,
+  formula = ~ s(waiting, k = 10, bs = "cs")
+)
+
+# Create observation model with normal distribution for duration
+obs_model <- Observation$new(
+  data = training_df,
+  n_states = 2,
+  dists = list(eruptions = "norm"),
+  par = list(eruptions = list(
+    mean = c(0, 0),
+    sd = c(1, 1)
+  ))
+)
+# Update model parameters to suggested
+obs_model$update_par(par = obs_model$suggest_initial())
+# Create HMM model
+hmm <- HMM$new(
+  hid = hid_model,
+  obs = obs_model
+)
+hmm$fit(silent = TRUE)
+# Create forecast object
+forecast <- Forecast$new(
+  hmm = hmm,
+  forecast_data = forecast_df,
+  starting_state_distribution = "last"
+  )
+}
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-obs_par_forecast"></a>}}

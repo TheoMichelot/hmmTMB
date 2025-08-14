@@ -1,8 +1,6 @@
-library(testthat)
-library(devtools)
 library(expm)
 
-load_all("../../../hmmTMB")
+context("Forecast Multivariate")
 
 dists <- list(
   mvnorm_obs     = "mvnorm"

@@ -1,7 +1,3 @@
-library(testthat)
-library(devtools)
-
-load_all("../../../hmmTMB")
 
 context("Forecast parameter validation")
 options(warn = -1)  # disable warnings

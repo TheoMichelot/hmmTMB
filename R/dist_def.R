@@ -713,7 +713,7 @@ dist_tweedie <- Dist$new(
   name = "tweedie", 
   name_long = "Tweedie",
   pdf = function(x, mean, p, phi, log = FALSE) {
-    l <- ldTweedie(x, mu = mean, p = p + 1, phi = phi)[ ,1]
+    l <- ldTweedie(x, mu = mean, p = p + 1, phi = phi)[1,1]
     if (!log) l <- exp(l)
     return(l)
   }, 
@@ -897,10 +897,7 @@ dist_dir <- Dist$new(
   pdf = function(x, ...,  log = FALSE) {
     alpha <- c(...)
     y <- do.call(cbind, as.matrix(x))
-    C <- gamma(sum(alpha)) /  prod(gamma(alpha))
-    p <- apply(y, 2, function(row) {
-      C * prod(row^(alpha - 1))
-    })
+    p <- gamma(sum(alpha)) * prod(y ^ (alpha - 1)) / prod(gamma(alpha))
     if (log) p <- log(p)
     return(p)
   }, 

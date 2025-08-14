@@ -1,75 +1,98 @@
-#' @title Forecast R6 Class for Hidden Markov Models
+#' @title R6 Class for Forecast in Hidden Markov Models
 #'
 #' @description
-#' Creates a forecast object from a fitted HMM model, projecting
-#' future state probabilities and unconditional observation densities for a
-#' user-defined horizon or covariate data-frame.
-#' Forecasting occurs in the constructor; results are accessible via public methods.
-#'
-#' @details
-#' Algorithm overview
-#' \enumerate{
-#'   \item Validate inputs (private$validate_params()).
-#'   \item Build or accept future design matrix (forecast_data).
-#'   \item Obtain time-varying transition matrices (tpm_forecast) and
-#'         observation parameters (obs_par_forecast) via hmm$predict().
-#'   \item Forward-propagate hidden-state distribution (hidden_state_forecast).
-#'   \item Marginalise over states for unconditional pdfs on user-defined grid (forecast_dists).
-#' }
-#'
-#' @param hmm A fitted HMM object.
-#' @param n Integer. Forecast horizon (ignored if forecast_data provided).
-#' @param forecast_data data.frame of future covariates / IDs.
-#'        Must include all covariates in fitted hmm.
-#' @param preset_eval_range Named list: elements are numeric vectors (univariate) or matrices
-#'        (multivariate, rows as dimension ex. mu1, mu2, columns as points) for evaluation grids per observation variable.
-#'        Missing entries default to 90–110% range of training data.
-#' @param starting_state_distribution Numeric vector of length nstates(), or
-#'        "last" (filtered distribution at final training row, propagated one step) or
-#'        "stationary" (model’s stationary distribution).
-#'
-#' @return An R6 object with notable public accessor methods (invoke with ()):
-#' \describe{
-#'   \item{hidden_state_forecast}{nstates × n forecast steps.}
-#'   \item{obs_par_forecast}{Array of time-varying observation parameters.}
-#'   \item{tpm_forecast}{Array of time-varying transition matrices.}
-#'   \item{forecast_dists}{List of unconditional pdf matrices, one per observation variable.}
-#'   \item{eval_range}{List of grids on which each pdf was evaluated.}
-#' }
-#'
-#' @examples
-#' \dontrun{
-#'   mod <- HMM$new(file = "pois_mod.hmm")
-#'   mod$fit()
-#'
-#'   fc  <- Forecast$new(hmm = mod, n = 12)
-#'
-#'   # Plot the nth forecasted pdf for the first observation variable
-#'   step <- 1
-#'   ggplot() +
-#'   geom_ridgeline(
-#'     aes(
-#'       x = fc$eval_range()[[1]],
-#'       y = 1,
-#'       height = fc$forecast_dists()[[1]][, step]
-#'     ),
-#'     scale = 0.5
-#'   ) +
-#'   labs(
-#'     title = sprintf("PDF for the %d Time Step", step),
-#'     x = sprintf("Observation Value: %s", names(fc$forecast_dists())[[1]]),
-#'     y = "Probability Density"
-#'   )
-#' }
-#'
+#' Creates a forecast object from a fitted HMM model, projecting future state probabilities and unconditional observation densities for a user-defined horizon using a covariate data-frame if applicable. Forecasting occurs in the constructor; results are accessible via public methods.
+#' 
 #' @export
 Forecast <- R6Class(
   classname = "Forecast",
-
-  ## Public fields -------------------------------------------------------------
+  
   public = list(
-    #' @description
-    #' Construct a forecast object.
+    
+    # Constructor -------------------------------------------------------------
+    
+    #' @description Construct a forecast object.
+    #' 
+    #' @details
+    #' Algorithm overview
+    #' \enumerate{
+    #'   \item Validate inputs (private$validate_params()).
+    #'   \item Build or accept future design matrix (forecast_data).
+    #'   \item Obtain time-varying transition matrices (tpm_forecast) and
+    #'         observation parameters (obs_par_forecast) via hmm$predict().
+    #'   \item Forward-propagate hidden-state distribution (hidden_state_forecast).
+    #'   \item Marginalise over states for unconditional pdfs on user-defined grid (forecast_dists).
+    #' }
+    #' 
+    #' @param hmm A fitted HMM object.
+    #' @param n Integer. Forecast horizon (ignored if forecast_data provided).
+    #' @param forecast_data data.frame of future covariates / IDs.
+    #'        Must include all covariates in fitted hmm.
+    #' @param preset_eval_range Named list: elements are numeric vectors (univariate) or matrices
+    #'        (multivariate, rows as dimension ex. mu1, mu2, columns as points).
+    #'        Missing entries default to 90–110% range of training data.
+    #' @param starting_state_distribution Numeric vector of length nstates(), or
+    #'        "last" (Fitted model at final training row, propagated one step) or
+    #'        "stationary" (model’s stationary distribution).
+    #' 
+    #' @return An R6 object with notable public accessor methods (invoke with ()):
+    #' \describe{
+    #'   \item{hidden_state_forecast}{nstates × n forecast steps.}
+    #'   \item{obs_par_forecast}{Array of time-varying observation parameters.}
+    #'   \item{tpm_forecast}{Array of time-varying transition matrices.}
+    #'   \item{forecast_dists}{List of unconditional pdf matrices, one per observation variable.}
+    #'   \item{eval_range}{List of grids on which each pdf was evaluated.}
+    #' }
+    #' 
+    #' @examples
+    #' \dontrun{
+    #' data(faithful)
+    #' 
+    #' # Create training and forecast data frames
+    #' training_fraction <- 0.8
+    #' n_training <- floor(nrow(faithful) * training_fraction)
+    #' training_df <- data.frame(
+    #'   ID = rep(1, n_training),
+    #'   waiting = faithful$waiting[1:n_training],
+    #'   eruptions = faithful$eruptions[1:n_training]
+    #' )
+    #' forecast_df <- data.frame(
+    #'   ID = rep(1, nrow(faithful) - n_training),
+    #'   waiting = faithful$waiting[(n_training + 1):nrow(faithful)],
+    #'   eruptions = faithful$eruptions[(n_training + 1):nrow(faithful)]
+    #' )
+    #' # Create 2-state model with non-linear effect of waiting on all transitions
+    #' hid_model <- MarkovChain$new(
+    #'   data = training_df,
+    #'   n_states = 2,
+    #'   formula = ~ s(waiting, k = 10, bs = "cs")
+    #' )
+    #' 
+    #' # Create observation model with normal distribution for duration
+    #' obs_model <- Observation$new(
+    #'   data = training_df,
+    #'   n_states = 2,
+    #'   dists = list(eruptions = "norm"),
+    #'   par = list(eruptions = list(
+    #'     mean = c(0, 0),
+    #'     sd = c(1, 1)
+    #'   ))
+    #' )
+    #' # Update model parameters to suggested
+    #' obs_model$update_par(par = obs_model$suggest_initial())
+    #' # Create HMM model
+    #' hmm <- HMM$new(
+    #'   hid = hid_model,
+    #'   obs = obs_model
+    #' )
+    #' hmm$fit(silent = TRUE)
+    #' # Create forecast object
+    #' forecast <- Forecast$new(
+    #'   hmm = hmm,
+    #'   forecast_data = forecast_df,
+    #'   starting_state_distribution = "last"
+    #'   )
+    #' }
     initialize = function(hmm               = NULL,
                           n                 = NULL,
                           forecast_data     = NULL,
@@ -379,7 +402,7 @@ Forecast <- R6Class(
 
       for (obs_var in obs_vars) {
 
-        if (!is.null(eval_range[[obs_var]])) {
+        if (is.null(eval_range[[obs_var]])) {
           warning(sprintf(
             "Using 100 evaluation points in range ±10%% of training data for observation variable '%s'. Setting eval_range explicitly is recommended.",
             obs_var
@@ -389,7 +412,7 @@ Forecast <- R6Class(
         if (is.null(eval_range[[obs_var]])) {
             max_range <- max(data[[obs_var]], na.rm = TRUE)
             min_range <- min(data[[obs_var]], na.rm = TRUE)
-            max_range <- if (max_range > 0) max_range * 0.1 else max_range * 0.9
+            max_range <- if (max_range > 0) max_range * 1.1 else max_range * 0.9
             min_range <- if (min_range > 0) min_range * 0.9 else min_range * 1.1
           eval_range[[obs_var]] <- seq(min_range, max_range, length.out = 100)
         }

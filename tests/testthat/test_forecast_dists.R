@@ -1,9 +1,6 @@
-library(testthat)
-library(devtools)
 library(expm)
 
-load_all("../../../hmmTMB")
-options(warn = -1)  # disable warnings
+context("Forecast Dists")
 
 dists <- list(
   beta_obs       = "beta",
