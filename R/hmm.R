@@ -733,12 +733,18 @@ HMM <- R6Class(
         stop("You need to install the package tmbstan to do this")
       }
       
+      if(!is.null(args$laplace)) {
+        if(args$laplace) {
+          stop("'laplace = TRUE' not currently working in fit_stan()")
+        }
+      }
+      
       # Setup if necessary
       if(is.null(private$tmb_obj_)) {
         self$setup(silent = silent)
       }
       
-      # Run Stan iterations 
+      # Run Stan iterations
       private$out_stan_ <- tmbstan(obj = private$tmb_obj_, init = "par", ...)
       post <- as.matrix(private$out_stan_)
       # Remove "lp__" column
