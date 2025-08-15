@@ -667,7 +667,7 @@ dist_zoibeta <- Dist$new(
     l[which(x == 0)] <- zeromass
     l[which(x == 1)] <- onemass
     l[which(x > 0 & x < 1)] <- (1 - zeromass - onemass) * 
-      dbeta(x = x, shape1 = shape1, shape2 = shape2)
+      dbeta(x = x[which(x > 0 & x < 1)], shape1 = shape1, shape2 = shape2)
     if(log) l <- log(l)
     return(l)
   },
@@ -897,7 +897,7 @@ dist_dir <- Dist$new(
   pdf = function(x, ...,  log = FALSE) {
     alpha <- c(...)
     y <- do.call(cbind, as.matrix(x))
-    p <- gamma(sum(alpha)) * prod(y ^ (alpha - 1)) /  prod(gamma(alpha))
+    p <- gamma(sum(alpha)) * prod(y ^ (alpha - 1)) / prod(gamma(alpha))
     if (log) p <- log(p)
     return(p)
   }, 
