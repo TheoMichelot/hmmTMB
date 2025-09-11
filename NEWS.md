@@ -1,3 +1,9 @@
+
+# hmmTMB 1.1.1
+
+- Add error message for laplace = TRUE in HMM$fit_stan()
+- Add reference to JSS paper
+
 # hmmTMB 1.1.0
 
 - Add standard error to output of `HMM$confint()`

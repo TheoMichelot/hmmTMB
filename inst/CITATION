@@ -1,11 +1,13 @@
-bibentry(
-    bibtype = "Article",
-    textVersion = "Michelot, T. (2023). hmmTMB: Hidden Markov models with flexible covariate effects in R. arXiv preprint, arXiv:2211.14139.",
-    header = "To cite hmmTMB in publications, please use",
-    author = c("Théo Michelot"),
-    title = "hmmTMB: Hidden Markov models with flexible covariate effects in R",
-    journal = "arXiv preprint",
-    year = "2023",
-    doi = "10.48550/arXiv.2211.14139",
-    url = "https://doi.org/10.48550/arXiv.2211.14139"
+bibentry(bibtype = "Article",
+  title        = "{hmmTMB}: Hidden {M}arkov Models with Flexible Covariate Effects in {R}",
+  author       = person(given = "Th{\\'e}o",
+                        family = "Michelot",
+                        email = "theo.michelot@dal.ca"),
+  journal      = "Journal of Statistical Software",
+  year         = "2025",
+  volume       = "114",
+  number       = "5",
+  pages        = "1--45",
+  doi          = "10.18637/jss.v114.i05",
+  header       = "To cite hmmTMB in publications use:"
 )

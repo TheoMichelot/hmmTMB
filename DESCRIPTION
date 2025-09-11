@@ -1,7 +1,7 @@
 Package: hmmTMB
 Type: Package
 Title: Fit Hidden Markov Models using Template Model Builder 
-Version: 1.1.0
+Version: 1.1.1
 Authors@R: c(
   person(given = "Theo",
          family = "Michelot",
@@ -14,7 +14,7 @@ Maintainer: Theo Michelot <theo.michelot@dal.ca>
 Description: Fitting hidden Markov models using automatic differentiation 
   and Laplace approximation, allowing for fast inference and flexible covariate
   effects (including random effects and smoothing splines) on model parameters.
-  The package is described by Michelot (2022) <doi:10.48550/arXiv.2211.14139>.
+  The package is described by Michelot (2025) <doi:10.18637/jss.v114.i05>.
 URL: https://github.com/TheoMichelot/hmmTMB
 License: GPL-3
 Depends: R6, mgcv, TMB, ggplot2
