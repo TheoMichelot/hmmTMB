@@ -47,7 +47,7 @@ We describe functionalities of the package in several vignettes, which are liste
   
 - ['Flexible animal movement modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_movement.pdf): Description of wild haggis movement analysis, illustrating how non-parametric covariate effects can be included. This includes two different types of movement models: (1) correlated random walks based on step lengths and turning angles, and (2) correlated random walks based on locations directly.
  
-- ['Occupancy modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_occupancy.pdf): Analysis of occupancy data set of crossbill from [Kéry et al. (2013)](https://onlinelibrary.wiley.com/doi/10.1111/jbi.12087).
+- ['Occupancy modelling using hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_occupancy.pdf): Analysis of occupancy data set of crossbill from Kéry et al. (2013), "Analysing and mapping species range dynamics using occupancy models, Journal of Biogeography, 40(8), 1463-1474.
 
 - ['The categorical distribution in hmmTMB'](https://github.com/TheoMichelot/hmmTMB/blob/master/vignettes/hmmTMB_example_categorical.pdf): The categorical distribution is slightly different from others, in that the number of parameters depends on the data (specifically, on the number of categories in the data). This vignette shows an example analysis for a data set on patient-therapist interactions from the [mHMMbayes](https://cran.r-project.org/package=mHMMbayes) package.
  
