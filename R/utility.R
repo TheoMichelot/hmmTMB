@@ -132,11 +132,11 @@ cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid
   all_vars <- data[, var_names, drop = FALSE]
   
   # Grid of covariate
-  if(is.factor(all_vars[, var])) {
-    n_grid <- length(unique(all_vars[, var]))
-    grid <- unique(all_vars[, var])
+  if(is.factor(all_vars[[var]])) {
+    n_grid <- length(unique(all_vars[[var]]))
+    grid <- unique(all_vars[[var]])
   } else {
-    grid <- seq(min(all_vars[, var]), max(all_vars[, var]), length = n_grid)
+    grid <- seq(min(all_vars[[var]]), max(all_vars[[var]]), length = n_grid)
   }
   
   # New data frame for covariate grid
