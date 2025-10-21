@@ -936,7 +936,7 @@ Observation <- R6Class(
         geom_histogram(breaks = breaks, aes(y = after_stat(density)), 
                        col = "white", bg = "lightgrey", na.rm = TRUE) + 
         geom_line(aes(grid, val, col = state, linetype = state), 
-                  data = df_dens, size = 0.7) +
+                  data = df_dens, linewidth = 0.7) +
         scale_color_manual("", values = c(hmmTMB_cols[1:self$nstates()], "black")) +
         scale_linetype_manual("", values = c(rep(1, self$nstates()), 2)) +
         coord_cartesian(ylim = c(0, 1.1 * max(h$density))) +
