@@ -1,4 +1,8 @@
 
+# hmmTMB 1.1.2
+
+- Fix bug in HMM$fit_stan()
+
 # hmmTMB 1.1.1
 
 - Add error message for laplace = TRUE in HMM$fit_stan()
