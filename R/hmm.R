@@ -733,6 +733,7 @@ HMM <- R6Class(
         stop("You need to install the package tmbstan to do this")
       }
       
+      args <- list(...)
       if(!is.null(args$laplace)) {
         if(args$laplace) {
           stop("'laplace = TRUE' not currently working in fit_stan()")
