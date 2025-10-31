@@ -343,6 +343,70 @@ dist_ztnbinom <- Dist$new(
   }
 )
 
+# Hurdle Negative-Binomial =====================
+dist_hnbinom <- Dist$new(
+  name = "hnbinom",
+  name_long = "hurdle negative binomial",
+  pdf = function(x, size, prob, z, log = FALSE) {
+    nb0 <- dnbinom(0, size = size, prob = prob)
+    prob_pos <- dnbinom(x, size = size, prob = prob) / (1 - nb0)
+    out <- numeric(length(x))
+    which_zero <- (x == 0)
+    out[which_zero]  <- z
+    out[!which_zero] <- (1 - z) * prob_pos[!which_zero]
+    if (log) {
+      out <- log(out)
+    }
+    out
+  },
+  cdf = function(q, size, prob, z) {
+    return(NA)
+  },
+  rng = function(n, size, prob, z) {
+    is_pos <- sample(0:1, size = n, replace = TRUE, prob = c(z, 1-z))
+    y <- integer(n)
+    n_pos <- sum(is_pos)
+    if(n_pos > 0) {
+      out <- integer(n_pos)
+      count <- 0
+      while(count < n_pos) {
+        val <- rnbinom(1, size = size, prob = prob)
+        if(val > 0) {
+          count <- count + 1
+          out[count] <- val
+        }
+      }
+      y[is_pos == 1] <- out
+    }
+    y
+  },
+  link = list(size = log, prob = qlogis, z = qlogis),
+  invlink = list(size = exp, prob = plogis, z = plogis),
+  npar = 3,
+  parnames = c("size", "prob", "z"),
+  parapprox = function(x) {
+    pos <- x[x > 0]
+    z_hat <- mean(x == 0)
+    if (length(pos) < 2L) {
+      size_hat <- 1
+      prob_hat <- 0.5
+    } else {
+      m <- mean(pos) 
+      v <- var(pos)
+      if (v <= m) {
+        v <- 1.01*m
+      }
+      size_hat <- m^2 / (v - m)
+      prob_hat <- m / v
+    }
+    eps <- 1e-4
+    c(size = max(size_hat, eps),
+      prob = min(max(prob_hat, eps), 1 - eps),
+      z = min(max(z_hat, eps), 1 - eps)
+    )
+  }
+)
+
 # Continuous distributions ------------------------------------------------
 
 # Normal =======================================
@@ -921,6 +985,7 @@ dist_list <- list(beta = dist_beta,
                   foldednorm = dist_foldednorm, 
                   gamma = dist_gamma,
                   gamma2 = dist_gamma2,
+                  hnbinom  = dist_hnbinom,
                   lnorm = dist_lnorm,
                   mvnorm = dist_mvnorm, 
                   nbinom = dist_nbinom,

@@ -326,6 +326,66 @@ public:
   }
 };
 
+template<class Type>
+class HurdleNegativeBinomial : public Dist<Type> {
+public:
+  // Constructor
+  HurdleNegativeBinomial() {};
+  
+  // Link function
+  vector<Type> link(const vector<Type>& par, const int& n_states) {
+    vector<Type> wpar(par.size());
+    // size
+    for (int i = 0; i < n_states; ++i)
+      wpar(i) = log(par(i));
+    // prob
+    for (int i = n_states; i < 2 * n_states; ++i)
+      wpar(i) = log(par(i) / (Type(1.0) - par(i)));
+    // z
+    for (int i = 2 * n_states; i < 3 * n_states; ++i)
+      wpar(i) = log(par(i) / (Type(1.0) - par(i)));
+    return wpar;
+  }
+  
+  // Inverse link function
+  matrix<Type> invlink(const vector<Type>& wpar, const int& n_states) {
+    int n_par = wpar.size() / n_states;
+    matrix<Type> par(n_states, n_par);
+    // size
+    for (int i = 0; i < n_states; ++i)
+      par(i, 0) = exp(wpar(i));
+    // prob
+    for (int i = 0; i < n_states; ++i)
+      par(i, 1) = Type(1.0) / (Type(1.0) + exp(-wpar(i + n_states)));
+    // z
+    for (int i = 0; i < n_states; ++i)
+      par(i, 2) = Type(1.0) / (Type(1.0) + exp(-wpar(i + 2 * n_states)));
+    return par;
+  }
+  
+  // Probability mass function
+  Type pdf(const Type& x, const vector<Type>& par, const bool& logpdf) {
+    const Type size = par(0);
+    const Type prob = par(1);
+    const Type z = par(2);
+    
+    // zero-truncation normaliser for the positive part
+    Type nb0   = dnbinom(Type(0.0), size, prob);
+
+    Type val;
+    if (x == Type(0.0)) {
+      // hurdle mass at 0
+      val = z;
+    } else {
+      // positive part: zero-truncated NB
+      val = (1 - z) * dnbinom(x, size, prob) / (Type(1.0) - nb0);
+    }
+    
+    if (logpdf) val = log(val);
+    return val;
+  }
+};
+
 template<class Type> 
 class Categorical : public Dist<Type> {
 public:

@@ -29,44 +29,46 @@ std::unique_ptr<Dist<Type>> dist_generator(const int& code) {
   case 7: 
     return(std::unique_ptr<Dist<Type>>(new Gamma2<Type>));
   case 8: 
-    return(std::unique_ptr<Dist<Type>>(new LogNormal<Type>)); 
+    return(std::unique_ptr<Dist<Type>>(new HurdleNegativeBinomial<Type>));
   case 9: 
-    return(std::unique_ptr<Dist<Type>>(new MultivariateNormal<Type>)); 
+    return(std::unique_ptr<Dist<Type>>(new LogNormal<Type>)); 
   case 10: 
-    return(std::unique_ptr<Dist<Type>>(new NegativeBinomial<Type>));
+    return(std::unique_ptr<Dist<Type>>(new MultivariateNormal<Type>)); 
   case 11: 
-    return(std::unique_ptr<Dist<Type>>(new NegativeBinomial2<Type>));
+    return(std::unique_ptr<Dist<Type>>(new NegativeBinomial<Type>));
   case 12: 
-    return(std::unique_ptr<Dist<Type>>(new Normal<Type>)); 
+    return(std::unique_ptr<Dist<Type>>(new NegativeBinomial2<Type>));
   case 13: 
-    return(std::unique_ptr<Dist<Type>>(new Poisson<Type>)); 
+    return(std::unique_ptr<Dist<Type>>(new Normal<Type>)); 
   case 14: 
-    return(std::unique_ptr<Dist<Type>>(new Studentst<Type>)); 
+    return(std::unique_ptr<Dist<Type>>(new Poisson<Type>)); 
   case 15: 
-    return(std::unique_ptr<Dist<Type>>(new TruncatedNormal<Type>)); 
+    return(std::unique_ptr<Dist<Type>>(new Studentst<Type>)); 
   case 16: 
-    return(std::unique_ptr<Dist<Type>>(new Tweedie<Type>)); 
+    return(std::unique_ptr<Dist<Type>>(new TruncatedNormal<Type>)); 
   case 17: 
-    return(std::unique_ptr<Dist<Type>>(new VonMises<Type>));
+    return(std::unique_ptr<Dist<Type>>(new Tweedie<Type>)); 
   case 18: 
-    return(std::unique_ptr<Dist<Type>>(new Weibull<Type>)); 
+    return(std::unique_ptr<Dist<Type>>(new VonMises<Type>));
   case 19: 
-    return(std::unique_ptr<Dist<Type>>(new WrpCauchy<Type>));
+    return(std::unique_ptr<Dist<Type>>(new Weibull<Type>)); 
   case 20: 
-    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedBinomial<Type>));
+    return(std::unique_ptr<Dist<Type>>(new WrpCauchy<Type>));
   case 21: 
-    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedGamma<Type>));
+    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedBinomial<Type>));
   case 22: 
-    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedGamma2<Type>));
+    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedGamma<Type>));
   case 23: 
-    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedNegativeBinomial<Type>));
+    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedGamma2<Type>));
   case 24: 
-    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedPoisson<Type>));
+    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedNegativeBinomial<Type>));
   case 25: 
-    return(std::unique_ptr<Dist<Type>>(new ZeroOneInflatedBeta<Type>));
+    return(std::unique_ptr<Dist<Type>>(new ZeroInflatedPoisson<Type>));
   case 26: 
-    return(std::unique_ptr<Dist<Type>>(new ZeroTruncatedNegativeBinomial<Type>));
+    return(std::unique_ptr<Dist<Type>>(new ZeroOneInflatedBeta<Type>));
   case 27: 
+    return(std::unique_ptr<Dist<Type>>(new ZeroTruncatedNegativeBinomial<Type>));
+  case 28: 
     return(std::unique_ptr<Dist<Type>>(new ZeroTruncatedPoisson<Type>));
   default: 
     return(std::unique_ptr<Dist<Type>>(new Normal<Type>)); 
