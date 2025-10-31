@@ -1,11 +1,13 @@
 
 # hmmTMB 1.1.2
 
-- Fix bug in HMM$fit_stan()
+- Add hurdle negative binomial distribution
+- Fix bug in `HMM$fit_stan()`
+- Fix bug in `HMM$pseudores()`
 
 # hmmTMB 1.1.1
 
-- Add error message for laplace = TRUE in HMM$fit_stan()
+- Add error message for `laplace = TRUE` in `HMM$fit_stan()`
 - Add reference to JSS paper
 
 # hmmTMB 1.1.0
