@@ -991,7 +991,7 @@ HMM <- R6Class(
         
         if(all(is.na(cdfs[[var]]))) {
           message(paste0("Pseudo-residuals not implemented for '", 
-                         self$obs()$dists()[[2]]$name(), "' distribution. ",
+                         self$obs()$dists()[[var]]$name(), "' distribution. ",
                          "Returning NA."))
         } else {
           cat("Computing residuals for", names(cdfs)[var], "... ")
