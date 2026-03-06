@@ -89,7 +89,8 @@ MarkovChain <- R6Class(
       # Check arguments
       private$check_args(n_states = n_states, 
                          formula = formula, 
-                         data = data)
+                         data = data,
+                         ref = ref)
       private$nstates_ <- n_states
       private$ref_ <- ref
       
@@ -765,7 +766,7 @@ MarkovChain <- R6Class(
     
     # Check constructor arguments
     # (For argument description, see constructor)
-    check_args = function(n_states, formula, data) {
+    check_args = function(n_states, formula, data, ref) {
       if(!is.null(n_states)) {
         if(!is.numeric(n_states) | n_states < 1) {
           stop("'n_states' should be a numeric >= 1")
@@ -782,8 +783,8 @@ MarkovChain <- R6Class(
             stop("'formula' should be a matrix of character strings")
           }
           
-          if (!all(diag(formula) == ".")) {
-            stop("Diagonal of formula should be '.'")
+          if (!all(sapply(1:n_states, function(i) formula[i,ref[i]]) == ".")) {
+            stop("Formula for reference transition probabilities should be '.'")
           }
           
         } else if(!inherits(formula, "formula")) {

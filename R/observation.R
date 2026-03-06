@@ -76,6 +76,7 @@ Observation <- R6Class(
                           formulas = NULL, 
                           n_states = NULL, 
                           par,
+                          inits_fe = NULL,
                           fixpar = NULL,
                           gam_args = NULL) {
       private$check_args(data = data, 
@@ -203,8 +204,13 @@ Observation <- R6Class(
                                      names_re_all = colnames(mats$X_re),
                                      names_re = colnames(ncol_re)))
       
-      # Initialise parameters      
-      self$update_coeff_fe(rep(0, sum(ncol_fe)))
+      # Initialise parameters
+      if(!is.null(inits_fe)){
+        self$update_coeff_fe(inits_fe)
+      }
+      else{
+        self$update_coeff_fe(rep(0, sum(ncol_fe)))
+      }
       self$update_coeff_re(rep(0, ncol(mats$X_re)))
       self$update_lambda(rep(1, ifelse(is.null(ncol_re), 0, ncol(ncol_re))))
       
