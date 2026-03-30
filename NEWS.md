@@ -1,4 +1,9 @@
 
+# hmmTMB 1.1.3
+
+- New vignette on (semi-)supervised learning
+- Fix parameter counts for models with constraints
+
 # hmmTMB 1.1.2
 
 - Add hurdle negative binomial distribution
