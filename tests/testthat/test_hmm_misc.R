@@ -2,12 +2,19 @@
 context("HMM class")
 
 # Create data with NAs in covariates
-data <- data.frame(z = 1:100, x1 = rnorm(100), x2 = rnorm(100))
+n <- 100
+data <- data.frame(z = NA, x1 = rnorm(n), x2 = rnorm(n))
 data$x1[1:10] <- NA
 data$x2[91:100] <- NA
 
+s <- 1
+for(i in 1:100) {
+  data$z[i] <- rnorm(1, c(0, 5)[s], c(1, 2)[s])
+  s <- sample(c(s, 3-s), size = 1, prob = c(0.9, 0.1))
+}
+
 # Initial parameters
-par <- list(z = list(mean = c(0, 0), sd = c(1, 1)))
+par <- list(z = list(mean = c(0, 5), sd = c(1, 1)))
 
 test_that("NA covariates are filled in", {
     # Create model
@@ -31,6 +38,7 @@ test_that("edf works in case with no smooth", {
     obs <- Observation$new(data = data, dists = list(z = "norm"), n_states = 2, par = par)
     hid <- MarkovChain$new(n_states = 2, data = data)
     hmm <- HMM$new(obs = obs, hid = hid)
+    hmm$fit(silent = TRUE)
     expect_equal(hmm$edf(), length(hid$coeff_fe()) + length(obs$coeff_fe()) + 
                    length(hmm$coeff_list()$log_delta0))
     
@@ -40,6 +48,7 @@ test_that("edf works in case with no smooth", {
                            par = par, formulas = list(z = list(mean = ~1, sd = f)))
     hid <- MarkovChain$new(n_states = 2, data = data, formula = f)
     hmm <- HMM$new(obs = obs, hid = hid)
+    hmm$fit(silent = TRUE)
     expect_equal(hmm$edf(), length(hid$coeff_fe()) + length(obs$coeff_fe()) +
                    length(hmm$coeff_list()$log_delta0))
 })
