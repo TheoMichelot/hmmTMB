@@ -455,36 +455,31 @@ HMM <- R6Class(
     edf = function() {
       # Degrees of freedom for fixed effects
       # (don't count smoothing parameters)
-      edf <- nrow(self$obs()$coeff_fe()) + 
-        nrow(self$hid()$coeff_fe())
-      if(!self$hid()$stationary()) {
-        edf <- edf + length(self$coeff_list()$log_delta0)
-      }
+      edf <- length(self$tmb_rep()$par.fixed)
       
-      if(!is.null(private$tmb_rep_)) {
-        if(!is.null(self$tmb_rep()$jointPrecision)) {
-          # Joint covariance matrix
-          Q <- self$tmb_rep()$jointPrecision
-          V <- prec_to_cov(Q)
-          
-          # get Hessian
-          par_all <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
-          H <- self$tmb_obj_joint()$he(par_all)
-          
-          # Extract covariance for random effect components
-          ind_re_hid <- which(colnames(Q) == "coeff_re_hid")
-          ind_re_obs <- which(colnames(Q) == "coeff_re_obs")
-          V_re_hid <- V[ind_re_hid, ind_re_hid]
-          V_re_obs <- V[ind_re_obs, ind_re_obs]
-          H_re_hid <- H[ind_re_hid, ind_re_hid]
-          H_re_obs <- H[ind_re_obs, ind_re_obs]
-          
-          edf_hid <- sum(diag(H_re_hid %*% V_re_hid))
-          edf_obs <- sum(diag(H_re_obs %*% V_re_obs))
-          
-          # Random effect EDF
-          edf <- edf + edf_hid + edf_obs    
-        }        
+      # Add random effects if needed
+      if(!is.null(self$tmb_rep()$jointPrecision)) {
+        # Joint covariance matrix
+        Q <- self$tmb_rep()$jointPrecision
+        V <- prec_to_cov(Q)
+        
+        # Get Hessian
+        par_all <- c(self$tmb_rep()$par.fixed, self$tmb_rep()$par.random)
+        H <- self$tmb_obj_joint()$he(par_all)
+        
+        # Extract covariance for random effect components
+        ind_re_hid <- which(colnames(Q) == "coeff_re_hid")
+        ind_re_obs <- which(colnames(Q) == "coeff_re_obs")
+        V_re_hid <- V[ind_re_hid, ind_re_hid]
+        V_re_obs <- V[ind_re_obs, ind_re_obs]
+        H_re_hid <- H[ind_re_hid, ind_re_hid]
+        H_re_obs <- H[ind_re_obs, ind_re_obs]
+        
+        edf_hid <- sum(diag(H_re_hid %*% V_re_hid))
+        edf_obs <- sum(diag(H_re_obs %*% V_re_obs))
+        
+        # Random effect EDF
+        edf <- edf + edf_hid + edf_obs    
       }
       
       return(edf)
@@ -1904,10 +1899,7 @@ HMM <- R6Class(
     #' @return Marginal AIC
     AIC_marginal = function() {
       llk <- -self$out()$objective
-      npar <- nrow(self$obs()$coeff_fe()) + 
-        nrow(self$hid()$coeff_fe()) +
-        length(self$obs()$lambda()) +
-        length(self$hid()$lambda())
+      npar <- length(self$tmb_rep()$par.fixed)
       if(!self$hid()$stationary()) {
         npar <- npar + length(self$coeff_list()$log_delta0)
       }
