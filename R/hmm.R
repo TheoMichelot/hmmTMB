@@ -1204,8 +1204,8 @@ HMM <- R6Class(
       if(is.null(rep$jointPrecision)) { # model does not have random effects
         par <- rep$par.fixed
         V <- rep$cov.fixed
-        # check if TMB inversion resulted in NaN varcovs or negative diagonal entries
-        # if so, compute Hessian and invert safely (ginv in prec_to_cov)
+        # Check if TMB inversion resulted in NaN VarCov or negative diagonal entries.
+        # If so, compute Hessian and invert safely via prec_to_cov (using ginv internally)
         if(any(is.na(V)) | any(diag(V) < 0)) {
           obj <- self$tmb_obj()
           H <- obj$he(par)
