@@ -1483,6 +1483,12 @@ HMM <- R6Class(
       par <- rep$par.fixed
       if(is.null(rep$jointPrecision)) {
         V <- rep$cov.fixed
+        # Use safe inversion if TMB covariance matrix is invalid
+        if(any(is.na(V)) | any(diag(V) < 0)) {
+          obj <- self$tmb_obj()
+          H <- obj$he(par)
+          V <- prec_to_cov(H)
+        }
       } else {
         V <- prec_to_cov(rep$jointPrecision)
       }
