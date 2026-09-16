@@ -45,3 +45,6 @@ src/*.o
 
 # cache files for vignettes
 vignettes/hmmTMB_vignette_cache/*
+
+# Generated test data for the forecast development notebooks
+inst/devel/test_data/

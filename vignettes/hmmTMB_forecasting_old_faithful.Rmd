@@ -1,0 +1,182 @@
+---
+title: "Forecasting with hmmTMB: An Example Using Old Faithful Data"
+author: "Duncan Cameron-Stienke"
+date: "`r Sys.Date()`"
+output: 
+    pdf_document:
+        number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Forecasting Old Faithful Eruption Durations with hmmTMB}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  message = FALSE, error = FALSE, warning = FALSE, comment = NA
+)
+```
+
+# Introduction
+This vignette demonstrates using hmmTMB for forecasting with a hidden Markov model (HMM).
+The Old Faithful dataset, included in base R, contains observations of eruption durations and waiting times between eruptions. We model the eruption durations as a two state Markov process, influenced by waiting times through non-linear effects in the transition probabilities.
+
+## Data Exploration
+First, load the necessary library and explore the data.
+```{r load-data}
+library(devtools)
+library(ggplot2)
+library(ggridges)
+load_all("../../hmmTMB")
+data("faithful")
+```
+
+We examine the autocorrelation, distribution, and relationship between variables.
+
+```{r view-data, fig.width = 6, fig.height = 3, out.width="90%", fig.align = "center"}
+acf(faithful$eruptions)
+hist(faithful$eruptions)
+plot(faithful$waiting, faithful$eruptions)
+```
+
+The autocorrelation plot shows a temporal pattern to eruption durations, where duration has a -0.5 correlation with lag -1 and +0.3 correlation with lag -2, likely caused by large eruptions depleting the water supply and shortening subsequent eruptions. The histogram indicates a bimodal distribution, suggesting two distinct eruption types. The scatter plot reveals a positive relationship between waiting time and eruption duration, indicating that waiting time is a useful predictor of eruption duration.
+
+## Data Preparation
+Split the data into training and forecasting sets, using 80% for training.
+```{r data-preparation}
+training_fraction <- 0.8
+n_training <- floor(nrow(faithful) * training_fraction)
+training_df <- data.frame(
+  ID = rep(1, n_training),
+  waiting = faithful$waiting[1:n_training],
+  eruptions = faithful$eruptions[1:n_training]
+)
+forecast_df <- data.frame(
+  ID = rep(1, nrow(faithful) - n_training),
+  waiting = faithful$waiting[(n_training + 1):nrow(faithful)],
+  eruptions = faithful$eruptions[(n_training + 1):nrow(faithful)]
+)
+```
+
+## Model Specification
+Define a 2-state Markov chain with non-linear effects of waiting time on transitions using smoothing splines, and normal distributions for eruption durations.
+```{r model-specification}
+hid_model <- MarkovChain$new(
+  data = training_df,
+  n_states = 2,
+  formula = ~ s(waiting, k = 10, bs = "cs")
+)
+obs_model <- Observation$new(
+  data = training_df,
+  n_states = 2,
+  dists = list(eruptions = "norm"),
+  par = list(eruptions = list(
+    mean = c(0, 0),
+    sd = c(1, 1)
+  ))
+)
+# Update to suggested initial parameters
+obs_model$update_par(par = obs_model$suggest_initial())
+hmm <- HMM$new(
+  hid = hid_model,
+  obs = obs_model
+)
+hmm$fit(silent = TRUE)
+```
+
+# Forecasting
+Create a forecast object using the fitted model and forecast data, starting from the last state distribution of the training period.
+```{r create-forecast}
+forecast <- Forecast$new(
+  hmm = hmm,
+  forecast_data = forecast_df,
+  starting_state_distribution = "last"
+)
+```
+## Evaluation with Negative Log-Likelihood
+Compute NLL for the forecasts and plot the results.
+```{r evaluate-forecasts}
+# Define the observation variable
+observation <- "eruptions"
+
+# Extract parameters
+eval_range <- forecast$eval_range()[[observation]]
+forecast_dist_matrix <- forecast$forecast_dists()[[observation]]
+step_size <- eval_range[2] - eval_range[1]
+time_steps <- seq(ncol(forecast_dist_matrix))
+
+# Find indices of closest evaluation points to true values
+true_value_indices <- sapply(
+  forecast_df[[observation]], 
+  function(true_val) which.min(abs(eval_range - true_val))
+)
+
+# Extract PDF values
+pdf_values <- forecast_dist_matrix[cbind(true_value_indices, time_steps)]
+
+# Compute NLL (approximating probability mass)
+nll <- -log(pdf_values * step_size)
+
+# Uniform baseline NLL
+total_range <- max(eval_range) - min(eval_range)
+nll_baseline <- -log(1 / length(eval_range))  # Alternative: -log(step_size / total_range)
+
+# Average NLL
+average_nll <- mean(nll, na.rm = TRUE)
+```
+Plot the NLL over time steps.
+```{r plot-nll, fig.width = 6, fig.height = 3, out.width="90%", fig.align = "center"}
+plot(
+  nll, 
+  type = "o", 
+  col = "blue", 
+  pch = 16,
+  xlab = "Time Step", 
+  ylab = "Negative Log-Likelihood",
+  main = "Negative Log-Likelihood Over Time"
+)
+abline(h = nll_baseline, col = "red", lty = 2)
+abline(h = average_nll, col = "green", lty = 3)
+legend(
+  "topright",
+  legend = c("NLL", "Uniform Baseline", "Average NLL"),
+  col = c("blue", "red", "green"), 
+  lty = c(1, 2, 3), 
+  pch = c(16, NA, NA), 
+  bty = "n"
+)
+```
+The negative log-likelihood (NLL) plot shows the model's performance over time steps. The blue line represents the NLL for each time step, while the red dashed line indicates the performance of a uniform predictor with no predictive power, and the green dashed line shows the average NLL across all time steps.
+The plot shows a strong consistent performance even at long time horizons. The data includes several outliers with poor predictive scores.
+
+# Visualizing Forecast Distributions with Ridge Plots
+Use ggplot2 and ggridges to visualize forecast distributions and true values.
+```{r ridge-plot, fig.width = 6, fig.height = 3, out.width="90%", fig.align = "center"}
+# Timesteps ahead to be plotted
+forecast_timesteps <- c(1, 2, 3, 4, 5)
+
+eval_range <- forecast$eval_range()[[observation]]
+ridge_data <- data.frame(
+  x = rep(eval_range, length(forecast_timesteps)),
+  time = factor(rep(forecast_timesteps, each = length(eval_range)), levels = forecast_timesteps),
+  density = c(forecast$forecast_dists()[[observation]][, forecast_timesteps])
+)
+true_df <- data.frame(
+  time = factor(forecast_timesteps, levels = forecast_timesteps),
+  x = forecast_df[[observation]][forecast_timesteps]
+)
+
+ggplot() +
+  geom_ridgeline(data = ridge_data,
+                 aes(x = x, y = time, height = density, fill = "Forecasted"),
+                 alpha = 0.3) +
+  geom_point(data = true_df,
+             aes(x = x, y = time, colour = "True"),
+             size = 2, inherit.aes = FALSE) +
+  scale_fill_manual(name = "Type", values = c("Forecasted" = "blue")) +
+  scale_colour_manual(name = "Type", values = c("True" = "red")) +
+  labs(title = paste("Ridge plot showing probability distribution and true values of", observation), x = "Eruption (s)", y = "Time Step") +
+  theme_minimal() +
+  guides(fill = guide_legend(override.aes = list(alpha = 0.3)))
+```
+
+This ridge plot displays the forecasted probability densities at selected time steps, overlaid with the true eruption durations.
