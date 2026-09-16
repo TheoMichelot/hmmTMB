@@ -4,6 +4,7 @@
 - New vignette on (semi-)supervised learning
 - Fix parameter counts for models with constraints
 - Use safe Hessian inversion even for models without random effects in `HMM$post_coeff()` and `HMM$confint()`
+- Forecasting through the `Forecast` class
 
 # hmmTMB 1.1.2
 
