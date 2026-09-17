@@ -1237,7 +1237,7 @@ model separately, where it shows their combined effect.
   covs = NULL,
   i = NULL,
   j = NULL,
-  n_grid = 40,
+  n_grid = 50,
   n_post = 0,
   level = 0.95,
   show = "mle",
@@ -1268,7 +1268,10 @@ indices of states; if plotting obspar then full names of parameters}
 ignored; if plotting obspar then indices of states}
 
 \item{\code{n_grid}}{Number of points along each axis, so the surface is
-evaluated at \code{n_grid^2} points (default: 40)}
+evaluated at \code{n_grid^2} points (default: 50). At the default
+\code{n_post = 0} this costs one prediction and is cheap even for a
+fine grid; with posterior simulation the cost grows with
+\code{n_grid^2}, so it is worth lowering there.}
 
 \item{\code{n_post}}{Number of posterior simulations used for the confidence
 interval. Defaults to 0, i.e. the maximum likelihood surface only,

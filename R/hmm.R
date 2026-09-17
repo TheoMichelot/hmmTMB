@@ -2034,7 +2034,10 @@ HMM <- R6Class(
     #' @param j If plotting tpm then columns of tpm; if plotting delta then
     #' ignored; if plotting obspar then indices of states
     #' @param n_grid Number of points along each axis, so the surface is
-    #' evaluated at \code{n_grid^2} points (default: 40)
+    #' evaluated at \code{n_grid^2} points (default: 50). At the default
+    #' \code{n_post = 0} this costs one prediction and is cheap even for a
+    #' fine grid; with posterior simulation the cost grows with
+    #' \code{n_grid^2}, so it is worth lowering there.
     #' @param n_post Number of posterior simulations used for the confidence
     #' interval. Defaults to 0, i.e. the maximum likelihood surface only,
     #' because a surface needs many more evaluation points than a curve does.
@@ -2052,7 +2055,7 @@ HMM <- R6Class(
     #'
     #' @return A ggplot object
     plot_2d = function(what, var, var2, covs = NULL, i = NULL, j = NULL,
-                       n_grid = 40, n_post = 0, level = 0.95, show = "mle",
+                       n_grid = 50, n_post = 0, level = 0.95, show = "mle",
                        too_far = 0.1, contour = TRUE) {
       show <- match.arg(show, c("mle", "ci"))
       if(show == "ci" & n_post <= 0) {
