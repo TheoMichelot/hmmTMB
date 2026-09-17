@@ -19,7 +19,7 @@
 ### s(x, y, bs = "spde"), so nothing about the modelling interface changes.
 ### What does change is how the likelihood is computed: hmmTMB switches to the
 ### banded forward algorithm, because the exact one would make the Hessian
-### with respect to the 1400-odd field weights dense and the Laplace
+### with respect to the several hundred field weights dense and the Laplace
 ### approximation unaffordable.
 ###
 ### Runs in well under a minute: the mesh follows the track rather than a
@@ -121,8 +121,8 @@ locs <- cbind(data$x, data$y)
 mesh <- fm_mesh_2d(loc = locs,
                    boundary = list(fm_nonconvex_hull(locs, convex = -0.03),
                                    fm_nonconvex_hull(locs, convex = -0.2)),
-                   max.edge = c(5, 50),
-                   cutoff = 1)
+                   max.edge = c(7, 50),
+                   cutoff = 2)
 plot(mesh, asp = 1)
 lines(data$x, data$y, col = "#00798c60")
 mesh$n   # number of field weights, integrated out by the Laplace approximation
