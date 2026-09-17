@@ -1,6 +1,13 @@
 
 # hmmTMB 1.1.3
 
+- Add the banded forward algorithm of Fischer (2026), through the new `bw`
+  argument of `HMM$new()`, with `HMM$update_bw()` and `HMM$check_bw()`. It
+  truncates the conditioning of each log-likelihood contribution at a fixed
+  lag, which makes the Hessian with respect to latent variables spread over
+  time banded rather than dense, at about twice the cost per evaluation and
+  with an error that decays geometrically in the bandwidth. Off by default,
+  so the exact forward algorithm is unchanged.
 - `HMM$post_coeff()` now samples a model with random effects through a sparse
   Cholesky factorisation of the joint precision, rather than inverting it
   first. The inverse is dense even when the precision is not, so this is much

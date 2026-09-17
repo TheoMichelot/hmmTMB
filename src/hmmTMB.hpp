@@ -7,6 +7,7 @@
 #include<memory>
 #include<iostream>
 #include "dist.hpp"
+#include "likelihood.hpp"
 
 //' Compute Negative log-likelihood for HMM
  template<class Type>
@@ -34,6 +35,7 @@
    DATA_VECTOR(log_det_S_hid); // log-determinant of penalty matrix
    DATA_IMATRIX(ncol_re_hid); // number of columns of S and X_re for each random effect
    DATA_INTEGER(include_smooths); // > 0 = include penalty in likelihood evaluation
+   DATA_INTEGER(bw); // bandwidth of the banded forward algorithm (< 2 = exact)
    DATA_IVECTOR(ref_tpm); // indices of reference transition probabilities
    DATA_IVECTOR(ref_delta0); // indices of reference initial probabilities
    // prior information 
@@ -231,6 +233,7 @@
    //========================//
    // Compute log-likelihood //
    //========================//
+   if (bw < 2) {
    // Initialise log-likelihood
    matrix<Type> phi(delta0.row(0));
    Type sumphi = 0;
@@ -249,6 +252,10 @@
      sumphi = phi.sum();
      llk = llk + log(sumphi);
      phi = phi / sumphi;
+   }
+   } else {
+     // Banded forward algorithm, see likelihood.hpp
+     llk = llk + forward_alg_banded(prob, tpm_array, delta0, ID, bw);
    }
    
    // Negative log-likelihood

@@ -45,6 +45,9 @@ HMM <- R6Class(
     #' factor levels).don See examples in the vignettes, and check the TMB
     #' documentation to understand the inner workings (argument \code{map}
     #' of \code{TMB::MakeADFun()}).
+    #' @param bw Bandwidth of the banded forward algorithm; see
+    #' \code{HMM$update_bw()}. Defaults to \code{NULL}, i.e. 0, the exact
+    #' forward algorithm.
     #'
     #' @return A new HMM object
     #'
@@ -66,7 +69,8 @@ HMM <- R6Class(
                           hid = NULL,
                           file = NULL,
                           init = NULL,
-                          fixpar = NULL) {
+                          fixpar = NULL,
+                          bw = NULL) {
       # Decide how model has been specified
       if (is.null(file) & is.null(obs)) {
         stop(paste0("Either 'file' should be the name of a file specifying ",
@@ -129,6 +133,9 @@ HMM <- R6Class(
         private$hid_$update_coeff_re(
           private$initialize_submodel(private$hid_$coeff_re(), init$hid()$coeff_re()))
       }
+
+      # Bandwidth of the forward algorithm
+      self$update_bw(bw)
 
       # initialize priors
       self$set_priors()
@@ -246,6 +253,76 @@ HMM <- R6Class(
     lambda = function() {
       return(list(obs = self$obs()$lambda(),
                   hid = self$hid()$lambda()))
+    },
+
+    #' @description Bandwidth of the forward algorithm (0 = exact)
+    bw = function() {
+      return(private$bw_)
+    },
+
+    #' @description Update bandwidth of the forward algorithm
+    #'
+    #' The exact forward algorithm accumulates log-likelihood contributions
+    #' that are each conditional on the entire process history, so the Hessian
+    #' with respect to latent variables spread over time is dense. The banded
+    #' algorithm of Fischer (2026) splits the time series into blocks of length
+    #' \code{bw} and truncates that conditioning at the previous block, which
+    #' makes the Hessian banded. It costs about twice as much per evaluation,
+    #' and its error decays geometrically in \code{bw}, because an ergodic
+    #' Markov chain forgets its initial condition exponentially fast.
+    #'
+    #' This is off by default. It is worth turning on for a model with many
+    #' random effects spread over time, where the dense Hessian of the exact
+    #' algorithm is what makes the Laplace approximation expensive. Use
+    #' \code{HMM$check_bw()} to choose a bandwidth before fitting, and
+    #' afterwards check that raising it leaves the estimates unchanged.
+    #'
+    #' @param bw Non-negative integer (0 = exact algorithm), or \code{NULL} to
+    #' choose automatically. This is TMB data, so changing it discards any
+    #' existing setup, which is rebuilt on the next \code{setup()} or
+    #' \code{fit()}.
+    update_bw = function(bw = NULL) {
+      if(is.null(bw)) {
+        bw <- 0L
+      }
+      if(length(bw) != 1 || !is.numeric(bw) || is.na(bw) ||
+         bw != round(bw) || bw < 0 || bw == 1) {
+        stop("'bw' should be 0, an integer >= 2, or NULL.")
+      }
+      private$bw_ <- as.integer(bw)
+      private$tmb_obj_ <- NULL
+      private$tmb_obj_joint_ <- NULL
+      invisible(self)
+    },
+
+    #' @description Profile the log-likelihood against the bandwidth
+    #'
+    #' Evaluates the joint log-likelihood at the model's current parameter
+    #' values for a range of bandwidths. A sensible bandwidth is the smallest
+    #' one beyond which the value no longer changes appreciably. This is
+    #' evaluated at fixed parameters, so it is cheap and does not require the
+    #' model to be re-fitted.
+    #'
+    #' @param bws Vector of bandwidths (each at least 2)
+    #' @param silent Logical. If TRUE (default), TMB tracing output is hidden.
+    #'
+    #' @return Data frame with columns \code{bw} and \code{llk}, including a
+    #' row with \code{bw = Inf} for the exact forward algorithm.
+    check_bw = function(bws = seq(5, 40, by = 5), silent = TRUE) {
+      if(any(bws < 2)) {
+        stop("All bandwidths should be at least 2.")
+      }
+      if(is.null(private$tmb_args_)) {
+        self$setup(silent = silent)
+      }
+      # Every parameter is held fixed, random effects included, so this is the
+      # joint likelihood and no Laplace approximation is involved
+      llk <- sapply(c(bws, Inf), function(b) {
+        obj <- private$make_tmb_obj(bw = ifelse(is.finite(b), b, 0),
+                                    include_smooths = -1, silent = silent)
+        -obj$fn(obj$par)
+      })
+      return(data.frame(bw = c(bws, Inf), llk = llk))
     },
 
     #' @description Update parameters stored inside model object
@@ -677,6 +754,7 @@ HMM <- R6Class(
                       log_det_S_hid = log_det_S_hid,
                       ncol_re_hid = ncol_re_hid,
                       include_smooths = 1,
+                      bw = 0,
                       ref_tpm = self$hid()$ref(),
                       ref_delta0 = self$hid()$ref_delta0(),
                       coeff_fe_obs_prior = priors$coeff_fe_obs,
@@ -684,11 +762,14 @@ HMM <- R6Class(
                       log_lambda_obs_prior = priors$log_lambda_obs,
                       log_lambda_hid_prior = priors$log_lambda_hid)
 
+      # Keep the ingredients, so that check_bw() can rebuild at another
+      # bandwidth without redoing any of the above
+      private$tmb_args_ <- list(data = tmb_dat, parameters = tmb_par,
+                                map = map, DLL = "hmmTMB")
+
       # Create TMB model
-      obj <- MakeADFun(tmb_dat, tmb_par, DLL = "hmmTMB",
-                       random = random,
-                       map = map,
-                       silent = silent)
+      obj <- private$make_tmb_obj(bw = self$bw(), include_smooths = 1,
+                                  random = random, silent = silent)
 
       nllk0 <- obj$fn(obj$par)
       if(is.nan(nllk0) | is.infinite(nllk0)) {
@@ -701,9 +782,8 @@ HMM <- R6Class(
       private$tmb_obj_ <- obj
 
       # Joint negative log-likelihood function
-      tmb_dat$include_smooths <- -1
-      private$tmb_obj_joint_ <- MakeADFun(tmb_dat, tmb_par, DLL = "hmmTMB",
-                                          map = map, silent = silent)
+      private$tmb_obj_joint_ <- private$make_tmb_obj(
+        bw = self$bw(), include_smooths = -1, silent = silent)
     },
 
     #' @description Fit model using tmbstan
@@ -2010,6 +2090,8 @@ HMM <- R6Class(
     par_iters_ = NULL,
     coeff_array_ = NULL,
     states_ = NULL,
+    bw_ = NULL,
+    tmb_args_ = NULL,
 
     # Reading from spec file --------------------------------------------------
 
@@ -2227,6 +2309,18 @@ HMM <- R6Class(
     },
 
     # Other private methods ---------------------------------------------------
+
+    ## Build a TMB object from the stored ingredients. Bandwidth and
+    ## include_smooths are data, so changing either means retaping.
+    make_tmb_obj = function(bw, include_smooths, random = NULL, silent = TRUE) {
+      if(is.null(private$tmb_args_)) {
+        stop("Setup model first")
+      }
+      args <- private$tmb_args_
+      args$data$bw <- as.integer(bw)
+      args$data$include_smooths <- as.integer(include_smooths)
+      do.call(MakeADFun, c(args, list(random = random, silent = silent)))
+    },
 
     ## Compute effective degrees of freedom for a GAM
     comp_edf = function(X, S, lambda){

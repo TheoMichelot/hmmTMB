@@ -20,7 +20,7 @@ data <- data.frame(temp = as.vector(t(nottem)))
 # Create hidden state and observation models
 hid <- MarkovChain$new(data = data, n_states = 2)
 par0 <- list(temp = list(mean = c(40, 60), sd = c(5, 5)))
-obs <- Observation$new(data = data, n_states = 2, 
+obs <- Observation$new(data = data, n_states = 2,
                        dists = list(temp = "norm"),
                        par = par0)
 
@@ -38,7 +38,7 @@ data <- data.frame(temp = as.vector(t(nottem)))
 # Create hidden state and observation models
 hid <- MarkovChain$new(data = data, n_states = 2)
 par0 <- list(temp = list(mean = c(40, 60), sd = c(5, 5)))
-obs <- Observation$new(data = data, n_states = 2, 
+obs <- Observation$new(data = data, n_states = 2,
                        dists = list(temp = "norm"),
                        par = par0)
 
@@ -59,7 +59,7 @@ data <- data.frame(temp = as.vector(t(nottem)))
 # Create hidden state and observation models
 hid <- MarkovChain$new(data = data, n_states = 2)
 par0 <- list(temp = list(mean = c(40, 60), sd = c(5, 5)))
-obs <- Observation$new(data = data, n_states = 2, 
+obs <- Observation$new(data = data, n_states = 2,
                        dists = list(temp = "norm"),
                        par = par0)
 
@@ -89,6 +89,9 @@ hmm$predict(what = "tpm", n_post = 1000)
 \item \href{#method-HMM-fixpar}{\code{HMM$fixpar()}}
 \item \href{#method-HMM-coeff_array}{\code{HMM$coeff_array()}}
 \item \href{#method-HMM-lambda}{\code{HMM$lambda()}}
+\item \href{#method-HMM-bw}{\code{HMM$bw()}}
+\item \href{#method-HMM-update_bw}{\code{HMM$update_bw()}}
+\item \href{#method-HMM-check_bw}{\code{HMM$check_bw()}}
 \item \href{#method-HMM-update_par}{\code{HMM$update_par()}}
 \item \href{#method-HMM-sd_re}{\code{HMM$sd_re()}}
 \item \href{#method-HMM-par}{\code{HMM$par()}}
@@ -133,7 +136,14 @@ hmm$predict(what = "tpm", n_post = 1000)
 \subsection{Method \code{new()}}{
 Create new HMM object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$new(obs = NULL, hid = NULL, file = NULL, init = NULL, fixpar = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$new(
+  obs = NULL,
+  hid = NULL,
+  file = NULL,
+  init = NULL,
+  fixpar = NULL,
+  bw = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -155,12 +165,16 @@ increasingly complex models: start from a simple model, then pass it as
 init to create a more complex model, and so on.}
 
 \item{\code{fixpar}}{Named list, with optional elements: 'hid', 'obs', 'delta0',
-'lambda_obs', and 'lambda_hid'. Each element is a named vector of 
+'lambda_obs', and 'lambda_hid'. Each element is a named vector of
 parameters in coeff_fe that should either be fixed (if the corresponding
 element is set to NA) or estimated to a common value (using integers or
 factor levels).don See examples in the vignettes, and check the TMB
 documentation to understand the inner workings (argument \code{map}
 of \code{TMB::MakeADFun()}).}
+
+\item{\code{bw}}{Bandwidth of the banded forward algorithm; see
+\code{HMM$update_bw()}. Defaults to \code{NULL}, i.e. 0, the exact
+forward algorithm.}
 }
 \if{html}{\out{</div>}}
 }
@@ -176,7 +190,7 @@ data <- data.frame(temp = as.vector(t(nottem)))
 # Create hidden state and observation models
 hid <- MarkovChain$new(data = data, n_states = 2)
 par0 <- list(temp = list(mean = c(40, 60), sd = c(5, 5)))
-obs <- Observation$new(data = data, n_states = 2, 
+obs <- Observation$new(data = data, n_states = 2,
                        dists = list(temp = "norm"),
                        par = par0)
 
@@ -222,7 +236,7 @@ Output of optimiser after model fitting
 \if{html}{\out{<a id="method-HMM-tmb_obj"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-tmb_obj}{}}}
 \subsection{Method \code{tmb_obj()}}{
-Model object created by TMB. This is the output of 
+Model object created by TMB. This is the output of
 the TMB function \code{MakeADFun}, and it is a list including elements
 \describe{
   \item{\code{fn}}{Objective function}
@@ -239,7 +253,7 @@ the TMB function \code{MakeADFun}, and it is a list including elements
 \if{latex}{\out{\hypertarget{method-HMM-tmb_obj_joint}{}}}
 \subsection{Method \code{tmb_obj_joint()}}{
 Model object created by TMB for the joint likelihood of
-the fixed and random effects. This is the output of the TMB function 
+the fixed and random effects. This is the output of the TMB function
 \code{MakeADFun}, and it is a list including elements
 \describe{
   \item{\code{fn}}{Objective function}
@@ -255,7 +269,7 @@ the fixed and random effects. This is the output of the TMB function
 \if{html}{\out{<a id="method-HMM-tmb_rep"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-tmb_rep}{}}}
 \subsection{Method \code{tmb_rep()}}{
-Output of the TMB function \code{sdreport}, which includes 
+Output of the TMB function \code{sdreport}, which includes
 estimates and standard errors for all model parameters.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$tmb_rep()}\if{html}{\out{</div>}}
@@ -348,6 +362,80 @@ Smoothness parameters
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-bw"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-bw}{}}}
+\subsection{Method \code{bw()}}{
+Bandwidth of the forward algorithm (0 = exact)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$bw()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-update_bw"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-update_bw}{}}}
+\subsection{Method \code{update_bw()}}{
+Update bandwidth of the forward algorithm
+
+The exact forward algorithm accumulates log-likelihood contributions
+that are each conditional on the entire process history, so the Hessian
+with respect to latent variables spread over time is dense. The banded
+algorithm of Fischer (2026) splits the time series into blocks of length
+\code{bw} and truncates that conditioning at the previous block, which
+makes the Hessian banded. It costs about twice as much per evaluation,
+and its error decays geometrically in \code{bw}, because an ergodic
+Markov chain forgets its initial condition exponentially fast.
+
+This is off by default. It is worth turning on for a model with many
+random effects spread over time, where the dense Hessian of the exact
+algorithm is what makes the Laplace approximation expensive. Use
+\code{HMM$check_bw()} to choose a bandwidth before fitting, and
+afterwards check that raising it leaves the estimates unchanged.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$update_bw(bw = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{bw}}{Non-negative integer (0 = exact algorithm), or \code{NULL} to
+choose automatically. This is TMB data, so changing it discards any
+existing setup, which is rebuilt on the next \code{setup()} or
+\code{fit()}.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-check_bw"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-check_bw}{}}}
+\subsection{Method \code{check_bw()}}{
+Profile the log-likelihood against the bandwidth
+
+Evaluates the joint log-likelihood at the model's current parameter
+values for a range of bandwidths. A sensible bandwidth is the smallest
+one beyond which the value no longer changes appreciably. This is
+evaluated at fixed parameters, so it is cheap and does not require the
+model to be re-fitted.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$check_bw(bws = seq(5, 40, by = 5), silent = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{bws}}{Vector of bandwidths (each at least 2)}
+
+\item{\code{silent}}{Logical. If TRUE (default), TMB tracing output is hidden.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Data frame with columns \code{bw} and \code{llk}, including a
+row with \code{bw = Inf} for the exact forward algorithm.
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HMM-update_par"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-update_par}{}}}
 \subsection{Method \code{update_par()}}{
@@ -359,8 +447,8 @@ Update parameters stored inside model object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{par_list}}{List with elements for coeff_fe_obs, 
-coeff_fe_hid, coeff_re_obs, coeff_re_hid, log_delta0, 
+\item{\code{par_list}}{List with elements for coeff_fe_obs,
+coeff_fe_hid, coeff_re_obs, coeff_re_hid, log_delta0,
 log_lambda_hid, and log_lambda_obs}
 
 \item{\code{iter}}{Optional argument to update model parameters based on MCMC
@@ -377,7 +465,7 @@ or "mean" if the posterior mean should be used.}
 Standard deviation of smooth terms (or random effects)
 
 This function transforms the smoothness parameter of
-each smooth term into a standard deviation, given by 
+each smooth term into a standard deviation, given by
 SD = 1/sqrt(lambda). It is particularly helpful to get the
 standard deviations of independent normal random effects.
 \subsection{Usage}{
@@ -425,9 +513,9 @@ Set priors for coefficients
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{new_priors}}{is a named list of matrices with optional elements 
+\item{\code{new_priors}}{is a named list of matrices with optional elements
 coeff_fe_obs, coeff_fe_hid, log_lambda_obs, andlog_lambda_hid.
-Each matrix has two columns (first col = mean, second col = sd) 
+Each matrix has two columns (first col = mean, second col = sd)
 specifying parameters for normal priors.}
 }
 \if{html}{\out{</div>}}
@@ -501,7 +589,7 @@ Effective degrees of freedom
 
 \subsection{Returns}{
 Number of effective degrees of freedom
-(accounting for flexibility in non-parametric 
+(accounting for flexibility in non-parametric
 terms implied by smoothing)
 }
 }
@@ -531,7 +619,7 @@ List of initial parameters
 \subsection{Method \code{setup()}}{
 TMB setup
 
-This creates an attribute \code{tmb_obj}, which can be used to 
+This creates an attribute \code{tmb_obj}, which can be used to
 evaluate the negative log-likelihood function.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$setup(silent = TRUE)}\if{html}{\out{</div>}}
@@ -553,10 +641,10 @@ Fit model using tmbstan
 
 Consult documentation of the tmbstan package for more information.
 After this method has been called, the Stan output can be accessed
-using the method \code{out_stan()}. This Stan output can for example 
+using the method \code{out_stan()}. This Stan output can for example
 be visualised using functions from the rstan package. The parameters
-stored in this HMM object are automatically updated to the mean 
-posterior estimate, although this can be changed using 
+stored in this HMM object are automatically updated to the mean
+posterior estimate, although this can be changed using
 \code{update_par()}.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$fit_stan(..., silent = FALSE)}\if{html}{\out{</div>}}
@@ -579,14 +667,14 @@ posterior estimate, although this can be changed using
 Model fitting
 
 The negative log-likelihood of the model is minimised using the
-function \code{nlminb()}. TMB uses the Laplace approximation to integrate 
+function \code{nlminb()}. TMB uses the Laplace approximation to integrate
 the random effects out of the likelihood.
 
 After the model has been fitted, the output of \code{nlminb()} can be
 accessed using the method \code{out()}. The estimated parameters can
-be accessed using the methods \code{par()} (for the HMM parameters, 
+be accessed using the methods \code{par()} (for the HMM parameters,
 possibly dependent on covariates), \code{predict()} (for uncertainty
-quantification and prediction of the HMM parameters for new covariate 
+quantification and prediction of the HMM parameters for new covariate
 values), \code{coeff_fe()} (for estimated fixed effect coefficients on
 the linear predictor scale), and \code{coeff_re()} (for estimated random
 effect coefficients on the linear predictor scale).
@@ -601,7 +689,7 @@ effect coefficients on the linear predictor scale).
 
 \item{\code{...}}{Other arguments to nlminb which is used to optimise the
 likelihood. This currently only supports the additional argument
-\code{control}, which is a list of control parameters such as 
+\code{control}, which is a list of control parameters such as
 \code{eval.max} and \code{iter.max} (see \code{?nlminb})}
 }
 \if{html}{\out{</div>}}
@@ -615,7 +703,7 @@ data <- data.frame(temp = as.vector(t(nottem)))
 # Create hidden state and observation models
 hid <- MarkovChain$new(data = data, n_states = 2)
 par0 <- list(temp = list(mean = c(40, 60), sd = c(5, 5)))
-obs <- Observation$new(data = data, n_states = 2, 
+obs <- Observation$new(data = data, n_states = 2,
                        dists = list(temp = "norm"),
                        par = par0)
 
@@ -648,9 +736,9 @@ input for the function update_par()
 \if{html}{\out{<a id="method-HMM-forward_backward"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-forward_backward}{}}}
 \subsection{Method \code{forward_backward()}}{
-Forward-backward algorithm 
+Forward-backward algorithm
 
-The forward probability for time step t and state j 
+The forward probability for time step t and state j
 is the joint pdf/pmf of observations up to time t and of being in
 state j at time t, p(Z[1], Z[2], ..., Z[t], S[t] = j).
 The backward probability for time t and state j is the
@@ -673,7 +761,7 @@ Log-forward and log-backward probabilities
 Pseudo-residuals
 
 Compute pseudo-residuals for the fitted model. If the fitted model
-is the "true" model, the pseudo-residuals follow a standard normal 
+is the "true" model, the pseudo-residuals follow a standard normal
 distribution. Deviations from normality suggest lack of fit.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{HMM$pseudores()}\if{html}{\out{</div>}}
@@ -702,7 +790,7 @@ Most likely state sequence
 \if{latex}{\out{\hypertarget{method-HMM-sample_states}{}}}
 \subsection{Method \code{sample_states()}}{
 Sample posterior state sequences using forward-filtering
-backward-sampling 
+backward-sampling
 
 The forward-filtering backward-sampling algorithm returns a
 sequence of states, similarly to the Viterbi algorithm, but it generates
@@ -718,7 +806,7 @@ will therefore generally not be the same.
 \describe{
 \item{\code{nsamp}}{Number of samples to produce}
 
-\item{\code{full}}{If TRUE and model fit by fit_stan then parameter estimates are 
+\item{\code{full}}{If TRUE and model fit by fit_stan then parameter estimates are
 sampled from the posterior samples before simulating each sequence}
 }
 \if{html}{\out{</div>}}
@@ -779,7 +867,7 @@ Posterior sampling for linear predictor
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-List with elements obs and hid, where each is a matrix 
+List with elements obs and hid, where each is a matrix
 with one column for each predictor and one row for each posterior draw
 }
 }
@@ -818,8 +906,8 @@ are returned}
 \subsection{Returns}{
 A list with elements:
 \describe{
-  \item{post}{If return_post = TRUE, this is a vector (for scalar 
-  outputs of fn) or matrix (for vector outputs) with a column for 
+  \item{post}{If return_post = TRUE, this is a vector (for scalar
+  outputs of fn) or matrix (for vector outputs) with a column for
   each simulation}
   \item{mean}{Mean over posterior samples}
   \item{lcl}{Lower confidence interval bound (if level !=0)}
@@ -851,16 +939,16 @@ to also get confidence intervals.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{what}}{Which estimates to predict? Options include 
-transition probability matrices "tpm", 
-stationary distributions "delta", or 
+\item{\code{what}}{Which estimates to predict? Options include
+transition probability matrices "tpm",
+stationary distributions "delta", or
 observation distribution parameters "obspar"}
 
 \item{\code{t}}{Time points to predict at}
 
 \item{\code{newdata}}{New dataframe to use for prediction}
 
-\item{\code{n_post}}{If greater than zero then n_post posterior 
+\item{\code{n_post}}{If greater than zero then n_post posterior
 samples are produced, and used to create confidence intervals.}
 
 \item{\code{level}}{Level of the confidence intervals, e.g. CI = 0.95
@@ -876,7 +964,7 @@ confidence limit are returned as separate elements in a list (if
 TRUE; default), or whether they are combined into a single array (if
 FALSE). Ignored if \code{what = "delta"} or if \code{n_post = 0}.}
 
-\item{\code{...}}{Other arguments to the respective functions 
+\item{\code{...}}{Other arguments to the respective functions
 for hid$tpm, hid$delta, obs$par}
 }
 \if{html}{\out{</div>}}
@@ -897,7 +985,7 @@ data <- data.frame(temp = as.vector(t(nottem)))
 # Create hidden state and observation models
 hid <- MarkovChain$new(data = data, n_states = 2)
 par0 <- list(temp = list(mean = c(40, 60), sd = c(5, 5)))
-obs <- Observation$new(data = data, n_states = 2, 
+obs <- Observation$new(data = data, n_states = 2,
                        dists = list(temp = "norm"),
                        par = par0)
 
@@ -937,11 +1025,11 @@ confidence intervals.}
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-List of matrices with three columns: mle (maximum likelihood 
+List of matrices with three columns: mle (maximum likelihood
 estimate), lcl (lower confidence limit), ucl (upper confidence
-limit), and se (standard error). One such matrix is produced for 
+limit), and se (standard error). One such matrix is produced for
 the working parameters of the observation model, the working parameters
-of the hidden state model, the smoothness parameters of the observation 
+of the hidden state model, the smoothness parameters of the observation
 model, and the smoothness parameters of the hidden state model.
 }
 }
@@ -977,7 +1065,7 @@ data variables
 Compute goodness-of-fit statistics using simulation
 
 Many time series are simulated from the fitted model, and the
-statistic(s) of interest are calculated for each. A histogram of 
+statistic(s) of interest are calculated for each. A histogram of
 those values can for example be used to compare to the observed
 value of the statistic. An observation far in the tails of the
 distribution of simulated statistics suggests lack of fit.
@@ -997,7 +1085,7 @@ compared between observed data and simulations.}
 \item{\code{full}}{If model fitted with `fit_stan`, then full = TRUE
 will sample from posterior for each simulation}
 
-\item{\code{silent}}{Logical. If FALSE, simulation progress is shown. 
+\item{\code{silent}}{Logical. If FALSE, simulation progress is shown.
 (Default: TRUE)}
 }
 \if{html}{\out{</div>}}
@@ -1049,7 +1137,7 @@ A ggplot object
 \if{html}{\out{<a id="method-HMM-plot_dist"></a>}}
 \if{latex}{\out{\hypertarget{method-HMM-plot_dist}{}}}
 \subsection{Method \code{plot_dist()}}{
-Plot observation distributions weighted by frequency in Viterbi 
+Plot observation distributions weighted by frequency in Viterbi
 
 This is a wrapper around Observation$plot_dist, where the
 distribution for each state is weighted by the proportion of time
@@ -1091,27 +1179,27 @@ Plot a model component
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{what}}{Name of model component to plot: should be one of "tpm"
-(transition probabilities), "delta" (stationary state probabilities), 
+(transition probabilities), "delta" (stationary state probabilities),
 or "obspar" (state-dependent observation parameters)}
 
 \item{\code{var}}{Name of covariate to plot on x-axis}
 
-\item{\code{covs}}{Optional named list for values of covariates (other than 'var') 
+\item{\code{covs}}{Optional named list for values of covariates (other than 'var')
 that should be used in the plot (or dataframe with single row). If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
 
 \item{\code{i}}{If plotting tpm then rows of tpm; if plotting delta then indices
-of states to plot; if plotting obspar then full names of parameters 
+of states to plot; if plotting obspar then full names of parameters
 to plot (e.g., obsvar.mean)}
 
-\item{\code{j}}{If plotting tpm then columnss of tpm to plot; if plotting delta 
+\item{\code{j}}{If plotting tpm then columnss of tpm to plot; if plotting delta
 then this is ignored,; if plotting obspar then indices of states to plot}
 
 \item{\code{n_grid}}{Number of points in grid over x-axis (default: 50)}
 
 \item{\code{n_post}}{Number of posterior simulations to use when computing
-confidence intervals; default: 1000. See \code{predict} function for 
+confidence intervals; default: 1000. See \code{predict} function for
 more detail.}
 }
 \if{html}{\out{</div>}}
@@ -1126,9 +1214,9 @@ A ggplot object
 \subsection{Method \code{AIC_marginal()}}{
 Marginal Akaike Information Criterion
 
-The marginal AIC is for example defined by 
+The marginal AIC is for example defined by
 Wood (2017), as AIC = - 2L + 2k where L is the
-maximum marginal log-likelihood (of fixed 
+maximum marginal log-likelihood (of fixed
 effects), and k is the number of degrees
 of freedom of the fixed effect component of
 the model
@@ -1146,7 +1234,7 @@ Marginal AIC
 \subsection{Method \code{AIC_conditional()}}{
 Conditional Akaike Information Criterion
 
-The conditional AIC is for example defined by 
+The conditional AIC is for example defined by
 Wood (2017), as AIC = - 2L + 2k where L is the
 maximum joint log-likelihood (of fixed and random
 effects), and k is the number of effective degrees
