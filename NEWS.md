@@ -1,6 +1,11 @@
 
 # hmmTMB 1.1.3
 
+- `HMM$post_coeff()` now samples a model with random effects through a sparse
+  Cholesky factorisation of the joint precision, rather than inverting it
+  first. The inverse is dense even when the precision is not, so this is much
+  cheaper and much smaller in memory for a model with many random effects.
+  Models without random effects are unaffected.
 - Build prediction matrices without fitting a throwaway `mgcv::gam()` to a
   dummy response. `predict.gam(type = "lpmatrix")` uses nothing that fitting
   produces, so the unfitted setup is enough.

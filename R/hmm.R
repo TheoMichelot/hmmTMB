@@ -1211,13 +1211,14 @@ HMM <- R6Class(
           H <- obj$he(par)
           V <- prec_to_cov(H)
         }
+        # Generate samples from MVN estimator distribution
+        post <- rmvn(n = n_post, mu = par, V = V)
       } else { # model has random effects
+        # Sample through a sparse Cholesky of the joint precision rather than
+        # inverting it first; see rmvn_prec()
         par <- c(rep$par.fixed, rep$par.random)
-        V <- prec_to_cov(rep$jointPrecision)
+        post <- rmvn_prec(n = n_post, mu = par, prec_mat = rep$jointPrecision)
       }
-
-      # Generate samples from MVN estimator distribution
-      post <- rmvn(n = n_post, mu = par, V = V)
 
       # Matrix filled with estimates
       npar <- nrow(self$coeff_array())

@@ -379,6 +379,48 @@ prec_to_cov <- function(prec_mat)
   return(cov_mat)
 }
 
+#' Sample from a multivariate normal given its precision matrix
+#' 
+#' Draws from N(mu, Q^-1) through a sparse Cholesky factorisation of the
+#' precision, Q = P' L L' P, as x = mu + P' L^-T z with z standard normal.
+#' Nothing is inverted, and the Cholesky factor keeps the sparsity of Q, so the
+#' cost is that of the factorisation rather than of a dense inverse followed by
+#' a dense n-by-n Cholesky of it. A dense precision is simply a sparse matrix
+#' with no zeros, and costs no more this way than the old route did.
+#' 
+#' If \code{prec_mat} is not positive definite -- a fit that has not converged,
+#' or a singular Hessian -- there is no Cholesky factor to be had, and this
+#' falls back on \code{\link{prec_to_cov}}, which uses a generalised inverse
+#' and warns.
+#' 
+#' @param n Number of samples
+#' @param mu Mean vector
+#' @param prec_mat Precision matrix, sparse or dense
+#' 
+#' @return Matrix with one row for each sample and one column for each element
+#' of \code{mu}
+#' 
+#' @importFrom stats rnorm
+rmvn_prec <- function(n, mu, prec_mat) {
+  # Matrix:: throughout: 'solve' has to be Matrix's S4 generic to dispatch on
+  # the Cholesky factor, and the rest follows it for consistency
+  if(!inherits(prec_mat, "Matrix")) {
+    prec_mat <- Matrix::Matrix(prec_mat, sparse = TRUE)
+  }
+  Q <- Matrix::forceSymmetric(prec_mat)
+  L <- tryCatch(Matrix::Cholesky(Q, super = TRUE, LDL = FALSE),
+                error = function(e) NULL, warning = function(w) NULL)
+  
+  # Not positive definite: no factor, so fall back on inverting it
+  if(is.null(L)) {
+    return(rmvn(n = n, mu = mu, V = prec_to_cov(prec_mat)))
+  }
+  
+  z <- matrix(rnorm(length(mu) * n), nrow = length(mu), ncol = n)
+  z <- Matrix::solve(L, Matrix::solve(L, z, system = "Lt"), system = "Pt")
+  return(t(as.matrix(z) + mu))
+}
+
 #' Find s(, bs = "re") terms in formula
 #' 
 #' This function is used to identify the variables "x" which are 
