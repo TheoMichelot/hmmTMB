@@ -16,7 +16,8 @@
 #'   \item X_fe Design matrix for fixed effects
 #'   \item X_re Design matrix for random effects
 #'   \item S Smoothness matrix
-#'   \item log_det_S Vector of log-determinants of smoothness matrices
+#'   \item log_det_S Vector of log-determinants of smoothness matrices, one
+#'   for each penalty
 #'   \item ncol_fe Number of columns of X_fe for each parameter
 #'   \item ncol_re Number of columns of X_re and S for each random effect
 #' }
@@ -32,6 +33,7 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
   names_fe <- NULL
   names_re <- NULL
   names_ncol_re <- NULL
+  log_det_S <- NULL
   start <- 1
   
   # Unlist formulas so that this function works both for Observation and MarkovChain
@@ -92,6 +94,15 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
     # Smoothing matrix
     S_list[[k]] <- bdiag_check(gam_setup$S)
     
+    # One generalised determinant per penalty matrix, rather than one for the
+    # block diagonal of all of this formula's penalties. The likelihood adds
+    # -0.5 * log|S_i|+ for each penalty separately, so a linear predictor with
+    # several smooths needs them apart; the block diagonal gave their sum to
+    # the first smooth and nothing to the rest.
+    # vapply, not sapply: a formula with no smooth has an empty penalty list,
+    # and sapply() would return a list and coerce log_det_S along with it
+    log_det_S <- c(log_det_S, vapply(gam_setup$S, gdeterminant, numeric(1)))
+    
     # Number of columns for fixed effects
     ncol_fe <- c(ncol_fe, gam_setup$nsdf)
     
@@ -125,9 +136,6 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
   X_re <- bdiag_check(X_list_re)
   colnames(X_re) <- names_re
   S <- bdiag_check(S_list)
-  
-  # Get (log-)determinants of penalty matrices
-  log_det_S <- unlist(sapply(S_list, gdeterminant))
   
   return(list(X_fe = X_fe, 
               X_re = X_re, 

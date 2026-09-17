@@ -26,7 +26,8 @@ A list of
   \item X_fe Design matrix for fixed effects
   \item X_re Design matrix for random effects
   \item S Smoothness matrix
-  \item log_det_S Vector of log-determinants of smoothness matrices
+  \item log_det_S Vector of log-determinants of smoothness matrices, one
+  for each penalty
   \item ncol_fe Number of columns of X_fe for each parameter
   \item ncol_re Number of columns of X_re and S for each random effect
 }

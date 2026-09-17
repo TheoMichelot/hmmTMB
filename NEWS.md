@@ -1,6 +1,10 @@
 
 # hmmTMB 1.1.3
 
+- Fix the log-determinants of the penalty matrices when one linear predictor
+  contains several smooth terms. `make_matrices()` returned one determinant per
+  formula rather than one per penalty, so the likelihood read past the end of
+  `log_det_S`, and the smoothing parameters of such a model were biased.
 - New vignette on (semi-)supervised learning
 - Fix parameter counts for models with constraints
 - Use safe Hessian inversion even for models without random effects in `HMM$post_coeff()` and `HMM$confint()`
