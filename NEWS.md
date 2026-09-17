@@ -1,6 +1,9 @@
 
 # hmmTMB 1.1.3
 
+- Build prediction matrices without fitting a throwaway `mgcv::gam()` to a
+  dummy response. `predict.gam(type = "lpmatrix")` uses nothing that fitting
+  produces, so the unfitted setup is enough.
 - Fix the log-determinants of the penalty matrices when one linear predictor
   contains several smooth terms. `make_matrices()` returned one determinant per
   formula rather than one per penalty, so the likelihood read past the end of

@@ -63,20 +63,19 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
                        gam_args)
     
     # Create matrices based on this formula
+    gam_setup <- do.call(what = gam,
+                         args = c(gam_args_list, list(fit = FALSE)))
+    # Extract column names for design matrices
+    term_names <- gam_setup$term.names
     if(is.null(new_data)) {
-      gam_setup <- do.call(what = gam,
-                           args = c(gam_args_list, list(fit = FALSE)))
       Xmat <- gam_setup$X
-      # Extract column names for design matrices
-      term_names <- gam_setup$term.names
     } else {
-      # Get design matrix for new data set
-      gam_setup0 <- do.call(what = gam, args = gam_args_list)
-      gam_setup <- do.call(what = gam,
-                           args = c(gam_args_list, list(fit = FALSE)))
-      Xmat <- predict(gam_setup0, newdata = new_data, type = "lpmatrix")
-      # Extract column names for design matrices
-      term_names <- gam_setup$term.names
+      # Get design matrix for new data set. predict.gam() with
+      # type = "lpmatrix" uses none of the quantities that fitting produces,
+      # so the unfitted setup can be wrapped in a shell and used instead of
+      # fitting a gam to the dummy response, as this used to do.
+      Xmat <- predict(gam_shell(gam_setup), newdata = new_data,
+                      type = "lpmatrix")
     }
     
     # Fixed effects design matrix
@@ -146,4 +145,30 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
               S_list = S_list, 
               ncol_fe = ncol_fe, 
               ncol_re = ncol_re))
+}
+
+#' Shell gam object for building prediction matrices
+#' 
+#' \code{mgcv::predict.gam()} with \code{type = "lpmatrix"} uses only the model
+#' frame, the terms objects, the factor levels and contrasts, and the smooth
+#' objects -- all of which \code{mgcv::gam(fit = FALSE)} already produces. This
+#' wraps that unfitted setup in something \code{predict.gam()} accepts, so that
+#' a prediction matrix can be built without fitting anything.
+#' 
+#' The coefficients are set to zero. \code{predict.gam()} requires the slot to
+#' exist and to have the right length, but for \code{type = "lpmatrix"} it
+#' returns the design matrix itself and never multiplies by them.
+#' 
+#' @param G Output of \code{mgcv::gam()} called with \code{fit = FALSE}
+#' 
+#' @return An object of class "gam", only usable for
+#' \code{predict(type = "lpmatrix")}
+gam_shell <- function(G) {
+  shell <- G[c("pterms", "terms", "smooth", "nsdf", "assign", "xlevels", 
+               "contrasts", "pred.formula")]
+  shell$model <- G$mf
+  shell$na.action <- attr(G$mf, "na.action")
+  shell$coefficients <- stats::setNames(rep(0, ncol(G$X)), G$term.names)
+  class(shell) <- c("gam", "glm", "lm")
+  return(shell)
 }
