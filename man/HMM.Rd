@@ -173,8 +173,8 @@ documentation to understand the inner workings (argument \code{map}
 of \code{TMB::MakeADFun()}).}
 
 \item{\code{bw}}{Bandwidth of the banded forward algorithm; see
-\code{HMM$update_bw()}. Defaults to \code{NULL}, i.e. 0, the exact
-forward algorithm.}
+\code{HMM$update_bw()}. Defaults to \code{NULL}, i.e. 15 if the model
+contains a Gaussian field and 0 (the exact algorithm) otherwise.}
 }
 \if{html}{\out{</div>}}
 }
@@ -386,9 +386,12 @@ makes the Hessian banded. It costs about twice as much per evaluation,
 and its error decays geometrically in \code{bw}, because an ergodic
 Markov chain forgets its initial condition exponentially fast.
 
-This is off by default. It is worth turning on for a model with many
-random effects spread over time, where the dense Hessian of the exact
-algorithm is what makes the Laplace approximation expensive. Use
+A model containing a Gaussian field is banded by default, with
+\code{bw = 15}, because the dense Hessian of the exact algorithm
+defeats the sparsity such a field exists to provide. That default is a
+starting point, not an answer: the bandwidth needed depends on how fast
+the chain forgets its initial condition, so a persistent chain needs
+more. Every other model is exact by default. Use
 \code{HMM$check_bw()} to choose a bandwidth before fitting, and
 afterwards check that raising it leaves the estimates unchanged.
 \subsection{Usage}{

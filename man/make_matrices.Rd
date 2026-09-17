@@ -34,6 +34,9 @@ A list of
   parameters of each smooth to the weights of its penalties (mgcv's
   convention). It is the identity unless a smooth combines several
   penalties through fewer parameters.
+  \item gmrf For each penalty, 1 if its log-determinant depends on the
+  parameters and so has to be computed inside the likelihood, and 0 if the
+  penalty is a fixed matrix scaled by exp(theta)
   \item sp_names Name of each smoothing parameter
   \item theta_start Starting value of each log smoothing parameter
 }
@@ -42,8 +45,9 @@ A list of
 Create model matrices
 }
 \details{
-Note the two indices: \code{ncol_re} and \code{log_det_S} have one entry per
-\emph{penalty}, while \code{L}, \code{sp_names} and \code{theta_start} have
-one per \emph{smoothing parameter}. The two coincide for an ordinary smooth,
-which has one of each.
+Note the two indices: \code{ncol_re}, \code{log_det_S} and \code{gmrf} have
+one entry per \emph{penalty}, while \code{L}, \code{sp_names},
+\code{sp_gmrf} and \code{theta_start} have one per \emph{smoothing
+parameter}. The two coincide for an ordinary smooth, which has one of each,
+but an SPDE field has three penalties and two parameters.
 }

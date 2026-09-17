@@ -188,6 +188,7 @@ Observation <- R6Class(
       cov_names <- unique(rapply(self$formulas(), all.vars))
       # Remove pi from list of covariates if it is in the formulas
       cov_names <- cov_names[which(cov_names!="pi")]
+      cov_names <- cov_names_in_data(cov_names, data)
       if(length(cov_names) > 0) {
         # Remove NAs in covariates (replace by last non-NA value)
         data[,cov_names] <- lapply(data[,cov_names, drop=FALSE], 
@@ -396,7 +397,15 @@ Observation <- R6Class(
     #' each smooth term into a standard deviation, given by 
     #' SD = 1/sqrt(lambda). It is particularly helpful to get the
     #' standard deviations of independent normal random effects.
-    sd_re = function() {return(1/sqrt(private$lambda_))},
+    #' A smooth with its own parameterisation rather than a single smoothness
+    #' parameter -- a Gaussian field, whose parameters are already a marginal
+    #' standard deviation and a range -- has no such transformation and
+    #' returns NA; read those off \code{lambda()} directly.
+    sd_re = function() {
+      sd <- 1/sqrt(private$lambda_)
+      sd[self$terms()$sp_gmrf == 1] <- NA
+      return(sd)
+    },
     
     #' @description List of model formulas for observation model
     #' 

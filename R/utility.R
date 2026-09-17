@@ -129,6 +129,7 @@ cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid
   }
   
   # Get data frame of covariates
+  var_names <- cov_names_in_data(var_names, data)
   all_vars <- data[, var_names, drop = FALSE]
   
   # Grid of covariate
@@ -377,6 +378,25 @@ prec_to_cov <- function(prec_mat)
                    "estimates may be unreliable)."))
   }
   return(cov_mat)
+}
+
+#' Covariate names that are columns of the data
+#' 
+#' \code{all.vars()} on a model formula returns every symbol in it, including
+#' objects a smooth refers to through its \code{xt} argument -- the mesh of an
+#' SPDE field, say -- which are not covariates and are not columns of the data.
+#' Those have to be dropped before the data are indexed by name.
+#' 
+#' A covariate that is genuinely missing from the data is dropped here too,
+#' rather than raising an error. \code{mgcv::gam()} reports it when the design
+#' matrices are built, which is a better place to say so.
+#' 
+#' @param var_names Character vector of names found in the formulas
+#' @param data Data frame
+#' 
+#' @return The subset of \code{var_names} naming columns of \code{data}
+cov_names_in_data <- function(var_names, data) {
+  return(intersect(var_names, colnames(data)))
 }
 
 #' Sample from a multivariate normal given its precision matrix

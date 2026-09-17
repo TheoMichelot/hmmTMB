@@ -24,15 +24,19 @@
 #'   parameters of each smooth to the weights of its penalties (mgcv's
 #'   convention). It is the identity unless a smooth combines several
 #'   penalties through fewer parameters.
+#'   \item gmrf For each penalty, 1 if its log-determinant depends on the
+#'   parameters and so has to be computed inside the likelihood, and 0 if the
+#'   penalty is a fixed matrix scaled by exp(theta)
 #'   \item sp_names Name of each smoothing parameter
 #'   \item theta_start Starting value of each log smoothing parameter
 #' }
 #'
 #' @details
-#' Note the two indices: \code{ncol_re} and \code{log_det_S} have one entry per
-#' \emph{penalty}, while \code{L}, \code{sp_names} and \code{theta_start} have
-#' one per \emph{smoothing parameter}. The two coincide for an ordinary smooth,
-#' which has one of each.
+#' Note the two indices: \code{ncol_re}, \code{log_det_S} and \code{gmrf} have
+#' one entry per \emph{penalty}, while \code{L}, \code{sp_names},
+#' \code{sp_gmrf} and \code{theta_start} have one per \emph{smoothing
+#' parameter}. The two coincide for an ordinary smooth, which has one of each,
+#' but an SPDE field has three penalties and two parameters.
 #' 
 #' @importFrom stats update predict
 make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
@@ -47,6 +51,8 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
   names_ncol_re <- NULL
   log_det_S <- NULL
   L_list <- list()
+  gmrf <- NULL
+  sp_gmrf <- NULL
   sp_names <- NULL
   theta_start <- NULL
   start <- 1
@@ -108,15 +114,6 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
     # Smoothing matrix
     S_list[[k]] <- bdiag_check(gam_setup$S)
     
-    # One generalised determinant per penalty matrix, rather than one for the
-    # block diagonal of all of this formula's penalties. The likelihood adds
-    # -0.5 * log|S_i|+ for each penalty separately, so a linear predictor with
-    # several smooths needs them apart; the block diagonal gave their sum to
-    # the first smooth and nothing to the rest.
-    # vapply, not sapply: a formula with no smooth has an empty penalty list,
-    # and sapply() would return a list and coerce log_det_S along with it
-    log_det_S <- c(log_det_S, vapply(gam_setup$S, gdeterminant, numeric(1)))
-    
     # Number of columns for fixed effects
     ncol_fe <- c(ncol_fe, gam_setup$nsdf)
     
@@ -142,9 +139,24 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
         # mgcv's L convention: a smooth may combine several penalties through
         # fewer smoothing parameters, with log(lambda) = L * theta. L is the
         # identity for an ordinary smooth, which has one of each.
+        # A smooth whose penalty is a proper precision that depends on its
+        # parameters through more than an overall scale says so, and its
+        # log-determinant is differentiated inside the likelihood instead of
+        # being precomputed here. This flag is all make_matrices() needs to
+        # know about such a smoother.
+        is_gmrf <- isTRUE(sm$gmrf)
+        gmrf <- c(gmrf, rep(as.integer(is_gmrf), npen))
+        # One generalised determinant per penalty matrix, rather than one for
+        # the block diagonal of all of this formula's penalties. The likelihood
+        # adds -0.5 * log|S_i|+ for each penalty separately, so a linear
+        # predictor with several smooths needs them apart.
+        log_det_S <- c(log_det_S, if(is_gmrf) rep(0, npen)
+                       else vapply(sm$S, gdeterminant, numeric(1)))
+        
         L_sm <- if(is.null(sm$L)) diag(npen) else as.matrix(sm$L)
         L_list <- c(L_list, list(L_sm))
         ntheta <- ncol(L_sm)
+        sp_gmrf <- c(sp_gmrf, rep(as.integer(is_gmrf), ntheta))
         sp_names <- c(sp_names, if(is.null(sm$theta.names)) rep(s_label, ntheta)
                       else paste0(s_label, ".", sm$theta.names))
         # A smooth may supply its own starting values, on the log scale.
@@ -173,7 +185,9 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
   return(list(X_fe = X_fe, 
               X_re = X_re, 
               S = S,
-              log_det_S = log_det_S,
+              # as.numeric so that this is double(0), not NULL, when no
+              # formula has a smooth
+              log_det_S = as.numeric(log_det_S),
               X_list_fe = X_list_fe, 
               X_list_re = X_list_re, 
               S_list = S_list, 
@@ -182,8 +196,11 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
               L = L,
               # sp_names stays NULL when there are no smooths, as ncol_re is,
               # so that update_lambda() leaves an empty lambda matrix unnamed.
-              # theta_start is numeric(0) instead, so that exp() accepts it.
+              # The rest are zero-length instead, so that callers can use them
+              # without checking, and so that exp() accepts theta_start.
               sp_names = sp_names,
+              gmrf = as.integer(gmrf),
+              sp_gmrf = as.integer(sp_gmrf),
               theta_start = as.numeric(theta_start)))
 }
 

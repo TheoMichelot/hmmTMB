@@ -1,6 +1,18 @@
 
 # hmmTMB 1.1.3
 
+- Add latent Gaussian fields, as a Matern SPDE smoother usable anywhere an
+  mgcv smooth is: `s(x, y, bs = "spde", xt = list(mesh = mesh))` in two
+  dimensions, and `s(x, bs = "spde")` in one, where a mesh of `k` quadratic
+  B-splines on evenly spaced knots is built for you over the range of the
+  covariate widened by a fifth on each side. `k` defaults to 15 rather than
+  mgcv's 10, because it is the resolution of the field and not a cap on
+  wiggliness: the range is estimated and is what does the smoothing. The two
+  parameters are a marginal standard deviation and a range, reported by
+  `lambda()`. A model containing a field uses the banded forward algorithm by
+  default, with `bw = 15`. Needs the fmesher package; nothing here needs INLA.
+  See `?smooth.construct.spde.smooth.spec` and
+  `inst/examples/spde/spde_field.R`.
 - Generalise the smoothing penalty to mgcv's `L` convention, so that a smooth
   may combine several penalty matrices through fewer smoothing parameters,
   with `log(lambda) = L * theta`. A smooth may also supply its own starting

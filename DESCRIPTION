@@ -21,6 +21,7 @@ Depends: R6, mgcv, TMB, ggplot2
 Imports: Matrix, stringr, MASS, tmbstan, methods
 LinkingTo: TMB, RcppEigen
 Suggests: 
+    fmesher,
     rstan,
     testthat,
     knitr,

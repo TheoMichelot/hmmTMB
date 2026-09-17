@@ -46,8 +46,8 @@ HMM <- R6Class(
     #' documentation to understand the inner workings (argument \code{map}
     #' of \code{TMB::MakeADFun()}).
     #' @param bw Bandwidth of the banded forward algorithm; see
-    #' \code{HMM$update_bw()}. Defaults to \code{NULL}, i.e. 0, the exact
-    #' forward algorithm.
+    #' \code{HMM$update_bw()}. Defaults to \code{NULL}, i.e. 15 if the model
+    #' contains a Gaussian field and 0 (the exact algorithm) otherwise.
     #'
     #' @return A new HMM object
     #'
@@ -101,8 +101,9 @@ HMM <- R6Class(
                             rapply(obs$formulas(), all.vars)))
       # Remove pi from list of covariates if it is in the formulas
       var_names <- var_names[which(var_names!="pi")]
+      data <- obs$data()
+      var_names <- cov_names_in_data(var_names, data)
       if(length(var_names) > 0) {
-        data <- obs$data()
         # Remove NAs in covariates (replace by last non-NA value)
         data[,var_names] <- lapply(data[,var_names, drop=FALSE],
                                    function(col) na_fill(col))
@@ -271,9 +272,12 @@ HMM <- R6Class(
     #' and its error decays geometrically in \code{bw}, because an ergodic
     #' Markov chain forgets its initial condition exponentially fast.
     #'
-    #' This is off by default. It is worth turning on for a model with many
-    #' random effects spread over time, where the dense Hessian of the exact
-    #' algorithm is what makes the Laplace approximation expensive. Use
+    #' A model containing a Gaussian field is banded by default, with
+    #' \code{bw = 15}, because the dense Hessian of the exact algorithm
+    #' defeats the sparsity such a field exists to provide. That default is a
+    #' starting point, not an answer: the bandwidth needed depends on how fast
+    #' the chain forgets its initial condition, so a persistent chain needs
+    #' more. Every other model is exact by default. Use
     #' \code{HMM$check_bw()} to choose a bandwidth before fitting, and
     #' afterwards check that raising it leaves the estimates unchanged.
     #'
@@ -283,7 +287,7 @@ HMM <- R6Class(
     #' \code{fit()}.
     update_bw = function(bw = NULL) {
       if(is.null(bw)) {
-        bw <- 0L
+        bw <- if(private$has_gmrf()) 15L else 0L
       }
       if(length(bw) != 1 || !is.numeric(bw) || is.na(bw) ||
          bw != round(bw) || bw < 0 || bw == 1) {
@@ -614,6 +618,7 @@ HMM <- R6Class(
       log_det_S_obs <- mod_mat_obs$log_det_S
       ncol_re_obs <- mod_mat_obs$ncol_re
       L_obs <- mod_mat_obs$L
+      gmrf_obs <- mod_mat_obs$gmrf
 
       # Create model matrices of hidden state process
       # (Design matrices for fixed and random effects, and smoothing matrix)
@@ -624,6 +629,7 @@ HMM <- R6Class(
       log_det_S_hid <- mod_mat_hid$log_det_S
       ncol_re_hid <- mod_mat_hid$ncol_re
       L_hid <- mod_mat_hid$L
+      gmrf_hid <- mod_mat_hid$gmrf
 
       # Prepare initial distribution delta0
       ldelta0 <- self$hid()$delta0(log = TRUE, as_matrix = FALSE)
@@ -651,6 +657,7 @@ HMM <- R6Class(
         log_det_S_obs <- -1
         ncol_re_obs <- matrix(-1, nr = 1, nc = 1)
         L_obs <- matrix(1, 1, 1)
+        gmrf_obs <- 0L
         X_re_obs <- as_sparse(rep(0, nrow(X_fe_obs)))
       } else {
         # If there are random effects,
@@ -670,6 +677,7 @@ HMM <- R6Class(
         log_det_S_hid <- -1
         ncol_re_hid <- matrix(-1, nr = 1, nc = 1)
         L_hid <- matrix(1, 1, 1)
+        gmrf_hid <- 0L
         X_re_hid <- as_sparse(rep(0, nrow(X_fe_hid)))
       } else {
         # If there are random effects,
@@ -753,12 +761,14 @@ HMM <- R6Class(
                       log_det_S_obs = log_det_S_obs,
                       ncol_re_obs = ncol_re_obs,
                       L_obs = L_obs,
+                      gmrf_obs = gmrf_obs,
                       X_fe_hid = as_sparse(X_fe_hid),
                       X_re_hid = as_sparse(X_re_hid),
                       S_hid = as_sparse(S_hid),
                       log_det_S_hid = log_det_S_hid,
                       ncol_re_hid = ncol_re_hid,
                       L_hid = L_hid,
+                      gmrf_hid = gmrf_hid,
                       include_smooths = 1,
                       bw = 0,
                       ref_tpm = self$hid()$ref(),
@@ -2315,6 +2325,12 @@ HMM <- R6Class(
     },
 
     # Other private methods ---------------------------------------------------
+
+    ## Does the model contain a smooth whose precision depends on its
+    ## parameters, i.e. a Gaussian field?
+    has_gmrf = function() {
+      any(c(self$obs()$terms()$gmrf, self$hid()$terms()$gmrf) == 1)
+    },
 
     ## Build a TMB object from the stored ingredients. Bandwidth and
     ## include_smooths are data, so changing either means retaping.

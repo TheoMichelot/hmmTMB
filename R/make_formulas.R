@@ -104,7 +104,10 @@ make_formulas <- function(input_forms,
         for(k in which_all_states)
           new_form <- paste0(new_form, " + ", covs[k])
         
-        state_forms[[paste0("state", s)]] <- as.formula(new_form)
+        # Keep the environment the user's formula came with, so that objects
+        # a smooth refers to -- the mesh of an SPDE field, say -- stay findable
+        state_forms[[paste0("state", s)]] <- as.formula(new_form,
+                                                        env = environment(form))
       }
       
       # Updated list of formulas for this parameter
