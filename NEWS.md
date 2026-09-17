@@ -1,6 +1,16 @@
 
 # hmmTMB 1.1.3
 
+- Add `HMM$plot_2d()`, for plotting a model component as a surface over two
+  covariates. `HMM$plot()` varies one covariate and holds the rest fixed, which
+  for a bivariate term such as `s(x, y)` shows a single slice; this varies both
+  and draws the surface. It is basis-agnostic, so it works for a thin plate
+  spline, `bs = "gp"`, a Gaussian field, or two covariates entering the model
+  separately. Cells far from any observation are left blank by default
+  (`too_far`, as in `mgcv::plot.gam()`), and `show = "ci"` fills by the width
+  of the confidence interval instead of the estimate. A field over one
+  covariate needs nothing new: it is an mgcv smooth, and `HMM$plot()` already
+  draws it like any other.
 - Compile with TMB's TMBad framework rather than its CppAD default. A Gaussian
   field has to factorise a parameter-dependent sparse precision inside the
   likelihood, which CppAD records operation by operation onto the tape: on a

@@ -175,6 +175,95 @@ cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid
   return(new_data)
 }
 
+#' Grid of covariate values over two covariates
+#' 
+#' The two-dimensional counterpart of \code{\link{cov_grid}}, used by
+#' \code{HMM$plot_2d()}. Both \code{var} and \code{var2} are varied over a
+#' regular \code{n_grid} by \code{n_grid} lattice spanning their ranges in the
+#' data, and every other covariate is held at one value, as in
+#' \code{\link{cov_grid}}: the one given in \code{covs}, otherwise the mean of
+#' a numeric covariate or the first level of a factor.
+#' 
+#' The lattice is regular because that is what \code{ggplot2::geom_raster()}
+#' needs, and \code{var} varies fastest, so that the result can be reshaped
+#' into a matrix column by column.
+#' 
+#' @param var Name of the first covariate, on the x axis
+#' @param var2 Name of the second covariate, on the y axis
+#' @param data Data frame of covariate values
+#' @param obj HMM model object, used to find the covariates if \code{data} is
+#' not given
+#' @param covs Optional named list of values for the other covariates
+#' @param formulas List of model formulas
+#' @param n_grid Number of points along each axis, so the grid has
+#' \code{n_grid^2} rows
+#' 
+#' @return Data frame with \code{n_grid^2} rows and one column for each
+#' covariate
+cov_grid_2d <- function(var, var2, data = NULL, obj = NULL, covs = NULL,
+                        formulas, n_grid = 40) {
+  # Get data set
+  if(is.null(data)) {
+    data <- obj$obs()$data()
+  }
+  
+  # Get covariate names
+  if(!is.null(obj)) {
+    var_names <- unique(c(rapply(obj$obs()$formulas(), all.vars),
+                          rapply(obj$hid()$formulas(), all.vars)))
+  } else {
+    var_names <- unique(rapply(formulas, all.vars))
+  }
+  # If no covariates in the model, only take the two being plotted
+  if(length(var_names) == 0) {
+    var_names <- c(var, var2)
+  }
+  
+  # pi might appear in the formulas (e.g. used in periodic terms)
+  if(any(var_names == "pi")) {
+    data$pi <- pi
+  }
+  
+  var_names <- unique(c(var, var2, cov_names_in_data(var_names, data)))
+  missing <- setdiff(var_names, colnames(data))
+  if(length(missing) > 0) {
+    stop("Not a covariate in the data: ", paste(missing, collapse = ", "))
+  }
+  all_vars <- data[, var_names, drop = FALSE]
+  
+  # A surface needs two numeric axes
+  for(v in c(var, var2)) {
+    if(!is.numeric(all_vars[[v]])) {
+      stop("'", v, "' is not numeric, so it cannot be an axis of a surface. ",
+           "Use HMM$plot() for a factor covariate.")
+    }
+  }
+  
+  # Regular lattice, with 'var' varying fastest
+  grid1 <- seq(min(all_vars[[var]], na.rm = TRUE),
+               max(all_vars[[var]], na.rm = TRUE), length = n_grid)
+  grid2 <- seq(min(all_vars[[var2]], na.rm = TRUE),
+               max(all_vars[[var2]], na.rm = TRUE), length = n_grid)
+  new_data <- matrix(NA, nrow = n_grid^2, ncol = ncol(all_vars))
+  colnames(new_data) <- colnames(all_vars)
+  new_data <- as.data.frame(new_data)
+  new_data[, var] <- rep(grid1, times = n_grid)
+  new_data[, var2] <- rep(grid2, each = n_grid)
+  
+  # Select value for the other covariates, as cov_grid() does
+  for(var_name in setdiff(colnames(new_data), c(var, var2))) {
+    if(!is.null(covs[[var_name]])) {
+      new_data[, var_name] <- covs[[var_name]]
+    } else {
+      col <- all_vars[[var_name]]
+      new_data[, var_name] <- if(is.numeric(col)) mean(col, na.rm = TRUE)
+                              else unique(col)[1]
+    }
+  }
+  
+  return(new_data)
+}
+
 #' Check if number of whole number 
 #'
 #' @param x number to check or vector of numbers 

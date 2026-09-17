@@ -12,6 +12,8 @@
 #' geom_ribbon scale_size_manual geom_histogram geom_vline geom_errorbar after_stat
 #' coord_cartesian
 #' @importFrom TMB MakeADFun sdreport
+#' @importFrom ggplot2 geom_raster geom_contour scale_fill_viridis_c
+#' @importFrom mgcv exclude.too.far
 #' @importFrom stringr str_trim str_split str_split_fixed
 #' @importFrom stats nlminb
 #' @importFrom tmbstan tmbstan
@@ -2001,6 +2003,166 @@ HMM <- R6Class(
             geom_ribbon(aes(ymin = lcl, ymax = ucl, fill = state),
                         col = NA, alpha = 0.3)
         }
+      }
+      return(p)
+    },
+
+    #' @description Plot a model component over two covariates
+    #'
+    #' The two-dimensional counterpart of \code{HMM$plot()}, for a model
+    #' containing a bivariate smooth such as \code{s(x, y)} or a Gaussian
+    #' field. \code{HMM$plot()} varies one covariate and holds the rest fixed,
+    #' which for a bivariate term shows a single slice through the surface;
+    #' this varies both and draws the surface itself.
+    #'
+    #' Nothing here is specific to any basis. The surface is built from
+    #' \code{HMM$predict()} on a lattice of covariate values, so it works for
+    #' any smoother hmmTMB accepts on two covariates -- a thin plate spline,
+    #' \code{bs = "gp"}, an SPDE field -- and for two covariates that enter the
+    #' model separately, where it shows their combined effect.
+    #'
+    #' @param what Name of model component to plot: one of "tpm" (transition
+    #' probabilities), "delta" (stationary state probabilities), or "obspar"
+    #' (state-dependent observation parameters)
+    #' @param var Name of covariate on the x-axis
+    #' @param var2 Name of covariate on the y-axis
+    #' @param covs Optional named list for values of covariates other than
+    #' \code{var} and \code{var2}. If not specified, the mean is used for
+    #' numeric covariates and the first level for factors.
+    #' @param i If plotting tpm then rows of tpm; if plotting delta then
+    #' indices of states; if plotting obspar then full names of parameters
+    #' @param j If plotting tpm then columns of tpm; if plotting delta then
+    #' ignored; if plotting obspar then indices of states
+    #' @param n_grid Number of points along each axis, so the surface is
+    #' evaluated at \code{n_grid^2} points (default: 40)
+    #' @param n_post Number of posterior simulations used for the confidence
+    #' interval. Defaults to 0, i.e. the maximum likelihood surface only,
+    #' because a surface needs many more evaluation points than a curve does.
+    #' Required to be positive for \code{show = "ci"}.
+    #' @param level Confidence level, when \code{n_post > 0} (default: 0.95)
+    #' @param show What the fill shows: "mle" for the estimate itself, or "ci"
+    #' for the width of the confidence interval, which says where the surface
+    #' is well determined and where it is not.
+    #' @param too_far Cells whose distance from the nearest observation exceeds
+    #' this, as a proportion of the plot's diagonal, are left blank. This is
+    #' \code{mgcv::exclude.too.far()}, and it matters for a bivariate smooth:
+    #' the corners of the lattice are usually extrapolation. Set to 0 to show
+    #' the whole rectangle (default: 0.1).
+    #' @param contour Add contour lines over the surface (default: TRUE)
+    #'
+    #' @return A ggplot object
+    plot_2d = function(what, var, var2, covs = NULL, i = NULL, j = NULL,
+                       n_grid = 40, n_post = 0, level = 0.95, show = "mle",
+                       too_far = 0.1, contour = TRUE) {
+      show <- match.arg(show, c("mle", "ci"))
+      if(show == "ci" & n_post <= 0) {
+        stop("show = \"ci\" needs n_post > 0, to have a confidence interval.")
+      }
+      if(var == var2) {
+        stop("'var' and 'var2' should be two different covariates.")
+      }
+
+      # Get relevant model component, and a lattice over the two covariates
+      comp <- switch(what, tpm = "hid", delta = "hid", obspar = "obs")
+      newdata <- cov_grid_2d(var = var, var2 = var2, obj = self, covs = covs,
+                             formulas = self[[comp]]()$formulas(),
+                             n_grid = n_grid)
+
+      n_states <- self$hid()$nstates()
+
+      # Get predictions. predict() returns a bare array when no posterior
+      # samples are drawn, and a list of mle/lcl/ucl when they are.
+      preds <- self$predict(what = what, t = "all", newdata = newdata,
+                            level = level, n_post = n_post)
+      mle <- if(n_post > 0) preds$mle else preds
+
+      # Data frame for plot, laid out as in HMM$plot()
+      df <- as.data.frame.table(mle)
+      if(n_post > 0) {
+        df$lcl <- as.vector(preds$lcl)
+        df$ucl <- as.vector(preds$ucl)
+      }
+      n_grid_pts <- nrow(newdata)
+      if (what == "tpm") {
+        colnames(df)[1:4] <- c("from", "to", "grid", "val")
+        levels(df$from) <- paste("State", 1:n_states)
+        levels(df$to) <- paste("State", 1:n_states)
+        gid <- rep(seq_len(n_grid_pts), each = n_states * n_states)
+      } else if (what == "delta") {
+        colnames(df)[1:3] <- c("grid", "state", "val")
+        levels(df$state) <- paste("State", 1:n_states)
+        gid <- rep(seq_len(n_grid_pts), n_states)
+      } else if (what == "obspar") {
+        colnames(df)[1:4] <- c("par", "state", "grid", "val")
+        levels(df$state) <- paste("State", 1:n_states)
+        gid <- rep(seq_len(n_grid_pts), each = nrow(df) / n_grid_pts)
+      }
+      df$var <- newdata[gid, var]
+      df$var2 <- newdata[gid, var2]
+
+      # Subset after the grid indices are attached, so they stay aligned
+      if (what == "tpm") {
+        if (!is.null(i)) df <- df[df$from == paste0("State ", i), ]
+        if (!is.null(j)) df <- df[df$to == paste0("State ", j), ]
+      } else if (what == "delta") {
+        if (!is.null(i)) df <- df[df$state == paste0("State ", i), ]
+      } else if (what == "obspar") {
+        if (!is.null(i)) df <- df[df$par == i, ]
+        if (!is.null(j)) df <- df[df$state == paste0("State ", j), ]
+      }
+
+      if(show == "ci") {
+        df$val <- df$ucl - df$lcl
+      }
+
+      # Blank the cells that are extrapolation. The surface is defined
+      # everywhere on the lattice, but far from the data it says more about the
+      # basis than about the data.
+      if(too_far > 0) {
+        obs_data <- self$obs()$data()
+        drop <- exclude.too.far(g1 = df$var, g2 = df$var2,
+                                d1 = obs_data[[var]], d2 = obs_data[[var2]],
+                                dist = too_far)
+        df$val[drop] <- NA
+      }
+
+      # Caption with values of the other (fixed) covariates
+      plot_txt <- NULL
+      other <- setdiff(colnames(newdata), c(var, var2))
+      if(length(other) > 0) {
+        other_covs <- newdata[1, other, drop = FALSE]
+        num_ind <- sapply(other_covs, is.numeric)
+        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov)
+          round(cov, 2))
+        fac_ind <- sapply(other_covs, is.factor)
+        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
+        plot_txt <- paste(colnames(other_covs), "=", other_covs,
+                          collapse = ", ")
+      }
+
+      fill_lab <- switch(what,
+                         tpm = if(show == "ci") "CI width" else "Probability",
+                         delta = if(show == "ci") "CI width" else "Probability",
+                         obspar = if(show == "ci") "CI width" else "Estimate")
+
+      p <- ggplot(df, aes(var, var2)) +
+        geom_raster(aes(fill = val), na.rm = TRUE) +
+        scale_fill_viridis_c(fill_lab, na.value = "transparent") +
+        xlab(var) + ylab(var2) + ggtitle(plot_txt) +
+        theme_light()
+      if(contour) {
+        # na.rm: the cells blanked by too_far are not missing data, they are
+        # deliberately absent, and should not be reported as dropped rows
+        p <- p + geom_contour(aes(z = val), colour = "white",
+                              alpha = 0.4, linewidth = 0.3, na.rm = TRUE)
+      }
+      if (what == "tpm") {
+        p <- p + facet_wrap(c("from", "to"),
+                            labeller = label_bquote("Pr("*.(from)*" -> "*.(to)*")"))
+      } else if (what == "delta") {
+        p <- p + facet_wrap("state")
+      } else if (what == "obspar") {
+        p <- p + facet_wrap(c("par", "state"))
       }
       return(p)
     },

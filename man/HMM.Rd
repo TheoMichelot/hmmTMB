@@ -121,6 +121,7 @@ hmm$predict(what = "tpm", n_post = 1000)
 \item \href{#method-HMM-plot_ts}{\code{HMM$plot_ts()}}
 \item \href{#method-HMM-plot_dist}{\code{HMM$plot_dist()}}
 \item \href{#method-HMM-plot}{\code{HMM$plot()}}
+\item \href{#method-HMM-plot_2d}{\code{HMM$plot_2d()}}
 \item \href{#method-HMM-AIC_marginal}{\code{HMM$AIC_marginal()}}
 \item \href{#method-HMM-AIC_conditional}{\code{HMM$AIC_conditional()}}
 \item \href{#method-HMM-print_obspar}{\code{HMM$print_obspar()}}
@@ -1204,6 +1205,89 @@ then this is ignored,; if plotting obspar then indices of states to plot}
 \item{\code{n_post}}{Number of posterior simulations to use when computing
 confidence intervals; default: 1000. See \code{predict} function for
 more detail.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A ggplot object
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-plot_2d"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-plot_2d}{}}}
+\subsection{Method \code{plot_2d()}}{
+Plot a model component over two covariates
+
+The two-dimensional counterpart of \code{HMM$plot()}, for a model
+containing a bivariate smooth such as \code{s(x, y)} or a Gaussian
+field. \code{HMM$plot()} varies one covariate and holds the rest fixed,
+which for a bivariate term shows a single slice through the surface;
+this varies both and draws the surface itself.
+
+Nothing here is specific to any basis. The surface is built from
+\code{HMM$predict()} on a lattice of covariate values, so it works for
+any smoother hmmTMB accepts on two covariates -- a thin plate spline,
+\code{bs = "gp"}, an SPDE field -- and for two covariates that enter the
+model separately, where it shows their combined effect.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_2d(
+  what,
+  var,
+  var2,
+  covs = NULL,
+  i = NULL,
+  j = NULL,
+  n_grid = 40,
+  n_post = 0,
+  level = 0.95,
+  show = "mle",
+  too_far = 0.1,
+  contour = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{what}}{Name of model component to plot: one of "tpm" (transition
+probabilities), "delta" (stationary state probabilities), or "obspar"
+(state-dependent observation parameters)}
+
+\item{\code{var}}{Name of covariate on the x-axis}
+
+\item{\code{var2}}{Name of covariate on the y-axis}
+
+\item{\code{covs}}{Optional named list for values of covariates other than
+\code{var} and \code{var2}. If not specified, the mean is used for
+numeric covariates and the first level for factors.}
+
+\item{\code{i}}{If plotting tpm then rows of tpm; if plotting delta then
+indices of states; if plotting obspar then full names of parameters}
+
+\item{\code{j}}{If plotting tpm then columns of tpm; if plotting delta then
+ignored; if plotting obspar then indices of states}
+
+\item{\code{n_grid}}{Number of points along each axis, so the surface is
+evaluated at \code{n_grid^2} points (default: 40)}
+
+\item{\code{n_post}}{Number of posterior simulations used for the confidence
+interval. Defaults to 0, i.e. the maximum likelihood surface only,
+because a surface needs many more evaluation points than a curve does.
+Required to be positive for \code{show = "ci"}.}
+
+\item{\code{level}}{Confidence level, when \code{n_post > 0} (default: 0.95)}
+
+\item{\code{show}}{What the fill shows: "mle" for the estimate itself, or "ci"
+for the width of the confidence interval, which says where the surface
+is well determined and where it is not.}
+
+\item{\code{too_far}}{Cells whose distance from the nearest observation exceeds
+this, as a proportion of the plot's diagonal, are left blank. This is
+\code{mgcv::exclude.too.far()}, and it matters for a bivariate smooth:
+the corners of the lattice are usually extrapolation. Set to 0 to show
+the whole rectangle (default: 0.1).}
+
+\item{\code{contour}}{Add contour lines over the surface (default: TRUE)}
 }
 \if{html}{\out{</div>}}
 }
