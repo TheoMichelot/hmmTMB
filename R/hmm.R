@@ -787,6 +787,15 @@ HMM <- R6Class(
       obj <- private$make_tmb_obj(bw = self$bw(), include_smooths = 1,
                                   random = random, silent = silent)
 
+      if(private$has_gmrf() && isTRUE(obj$report()$ad_framework == 0)) {
+        warning(paste("This model contains a Gaussian field, whose precision",
+                      "matrix has to be factorised inside the likelihood, but",
+                      "hmmTMB was compiled with the CppAD framework, under",
+                      "which that is orders of magnitude slower. Reinstall",
+                      "without setting HMMTMB_AD_FRAMEWORK to use TMBad."),
+                call. = FALSE)
+      }
+
       nllk0 <- obj$fn(obj$par)
       if(is.nan(nllk0) | is.infinite(nllk0)) {
         stop(paste("Log-likelihood is NaN or infinite at starting parameters.",

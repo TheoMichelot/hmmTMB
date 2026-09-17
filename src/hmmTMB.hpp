@@ -57,6 +57,16 @@
    PARAMETER_VECTOR(coeff_re_obs); // observation parameters (random effects)
    PARAMETER_VECTOR(coeff_re_hid); // state process parameters (random effects)
    
+   // Which AD framework the package was compiled with. A parameter-dependent
+   // sparse log-determinant is only affordable under TMBad, so the R side
+   // checks this before fitting a model with a Gaussian field.
+#ifdef TMBAD_FRAMEWORK
+   int ad_framework = 1;
+#else
+   int ad_framework = 0;
+#endif
+   REPORT(ad_framework);
+
    // Number of observed variables
    int n_var = distcode.size();
    // Number of data rows

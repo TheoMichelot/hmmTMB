@@ -1,11 +1,13 @@
 all: hmmTMB.dll
 
+# TMBad rather than TMB's own CppAD default; see src/Makefile.
+
 # Every header is a prerequisite: the template is one translation unit, so a
 # header-only edit would otherwise be silently ignored by make.
 HEADERS = hmmTMB.hpp dist.hpp dist_def.hpp added_dists.hpp likelihood.hpp
 
 hmmTMB.dll: hmmTMB.cpp $(HEADERS)
-	$(R_HOME)/bin$(R_ARCH_BIN)/Rscript --vanilla -e "invisible(TMB::compile('hmmTMB.cpp', safebounds = FALSE, safeunload = FALSE))"
+	$(R_HOME)/bin$(R_ARCH_BIN)/Rscript --vanilla -e "invisible(TMB::compile('hmmTMB.cpp', safebounds = FALSE, safeunload = FALSE, framework = Sys.getenv('HMMTMB_AD_FRAMEWORK', 'TMBad')))"
 	
 clean:
 	rm -rf *.dll

@@ -1,6 +1,12 @@
 
 # hmmTMB 1.1.3
 
+- Compile with TMB's TMBad framework rather than its CppAD default. A Gaussian
+  field has to factorise a parameter-dependent sparse precision inside the
+  likelihood, which CppAD records operation by operation onto the tape: on a
+  952-node two-dimensional mesh one gradient takes 382 s under CppAD against
+  1.1 s under TMBad. Set `HMMTMB_AD_FRAMEWORK=CppAD` before installing to fall
+  back; fitting a field then warns.
 - Add latent Gaussian fields, as a Matern SPDE smoother usable anywhere an
   mgcv smooth is: `s(x, y, bs = "spde", xt = list(mesh = mesh))` in two
   dimensions, and `s(x, bs = "spde")` in one, where a mesh of `k` quadratic
