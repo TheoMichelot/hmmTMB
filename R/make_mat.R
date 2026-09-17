@@ -20,7 +20,19 @@
 #'   for each penalty
 #'   \item ncol_fe Number of columns of X_fe for each parameter
 #'   \item ncol_re Number of columns of X_re and S for each random effect
+#'   \item L Matrix with log(lambda) = L * theta, mapping the smoothing
+#'   parameters of each smooth to the weights of its penalties (mgcv's
+#'   convention). It is the identity unless a smooth combines several
+#'   penalties through fewer parameters.
+#'   \item sp_names Name of each smoothing parameter
+#'   \item theta_start Starting value of each log smoothing parameter
 #' }
+#'
+#' @details
+#' Note the two indices: \code{ncol_re} and \code{log_det_S} have one entry per
+#' \emph{penalty}, while \code{L}, \code{sp_names} and \code{theta_start} have
+#' one per \emph{smoothing parameter}. The two coincide for an ordinary smooth,
+#' which has one of each.
 #' 
 #' @importFrom stats update predict
 make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
@@ -34,6 +46,9 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
   names_re <- NULL
   names_ncol_re <- NULL
   log_det_S <- NULL
+  L_list <- list()
+  sp_names <- NULL
+  theta_start <- NULL
   start <- 1
   
   # Unlist formulas so that this function works both for Observation and MarkovChain
@@ -110,17 +125,34 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
       colnames(sub_ncol_re) <- 1:ncol(sub_ncol_re)
       start_s <- 1
       for (s in 1:length(gam_setup$smooth)) {
+        sm <- gam_setup$smooth[[s]]
         # how many penalties for this smooth?
-        npen <- length(gam_setup$smooth[[s]]$S)
+        npen <- length(sm$S)
         # how many parameters for this smooth? 
-        npar <- ncol(gam_setup$smooth[[s]]$S[[1]])
+        npar <- ncol(sm$S[[1]])
         # where does this smooth's parameters start and end?
         sub_ncol_re[, (start_s:(start_s + npen - 1))] <- c(start, start + npar - 1)
-        colnames(sub_ncol_re)[start_s:(start_s + npen - 1)] <- rep(gam_setup$smooth[[s]]$label, npen)
+        colnames(sub_ncol_re)[start_s:(start_s + npen - 1)] <- rep(sm$label, npen)
         # get names of smooth terms
         # regex from datascience.stackexchange.com/questions/8922
         s_terms <- gsub("(.*)\\..*", "\\1", names_re[sub_ncol_re[1, s]:sub_ncol_re[2, s]])
-        names_ncol_re <- c(names_ncol_re, rep(unique(s_terms), npen))
+        s_label <- unique(s_terms)
+        names_ncol_re <- c(names_ncol_re, rep(s_label, npen))
+        
+        # mgcv's L convention: a smooth may combine several penalties through
+        # fewer smoothing parameters, with log(lambda) = L * theta. L is the
+        # identity for an ordinary smooth, which has one of each.
+        L_sm <- if(is.null(sm$L)) diag(npen) else as.matrix(sm$L)
+        L_list <- c(L_list, list(L_sm))
+        ntheta <- ncol(L_sm)
+        sp_names <- c(sp_names, if(is.null(sm$theta.names)) rep(s_label, ntheta)
+                      else paste0(s_label, ".", sm$theta.names))
+        # A smooth may supply its own starting values, on the log scale.
+        # An ordinary smooth supplies none, which means 0, i.e. lambda = 1.
+        theta_start <- c(theta_start,
+                         if(is.null(sm$theta.start)) rep(0, ntheta)
+                         else rep(sm$theta.start, length = ntheta))
+        
         start <- start + npar
         start_s <- start_s + npen
       }
@@ -135,6 +167,8 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
   X_re <- bdiag_check(X_list_re)
   colnames(X_re) <- names_re
   S <- bdiag_check(S_list)
+  L <- bdiag_check(L_list)
+  if(!is.null(L)) L <- as.matrix(L)
   
   return(list(X_fe = X_fe, 
               X_re = X_re, 
@@ -144,7 +178,13 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
               X_list_re = X_list_re, 
               S_list = S_list, 
               ncol_fe = ncol_fe, 
-              ncol_re = ncol_re))
+              ncol_re = ncol_re,
+              L = L,
+              # sp_names stays NULL when there are no smooths, as ncol_re is,
+              # so that update_lambda() leaves an empty lambda matrix unnamed.
+              # theta_start is numeric(0) instead, so that exp() accepts it.
+              sp_names = sp_names,
+              theta_start = as.numeric(theta_start)))
 }
 
 #' Shell gam object for building prediction matrices

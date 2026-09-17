@@ -1,6 +1,12 @@
 
 # hmmTMB 1.1.3
 
+- Generalise the smoothing penalty to mgcv's `L` convention, so that a smooth
+  may combine several penalty matrices through fewer smoothing parameters,
+  with `log(lambda) = L * theta`. A smooth may also supply its own starting
+  values and parameter names. `L` is the identity and the starting values are
+  `lambda = 1` for every basis mgcv ships, so nothing changes for an existing
+  model.
 - Add the banded forward algorithm of Fischer (2026), through the new `bw`
   argument of `HMM$new()`, with `HMM$update_bw()` and `HMM$check_bw()`. It
   truncates the conditioning of each log-likelihood contribution at a fixed

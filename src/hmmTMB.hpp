@@ -28,12 +28,14 @@
    DATA_SPARSE_MATRIX(S_obs); // penalty matrix
    DATA_VECTOR(log_det_S_obs); // log-determinant of penalty matrix
    DATA_IMATRIX(ncol_re_obs); // number of columns of S and X_re for each random effect
+   DATA_MATRIX(L_obs); // maps log smoothing parameters to log penalty weights
    // model matrices for hidden state process
    DATA_SPARSE_MATRIX(X_fe_hid); // design matrix for fixed effects
    DATA_SPARSE_MATRIX(X_re_hid); // design matrix for random effects
    DATA_SPARSE_MATRIX(S_hid); // penalty matrix
    DATA_VECTOR(log_det_S_hid); // log-determinant of penalty matrix
    DATA_IMATRIX(ncol_re_hid); // number of columns of S and X_re for each random effect
+   DATA_MATRIX(L_hid); // maps log smoothing parameters to log penalty weights
    DATA_INTEGER(include_smooths); // > 0 = include penalty in likelihood evaluation
    DATA_INTEGER(bw); // bandwidth of the banded forward algorithm (< 2 = exact)
    DATA_IVECTOR(ref_tpm); // indices of reference transition probabilities
@@ -268,6 +270,10 @@
    if((include_smooths > 0) & (ncol_re_obs(0, 0) > -1)) {
      // Index in matrix S
      int S_start = 0;
+     // mgcv's L convention: a smooth may combine several penalties through
+     // fewer smoothing parameters, so one weight per penalty comes from
+     // log(lambda) = L * theta. L is the identity for an ordinary smooth.
+     vector<Type> log_lambda = L_obs * log_lambda_obs;
      
      // Loop over smooths
      for(int i = 0; i < ncol_re_obs.cols(); i++) {
@@ -284,8 +290,8 @@
        nllk = nllk +
          Type(0.5) * Sn * log(2*M_PI) -
          Type(0.5) * log_det_S_obs(i) -
-         Type(0.5) * Sn * log_lambda_obs(i) +
-         Type(0.5) * exp(log_lambda_obs(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
+         Type(0.5) * Sn * log_lambda(i) +
+         Type(0.5) * exp(log_lambda(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
        
        // Increase index
        S_start = S_start + Sn;
@@ -296,6 +302,10 @@
    if((include_smooths > 0) & (ncol_re_hid(0, 0) > -1)) {
      // Index in matrix S
      int S_start = 0;
+     // mgcv's L convention: a smooth may combine several penalties through
+     // fewer smoothing parameters, so one weight per penalty comes from
+     // log(lambda) = L * theta. L is the identity for an ordinary smooth.
+     vector<Type> log_lambda = L_hid * log_lambda_hid;
      
      // Loop over smooths
      for(int i = 0; i < ncol_re_hid.cols(); i++) {
@@ -312,8 +322,8 @@
        nllk = nllk +
          Type(0.5) * Sn * log(2*M_PI) -
          Type(0.5) * log_det_S_hid(i) -
-         Type(0.5) * Sn * log_lambda_hid(i) +
-         Type(0.5) * exp(log_lambda_hid(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
+         Type(0.5) * Sn * log_lambda(i) +
+         Type(0.5) * exp(log_lambda(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
        
        // Increase index
        S_start = S_start + Sn;

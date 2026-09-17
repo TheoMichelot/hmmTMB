@@ -30,8 +30,20 @@ A list of
   for each penalty
   \item ncol_fe Number of columns of X_fe for each parameter
   \item ncol_re Number of columns of X_re and S for each random effect
+  \item L Matrix with log(lambda) = L * theta, mapping the smoothing
+  parameters of each smooth to the weights of its penalties (mgcv's
+  convention). It is the identity unless a smooth combines several
+  penalties through fewer parameters.
+  \item sp_names Name of each smoothing parameter
+  \item theta_start Starting value of each log smoothing parameter
 }
 }
 \description{
 Create model matrices
+}
+\details{
+Note the two indices: \code{ncol_re} and \code{log_det_S} have one entry per
+\emph{penalty}, while \code{L}, \code{sp_names} and \code{theta_start} have
+one per \emph{smoothing parameter}. The two coincide for an ordinary smooth,
+which has one of each.
 }

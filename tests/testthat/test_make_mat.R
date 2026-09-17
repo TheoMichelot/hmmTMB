@@ -117,3 +117,99 @@ test_that("make_matrices builds the same new_data matrices as before", {
   expect_equal(bare(mats$X_fe), bare(old[, 1:G$nsdf, drop = FALSE]))
   expect_equal(bare(mats$X_re), bare(old[, -(1:G$nsdf), drop = FALSE]))
 })
+
+# The L convention --------------------------------------------------------
+
+test_that("L is the identity for ordinary smooths", {
+  set.seed(1)
+  data <- data.frame(x = stats::runif(200), z = stats::runif(200),
+                     g = factor(rep(1:5, length.out = 200)))
+
+  one <- make_matrices(list(a = ~ s(x, k = 6, bs = "cs")), data = data)
+  expect_equal(one$L, matrix(1, 1, 1))
+  expect_equal(one$theta_start, 0)
+  expect_equal(one$sp_names, "a.s(x)")   # prefixed by the formula it came from
+
+  two <- make_matrices(list(a = ~ s(x, k = 6, bs = "cs") + s(z, k = 5, bs = "cs")),
+                       data = data)
+  expect_equal(two$L, diag(2))
+  expect_equal(two$theta_start, c(0, 0))
+
+  re <- make_matrices(list(a = ~ s(g, bs = "re")), data = data)
+  expect_equal(re$L, matrix(1, 1, 1))
+  expect_equal(re$theta_start, 0)
+})
+
+test_that("sp_names still names one smoothing parameter per smooth", {
+  set.seed(1)
+  data <- data.frame(x = stats::runif(200), z = stats::runif(200))
+  mats <- make_matrices(list(a = ~ s(x, k = 6, bs = "cs"),
+                             b = ~ s(z, k = 5, bs = "cs")),
+                        data = data)
+  # An ordinary smooth has one penalty and one parameter, so the per-parameter
+  # names and the per-penalty column names of ncol_re still coincide
+  expect_equal(mats$sp_names, unname(colnames(mats$ncol_re)))
+  expect_length(mats$theta_start, 2)
+})
+
+test_that("theta_start starts every ordinary smooth at lambda = 1", {
+  set.seed(1)
+  data <- data.frame(x = stats::runif(200), z = NA)
+  s <- 1
+  for(i in 1:200) {
+    data$z[i] <- stats::rnorm(1, c(0, 4)[s], 1)
+    s <- sample(c(s, 3 - s), size = 1, prob = c(0.9, 0.1))
+  }
+  obs <- Observation$new(data = data, dists = list(z = "norm"), n_states = 2,
+                         par = list(z = list(mean = c(0, 4), sd = c(1, 1))),
+                         formulas = list(z = list(mean = ~ s(x, k = 6, bs = "cs"),
+                                                  sd = ~1)))
+  # One smooth per state, both starting where they always did
+  expect_equal(as.vector(obs$lambda()), c(1, 1))
+})
+
+test_that("the likelihood reads penalty weights through L", {
+  set.seed(1)
+  n <- 200
+  data <- data.frame(x = seq(-3, 3, length.out = n), z = NA)
+  s <- 1
+  for(i in 1:n) {
+    data$z[i] <- stats::rnorm(1, c(0, 4)[s] + sin(data$x[i]), 0.7)
+    s <- sample(c(s, 3 - s), size = 1, prob = c(0.9, 0.1))
+  }
+  obs <- Observation$new(data = data, dists = list(z = "norm"), n_states = 2,
+                         par = list(z = list(mean = c(0, 4), sd = c(1, 1))),
+                         formulas = list(z = list(mean = ~ s(x, k = 6, bs = "cs"),
+                                                  sd = ~1)))
+  hid <- MarkovChain$new(n_states = 2, data = data)
+  hmm <- HMM$new(obs = obs, hid = hid)
+  hmm$setup(silent = TRUE)
+
+  args <- hmm$.__enclos_env__$private$tmb_args_
+  # One smooth per state, so two penalties and two smoothing parameters
+  n_pen <- nrow(args$data$L_obs)
+  expect_equal(n_pen, 2L)
+  expect_equal(args$data$L_obs, diag(n_pen))
+
+  build <- function(L) {
+    a <- args
+    a$data$L_obs <- L
+    a$data$include_smooths <- 1L
+    do.call(TMB::MakeADFun, c(a, list(silent = TRUE)))
+  }
+  o1 <- build(diag(n_pen))
+  o2 <- build(2 * diag(n_pen))
+
+  i_lam <- which(names(o1$par) == "log_lambda_obs")
+  expect_length(i_lam, n_pen)
+
+  theta <- rep_len(c(0.37, -0.2), n_pen)
+  # log(lambda) = L * theta, so doubling L at theta must equal L = I at 2 theta
+  p1 <- o1$par; p1[i_lam] <- 2 * theta
+  p2 <- o2$par; p2[i_lam] <- theta
+  expect_equal(o2$fn(p2), o1$fn(p1))
+
+  # and that this is not vacuous
+  p3 <- o1$par; p3[i_lam] <- theta
+  expect_false(isTRUE(all.equal(o1$fn(p3), o1$fn(p1))))
+})

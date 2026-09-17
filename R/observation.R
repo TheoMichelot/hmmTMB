@@ -201,12 +201,14 @@ Observation <- R6Class(
       ncol_re <- mats$ncol_re
       private$terms_ <- c(mats, list(names_fe = colnames(mats$X_fe),
                                      names_re_all = colnames(mats$X_re),
-                                     names_re = colnames(ncol_re)))
+                                     names_re = mats$sp_names))
       
       # Initialise parameters      
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
       self$update_coeff_re(rep(0, ncol(mats$X_re)))
-      self$update_lambda(rep(1, ifelse(is.null(ncol_re), 0, ncol(ncol_re))))
+      # Each smooth's constructor supplies its own starting values; an
+      # ordinary smooth supplies none, which means lambda = 1 as before
+      self$update_lambda(exp(mats$theta_start))
       
       # Make sure par is in right order
       corrected_par <- vector(mode = "list", length = n_var)

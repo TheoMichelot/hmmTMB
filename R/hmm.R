@@ -613,6 +613,7 @@ HMM <- R6Class(
       S_obs <- mod_mat_obs$S
       log_det_S_obs <- mod_mat_obs$log_det_S
       ncol_re_obs <- mod_mat_obs$ncol_re
+      L_obs <- mod_mat_obs$L
 
       # Create model matrices of hidden state process
       # (Design matrices for fixed and random effects, and smoothing matrix)
@@ -622,6 +623,7 @@ HMM <- R6Class(
       S_hid <- mod_mat_hid$S
       log_det_S_hid <- mod_mat_hid$log_det_S
       ncol_re_hid <- mod_mat_hid$ncol_re
+      L_hid <- mod_mat_hid$L
 
       # Prepare initial distribution delta0
       ldelta0 <- self$hid()$delta0(log = TRUE, as_matrix = FALSE)
@@ -648,6 +650,7 @@ HMM <- R6Class(
         S_obs <- as_sparse(matrix(0, 1, 1))
         log_det_S_obs <- -1
         ncol_re_obs <- matrix(-1, nr = 1, nc = 1)
+        L_obs <- matrix(1, 1, 1)
         X_re_obs <- as_sparse(rep(0, nrow(X_fe_obs)))
       } else {
         # If there are random effects,
@@ -666,6 +669,7 @@ HMM <- R6Class(
         S_hid <- as_sparse(matrix(0, 1, 1))
         log_det_S_hid <- -1
         ncol_re_hid <- matrix(-1, nr = 1, nc = 1)
+        L_hid <- matrix(1, 1, 1)
         X_re_hid <- as_sparse(rep(0, nrow(X_fe_hid)))
       } else {
         # If there are random effects,
@@ -748,11 +752,13 @@ HMM <- R6Class(
                       S_obs = as_sparse(S_obs),
                       log_det_S_obs = log_det_S_obs,
                       ncol_re_obs = ncol_re_obs,
+                      L_obs = L_obs,
                       X_fe_hid = as_sparse(X_fe_hid),
                       X_re_hid = as_sparse(X_re_hid),
                       S_hid = as_sparse(S_hid),
                       log_det_S_hid = log_det_S_hid,
                       ncol_re_hid = ncol_re_hid,
+                      L_hid = L_hid,
                       include_smooths = 1,
                       bw = 0,
                       ref_tpm = self$hid()$ref(),
