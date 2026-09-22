@@ -82,6 +82,9 @@ hidden state and observation components it is built from.
 \item \href{#method-Forecast-update_eval_range}{\code{Forecast$update_eval_range()}}
 \item \href{#method-Forecast-hidden_state_forecast}{\code{Forecast$hidden_state_forecast()}}
 \item \href{#method-Forecast-forecast_dists}{\code{Forecast$forecast_dists()}}
+\item \href{#method-Forecast-quantile}{\code{Forecast$quantile()}}
+\item \href{#method-Forecast-mean}{\code{Forecast$mean()}}
+\item \href{#method-Forecast-plot}{\code{Forecast$plot()}}
 \item \href{#method-Forecast-clone}{\code{Forecast$clone()}}
 }
 }
@@ -298,6 +301,78 @@ Get the unconditional predictive pdfs.
 \if{html}{\out{<div class="r">}}\preformatted{Forecast$forecast_dists()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-quantile"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-quantile}{}}}
+\subsection{Method \code{quantile()}}{
+Quantiles of forecast distribution
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$quantile(var, probs)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var}}{Name of observation variable, as character string}
+
+\item{\code{probs}}{Numeric vector of probabilities}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Data frame with one column for each quantile probability and
+one row for each time step in the forecast
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-mean"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-mean}{}}}
+\subsection{Method \code{mean()}}{
+Mean of forecast distribution
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$mean(var)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var}}{Name of observation variable, as character string}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Numeric vector of means, with one element for each time
+step in the forecast
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Forecast-plot"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-plot}{}}}
+\subsection{Method \code{plot()}}{
+Plot forecast
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Forecast$plot(var, show_data = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{var}}{Name of observation variable, as character string}
+
+\item{\code{show_data}}{Logical: should data be included in the plot?}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+The plot shows the mean of the forecast distribution over time
+(red line), as well as bands of decreasing opacity for the 50%, 80%, and
+90% quantile intervals of the forecast distribution.
+}
+
+\subsection{Returns}{
+A ggplot object
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-clone"></a>}}

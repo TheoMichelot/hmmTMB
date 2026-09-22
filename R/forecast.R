@@ -327,6 +327,94 @@ Forecast <- R6Class(
     #' @description Get the unconditional predictive pdfs.
     forecast_dists = function() {
       return(private$forecast_dists_)
+    },
+    
+    #' @description Quantiles of forecast distribution
+    #' 
+    #' @param var Name of observation variable, as character string
+    #' @param probs Numeric vector of probabilities
+    #' 
+    #' @return Data frame with one column for each quantile probability and
+    #' one row for each time step in the forecast
+    quantile = function(var, probs) {
+      # Range of variable
+      x <- self$eval_range()[[var]]
+      # Assume eval_range grid is regular
+      dx <- x[2] - x[1]
+      
+      # Pmf/pdf evaluations over grid
+      dist <- self$forecast_dists()[[var]]
+      
+      # Create empty data frame for quantiles
+      quant_df <- as.data.frame(
+        matrix(NA, nrow = ncol(dist), ncol = length(probs)))
+      colnames(quant_df) <- paste0(round(probs*100, 3), "%")
+      
+      # Loop over time steps
+      for(i in 1:ncol(dist)) {
+        p <- dist[,i]
+        # Empirical cdf
+        cdf <- cumsum(p) * dx
+        # Loop over probabilities
+        for(j in 1:length(probs)) {
+          quant_df[i,j] <- x[which(cdf >= probs[j])[1]]
+        }
+      }
+      return(quant_df)
+    },
+    
+    #' @description Mean of forecast distribution
+    #' 
+    #' @param var Name of observation variable, as character string
+    #' 
+    #' @return Numeric vector of means, with one element for each time
+    #' step in the forecast
+    mean = function(var) {
+      # Range of variable
+      x <- self$eval_range()[[var]]
+      # Assume eval_range grid is regular
+      dx <- x[2] - x[1]
+      
+      # Pmf/pdf evaluations over grid
+      dist <- self$forecast_dists()[[var]]
+      
+      # Get mean as weighted sum for each column (each time step)
+      mean_pred <- apply(dist, 2, function(p) sum(x * p) * dx)
+      return(mean_pred)
+    },
+    
+    #' @description Plot forecast
+    #' 
+    #' @param var Name of observation variable, as character string
+    #' @param show_data Logical: should data be included in the plot?
+    #' 
+    #' @details The plot shows the mean of the forecast distribution over time
+    #' (red line), as well as bands of decreasing opacity for the 50%, 80%, and
+    #' 90% quantile intervals of the forecast distribution.
+    #' 
+    #' @return A ggplot object
+    plot = function(var, show_data = FALSE) {
+      means <- self$mean(var = var)
+      quants <- self$quantile(var = var, probs = c(0.05, 0.1, 0.25, 0.75, 0.9, 0.95))
+      
+      data <- private$hmm_$obs()$data()
+      times_data <- 1:nrow(data)
+      times_fc <- (nrow(data) + 1):(nrow(data) + length(means))
+      
+      df_fc <- cbind(quants, mean = means, time = times_fc)
+      df_data <- data.frame(var = data[[var]], time = times_data)
+
+      p <- ggplot(df_fc, aes(x = time)) +
+        geom_line(aes(y = mean), col = 2) +
+        geom_ribbon(aes(ymin = `25%`, ymax = `75%`), alpha = 0.2, fill = 2) +
+        geom_ribbon(aes(ymin = `10%`, ymax = `90%`), alpha = 0.2, fill = 2) +
+        geom_ribbon(aes(ymin = `5%`, ymax = `95%`), alpha = 0.2, fill = 2) +
+        labs(y = var)
+      
+      if(show_data) {
+        p <- p + geom_line(aes(y = var), data = df_data)
+      }
+      return(p)
     }
   ),
 
