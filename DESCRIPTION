@@ -27,8 +27,18 @@ Suggests:
     rmarkdown,
     moveHMM,
     scico,
+    expm,
     MSwM,
-    unmarked
+    unmarked,
+    ggridges,
+    aniMotum,
+    quantmod,
+    mHMMbayes,
+    reticulate,
+    LMest,
+    depmixS4,
+    lubridate,
+    momentuHMM
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
