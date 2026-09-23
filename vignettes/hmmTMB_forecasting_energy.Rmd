@@ -1,0 +1,91 @@
+---
+title: "Forecasting with hmmTMB: energy prices"
+author: "Théo Michelot"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    number_sections: true
+header-includes:
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+vignette: >
+  %\VignetteIndexEntry{Forecasting energy prices with hmmTMB}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+message = FALSE, error = FALSE, warning = FALSE, comment = NA
+)
+```
+
+This vignette briefly showcases the `Forecast` class on the energy data set from the package MSwM (@sanchez2021), which is also analysed in the main workflow vignette. For details about the variables, please refer to `?MSwM::energy`.
+
+We start by loading a few packages and the energy data set.
+
+```{r load}
+# Load packages and data
+library(hmmTMB)
+library(ggplot2)
+theme_set(theme_bw())
+library(MSwM)
+data("energy")
+
+head(energy)
+```
+
+Our aim will be to forecast the value of the `Price` variable (average price of energy). To compare the forecasted values to the truth, we split the data set into a training data set `data1`, which will be used to estimate the model parameters, and a forecast data set `data2`, which will only be used to provide covariates for forecasting. We will forecast over the final 100 days of the data set.
+
+```{r prep}
+# Split data into training and test sets
+energy$time <- 1:nrow(energy)
+data1 <- energy[1:(nrow(energy)-100),]
+data2 <- energy[(nrow(energy)-99):nrow(energy),]
+```
+
+We fit a 2-state hidden Markov model, where the response `Price` variable is modelled by a normal distribution in each state. The mean of the observation distribution is modelled as a function of the `Oil` and `Gas` variables, so that we can use future oil and gas prices to forecast energy prices.
+
+```{r fit}
+# Hidden state model
+hid <- MarkovChain$new(data = data1, 
+                       n_states = 2, 
+                       initial_state = 2)
+
+# Observation process model
+dists <- list(Price = "norm")
+f <- list(Price = list(mean = ~Oil + Gas))
+par0 <- list(Price = list(mean = c(2, 4), sd = c(2, 5)))
+obs <- Observation$new(data = data1, dists = dists, formulas = f, par = par0)
+
+# Fit HMM on training data
+hmm <- HMM$new(obs = obs, hid = hid)
+hmm$fit(silent = TRUE)
+```
+
+We use the `Forecast` class to compute forecast distributions for `Price`. `Forecast$new()` takes as inputs the fitted model object, a data set that includes covariates for the forecast times, and a list of grids of observation variable values at which to evaluate the forecast distributions. Based on the observed range of `Price` values, we choose a grid between 0 and 30.
+
+```{r forecast}
+# Define forecasting grid for Price distribution
+obs_range <- list(Price = seq(0, 30, length = 1000))
+
+# Compute forecast distributions for test data
+fc <- Forecast$new(hmm = hmm, 
+                   forecast_data = data2, 
+                   preset_eval_range = obs_range)
+
+# Get forecast distribution means
+head(fc$mean(var = "Price"))
+```
+
+We plot the forecast distributions with the `Forecast$plot()` method. This function shows the mean of the forecast distribution over time, as well as 50%, 80%, and 90% quantile forecast intervals (with decreasing opacity). We use `show_data = TRUE` to include the training data (before the forecasting period), and add a line for the true `Price` values during the forecast period for comparison.
+
+```{r plot, fig.width = 7, fig.height = 3, out.width="100%", fig.align = "center"}
+# Plot mean and quantiles of forecast distributions
+fc$plot(var = "Price", show_data = TRUE) +
+  coord_cartesian(xlim = c(nrow(data1) - 200, nrow(data1) + nrow(data2))) +
+  geom_line(aes(y = Price), data = data2, alpha = 0.3)
+```
+
+# References

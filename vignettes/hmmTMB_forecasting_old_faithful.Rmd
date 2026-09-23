@@ -1,6 +1,6 @@
 ---
 title: "Forecasting with hmmTMB: An Example Using Old Faithful Data"
-author: "Duncan Cameron-Stienke"
+author: "Duncan Cameron-Steinke"
 date: "`r Sys.Date()`"
 output: 
     pdf_document:
@@ -23,7 +23,6 @@ The Old Faithful dataset, included in base R, contains observations of eruption 
 ## Data Exploration
 First, load the necessary library and explore the data.
 ```{r load-data}
-library(devtools)
 library(ggplot2)
 library(ggridges)
 load_all("../../hmmTMB")
