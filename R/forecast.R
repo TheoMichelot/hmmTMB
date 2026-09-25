@@ -120,7 +120,7 @@ Forecast <- R6Class(
                           forecast_data     = NULL,
                           preset_eval_range     = NULL,
                           starting_state_distribution = "last") {
-
+      
       ## -- 1  Input checking --------------------------------------------------
       private$validate_params(
         hmm                       = hmm,
@@ -129,12 +129,12 @@ Forecast <- R6Class(
         preset_eval_range             = preset_eval_range,
         starting_state_distribution = starting_state_distribution
       )
-
+      
       ## -- 2  Store the fitted model & basic metadata -------------------------
       private$hmm_             <- hmm
       private$observation_vars_ <- colnames(private$hmm_$obs()$obs_var())
       private$starting_state_distribution_ <- starting_state_distribution
-
+      
       ## -- 3  Build or accept the future design matrix ------------------------
       private$forecast_data_ <- if (!is.null(forecast_data)) {
         forecast_data
@@ -150,23 +150,23 @@ Forecast <- R6Class(
           )
         )
       }
-
+      
       ## -- 4  Predict forward-looking parameters ------------------------------
       private$obs_par_forecast_ <- private$hmm_$predict("obspar",
-                                                newdata = private$forecast_data_)
+                                                        newdata = private$forecast_data_)
       private$tpm_forecast_     <- private$hmm_$predict("tpm",
-                                                newdata = private$forecast_data_)
-
+                                                        newdata = private$forecast_data_)
+      
       ## -- 5  Establish evaluation grids for each response variable -----------
       private$eval_range_ <- private$configure_eval_range(
         eval_range   = preset_eval_range,
         obs_vars = private$observation_vars_,
         data     = private$hmm_$obs()$data()
       )
-
+      
       ## -- 6  Choose the initial hidden-state distribution --------------------
       if (is.character(starting_state_distribution)) {
-
+        
         if (starting_state_distribution == "last") {
           # one-step-ahead distribution conditional on final training point
           last_sp  <- utils::tail(private$hmm_$state_probs(), 1)
@@ -181,15 +181,15 @@ Forecast <- R6Class(
       } else {
         dist_0 <- starting_state_distribution
       }
-
+      
       ## -- 7  Forward-propagate hidden states ---------------------------------
       n_steps <- nrow(private$forecast_data_)
       hidden_state_forecast <-
         array(NA_real_,
               dim = c(private$hmm_$hid()$nstates(), n_steps))
-
+      
       hidden_state_forecast[, 1] <- dist_0
-
+      
       if (n_steps > 1) {
         for (t in 2:n_steps) {
           hidden_state_forecast[, t] <-
@@ -201,12 +201,12 @@ Forecast <- R6Class(
       ## -- 8  Build unconditional predictive pdfs -----------------------------
       private$forecast_dists_ <- vector("list", length(private$observation_vars_))
       names(private$forecast_dists_) <- private$observation_vars_
-
+      
       for (obs_var in private$observation_vars_) {
-
+        
         # Get distribution and parameters for the current observation variable
         obs_dists      <- private$hmm_$obs()$dists()[[obs_var]]
-
+        
         model_params   <- names(private$obs_par_forecast_[, 1, 1])
         if (is.null(model_params)) {
           # Edge case: when obs_par_forecast has only 1 parameter it is unnamed
@@ -218,9 +218,9 @@ Forecast <- R6Class(
             paste0("^", obs_var, "(\\.)"), model_params, value = TRUE
           )
         }
-
+        
         obs_eval_range <- private$eval_range_[[obs_var]]
-
+        
         # In the case where distribution is multivariate, (dirichlet, mvnorm) we
         # need a list where each element is a vector of x-values.
         if (is.matrix(obs_eval_range)) {
@@ -231,12 +231,12 @@ Forecast <- R6Class(
         } else {
           multi_variate <- FALSE
         }
-
+        
         private$forecast_dists_[[obs_var]] <-
           array(NA_real_, dim = c(length(obs_eval_range), n_steps))
-
+        
         for (i in seq_len(n_steps)) {
-
+          
           # Evaluate each state's pdf at eval_range for time step i
           # pdf_matrix: matrix with dimensions |eval_range| x n_states
           pdf_matrix <- vapply(
@@ -253,35 +253,35 @@ Forecast <- R6Class(
             # vapply template: numeric vector of length |eval_range|
             numeric(length(obs_eval_range))
           )
-
+          
           # Compute forecasted pdf
           private$forecast_dists_[[obs_var]][, i] <- pdf_matrix %*% private$hidden_state_forecast_[, i]
-
+          
         }
       }
     },
-
+    
     # Accessors ---------------------------------------------------------------
     #' @description Get predicted observation parameters.
     obs_par_forecast = function() {
       return(private$obs_par_forecast_)
     },
-
+    
     #' @description Get predicted transition matrices.
     tpm_forecast = function() {
       return(private$tpm_forecast_)
     },
-
+    
     #' @description Get the evaluation grid for each response variable.
     eval_range = function() {
       return(private$eval_range_)
     },
-
+    
     #' @description Get the forecast data used for predictions.
     forecast_data = function() {
       return(private$forecast_data_)
     },
-
+    
     #' @description Update the evaluation grid for forecast pdfs.
     #' This method reconfigures the evaluation range used to compute unconditional predictive pdfs.
     #' It validates the new eval_range, updates internal state, reinitializes forecast densities,
@@ -298,14 +298,14 @@ Forecast <- R6Class(
         preset_eval_range = eval_range,
         starting_state_distribution = private$hidden_state_forecast_[, 1]
       )
-
+      
       # Configure and update the internal evaluation grid using new input
       private$eval_range_ <- private$configure_eval_range(
         eval_range = eval_range,
         obs_vars   = private$observation_vars_,
         data       = private$hmm_$obs()$data()
       )
-
+      
       # Recompute forecast distributions with the updated evaluation grid.
       # Note: This call to initialize() recalculates dependent quantities such as forecast_dists.
       self$initialize(
@@ -314,16 +314,16 @@ Forecast <- R6Class(
         preset_eval_range           = eval_range,
         starting_state_distribution = private$hidden_state_forecast_[, 1]
       )
-
+      
       # Return the forecast object invisibly for potential method chaining.
       invisible(self)
     },
-
+    
     #' @description Get the forward state probabilities.
     hidden_state_forecast = function() {
       return(private$hidden_state_forecast_)
     },
-
+    
     #' @description Get the unconditional predictive pdfs.
     forecast_dists = function() {
       return(private$forecast_dists_)
@@ -359,6 +359,12 @@ Forecast <- R6Class(
         for(j in 1:length(probs)) {
           quant_df[i,j] <- x[which(cdf >= probs[j])[1]]
         }
+      }
+      
+      if(any(is.na(quant_df))) {
+        warning(paste0("Some quantiles could not be calculated for variable ",
+                       var, ". Perhaps preset_eval_range should cover a wider ",
+                       "range."))
       }
       return(quant_df)
     },
@@ -403,7 +409,7 @@ Forecast <- R6Class(
       
       df_fc <- cbind(quants, mean = means, time = times_fc)
       df_data <- data.frame(var = data[[var]], time = times_data)
-
+      
       p <- ggplot(df_fc, aes(x = time)) +
         geom_line(aes(y = mean), col = 2) +
         geom_ribbon(aes(ymin = `25%`, ymax = `75%`), alpha = 0.2, fill = 2) +
@@ -417,12 +423,12 @@ Forecast <- R6Class(
       return(p)
     }
   ),
-
+  
   ## ---------------------------------------------------------------------------
   ## Private helpers -----------------------------------------------------------
   ## ---------------------------------------------------------------------------
   private = list(
-
+    
     # Private data members
     hmm_                   = NULL,  # fitted HMM model
     observation_vars_      = NULL,  # names of response variables
@@ -433,35 +439,35 @@ Forecast <- R6Class(
     hidden_state_forecast_ = NULL,  # forward state probabilities
     forecast_dists_        = NULL,  # unconditional predictive pdfs
     starting_state_distribution_ = NULL,  # initial state distribution
-
+    
     ## -- 1  Comprehensive argument checks -------------------------------------
     validate_params = function(hmm = NULL, n = NULL, forecast_data = NULL,
                                preset_eval_range = NULL,
                                starting_state_distribution = NULL) {
-
+      
       if (is.null(hmm))
         stop("`hmm` must be provided", call. = FALSE)
       if (!inherits(hmm, "HMM"))
         stop("`hmm` must inherit from class 'HMM'", call. = FALSE)
-
+      
       dist_names <- lapply(hmm$obs()$dists(), function(x) x$name())
       if (any(unlist(dist_names) %in% c("cat", "dir", "tweedie", "zoibeta"))) {
         stop("Forecasting not currently supported for the categorical, ",
              "Dirichlet, Tweedie, or zero-one-inflated beta distributions",
              call. = FALSE)
       }
-
+      
       # n  vs  forecast_data ---------------------------------------------------
       if (is.null(n) && is.null(forecast_data))
         stop("Supply either `n` or `forecast_data`", call. = FALSE)
-
+      
       if (!is.null(n) && (!is.numeric(n) || length(n) != 1 || is.na(n) ||
                           n <= 0 || n %% 1 != 0))
         stop("`n` must be a positive integer", call. = FALSE)
-
+      
       if (!is.null(forecast_data) && !is.data.frame(forecast_data))
         stop("`forecast_data` must be a data.frame", call. = FALSE)
-
+      
       # Covariate coverage -----------------------------------------------------
       covariates <- unique(Filter(
         function(x) !is.null(x) && x != "",     # remove NULLs and empty strings
@@ -470,60 +476,60 @@ Forecast <- R6Class(
           rapply(hmm$obs()$formulas(), all.vars)
         )
       ))
-
+      
       if (length(covariates)) {
         if (is.null(forecast_data))
           stop("Provide `forecast_data` when covariates are in the model",
                call. = FALSE)
-
+        
         missing_covs <- setdiff(covariates, colnames(forecast_data))
         if (length(missing_covs))
           stop("`forecast_data` is missing covariates: ",
                paste(missing_covs, collapse = ", "), call. = FALSE)
       }
-
+      
       # x-grid list ------------------------------------------------------------
       if (!is.null(preset_eval_range) &&
           (!is.list(preset_eval_range) ||
-             is.null(names(preset_eval_range)) ||
-             any(names(preset_eval_range) == ""))) {
+           is.null(names(preset_eval_range)) ||
+           any(names(preset_eval_range) == ""))) {
         stop("`preset_eval_range` must be a *named* list", call. = FALSE)
       }
-
+      
       # starting_state_distribution -------------------------------------------
       if (is.null(starting_state_distribution))
         stop("`starting_state_distribution` must be provided", call. = FALSE)
-
+      
       if (is.character(starting_state_distribution) &&
           !starting_state_distribution %in% c("last", "stationary"))
         stop("Character `starting_state_distribution` must be ",
              "'last' or 'stationary'", call. = FALSE)
-
+      
       if (!is.character(starting_state_distribution) &&
           (!is.numeric(starting_state_distribution) ||
-             length(starting_state_distribution) != hmm$hid()$nstates()))
+           length(starting_state_distribution) != hmm$hid()$nstates()))
         stop("`starting_state_distribution` must have length nstates()",
              call. = FALSE)
-
+      
       # Numeric input must be a genuine distribution over states, otherwise the
       # forward recursion silently propagates values that are not probabilities.
       if (!is.character(starting_state_distribution) &&
           (anyNA(starting_state_distribution) ||
-             any(starting_state_distribution < 0) ||
-             abs(sum(starting_state_distribution) - 1) > 1e-6))
+           any(starting_state_distribution < 0) ||
+           abs(sum(starting_state_distribution) - 1) > 1e-6))
         stop("`starting_state_distribution` must be non-negative and sum to 1",
              call. = FALSE)
     },
-
+    
     ## -- 2  Build default x-grids if needed -----------------------------------
     configure_eval_range = function(eval_range   = NULL,
-                                obs_vars = NULL,
-                                data     = NULL) {
-
+                                    obs_vars = NULL,
+                                    data     = NULL) {
+      
       if (is.null(eval_range)) eval_range <- list()
-
+      
       for (obs_var in obs_vars) {
-
+        
         if (is.null(eval_range[[obs_var]])) {
           warning(sprintf(
             paste0("Using a default grid of 100 points for observation variable '%s', ",
@@ -532,12 +538,12 @@ Forecast <- R6Class(
             obs_var
           ), call. = FALSE)
         }
-
+        
         if (is.null(eval_range[[obs_var]])) {
-            max_range <- max(data[[obs_var]], na.rm = TRUE)
-            min_range <- min(data[[obs_var]], na.rm = TRUE)
-            max_range <- if (max_range > 0) max_range * 1.1 else max_range * 0.9
-            min_range <- if (min_range > 0) min_range * 0.9 else min_range * 1.1
+          max_range <- max(data[[obs_var]], na.rm = TRUE)
+          min_range <- min(data[[obs_var]], na.rm = TRUE)
+          max_range <- if (max_range > 0) max_range * 1.1 else max_range * 0.9
+          min_range <- if (min_range > 0) min_range * 0.9 else min_range * 1.1
           eval_range[[obs_var]] <- seq(min_range, max_range, length.out = 100)
         }
       }
