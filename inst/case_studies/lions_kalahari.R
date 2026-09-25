@@ -129,10 +129,16 @@ nrow(data)                        # hourly steps
 table(data$ID)                    # per deployment
 mean(is.na(data$step))            # proportion of hours with no usable step
 
+## Everything below is plotted in degrees, and a degree of longitude is not a
+## degree of latitude: at 21.5 degrees south it covers about 7% less ground.
+## asp = 1 would therefore stretch every map east-west. This is the correction,
+## and it is the same one ggplot2's coord_quickmap() makes for itself.
+map_asp <- 1 / cos(mean(data$y, na.rm = TRUE) * pi / 180)
+
 ## The eight tracks. They overlap heavily, which is what makes a single shared
 ## field worth estimating: several lions visiting the same places give it far
 ## more to go on than one would.
-plot(data$x, data$y, asp = 1, type = "n", bty = "n",
+plot(data$x, data$y, asp = map_asp, type = "n", bty = "n",
      xlab = "Longitude", ylab = "Latitude")
 for (id in unique(data$ID)) {
   keep <- data$ID == id
@@ -141,8 +147,8 @@ for (id in unique(data$ID)) {
 
 ## Step lengths are strongly bimodal, which is the HMM's starting point: a
 ## great many near-zero steps, and a long tail of travelling ones.
-hist(data$step, breaks = 200, xlim = c(0, 5), col = "grey80", border = "white",
-     main = "", xlab = "Step length (km)")
+hist(data$step, breaks = 200, xlim = c(0, 3), ylim = c(0, 2000),
+     col = "grey80", border = "white", main = "", xlab = "Step length (km)")
 
 
 # Mesh --------------------------------------------------------------------
@@ -171,7 +177,7 @@ mesh <- fm_mesh_2d(loc = loc,
                    cutoff = 0.025)
 mesh$n   # field weights, integrated out by the Laplace approximation
 
-plot(mesh, asp = 1)
+plot(mesh, asp = map_asp)
 points(data$x, data$y, pch = 4, cex = 0.3, lwd = 0.5, col = "#00008b30")
 
 ## A finer mesh, max.edge = c(0.03, 1) and cutoff = 0.01, is what Fischer
@@ -186,6 +192,7 @@ points(data$x, data$y, pch = 4, cex = 0.3, lwd = 0.5, col = "#00008b30")
 ## of an active lion settling down, and the 1 -> 2 transition is
 ## intercept-only. Transition-specific formulas are given as a matrix, with
 ## "." on the reference (diagonal) entries.
+## See ?smooth.construct.spde.smooth.spec for details on the SPDE smoother.
 form <- matrix(c(".", "~ 1",
                  "~ s(x_int, y_int, bs = 'spde', xt = list(mesh = mesh))", "."),
                nrow = 2, byrow = TRUE)
@@ -213,15 +220,16 @@ hmm_sp <- HMM$new(hid = hid, obs = obs)
 ## bandwidth of 15
 hmm_sp$bw()
 
-system.time(hmm_sp$fit())
+## Fitting the model
+hmm_sp$fit()
 
 
 # Check the bandwidth -----------------------------------------------------
 
 ## The bandwidth controls how far back in time each log-likelihood
-## contribution is allowed to look. Too small and the approximation bites;
-## large enough and the log-likelihood stops moving. Profile it at the
-## estimates: if the curve has flattened well before the bandwidth in use, the
+## contribution is allowed to look. Too small and the approximation is poor;
+## too large and computations become infeasible. Profile it at the
+## estimates: if the curve has flattened before the bandwidth in use, the
 ## approximation is fine. The row with bw = Inf is the exact algorithm, which
 ## is what the banded one is being compared against.
 ##
@@ -244,31 +252,34 @@ hmm_sp$check_bw(bws = seq(5, 25, by = 5))
 ## The two state-dependent distributions. The resting state has a mean step of
 ## about seven metres, which is GPS noise around a stationary animal rather
 ## than movement; the active state averages roughly nine hundred metres an
-## hour. The turning-angle means were estimated rather than fixed, and come
-## back at pi and 0 -- reversal when resting, persistence when active -- which
-## is a check on that reading rather than an assumption behind it.
+## hour. The turning-angle means come back at pi and 0 -- reversal when resting,
+## persistence when active.
 hmm_sp$obs()$par()[, , 1]
 
 ## The field's two parameters, a marginal standard deviation on the scale of
 ## the linear predictor and a range in degrees. The range comes out near 0.23
-## degrees, some 25 km: comfortably inside a study area spanning 1.2 degrees by
-## 0.7, and about three times the mesh's inner edge length, so the rule of thumb
-## the mesh was built on holds after the fact as well as before it. A range that
-## came out close to the size of the study area would be the warning sign: the
-## field would then be nearly improper and its parameters meaningless, however
-## good the surface looked. These are not variances, so sd_re() reports NA for
-## them.
+## degrees, some 23 km: comfortably inside a study area and about three times the
+## mesh's inner edge length, so the rule of thumb the mesh was built on holds.
+## A range that came out close to the size of the study area would be the warning
+## sign: the field would then be nearly improper and its parameters meaningless,
+## however good the surface looked.
 hmm_sp$lambda()$hid
 
 ## The fitted surface, as Pr(active -> resting) over the two coordinates.
 ## HMM$plot() varies one covariate and holds the rest at their means, which for
 ## a bivariate term shows a single slice; plot_2d() varies both.
 ##
-## It ranges from about 0.13 to 0.65 -- a sizeable effect, not a flat field
-## with decoration. The low end is not scattered noise either: it is a single
+## It ranges from about 0.13 to 0.65 -- a sizeable effect. The low end is a single
 ## coherent region in the south-centre of the study area, where an active lion
 ## settles within the hour with probability around 0.15 against 0.5 or more
 ## over most of the rest.
+##
+## plot_2d() sets no coordinate system, which is right for a method that has to
+## serve any pair of covariates -- a surface over temperature and wind speed has
+## no business being square. When the two are coordinates it does matter, and
+## since the return value is a ggplot the fix is one layer. coord_quickmap()
+## is the one to reach for rather than coord_equal(): it applies the latitude
+## correction above, where coord_equal() would just make the panel square.
 ##
 ## One practical note. The smooth constructor keeps the mesh on the smooth
 ## object it builds, but hmmTMB does not keep that object: it stores the
@@ -278,7 +289,8 @@ hmm_sp$lambda()$hid
 ## mesh around for as long as you want to predict -- saving the fitted model on
 ## its own and reloading it in a new session is not enough, and the error when
 ## that happens is an unhelpful "object 'mesh' not found".
-hmm_sp$plot_2d("tpm", var = "x_int", var2 = "y_int", i = 2, j = 1)
+hmm_sp$plot_2d("tpm", var = "x_int", var2 = "y_int", i = 2, j = 1, n_grid = 100) +
+  coord_quickmap()
 
 ## Cells further than 10% of the plot's diagonal from the nearest observation
 ## are left blank by default, as in mgcv::plot.gam(): a fitted surface far from
@@ -294,7 +306,8 @@ hmm_sp$plot_2d("tpm", var = "x_int", var2 = "y_int", i = 2, j = 1)
 ## are off because the interval width is a Monte Carlo quantity, and contouring
 ## it mostly draws the simulation noise.
 hmm_sp$plot_2d("tpm", var = "x_int", var2 = "y_int", i = 2, j = 1,
-               n_grid = 30, n_post = 300, show = "ci", contour = FALSE)
+               n_grid = 30, n_post = 300, show = "ci", contour = FALSE) +
+  coord_quickmap()
 
 ## Every plot_2d() call returns a ggplot, so it takes further layers like any
 ## other -- here the tracks themselves, over the surface they produced. (The
@@ -303,16 +316,17 @@ hmm_sp$plot_2d("tpm", var = "x_int", var2 = "y_int", i = 2, j = 1,
 hmm_sp$plot_2d("tpm", var = "x_int", var2 = "y_int", i = 2, j = 1,
                contour = FALSE) +
   geom_path(data = data, aes(x = x_int, y = y_int, group = ID),
-            colour = "white", linewidth = 0.1, alpha = 0.3)
+            colour = "white", linewidth = 0.1, alpha = 0.3) +
+  coord_quickmap()
 
 ## For anything plot_2d() will not do, go through predict() directly: it is
 ## what the method calls, on a lattice of your own making, and it returns the
-## array rather than a picture.
+## array.
 grid <- expand.grid(x_int = seq(min(data$x_int), max(data$x_int), length = 200),
                     y_int = seq(min(data$y_int), max(data$y_int), length = 200))
 tpm <- hmm_sp$predict("tpm", newdata = grid)
 image(unique(grid$x_int), unique(grid$y_int), matrix(tpm[2, 1, ], 200, 200),
-      col = hcl.colors(30), asp = 1, zlim = c(0, 1), bty = "n",
+      col = hcl.colors(30), asp = map_asp, zlim = c(0, 1), bty = "n",
       xlab = "Longitude", ylab = "Latitude",
       main = expression(Pr(active %->% resting)))
 
@@ -346,13 +360,10 @@ hid2 <- MarkovChain$new(data = data, n_states = 2, formula = form2,
 ## clone carries the fitted values with it, which makes this a warm start.
 hmm_td <- HMM$new(hid = hid2, obs = obs$clone())
 
-system.time(hmm_td$fit())
+hmm_td$fit()
+## This model is pretty memory hungry which your machine might not handle.
 
-## Both criteria prefer the larger model by thousands, which no amount of
-## caution about the criteria themselves would overturn. Read the direction
-## rather than the exact figure, though: these are conditional AIC and BIC,
-## counting effective degrees of freedom for the smooth and field terms, and
-## hmmTMB warns that they are experimental for models with random effects.
+## Both criteria prefer the larger model.
 AIC(hmm_sp, hmm_td)
 BIC(hmm_sp, hmm_td)
 
@@ -379,50 +390,21 @@ hmm_td$plot("tpm", var = "hour", i = 2, j = 1)
 ## The field, net of the daily cycle. The two terms are additive on the linear
 ## predictor, so changing the hour only shifts the surface up or down there --
 ## but the plot is on the probability scale, where the logistic transform then
-## squashes a shifted surface differently. That makes the hour a real choice,
-## not a cosmetic one: the default, hour at its mean and so near midday, puts
-## the whole surface where a lion is very likely to be resting anyway and
-## flattens it against 1. Night, when the switch is actually in play, is the
-## slice worth looking at.
+## squashes a shifted surface differently. That makes the hour a real choice:
+## the default, hour at its mean and so near midday, puts the whole surface where
+## a lion is very likely to be resting anyway and flattens it against 1.
+## Night, when the switch is actually in play, is the slice worth looking at.
 hmm_td$plot_2d("tpm", var = "x_int", var2 = "y_int", i = 2, j = 1,
-               covs = list(hour = 20))
+               covs = list(hour = 20)) +
+  coord_quickmap()
 
 ## The field's parameters, against those of the smaller model. They hardly
 ## move -- sd 0.565 against 0.597, range 0.239 against 0.230 -- so the field was
 ## not standing in for the daily cycle in the first model: the two effects are
-## picking up different things, and adding one does not dismantle the other.
+## picking up different things.
 hmm_td$lambda()$hid
 hmm_sp$lambda()$hid
 
 ## And the state-dependent distributions, which barely move either: the two
 ## states are pinned down by the step lengths, not by what drives the switching.
 hmm_td$obs()$par()[, , 1]
-
-
-# Decoded states ----------------------------------------------------------
-
-## The most likely state sequence, and the share of hours spent active: about
-## 36%, against 43% under the field-only model, which had no daily cycle to
-## explain the long midday lulls with and absorbed some of them as movement.
-states <- hmm_td$viterbi()
-prop.table(table(states))
-
-## One lion's track, coloured by decoded state. Resting shows up as the dense
-## knots, travelling as the long runs between them.
-i <- which(data$ID == "AL156")[1:2000]
-plot(data$x[i], data$y[i], type = "l", asp = 1, col = "grey70", bty = "n",
-     xlab = "Longitude", ylab = "Latitude")
-points(data$x[i], data$y[i], pch = 20, cex = 0.7,
-       col = c("#00798c", "#d1495b")[states[i]])
-legend("topright", pch = 20, col = c("#00798c", "#d1495b"),
-       legend = c("Resting", "Active"), bty = "n")
-
-## And the share of hours active by hour of the day, decoded rather than
-## modelled -- the empirical counterpart of the cycle plotted above. It holds
-## near 0.5 right through the night, from about 17:00 to 07:00, and collapses
-## to 0.04 in the early afternoon: a lion is more than ten times as likely to
-## be moving at its most active hour as at its least.
-plot(0:23, tapply(states == 2, data$hour, mean), type = "b", pch = 20,
-     bty = "n", ylim = c(0, 1), xlab = "Hour of day",
-     ylab = "Proportion active")
-
