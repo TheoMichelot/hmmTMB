@@ -12,6 +12,8 @@
 #' geom_ribbon scale_size_manual geom_histogram geom_vline geom_errorbar after_stat
 #' coord_cartesian
 #' @importFrom TMB MakeADFun sdreport
+#' @importFrom ggplot2 geom_raster geom_contour scale_fill_viridis_c
+#' @importFrom mgcv exclude.too.far
 #' @importFrom stringr str_trim str_split str_split_fixed
 #' @importFrom stats nlminb
 #' @importFrom tmbstan tmbstan
@@ -45,6 +47,9 @@ HMM <- R6Class(
     #' factor levels).don See examples in the vignettes, and check the TMB
     #' documentation to understand the inner workings (argument \code{map}
     #' of \code{TMB::MakeADFun()}).
+    #' @param bw Bandwidth of the banded forward algorithm; see
+    #' \code{HMM$update_bw()}. Defaults to \code{NULL}, i.e. 15 if the model
+    #' contains a Gaussian field and 0 (the exact algorithm) otherwise.
     #'
     #' @return A new HMM object
     #'
@@ -66,7 +71,8 @@ HMM <- R6Class(
                           hid = NULL,
                           file = NULL,
                           init = NULL,
-                          fixpar = NULL) {
+                          fixpar = NULL,
+                          bw = NULL) {
       # Decide how model has been specified
       if (is.null(file) & is.null(obs)) {
         stop(paste0("Either 'file' should be the name of a file specifying ",
@@ -97,8 +103,9 @@ HMM <- R6Class(
                             rapply(obs$formulas(), all.vars)))
       # Remove pi from list of covariates if it is in the formulas
       var_names <- var_names[which(var_names!="pi")]
+      data <- obs$data()
+      var_names <- cov_names_in_data(var_names, data)
       if(length(var_names) > 0) {
-        data <- obs$data()
         # Remove NAs in covariates (replace by last non-NA value)
         data[,var_names] <- lapply(data[,var_names, drop=FALSE],
                                    function(col) na_fill(col))
@@ -129,6 +136,9 @@ HMM <- R6Class(
         private$hid_$update_coeff_re(
           private$initialize_submodel(private$hid_$coeff_re(), init$hid()$coeff_re()))
       }
+
+      # Bandwidth of the forward algorithm
+      self$update_bw(bw)
 
       # initialize priors
       self$set_priors()
@@ -246,6 +256,79 @@ HMM <- R6Class(
     lambda = function() {
       return(list(obs = self$obs()$lambda(),
                   hid = self$hid()$lambda()))
+    },
+
+    #' @description Bandwidth of the forward algorithm (0 = exact)
+    bw = function() {
+      return(private$bw_)
+    },
+
+    #' @description Update bandwidth of the forward algorithm
+    #'
+    #' The exact forward algorithm accumulates log-likelihood contributions
+    #' that are each conditional on the entire process history, so the Hessian
+    #' with respect to latent variables spread over time is dense. The banded
+    #' algorithm of Fischer (2026) splits the time series into blocks of length
+    #' \code{bw} and truncates that conditioning at the previous block, which
+    #' makes the Hessian banded. It costs about twice as much per evaluation,
+    #' and its error decays geometrically in \code{bw}, because an ergodic
+    #' Markov chain forgets its initial condition exponentially fast.
+    #'
+    #' A model containing a Gaussian field is banded by default, with
+    #' \code{bw = 15}, because the dense Hessian of the exact algorithm
+    #' defeats the sparsity such a field exists to provide. That default is a
+    #' starting point, not an answer: the bandwidth needed depends on how fast
+    #' the chain forgets its initial condition, so a persistent chain needs
+    #' more. Every other model is exact by default. Use
+    #' \code{HMM$check_bw()} to choose a bandwidth before fitting, and
+    #' afterwards check that raising it leaves the estimates unchanged.
+    #'
+    #' @param bw Non-negative integer (0 = exact algorithm), or \code{NULL} to
+    #' choose automatically. This is TMB data, so changing it discards any
+    #' existing setup, which is rebuilt on the next \code{setup()} or
+    #' \code{fit()}.
+    update_bw = function(bw = NULL) {
+      if(is.null(bw)) {
+        bw <- if(private$has_gmrf()) 15L else 0L
+      }
+      if(length(bw) != 1 || !is.numeric(bw) || is.na(bw) ||
+         bw != round(bw) || bw < 0 || bw == 1) {
+        stop("'bw' should be 0, an integer >= 2, or NULL.")
+      }
+      private$bw_ <- as.integer(bw)
+      private$tmb_obj_ <- NULL
+      private$tmb_obj_joint_ <- NULL
+      invisible(self)
+    },
+
+    #' @description Profile the log-likelihood against the bandwidth
+    #'
+    #' Evaluates the joint log-likelihood at the model's current parameter
+    #' values for a range of bandwidths. A sensible bandwidth is the smallest
+    #' one beyond which the value no longer changes appreciably. This is
+    #' evaluated at fixed parameters, so it is cheap and does not require the
+    #' model to be re-fitted.
+    #'
+    #' @param bws Vector of bandwidths (each at least 2)
+    #' @param silent Logical. If TRUE (default), TMB tracing output is hidden.
+    #'
+    #' @return Data frame with columns \code{bw} and \code{llk}, including a
+    #' row with \code{bw = Inf} for the exact forward algorithm.
+    check_bw = function(bws = seq(5, 40, by = 5), silent = TRUE) {
+      if(any(bws < 2)) {
+        stop("All bandwidths should be at least 2.")
+      }
+      if(is.null(private$tmb_args_)) {
+        self$setup(silent = silent)
+      }
+      # Every parameter is held fixed, random effects included, so this is the
+      # joint likelihood and no Laplace approximation is involved
+      llk <- sapply(c(bws, Inf), function(b) {
+        obj <- private$make_tmb_obj(bw = ifelse(is.finite(b), b, 0),
+                                    include_smooths = -1, silent = silent)
+        -obj$fn(obj$par)
+      })
+      return(data.frame(bw = c(bws, Inf), llk = llk))
     },
 
     #' @description Update parameters stored inside model object
@@ -536,6 +619,8 @@ HMM <- R6Class(
       S_obs <- mod_mat_obs$S
       log_det_S_obs <- mod_mat_obs$log_det_S
       ncol_re_obs <- mod_mat_obs$ncol_re
+      L_obs <- mod_mat_obs$L
+      gmrf_obs <- mod_mat_obs$gmrf
 
       # Create model matrices of hidden state process
       # (Design matrices for fixed and random effects, and smoothing matrix)
@@ -545,6 +630,8 @@ HMM <- R6Class(
       S_hid <- mod_mat_hid$S
       log_det_S_hid <- mod_mat_hid$log_det_S
       ncol_re_hid <- mod_mat_hid$ncol_re
+      L_hid <- mod_mat_hid$L
+      gmrf_hid <- mod_mat_hid$gmrf
 
       # Prepare initial distribution delta0
       ldelta0 <- self$hid()$delta0(log = TRUE, as_matrix = FALSE)
@@ -571,6 +658,8 @@ HMM <- R6Class(
         S_obs <- as_sparse(matrix(0, 1, 1))
         log_det_S_obs <- -1
         ncol_re_obs <- matrix(-1, nr = 1, nc = 1)
+        L_obs <- matrix(1, 1, 1)
+        gmrf_obs <- 0L
         X_re_obs <- as_sparse(rep(0, nrow(X_fe_obs)))
       } else {
         # If there are random effects,
@@ -589,6 +678,8 @@ HMM <- R6Class(
         S_hid <- as_sparse(matrix(0, 1, 1))
         log_det_S_hid <- -1
         ncol_re_hid <- matrix(-1, nr = 1, nc = 1)
+        L_hid <- matrix(1, 1, 1)
+        gmrf_hid <- 0L
         X_re_hid <- as_sparse(rep(0, nrow(X_fe_hid)))
       } else {
         # If there are random effects,
@@ -671,12 +762,17 @@ HMM <- R6Class(
                       S_obs = as_sparse(S_obs),
                       log_det_S_obs = log_det_S_obs,
                       ncol_re_obs = ncol_re_obs,
+                      L_obs = L_obs,
+                      gmrf_obs = gmrf_obs,
                       X_fe_hid = as_sparse(X_fe_hid),
                       X_re_hid = as_sparse(X_re_hid),
                       S_hid = as_sparse(S_hid),
                       log_det_S_hid = log_det_S_hid,
                       ncol_re_hid = ncol_re_hid,
+                      L_hid = L_hid,
+                      gmrf_hid = gmrf_hid,
                       include_smooths = 1,
+                      bw = 0,
                       ref_tpm = self$hid()$ref(),
                       ref_delta0 = self$hid()$ref_delta0(),
                       coeff_fe_obs_prior = priors$coeff_fe_obs,
@@ -684,11 +780,23 @@ HMM <- R6Class(
                       log_lambda_obs_prior = priors$log_lambda_obs,
                       log_lambda_hid_prior = priors$log_lambda_hid)
 
+      # Keep the ingredients, so that check_bw() can rebuild at another
+      # bandwidth without redoing any of the above
+      private$tmb_args_ <- list(data = tmb_dat, parameters = tmb_par,
+                                map = map, DLL = "hmmTMB")
+
       # Create TMB model
-      obj <- MakeADFun(tmb_dat, tmb_par, DLL = "hmmTMB",
-                       random = random,
-                       map = map,
-                       silent = silent)
+      obj <- private$make_tmb_obj(bw = self$bw(), include_smooths = 1,
+                                  random = random, silent = silent)
+
+      if(private$has_gmrf() && isTRUE(obj$report()$ad_framework == 0)) {
+        warning(paste("This model contains a Gaussian field, whose precision",
+                      "matrix has to be factorised inside the likelihood, but",
+                      "hmmTMB was compiled with the CppAD framework, under",
+                      "which that is orders of magnitude slower. Reinstall",
+                      "without setting HMMTMB_AD_FRAMEWORK to use TMBad."),
+                call. = FALSE)
+      }
 
       nllk0 <- obj$fn(obj$par)
       if(is.nan(nllk0) | is.infinite(nllk0)) {
@@ -701,9 +809,8 @@ HMM <- R6Class(
       private$tmb_obj_ <- obj
 
       # Joint negative log-likelihood function
-      tmb_dat$include_smooths <- -1
-      private$tmb_obj_joint_ <- MakeADFun(tmb_dat, tmb_par, DLL = "hmmTMB",
-                                          map = map, silent = silent)
+      private$tmb_obj_joint_ <- private$make_tmb_obj(
+        bw = self$bw(), include_smooths = -1, silent = silent)
     },
 
     #' @description Fit model using tmbstan
@@ -1211,13 +1318,14 @@ HMM <- R6Class(
           H <- obj$he(par)
           V <- prec_to_cov(H)
         }
+        # Generate samples from MVN estimator distribution
+        post <- rmvn(n = n_post, mu = par, V = V)
       } else { # model has random effects
+        # Sample through a sparse Cholesky of the joint precision rather than
+        # inverting it first; see rmvn_prec()
         par <- c(rep$par.fixed, rep$par.random)
-        V <- prec_to_cov(rep$jointPrecision)
+        post <- rmvn_prec(n = n_post, mu = par, prec_mat = rep$jointPrecision)
       }
-
-      # Generate samples from MVN estimator distribution
-      post <- rmvn(n = n_post, mu = par, V = V)
 
       # Matrix filled with estimates
       npar <- nrow(self$coeff_array())
@@ -1899,6 +2007,169 @@ HMM <- R6Class(
       return(p)
     },
 
+    #' @description Plot a model component over two covariates
+    #'
+    #' The two-dimensional counterpart of \code{HMM$plot()}, for a model
+    #' containing a bivariate smooth such as \code{s(x, y)} or a Gaussian
+    #' field. \code{HMM$plot()} varies one covariate and holds the rest fixed,
+    #' which for a bivariate term shows a single slice through the surface;
+    #' this varies both and draws the surface itself.
+    #'
+    #' Nothing here is specific to any basis. The surface is built from
+    #' \code{HMM$predict()} on a lattice of covariate values, so it works for
+    #' any smoother hmmTMB accepts on two covariates -- a thin plate spline,
+    #' \code{bs = "gp"}, an SPDE field -- and for two covariates that enter the
+    #' model separately, where it shows their combined effect.
+    #'
+    #' @param what Name of model component to plot: one of "tpm" (transition
+    #' probabilities), "delta" (stationary state probabilities), or "obspar"
+    #' (state-dependent observation parameters)
+    #' @param var Name of covariate on the x-axis
+    #' @param var2 Name of covariate on the y-axis
+    #' @param covs Optional named list for values of covariates other than
+    #' \code{var} and \code{var2}. If not specified, the mean is used for
+    #' numeric covariates and the first level for factors.
+    #' @param i If plotting tpm then rows of tpm; if plotting delta then
+    #' indices of states; if plotting obspar then full names of parameters
+    #' @param j If plotting tpm then columns of tpm; if plotting delta then
+    #' ignored; if plotting obspar then indices of states
+    #' @param n_grid Number of points along each axis, so the surface is
+    #' evaluated at \code{n_grid^2} points (default: 50). At the default
+    #' \code{n_post = 0} this costs one prediction and is cheap even for a
+    #' fine grid; with posterior simulation the cost grows with
+    #' \code{n_grid^2}, so it is worth lowering there.
+    #' @param n_post Number of posterior simulations used for the confidence
+    #' interval. Defaults to 0, i.e. the maximum likelihood surface only,
+    #' because a surface needs many more evaluation points than a curve does.
+    #' Required to be positive for \code{show = "ci"}.
+    #' @param level Confidence level, when \code{n_post > 0} (default: 0.95)
+    #' @param show What the fill shows: "mle" for the estimate itself, or "ci"
+    #' for the width of the confidence interval, which says where the surface
+    #' is well determined and where it is not.
+    #' @param too_far Cells whose distance from the nearest observation exceeds
+    #' this, as a proportion of the plot's diagonal, are left blank. This is
+    #' \code{mgcv::exclude.too.far()}, and it matters for a bivariate smooth:
+    #' the corners of the lattice are usually extrapolation. Set to 0 to show
+    #' the whole rectangle (default: 0.1).
+    #' @param contour Add contour lines over the surface (default: TRUE)
+    #'
+    #' @return A ggplot object
+    plot_2d = function(what, var, var2, covs = NULL, i = NULL, j = NULL,
+                       n_grid = 50, n_post = 0, level = 0.95, show = "mle",
+                       too_far = 0.1, contour = TRUE) {
+      show <- match.arg(show, c("mle", "ci"))
+      if(show == "ci" & n_post <= 0) {
+        stop("show = \"ci\" needs n_post > 0, to have a confidence interval.")
+      }
+      if(var == var2) {
+        stop("'var' and 'var2' should be two different covariates.")
+      }
+
+      # Get relevant model component, and a lattice over the two covariates
+      comp <- switch(what, tpm = "hid", delta = "hid", obspar = "obs")
+      newdata <- cov_grid_2d(var = var, var2 = var2, obj = self, covs = covs,
+                             formulas = self[[comp]]()$formulas(),
+                             n_grid = n_grid)
+
+      n_states <- self$hid()$nstates()
+
+      # Get predictions. predict() returns a bare array when no posterior
+      # samples are drawn, and a list of mle/lcl/ucl when they are.
+      preds <- self$predict(what = what, t = "all", newdata = newdata,
+                            level = level, n_post = n_post)
+      mle <- if(n_post > 0) preds$mle else preds
+
+      # Data frame for plot, laid out as in HMM$plot()
+      df <- as.data.frame.table(mle)
+      if(n_post > 0) {
+        df$lcl <- as.vector(preds$lcl)
+        df$ucl <- as.vector(preds$ucl)
+      }
+      n_grid_pts <- nrow(newdata)
+      if (what == "tpm") {
+        colnames(df)[1:4] <- c("from", "to", "grid", "val")
+        levels(df$from) <- paste("State", 1:n_states)
+        levels(df$to) <- paste("State", 1:n_states)
+        gid <- rep(seq_len(n_grid_pts), each = n_states * n_states)
+      } else if (what == "delta") {
+        colnames(df)[1:3] <- c("grid", "state", "val")
+        levels(df$state) <- paste("State", 1:n_states)
+        gid <- rep(seq_len(n_grid_pts), n_states)
+      } else if (what == "obspar") {
+        colnames(df)[1:4] <- c("par", "state", "grid", "val")
+        levels(df$state) <- paste("State", 1:n_states)
+        gid <- rep(seq_len(n_grid_pts), each = nrow(df) / n_grid_pts)
+      }
+      df$var <- newdata[gid, var]
+      df$var2 <- newdata[gid, var2]
+
+      # Subset after the grid indices are attached, so they stay aligned
+      if (what == "tpm") {
+        if (!is.null(i)) df <- df[df$from == paste0("State ", i), ]
+        if (!is.null(j)) df <- df[df$to == paste0("State ", j), ]
+      } else if (what == "delta") {
+        if (!is.null(i)) df <- df[df$state == paste0("State ", i), ]
+      } else if (what == "obspar") {
+        if (!is.null(i)) df <- df[df$par == i, ]
+        if (!is.null(j)) df <- df[df$state == paste0("State ", j), ]
+      }
+
+      if(show == "ci") {
+        df$val <- df$ucl - df$lcl
+      }
+
+      # Blank the cells that are extrapolation. The surface is defined
+      # everywhere on the lattice, but far from the data it says more about the
+      # basis than about the data.
+      if(too_far > 0) {
+        obs_data <- self$obs()$data()
+        drop <- exclude.too.far(g1 = df$var, g2 = df$var2,
+                                d1 = obs_data[[var]], d2 = obs_data[[var2]],
+                                dist = too_far)
+        df$val[drop] <- NA
+      }
+
+      # Caption with values of the other (fixed) covariates
+      plot_txt <- NULL
+      other <- setdiff(colnames(newdata), c(var, var2))
+      if(length(other) > 0) {
+        other_covs <- newdata[1, other, drop = FALSE]
+        num_ind <- sapply(other_covs, is.numeric)
+        other_covs[num_ind] <- lapply(other_covs[num_ind], function(cov)
+          round(cov, 2))
+        fac_ind <- sapply(other_covs, is.factor)
+        other_covs[fac_ind] <- lapply(other_covs[fac_ind], as.character)
+        plot_txt <- paste(colnames(other_covs), "=", other_covs,
+                          collapse = ", ")
+      }
+
+      fill_lab <- switch(what,
+                         tpm = if(show == "ci") "CI width" else "Probability",
+                         delta = if(show == "ci") "CI width" else "Probability",
+                         obspar = if(show == "ci") "CI width" else "Estimate")
+
+      p <- ggplot(df, aes(var, var2)) +
+        geom_raster(aes(fill = val), na.rm = TRUE) +
+        scale_fill_viridis_c(fill_lab, na.value = "transparent") +
+        xlab(var) + ylab(var2) + ggtitle(plot_txt) +
+        theme_light()
+      if(contour) {
+        # na.rm: the cells blanked by too_far are not missing data, they are
+        # deliberately absent, and should not be reported as dropped rows
+        p <- p + geom_contour(aes(z = val), colour = "white",
+                              alpha = 0.4, linewidth = 0.3, na.rm = TRUE)
+      }
+      if (what == "tpm") {
+        p <- p + facet_wrap(c("from", "to"),
+                            labeller = label_bquote("Pr("*.(from)*" -> "*.(to)*")"))
+      } else if (what == "delta") {
+        p <- p + facet_wrap("state")
+      } else if (what == "obspar") {
+        p <- p + facet_wrap(c("par", "state"))
+      }
+      return(p)
+    },
+
     # AIC methods (for simulation experiments) --------------------------------
     #' @description Marginal Akaike Information Criterion
     #'
@@ -2009,6 +2280,8 @@ HMM <- R6Class(
     par_iters_ = NULL,
     coeff_array_ = NULL,
     states_ = NULL,
+    bw_ = NULL,
+    tmb_args_ = NULL,
 
     # Reading from spec file --------------------------------------------------
 
@@ -2226,6 +2499,24 @@ HMM <- R6Class(
     },
 
     # Other private methods ---------------------------------------------------
+
+    ## Does the model contain a smooth whose precision depends on its
+    ## parameters, i.e. a Gaussian field?
+    has_gmrf = function() {
+      any(c(self$obs()$terms()$gmrf, self$hid()$terms()$gmrf) == 1)
+    },
+
+    ## Build a TMB object from the stored ingredients. Bandwidth and
+    ## include_smooths are data, so changing either means retaping.
+    make_tmb_obj = function(bw, include_smooths, random = NULL, silent = TRUE) {
+      if(is.null(private$tmb_args_)) {
+        stop("Setup model first")
+      }
+      args <- private$tmb_args_
+      args$data$bw <- as.integer(bw)
+      args$data$include_smooths <- as.integer(include_smooths)
+      do.call(MakeADFun, c(args, list(random = random, silent = silent)))
+    },
 
     ## Compute effective degrees of freedom for a GAM
     comp_edf = function(X, S, lambda){

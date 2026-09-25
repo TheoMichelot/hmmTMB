@@ -16,10 +16,27 @@
 #'   \item X_fe Design matrix for fixed effects
 #'   \item X_re Design matrix for random effects
 #'   \item S Smoothness matrix
-#'   \item log_det_S Vector of log-determinants of smoothness matrices
+#'   \item log_det_S Vector of log-determinants of smoothness matrices, one
+#'   for each penalty
 #'   \item ncol_fe Number of columns of X_fe for each parameter
 #'   \item ncol_re Number of columns of X_re and S for each random effect
+#'   \item L Matrix with log(lambda) = L * theta, mapping the smoothing
+#'   parameters of each smooth to the weights of its penalties (mgcv's
+#'   convention). It is the identity unless a smooth combines several
+#'   penalties through fewer parameters.
+#'   \item gmrf For each penalty, 1 if its log-determinant depends on the
+#'   parameters and so has to be computed inside the likelihood, and 0 if the
+#'   penalty is a fixed matrix scaled by exp(theta)
+#'   \item sp_names Name of each smoothing parameter
+#'   \item theta_start Starting value of each log smoothing parameter
 #' }
+#'
+#' @details
+#' Note the two indices: \code{ncol_re}, \code{log_det_S} and \code{gmrf} have
+#' one entry per \emph{penalty}, while \code{L}, \code{sp_names},
+#' \code{sp_gmrf} and \code{theta_start} have one per \emph{smoothing
+#' parameter}. The two coincide for an ordinary smooth, which has one of each,
+#' but an SPDE field has three penalties and two parameters.
 #' 
 #' @importFrom stats update predict
 make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
@@ -32,6 +49,12 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
   names_fe <- NULL
   names_re <- NULL
   names_ncol_re <- NULL
+  log_det_S <- NULL
+  L_list <- list()
+  gmrf <- NULL
+  sp_gmrf <- NULL
+  sp_names <- NULL
+  theta_start <- NULL
   start <- 1
   
   # Unlist formulas so that this function works both for Observation and MarkovChain
@@ -61,20 +84,19 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
                        gam_args)
     
     # Create matrices based on this formula
+    gam_setup <- do.call(what = gam,
+                         args = c(gam_args_list, list(fit = FALSE)))
+    # Extract column names for design matrices
+    term_names <- gam_setup$term.names
     if(is.null(new_data)) {
-      gam_setup <- do.call(what = gam,
-                           args = c(gam_args_list, list(fit = FALSE)))
       Xmat <- gam_setup$X
-      # Extract column names for design matrices
-      term_names <- gam_setup$term.names
     } else {
-      # Get design matrix for new data set
-      gam_setup0 <- do.call(what = gam, args = gam_args_list)
-      gam_setup <- do.call(what = gam,
-                           args = c(gam_args_list, list(fit = FALSE)))
-      Xmat <- predict(gam_setup0, newdata = new_data, type = "lpmatrix")
-      # Extract column names for design matrices
-      term_names <- gam_setup$term.names
+      # Get design matrix for new data set. predict.gam() with
+      # type = "lpmatrix" uses none of the quantities that fitting produces,
+      # so the unfitted setup can be wrapped in a shell and used instead of
+      # fitting a gam to the dummy response, as this used to do.
+      Xmat <- predict(gam_shell(gam_setup), newdata = new_data,
+                      type = "lpmatrix")
     }
     
     # Fixed effects design matrix
@@ -100,17 +122,49 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
       colnames(sub_ncol_re) <- 1:ncol(sub_ncol_re)
       start_s <- 1
       for (s in 1:length(gam_setup$smooth)) {
+        sm <- gam_setup$smooth[[s]]
         # how many penalties for this smooth?
-        npen <- length(gam_setup$smooth[[s]]$S)
+        npen <- length(sm$S)
         # how many parameters for this smooth? 
-        npar <- ncol(gam_setup$smooth[[s]]$S[[1]])
+        npar <- ncol(sm$S[[1]])
         # where does this smooth's parameters start and end?
         sub_ncol_re[, (start_s:(start_s + npen - 1))] <- c(start, start + npar - 1)
-        colnames(sub_ncol_re)[start_s:(start_s + npen - 1)] <- rep(gam_setup$smooth[[s]]$label, npen)
+        colnames(sub_ncol_re)[start_s:(start_s + npen - 1)] <- rep(sm$label, npen)
         # get names of smooth terms
         # regex from datascience.stackexchange.com/questions/8922
         s_terms <- gsub("(.*)\\..*", "\\1", names_re[sub_ncol_re[1, s]:sub_ncol_re[2, s]])
-        names_ncol_re <- c(names_ncol_re, rep(unique(s_terms), npen))
+        s_label <- unique(s_terms)
+        names_ncol_re <- c(names_ncol_re, rep(s_label, npen))
+        
+        # mgcv's L convention: a smooth may combine several penalties through
+        # fewer smoothing parameters, with log(lambda) = L * theta. L is the
+        # identity for an ordinary smooth, which has one of each.
+        # A smooth whose penalty is a proper precision that depends on its
+        # parameters through more than an overall scale says so, and its
+        # log-determinant is differentiated inside the likelihood instead of
+        # being precomputed here. This flag is all make_matrices() needs to
+        # know about such a smoother.
+        is_gmrf <- isTRUE(sm$gmrf)
+        gmrf <- c(gmrf, rep(as.integer(is_gmrf), npen))
+        # One generalised determinant per penalty matrix, rather than one for
+        # the block diagonal of all of this formula's penalties. The likelihood
+        # adds -0.5 * log|S_i|+ for each penalty separately, so a linear
+        # predictor with several smooths needs them apart.
+        log_det_S <- c(log_det_S, if(is_gmrf) rep(0, npen)
+                       else vapply(sm$S, gdeterminant, numeric(1)))
+        
+        L_sm <- if(is.null(sm$L)) diag(npen) else as.matrix(sm$L)
+        L_list <- c(L_list, list(L_sm))
+        ntheta <- ncol(L_sm)
+        sp_gmrf <- c(sp_gmrf, rep(as.integer(is_gmrf), ntheta))
+        sp_names <- c(sp_names, if(is.null(sm$theta.names)) rep(s_label, ntheta)
+                      else paste0(s_label, ".", sm$theta.names))
+        # A smooth may supply its own starting values, on the log scale.
+        # An ordinary smooth supplies none, which means 0, i.e. lambda = 1.
+        theta_start <- c(theta_start,
+                         if(is.null(sm$theta.start)) rep(0, ntheta)
+                         else rep(sm$theta.start, length = ntheta))
+        
         start <- start + npar
         start_s <- start_s + npen
       }
@@ -125,17 +179,53 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
   X_re <- bdiag_check(X_list_re)
   colnames(X_re) <- names_re
   S <- bdiag_check(S_list)
-  
-  # Get (log-)determinants of penalty matrices
-  log_det_S <- unlist(sapply(S_list, gdeterminant))
+  L <- bdiag_check(L_list)
+  if(!is.null(L)) L <- as.matrix(L)
   
   return(list(X_fe = X_fe, 
               X_re = X_re, 
               S = S,
-              log_det_S = log_det_S,
+              # as.numeric so that this is double(0), not NULL, when no
+              # formula has a smooth
+              log_det_S = as.numeric(log_det_S),
               X_list_fe = X_list_fe, 
               X_list_re = X_list_re, 
               S_list = S_list, 
               ncol_fe = ncol_fe, 
-              ncol_re = ncol_re))
+              ncol_re = ncol_re,
+              L = L,
+              # sp_names stays NULL when there are no smooths, as ncol_re is,
+              # so that update_lambda() leaves an empty lambda matrix unnamed.
+              # The rest are zero-length instead, so that callers can use them
+              # without checking, and so that exp() accepts theta_start.
+              sp_names = sp_names,
+              gmrf = as.integer(gmrf),
+              sp_gmrf = as.integer(sp_gmrf),
+              theta_start = as.numeric(theta_start)))
+}
+
+#' Shell gam object for building prediction matrices
+#' 
+#' \code{mgcv::predict.gam()} with \code{type = "lpmatrix"} uses only the model
+#' frame, the terms objects, the factor levels and contrasts, and the smooth
+#' objects -- all of which \code{mgcv::gam(fit = FALSE)} already produces. This
+#' wraps that unfitted setup in something \code{predict.gam()} accepts, so that
+#' a prediction matrix can be built without fitting anything.
+#' 
+#' The coefficients are set to zero. \code{predict.gam()} requires the slot to
+#' exist and to have the right length, but for \code{type = "lpmatrix"} it
+#' returns the design matrix itself and never multiplies by them.
+#' 
+#' @param G Output of \code{mgcv::gam()} called with \code{fit = FALSE}
+#' 
+#' @return An object of class "gam", only usable for
+#' \code{predict(type = "lpmatrix")}
+gam_shell <- function(G) {
+  shell <- G[c("pterms", "terms", "smooth", "nsdf", "assign", "xlevels", 
+               "contrasts", "pred.formula")]
+  shell$model <- G$mf
+  shell$na.action <- attr(G$mf, "na.action")
+  shell$coefficients <- stats::setNames(rep(0, ncol(G$X)), G$term.names)
+  class(shell) <- c("gam", "glm", "lm")
+  return(shell)
 }

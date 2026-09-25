@@ -113,6 +113,15 @@ MarkovChain <- R6Class(
       private$ref_mat_ <- matrix(0, n_states, n_states)
       private$ref_mat_[cbind(1:n_states, ref)] <- 1
       
+      # The formulas are rebuilt from strings below, which loses the
+      # environment they were written in. Objects a smooth refers to -- the
+      # mesh of an SPDE field, say -- have to stay findable, so keep the
+      # environment of the formula. When the formulas arrive as a character
+      # matrix there is none to keep, and the caller's frame is the best
+      # guess; R6 puts exactly one frame between it and here.
+      form_env <- if(inherits(formula, "formula")) environment(formula)
+                  else parent.frame(2)
+      
       # Define 'formula' as matrix
       if(is.null(formula)) {
         # No covariate effects
@@ -168,9 +177,9 @@ MarkovChain <- R6Class(
       ls_form_char <- as.list(t(formula)[!t(self$ref_mat())])
       ls_form <- lapply(ls_form_char, function(form_char) {
         if(form_char == ".")
-          return(as.formula("~1"))
+          return(as.formula("~1", env = form_env))
         else
-          return(as.formula(form_char))
+          return(as.formula(form_char, env = form_env))
       })
       
       # Names for transition probabilities
@@ -186,6 +195,7 @@ MarkovChain <- R6Class(
       var_names <- unique(rapply(self$formulas(), all.vars))
       # Remove pi from list of covariates if it is in the formulas
       var_names <- var_names[which(var_names!="pi")]
+      var_names <- cov_names_in_data(var_names, data)
       if(length(var_names) > 0) {
         # Remove NAs in covariates (replace by last non-NA value)
         data[,var_names] <- lapply(data[,var_names, drop=FALSE], 
@@ -198,12 +208,14 @@ MarkovChain <- R6Class(
       ncol_re <- mats$ncol_re
       private$terms_ <- c(mats, list(names_fe = colnames(mats$X_fe),
                                      names_re_all = colnames(mats$X_re),
-                                     names_re = colnames(ncol_re)))
+                                     names_re = mats$sp_names))
       
       # Initialise coeff_fe and coeff_re to 0
       self$update_coeff_fe(rep(0, sum(ncol_fe)))
       self$update_coeff_re(rep(0, ncol(mats$X_re)))
-      self$update_lambda(rep(1, ifelse(is.null(ncol_re), 0, ncol(ncol_re))))
+      # Each smooth's constructor supplies its own starting values; an
+      # ordinary smooth supplies none, which means lambda = 1 as before
+      self$update_lambda(exp(mats$theta_start))
       
       # Setup initial distribution
       private$initial_state_ <- initial_state
@@ -396,7 +408,15 @@ MarkovChain <- R6Class(
     #' each smooth term into a standard deviation, given by 
     #' SD = 1/sqrt(lambda). It is particularly helpful to get the
     #' standard deviations of independent normal random effects.
-    sd_re = function() {return(1/sqrt(private$lambda_))},
+    #' A smooth with its own parameterisation rather than a single smoothness
+    #' parameter -- a Gaussian field, whose parameters are already a marginal
+    #' standard deviation and a range -- has no such transformation and
+    #' returns NA; read those off \code{lambda()} directly.
+    sd_re = function() {
+      sd <- 1/sqrt(private$lambda_)
+      sd[self$terms()$sp_gmrf == 1] <- NA
+      return(sd)
+    },
     
     #' @description Number of states
     nstates = function() {return(private$nstates_)},
