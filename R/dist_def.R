@@ -770,6 +770,44 @@ dist_zoibeta <- Dist$new(
   }
 )
 
+
+# Scaled chi-squared ========================================
+dist_schisq <- Dist$new(
+  name = "schisq", 
+  name_long = "scaled chi-squared",
+  pdf = function(x, scale, df, log = FALSE) { 
+    shape <- df/2
+    scale_gamma <- 2*scale^2
+    l <- dgamma(x, shape = shape, scale = scale_gamma, log = log)
+    return(l)
+  },
+  cdf = function(q, scale, df) {
+    shape <- df/2
+    scale_gamma <- 2*scale^2
+    p <- pgamma(q = q, shape = shape, scale = scale_gamma)
+    return(p)
+  },
+  rng = function(n, scale, df) {
+    shape <- df/2
+    scale_gamma <- 2*scale^2
+    return(rgamma(n, shape = shape, scale = scale_gamma))
+  },
+  link = list(scale = log, df = log),
+  invlink = list(scale = exp, df = exp),
+  npar = 2, 
+  parnames = c("scale", "df"), 
+  parapprox = function(x) {
+    # method of moments estimators
+    mean <- mean(x)
+    sd <- sd(x)
+    scale_gamma <- sd^2 / mean 
+    shape <- mean / scale 
+    scale = sqrt(scale_gamma/2)
+    df = 2*shape
+    return(c(scale, df))
+  }
+)
+
 # Mixed distributions -----------------------------------------------------
 
 # Tweedie ======================================
@@ -1006,7 +1044,8 @@ dist_list <- list(beta = dist_beta,
                   zipois = dist_zipois,
                   zoibeta = dist_zoibeta,
                   ztnbinom = dist_ztnbinom, 
-                  ztpois = dist_ztpois)
+                  ztpois = dist_ztpois,
+                  schisq = dist_schisq)
 
 # Define unique distribution code (must match C++ side)
 lapply(seq_along(dist_list), function(i) {
