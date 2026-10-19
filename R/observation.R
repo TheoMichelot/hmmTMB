@@ -915,12 +915,10 @@ Observation <- R6Class(
       # Loop over states
       vals <- matrix(NA, nrow = n_grid, ncol = self$nstates() + 1)
       for(state in 1:self$nstates()) {
-        # Define list of arguments to pass to pdf
-        args <- list(grid)
-        args <- c(args, par[state,])
-        
-        # Compute state-dependent pdf
-        vals[,state] <- weights[state] * do.call(self$dists()[[var]]$pdf(), args)
+        # Compute state-dependent pdf (pointwise using sapply because some pdfs
+        # are not vectorised)
+        vals[,state] <- weights[state] *
+          sapply(grid, self$dists()[[var]]$pdf_apply, par = par[state,])
       }
       # Weighted sum of state-dependent pdfs
       vals[, self$nstates() + 1] <- rowSums(vals[, 1:self$nstates()])
