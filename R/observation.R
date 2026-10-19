@@ -111,7 +111,7 @@ Observation <- R6Class(
         if(!check_contiguous(data$ID)) {
           stop("Observations for each ID must be contiguous in data.")
         }
-        data$ID <- factor(data$ID)
+        data$ID <- factor(data$ID, levels = unique(data$ID))
       }
       
       # Set data and nstates attributes
