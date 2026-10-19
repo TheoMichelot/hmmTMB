@@ -214,7 +214,7 @@ dist_nbinom2 <- Dist$new(
 dist_cat <- Dist$new(
   name = "cat", 
   name_long = "categorical",
-  pdf = function(x, ..., log = TRUE) {
+  pdf = function(x, ..., log = FALSE) {
     # get class probabilities
     p <- c(...) 
     p <- c(1 - sum(p), p)
