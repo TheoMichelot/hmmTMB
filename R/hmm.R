@@ -1001,7 +1001,7 @@ HMM <- R6Class(
               # c cancels out below (to avoid numerical issues)
               c <- max(logforw[, i - 1])
               a <- exp(logforw[, i - 1] - c)
-              res[i] <- qnorm(t(a) %*% (tpms[,,i]/sum(a)) %*% cdfs[[var]][i,])
+              res[i] <- qnorm(t(a) %*% (tpms[,,i-1]/sum(a)) %*% cdfs[[var]][i,])
             }
           }
           cat("done\n")
