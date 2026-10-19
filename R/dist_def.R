@@ -507,12 +507,14 @@ dist_t <- Dist$new(
     x <- y + mean 
     return(x)
   }, 
-  link = list(mean = identity, scale = log), 
-  invlink = list(mean = identity, scale = exp), 
+  link = list(mean = identity, scale = function(x) log(x - 1)), 
+  invlink = list(mean = identity, scale = function(x) exp(x) + 1), 
   npar = 2, 
   parnames = c("mean", "scale"), 
   parapprox = function(x) {
-    return(c(mean(x), sd(x)))
+    m <- mean(x)
+    s <- ifelse(sd(x) > 1, sd(x), 1.1)
+    return(c(m, s))
   }
 )
 

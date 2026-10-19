@@ -557,7 +557,7 @@ public:
     // mean
     for (int i = 0; i < n_states; ++i) wpar(i) = par(i);
     // scale
-    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i)); ; 
+    for (int i = n_states; i < 2 * n_states; ++i) wpar(i) = log(par(i) - 1); ; 
     return(wpar); 
   } 
   // Inverse link function 
@@ -567,7 +567,7 @@ public:
     // mean
     for (int i = 0; i < n_states; ++i) par(i, 0) = wpar(i);
     // scale
-    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states));
+    for (int i = 0; i < n_states; ++i) par(i, 1) = exp(wpar(i + n_states)) + 1;
     return(par); 
   }
   // Probability density/mass function
