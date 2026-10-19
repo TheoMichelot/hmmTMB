@@ -801,7 +801,7 @@ dist_schisq <- Dist$new(
     mean <- mean(x)
     sd <- sd(x)
     scale_gamma <- sd^2 / mean 
-    shape <- mean / scale 
+    shape <- mean / scale_gamma 
     scale = sqrt(scale_gamma/2)
     df = 2*shape
     return(c(scale, df))
