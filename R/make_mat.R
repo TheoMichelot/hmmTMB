@@ -49,7 +49,7 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
     var_re <- find_re(form)
     for(var in var_re) {
       if(!inherits(data[[var]], "factor")) {
-        data[[var]] <- factor(data[[var]])
+        data[[var]] <- factor(data[[var]], levels = unique(data[[var]]))
         warning(paste0("'", var, "' is included as a random effect but is ",
                        "not a factor - changing to factor."))
       }
