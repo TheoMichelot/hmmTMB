@@ -48,11 +48,17 @@ make_matrices = function(formulas, data, new_data = NULL, gam_args = NULL) {
     # Check that random effect variables are factors
     var_re <- find_re(form)
     for(var in var_re) {
+
       if(!inherits(data[[var]], "factor")) {
-        data[[var]] <- factor(data[[var]], levels = unique(data[[var]]))
         warning(paste0("'", var, "' is included as a random effect but is ",
                        "not a factor - changing to factor."))
+      } else if(!all(unique(data[[var]]) == levels(data[[var]]))) {
+        # This is for consistency with how factors are processed in
+        # Observation$new()
+        warning(paste0("Levels for '", var, "' changed to be in order of ",
+                       "appearance in data: levels = unique(data$", var, ")"))
       }
+      data[[var]] <- factor(data[[var]], levels = unique(data[[var]]))
     }
     
     # Prepare gam() arguments
