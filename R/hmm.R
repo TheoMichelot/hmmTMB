@@ -2052,11 +2052,15 @@ HMM <- R6Class(
     #' the corners of the lattice are usually extrapolation. Set to 0 to show
     #' the whole rectangle (default: 0.1).
     #' @param contour Add contour lines over the surface (default: TRUE)
+    #' @param padding Numeric vector of length 1 or 2 giving the amount to pad
+    #' the 'var' and 'var2' ranges beyond the data. A single value is recycled to
+    #' both axes, and a length-2 vector is interpreted as (padding in var,
+    #' padding in var2). Defaults to 0.
     #'
     #' @return A ggplot object
     plot_2d = function(what, var, var2, covs = NULL, i = NULL, j = NULL,
                        n_grid = 50, n_post = 0, level = 0.95, show = "mle",
-                       too_far = 0.1, contour = TRUE) {
+                       too_far = 0.1, contour = TRUE, padding = 0) {
       show <- match.arg(show, c("mle", "ci"))
       if(show == "ci" & n_post <= 0) {
         stop("show = \"ci\" needs n_post > 0, to have a confidence interval.")
@@ -2069,7 +2073,7 @@ HMM <- R6Class(
       comp <- switch(what, tpm = "hid", delta = "hid", obspar = "obs")
       newdata <- cov_grid_2d(var = var, var2 = var2, obj = self, covs = covs,
                              formulas = self[[comp]]()$formulas(),
-                             n_grid = n_grid)
+                             n_grid = n_grid, padding = padding)
 
       n_states <- self$hid()$nstates()
 

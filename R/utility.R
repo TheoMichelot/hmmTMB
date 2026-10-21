@@ -197,11 +197,15 @@ cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid
 #' @param formulas List of model formulas
 #' @param n_grid Number of points along each axis, so the grid has
 #' \code{n_grid^2} rows
+#' @param padding Numeric vector of length 1 or 2 giving the amount to pad
+#' the 'var' and 'var2' ranges beyond the data. A single value is recycled to
+#' both axes, and a length-2 vector is interpreted as (padding in var,
+#' padding in var2). Defaults to 0.
 #' 
 #' @return Data frame with \code{n_grid^2} rows and one column for each
 #' covariate
 cov_grid_2d <- function(var, var2, data = NULL, obj = NULL, covs = NULL,
-                        formulas, n_grid = 40) {
+                        formulas, n_grid = 40, padding = 0) {
   # Get data set
   if(is.null(data)) {
     data <- obj$obs()$data()
@@ -239,11 +243,16 @@ cov_grid_2d <- function(var, var2, data = NULL, obj = NULL, covs = NULL,
     }
   }
   
+  # Use same padding in both dimensions if only one provided
+  if(length(padding) == 1) {
+    padding <- c(padding, padding)
+  }
+  
   # Regular lattice, with 'var' varying fastest
-  grid1 <- seq(min(all_vars[[var]], na.rm = TRUE),
-               max(all_vars[[var]], na.rm = TRUE), length = n_grid)
-  grid2 <- seq(min(all_vars[[var2]], na.rm = TRUE),
-               max(all_vars[[var2]], na.rm = TRUE), length = n_grid)
+  grid1 <- seq(min(all_vars[[var]], na.rm = TRUE) - padding[1],
+               max(all_vars[[var]], na.rm = TRUE) + padding[1], length = n_grid)
+  grid2 <- seq(min(all_vars[[var2]], na.rm = TRUE) - padding[2],
+               max(all_vars[[var2]], na.rm = TRUE) + padding[2], length = n_grid)
   new_data <- matrix(NA, nrow = n_grid^2, ncol = ncol(all_vars))
   colnames(new_data) <- colnames(all_vars)
   new_data <- as.data.frame(new_data)

@@ -11,7 +11,8 @@ cov_grid_2d(
   obj = NULL,
   covs = NULL,
   formulas,
-  n_grid = 40
+  n_grid = 40,
+  padding = 0
 )
 }
 \arguments{
@@ -30,6 +31,11 @@ not given}
 
 \item{n_grid}{Number of points along each axis, so the grid has
 \code{n_grid^2} rows}
+
+\item{padding}{Numeric vector of length 1 or 2 giving the amount to pad
+the 'var' and 'var2' ranges beyond the data. A single value is recycled to
+both axes, and a length-2 vector is interpreted as (padding in var,
+padding in var2). Defaults to 0.}
 }
 \value{
 Data frame with \code{n_grid^2} rows and one column for each

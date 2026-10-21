@@ -1294,7 +1294,8 @@ model separately, where it shows their combined effect.
   level = 0.95,
   show = "mle",
   too_far = 0.1,
-  contour = TRUE
+  contour = TRUE,
+  padding = 0
 )}
     \if{html}{\out{</div>}}
   }
@@ -1332,6 +1333,10 @@ this, as a proportion of the plot's diagonal, are left blank. This is
 the corners of the lattice are usually extrapolation. Set to 0 to show
 the whole rectangle (default: 0.1).}
       \item{\code{contour}}{Add contour lines over the surface (default: TRUE)}
+      \item{\code{padding}}{Numeric vector of length 1 or 2 giving the amount to pad
+the 'var' and 'var2' ranges beyond the data. A single value is recycled to
+both axes, and a length-2 vector is interpreted as (padding in var,
+padding in var2). Defaults to 0.}
     }
     \if{html}{\out{</div>}}
   }
