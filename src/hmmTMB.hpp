@@ -7,6 +7,7 @@
 #include<memory>
 #include<iostream>
 #include "dist.hpp"
+#include "likelihood.hpp"
 
 //' Compute Negative log-likelihood for HMM
  template<class Type>
@@ -27,13 +28,18 @@
    DATA_SPARSE_MATRIX(S_obs); // penalty matrix
    DATA_VECTOR(log_det_S_obs); // log-determinant of penalty matrix
    DATA_IMATRIX(ncol_re_obs); // number of columns of S and X_re for each random effect
+   DATA_MATRIX(L_obs); // maps log smoothing parameters to log penalty weights
+   DATA_IVECTOR(gmrf_obs); // for each penalty, 1 if its log-determinant is computed here
    // model matrices for hidden state process
    DATA_SPARSE_MATRIX(X_fe_hid); // design matrix for fixed effects
    DATA_SPARSE_MATRIX(X_re_hid); // design matrix for random effects
    DATA_SPARSE_MATRIX(S_hid); // penalty matrix
    DATA_VECTOR(log_det_S_hid); // log-determinant of penalty matrix
    DATA_IMATRIX(ncol_re_hid); // number of columns of S and X_re for each random effect
+   DATA_MATRIX(L_hid); // maps log smoothing parameters to log penalty weights
+   DATA_IVECTOR(gmrf_hid); // for each penalty, 1 if its log-determinant is computed here
    DATA_INTEGER(include_smooths); // > 0 = include penalty in likelihood evaluation
+   DATA_INTEGER(bw); // bandwidth of the banded forward algorithm (< 2 = exact)
    DATA_IVECTOR(ref_tpm); // indices of reference transition probabilities
    DATA_IVECTOR(ref_delta0); // indices of reference initial probabilities
    // prior information 
@@ -51,6 +57,16 @@
    PARAMETER_VECTOR(coeff_re_obs); // observation parameters (random effects)
    PARAMETER_VECTOR(coeff_re_hid); // state process parameters (random effects)
    
+   // Which AD framework the package was compiled with. A parameter-dependent
+   // sparse log-determinant is only affordable under TMBad, so the R side
+   // checks this before fitting a model with a Gaussian field.
+#ifdef TMBAD_FRAMEWORK
+   int ad_framework = 1;
+#else
+   int ad_framework = 0;
+#endif
+   REPORT(ad_framework);
+
    // Number of observed variables
    int n_var = distcode.size();
    // Number of data rows
@@ -231,6 +247,7 @@
    //========================//
    // Compute log-likelihood //
    //========================//
+   if (bw < 2) {
    // Initialise log-likelihood
    matrix<Type> phi(delta0.row(0));
    Type sumphi = 0;
@@ -250,6 +267,10 @@
      llk = llk + log(sumphi);
      phi = phi / sumphi;
    }
+   } else {
+     // Banded forward algorithm, see likelihood.hpp
+     llk = llk + forward_alg_banded(prob, tpm_array, delta0, ID, bw);
+   }
    
    // Negative log-likelihood
    Type nllk = -llk;
@@ -259,58 +280,14 @@
    //===================//
    // Are there smooths in the observation model?
    if((include_smooths > 0) & (ncol_re_obs(0, 0) > -1)) {
-     // Index in matrix S
-     int S_start = 0;
-     
-     // Loop over smooths
-     for(int i = 0; i < ncol_re_obs.cols(); i++) {
-       // Size of penalty matrix for this smooth
-       int Sn = ncol_re_obs(1, i) - ncol_re_obs(0, i) + 1;
-       
-       // Penalty matrix for this smooth
-       Eigen::SparseMatrix<Type> this_S = S_obs.block(S_start, S_start, Sn, Sn);
-       
-       // Coefficients for this smooth
-       vector<Type> this_coeff_re = coeff_re_obs.segment(ncol_re_obs(0, i) - 1, Sn);
-       
-       // Add penalty
-       nllk = nllk +
-         Type(0.5) * Sn * log(2*M_PI) -
-         Type(0.5) * log_det_S_obs(i) -
-         Type(0.5) * Sn * log_lambda_obs(i) +
-         Type(0.5) * exp(log_lambda_obs(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
-       
-       // Increase index
-       S_start = S_start + Sn;
-     }
+     nllk += smooth_penalty(S_obs, coeff_re_obs, log_lambda_obs, ncol_re_obs,
+                            L_obs, log_det_S_obs, gmrf_obs);
    }
    
    // Are there smooths in the hidden state model?
    if((include_smooths > 0) & (ncol_re_hid(0, 0) > -1)) {
-     // Index in matrix S
-     int S_start = 0;
-     
-     // Loop over smooths
-     for(int i = 0; i < ncol_re_hid.cols(); i++) {
-       // Size of penalty matrix for this smooth
-       int Sn = ncol_re_hid(1, i) - ncol_re_hid(0, i) + 1;
-       
-       // Penalty matrix for this smooth
-       Eigen::SparseMatrix<Type> this_S = S_hid.block(S_start, S_start, Sn, Sn);
-       
-       // Coefficients for this smooth
-       vector<Type> this_coeff_re = coeff_re_hid.segment(ncol_re_hid(0, i) - 1, Sn);
-       
-       // Add penalty
-       nllk = nllk +
-         Type(0.5) * Sn * log(2*M_PI) -
-         Type(0.5) * log_det_S_hid(i) -
-         Type(0.5) * Sn * log_lambda_hid(i) +
-         Type(0.5) * exp(log_lambda_hid(i)) * density::GMRF(this_S).Quadform(this_coeff_re);
-       
-       // Increase index
-       S_start = S_start + Sn;
-     }
+     nllk += smooth_penalty(S_hid, coeff_re_hid, log_lambda_hid, ncol_re_hid,
+                            L_hid, log_det_S_hid, gmrf_hid);
    }
    
    return nllk;

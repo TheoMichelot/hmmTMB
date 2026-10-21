@@ -129,6 +129,7 @@ cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid
   }
   
   # Get data frame of covariates
+  var_names <- cov_names_in_data(var_names, data)
   all_vars <- data[, var_names, drop = FALSE]
   
   # Grid of covariate
@@ -169,6 +170,95 @@ cov_grid <- function(var, data = NULL, obj = NULL, covs = NULL, formulas, n_grid
   for(var_name in colnames(new_data)) {
     if(var_name != var)
       new_data[, var_name] <- covs[, var_name]
+  }
+  
+  return(new_data)
+}
+
+#' Grid of covariate values over two covariates
+#' 
+#' The two-dimensional counterpart of \code{\link{cov_grid}}, used by
+#' \code{HMM$plot_2d()}. Both \code{var} and \code{var2} are varied over a
+#' regular \code{n_grid} by \code{n_grid} lattice spanning their ranges in the
+#' data, and every other covariate is held at one value, as in
+#' \code{\link{cov_grid}}: the one given in \code{covs}, otherwise the mean of
+#' a numeric covariate or the first level of a factor.
+#' 
+#' The lattice is regular because that is what \code{ggplot2::geom_raster()}
+#' needs, and \code{var} varies fastest, so that the result can be reshaped
+#' into a matrix column by column.
+#' 
+#' @param var Name of the first covariate, on the x axis
+#' @param var2 Name of the second covariate, on the y axis
+#' @param data Data frame of covariate values
+#' @param obj HMM model object, used to find the covariates if \code{data} is
+#' not given
+#' @param covs Optional named list of values for the other covariates
+#' @param formulas List of model formulas
+#' @param n_grid Number of points along each axis, so the grid has
+#' \code{n_grid^2} rows
+#' 
+#' @return Data frame with \code{n_grid^2} rows and one column for each
+#' covariate
+cov_grid_2d <- function(var, var2, data = NULL, obj = NULL, covs = NULL,
+                        formulas, n_grid = 40) {
+  # Get data set
+  if(is.null(data)) {
+    data <- obj$obs()$data()
+  }
+  
+  # Get covariate names
+  if(!is.null(obj)) {
+    var_names <- unique(c(rapply(obj$obs()$formulas(), all.vars),
+                          rapply(obj$hid()$formulas(), all.vars)))
+  } else {
+    var_names <- unique(rapply(formulas, all.vars))
+  }
+  # If no covariates in the model, only take the two being plotted
+  if(length(var_names) == 0) {
+    var_names <- c(var, var2)
+  }
+  
+  # pi might appear in the formulas (e.g. used in periodic terms)
+  if(any(var_names == "pi")) {
+    data$pi <- pi
+  }
+  
+  var_names <- unique(c(var, var2, cov_names_in_data(var_names, data)))
+  missing <- setdiff(var_names, colnames(data))
+  if(length(missing) > 0) {
+    stop("Not a covariate in the data: ", paste(missing, collapse = ", "))
+  }
+  all_vars <- data[, var_names, drop = FALSE]
+  
+  # A surface needs two numeric axes
+  for(v in c(var, var2)) {
+    if(!is.numeric(all_vars[[v]])) {
+      stop("'", v, "' is not numeric, so it cannot be an axis of a surface. ",
+           "Use HMM$plot() for a factor covariate.")
+    }
+  }
+  
+  # Regular lattice, with 'var' varying fastest
+  grid1 <- seq(min(all_vars[[var]], na.rm = TRUE),
+               max(all_vars[[var]], na.rm = TRUE), length = n_grid)
+  grid2 <- seq(min(all_vars[[var2]], na.rm = TRUE),
+               max(all_vars[[var2]], na.rm = TRUE), length = n_grid)
+  new_data <- matrix(NA, nrow = n_grid^2, ncol = ncol(all_vars))
+  colnames(new_data) <- colnames(all_vars)
+  new_data <- as.data.frame(new_data)
+  new_data[, var] <- rep(grid1, times = n_grid)
+  new_data[, var2] <- rep(grid2, each = n_grid)
+  
+  # Select value for the other covariates, as cov_grid() does
+  for(var_name in setdiff(colnames(new_data), c(var, var2))) {
+    if(!is.null(covs[[var_name]])) {
+      new_data[, var_name] <- covs[[var_name]]
+    } else {
+      col <- all_vars[[var_name]]
+      new_data[, var_name] <- if(is.numeric(col)) mean(col, na.rm = TRUE)
+                              else unique(col)[1]
+    }
   }
   
   return(new_data)
@@ -377,6 +467,67 @@ prec_to_cov <- function(prec_mat)
                    "estimates may be unreliable)."))
   }
   return(cov_mat)
+}
+
+#' Covariate names that are columns of the data
+#' 
+#' \code{all.vars()} on a model formula returns every symbol in it, including
+#' objects a smooth refers to through its \code{xt} argument -- the mesh of an
+#' SPDE field, say -- which are not covariates and are not columns of the data.
+#' Those have to be dropped before the data are indexed by name.
+#' 
+#' A covariate that is genuinely missing from the data is dropped here too,
+#' rather than raising an error. \code{mgcv::gam()} reports it when the design
+#' matrices are built, which is a better place to say so.
+#' 
+#' @param var_names Character vector of names found in the formulas
+#' @param data Data frame
+#' 
+#' @return The subset of \code{var_names} naming columns of \code{data}
+cov_names_in_data <- function(var_names, data) {
+  return(intersect(var_names, colnames(data)))
+}
+
+#' Sample from a multivariate normal given its precision matrix
+#' 
+#' Draws from N(mu, Q^-1) through a sparse Cholesky factorisation of the
+#' precision, Q = P' L L' P, as x = mu + P' L^-T z with z standard normal.
+#' Nothing is inverted, and the Cholesky factor keeps the sparsity of Q, so the
+#' cost is that of the factorisation rather than of a dense inverse followed by
+#' a dense n-by-n Cholesky of it. A dense precision is simply a sparse matrix
+#' with no zeros, and costs no more this way than the old route did.
+#' 
+#' If \code{prec_mat} is not positive definite -- a fit that has not converged,
+#' or a singular Hessian -- there is no Cholesky factor to be had, and this
+#' falls back on \code{\link{prec_to_cov}}, which uses a generalised inverse
+#' and warns.
+#' 
+#' @param n Number of samples
+#' @param mu Mean vector
+#' @param prec_mat Precision matrix, sparse or dense
+#' 
+#' @return Matrix with one row for each sample and one column for each element
+#' of \code{mu}
+#' 
+#' @importFrom stats rnorm
+rmvn_prec <- function(n, mu, prec_mat) {
+  # Matrix:: throughout: 'solve' has to be Matrix's S4 generic to dispatch on
+  # the Cholesky factor, and the rest follows it for consistency
+  if(!inherits(prec_mat, "Matrix")) {
+    prec_mat <- Matrix::Matrix(prec_mat, sparse = TRUE)
+  }
+  Q <- Matrix::forceSymmetric(prec_mat)
+  L <- tryCatch(Matrix::Cholesky(Q, super = TRUE, LDL = FALSE),
+                error = function(e) NULL, warning = function(w) NULL)
+  
+  # Not positive definite: no factor, so fall back on inverting it
+  if(is.null(L)) {
+    return(rmvn(n = n, mu = mu, V = prec_to_cov(prec_mat)))
+  }
+  
+  z <- matrix(rnorm(length(mu) * n), nrow = length(mu), ncol = n)
+  z <- Matrix::solve(L, Matrix::solve(L, z, system = "Lt"), system = "Pt")
+  return(t(as.matrix(z) + mu))
 }
 
 #' Find s(, bs = "re") terms in formula

@@ -415,6 +415,10 @@ This function transforms the smoothness parameter of
 each smooth term into a standard deviation, given by 
 SD = 1/sqrt(lambda). It is particularly helpful to get the
 standard deviations of independent normal random effects.
+A smooth with its own parameterisation rather than a single smoothness
+parameter -- a Gaussian field, whose parameters are already a marginal
+standard deviation and a range -- has no such transformation and
+returns NA; read those off \code{lambda()} directly.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Observation$sd_re()}\if{html}{\out{</div>}}
 }

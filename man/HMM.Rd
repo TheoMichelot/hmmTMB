@@ -89,6 +89,9 @@ hmm$predict(what = "tpm", n_post = 1000)
 \item \href{#method-HMM-fixpar}{\code{HMM$fixpar()}}
 \item \href{#method-HMM-coeff_array}{\code{HMM$coeff_array()}}
 \item \href{#method-HMM-lambda}{\code{HMM$lambda()}}
+\item \href{#method-HMM-bw}{\code{HMM$bw()}}
+\item \href{#method-HMM-update_bw}{\code{HMM$update_bw()}}
+\item \href{#method-HMM-check_bw}{\code{HMM$check_bw()}}
 \item \href{#method-HMM-update_par}{\code{HMM$update_par()}}
 \item \href{#method-HMM-sd_re}{\code{HMM$sd_re()}}
 \item \href{#method-HMM-par}{\code{HMM$par()}}
@@ -118,6 +121,7 @@ hmm$predict(what = "tpm", n_post = 1000)
 \item \href{#method-HMM-plot_ts}{\code{HMM$plot_ts()}}
 \item \href{#method-HMM-plot_dist}{\code{HMM$plot_dist()}}
 \item \href{#method-HMM-plot}{\code{HMM$plot()}}
+\item \href{#method-HMM-plot_2d}{\code{HMM$plot_2d()}}
 \item \href{#method-HMM-AIC_marginal}{\code{HMM$AIC_marginal()}}
 \item \href{#method-HMM-AIC_conditional}{\code{HMM$AIC_conditional()}}
 \item \href{#method-HMM-print_obspar}{\code{HMM$print_obspar()}}
@@ -133,7 +137,14 @@ hmm$predict(what = "tpm", n_post = 1000)
 \subsection{Method \code{new()}}{
 Create new HMM object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HMM$new(obs = NULL, hid = NULL, file = NULL, init = NULL, fixpar = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HMM$new(
+  obs = NULL,
+  hid = NULL,
+  file = NULL,
+  init = NULL,
+  fixpar = NULL,
+  bw = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -161,6 +172,10 @@ element is set to NA) or estimated to a common value (using integers or
 factor levels).don See examples in the vignettes, and check the TMB
 documentation to understand the inner workings (argument \code{map}
 of \code{TMB::MakeADFun()}).}
+
+\item{\code{bw}}{Bandwidth of the banded forward algorithm; see
+\code{HMM$update_bw()}. Defaults to \code{NULL}, i.e. 15 if the model
+contains a Gaussian field and 0 (the exact algorithm) otherwise.}
 }
 \if{html}{\out{</div>}}
 }
@@ -346,6 +361,83 @@ Smoothness parameters
 \if{html}{\out{<div class="r">}}\preformatted{HMM$lambda()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-bw"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-bw}{}}}
+\subsection{Method \code{bw()}}{
+Bandwidth of the forward algorithm (0 = exact)
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$bw()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-update_bw"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-update_bw}{}}}
+\subsection{Method \code{update_bw()}}{
+Update bandwidth of the forward algorithm
+
+The exact forward algorithm accumulates log-likelihood contributions
+that are each conditional on the entire process history, so the Hessian
+with respect to latent variables spread over time is dense. The banded
+algorithm of Fischer (2026) splits the time series into blocks of length
+\code{bw} and truncates that conditioning at the previous block, which
+makes the Hessian banded. It costs about twice as much per evaluation,
+and its error decays geometrically in \code{bw}, because an ergodic
+Markov chain forgets its initial condition exponentially fast.
+
+A model containing a Gaussian field is banded by default, with
+\code{bw = 15}, because the dense Hessian of the exact algorithm
+defeats the sparsity such a field exists to provide. That default is a
+starting point, not an answer: the bandwidth needed depends on how fast
+the chain forgets its initial condition, so a persistent chain needs
+more. Every other model is exact by default. Use
+\code{HMM$check_bw()} to choose a bandwidth before fitting, and
+afterwards check that raising it leaves the estimates unchanged.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$update_bw(bw = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{bw}}{Non-negative integer (0 = exact algorithm), or \code{NULL} to
+choose automatically. This is TMB data, so changing it discards any
+existing setup, which is rebuilt on the next \code{setup()} or
+\code{fit()}.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-check_bw"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-check_bw}{}}}
+\subsection{Method \code{check_bw()}}{
+Profile the log-likelihood against the bandwidth
+
+Evaluates the joint log-likelihood at the model's current parameter
+values for a range of bandwidths. A sensible bandwidth is the smallest
+one beyond which the value no longer changes appreciably. This is
+evaluated at fixed parameters, so it is cheap and does not require the
+model to be re-fitted.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$check_bw(bws = seq(5, 40, by = 5), silent = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{bws}}{Vector of bandwidths (each at least 2)}
+
+\item{\code{silent}}{Logical. If TRUE (default), TMB tracing output is hidden.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Data frame with columns \code{bw} and \code{llk}, including a
+row with \code{bw = Inf} for the exact forward algorithm.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HMM-update_par"></a>}}
@@ -1113,6 +1205,92 @@ then this is ignored,; if plotting obspar then indices of states to plot}
 \item{\code{n_post}}{Number of posterior simulations to use when computing
 confidence intervals; default: 1000. See \code{predict} function for
 more detail.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A ggplot object
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HMM-plot_2d"></a>}}
+\if{latex}{\out{\hypertarget{method-HMM-plot_2d}{}}}
+\subsection{Method \code{plot_2d()}}{
+Plot a model component over two covariates
+
+The two-dimensional counterpart of \code{HMM$plot()}, for a model
+containing a bivariate smooth such as \code{s(x, y)} or a Gaussian
+field. \code{HMM$plot()} varies one covariate and holds the rest fixed,
+which for a bivariate term shows a single slice through the surface;
+this varies both and draws the surface itself.
+
+Nothing here is specific to any basis. The surface is built from
+\code{HMM$predict()} on a lattice of covariate values, so it works for
+any smoother hmmTMB accepts on two covariates -- a thin plate spline,
+\code{bs = "gp"}, an SPDE field -- and for two covariates that enter the
+model separately, where it shows their combined effect.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HMM$plot_2d(
+  what,
+  var,
+  var2,
+  covs = NULL,
+  i = NULL,
+  j = NULL,
+  n_grid = 50,
+  n_post = 0,
+  level = 0.95,
+  show = "mle",
+  too_far = 0.1,
+  contour = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{what}}{Name of model component to plot: one of "tpm" (transition
+probabilities), "delta" (stationary state probabilities), or "obspar"
+(state-dependent observation parameters)}
+
+\item{\code{var}}{Name of covariate on the x-axis}
+
+\item{\code{var2}}{Name of covariate on the y-axis}
+
+\item{\code{covs}}{Optional named list for values of covariates other than
+\code{var} and \code{var2}. If not specified, the mean is used for
+numeric covariates and the first level for factors.}
+
+\item{\code{i}}{If plotting tpm then rows of tpm; if plotting delta then
+indices of states; if plotting obspar then full names of parameters}
+
+\item{\code{j}}{If plotting tpm then columns of tpm; if plotting delta then
+ignored; if plotting obspar then indices of states}
+
+\item{\code{n_grid}}{Number of points along each axis, so the surface is
+evaluated at \code{n_grid^2} points (default: 50). At the default
+\code{n_post = 0} this costs one prediction and is cheap even for a
+fine grid; with posterior simulation the cost grows with
+\code{n_grid^2}, so it is worth lowering there.}
+
+\item{\code{n_post}}{Number of posterior simulations used for the confidence
+interval. Defaults to 0, i.e. the maximum likelihood surface only,
+because a surface needs many more evaluation points than a curve does.
+Required to be positive for \code{show = "ci"}.}
+
+\item{\code{level}}{Confidence level, when \code{n_post > 0} (default: 0.95)}
+
+\item{\code{show}}{What the fill shows: "mle" for the estimate itself, or "ci"
+for the width of the confidence interval, which says where the surface
+is well determined and where it is not.}
+
+\item{\code{too_far}}{Cells whose distance from the nearest observation exceeds
+this, as a proportion of the plot's diagonal, are left blank. This is
+\code{mgcv::exclude.too.far()}, and it matters for a bivariate smooth:
+the corners of the lattice are usually extrapolation. Set to 0 to show
+the whole rectangle (default: 0.1).}
+
+\item{\code{contour}}{Add contour lines over the surface (default: TRUE)}
 }
 \if{html}{\out{</div>}}
 }
