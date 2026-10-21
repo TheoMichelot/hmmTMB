@@ -9,7 +9,18 @@ Authors@R: c(
          email = "theo.michelot@dal.ca"),
   person(given = "Richard",
          family = "Glennie",
-         role = c("aut", "ctb")))
+         role = "aut"),
+  person(given = "Jan-Ole",
+         family = "Fischer",
+         role = "ctb",
+         comment = "SPDE smooths"),
+  person(given = "Duncan",
+         family = "Cameron-Steinke",
+         role = "ctb",
+         comment = "Forecast class"),
+  person(given = "Pauline",
+         family = "Rocu",
+         role = "ctb"))
 Maintainer: Theo Michelot <theo.michelot@dal.ca>
 Description: Fitting hidden Markov models using automatic differentiation 
   and Laplace approximation, allowing for fast inference and flexible covariate
@@ -21,7 +32,6 @@ Depends: R6, mgcv, TMB, ggplot2
 Imports: Matrix, stringr, MASS, tmbstan, methods, fmesher
 LinkingTo: TMB, RcppEigen
 Suggests: 
-    fmesher,
     rstan,
     testthat,
     knitr,

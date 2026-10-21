@@ -27,7 +27,14 @@ Useful links:
 Authors:
 \itemize{
   \item Theo Michelot \email{theo.michelot@dal.ca}
-  \item Richard Glennie [contributor]
+  \item Richard Glennie
+}
+
+Other contributors:
+\itemize{
+  \item Jan-Ole Fischer (SPDE smooths) [contributor]
+  \item Duncan Cameron-Steinke (Forecast class) [contributor]
+  \item Pauline Rocu [contributor]
 }
 
 }
