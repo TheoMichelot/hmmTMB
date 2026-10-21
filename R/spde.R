@@ -88,7 +88,7 @@
 #' \code{fmesher::fm_fem()}. \code{alpha = 2} throughout, so the Matern
 #' smoothness is \eqn{\nu = 2 - d/2}: \eqn{\nu = 1} in two dimensions and
 #' \eqn{\nu = 3/2} in one. The range is \eqn{\rho = \sqrt{8\nu}/\kappa} and
-#' the marginal standard deviation is
+#' the marginal variance is
 #' \eqn{\sigma^2 = \Gamma(\nu) / (\Gamma(2)(4\pi)^{d/2}\kappa^{2\nu}\tau^2)},
 #' which is \eqn{1/(\tau^2\kappa^2 4\pi)} in two dimensions and
 #' \eqn{1/(4\tau^2\kappa^3)} in one. Both constants depend on \eqn{d}, so the
@@ -130,6 +130,10 @@
 #' @references
 #' Lindgren, F., Rue, H. and Lindstrom, J. (2011). An explicit link between
 #' Gaussian fields and Gaussian Markov random fields. \emph{JRSS-B} 73, 423-498.
+#'
+#' Miller, D. L., Glennie, R., & Seaton, A. E. (2020). Understanding the 
+#' stochastic partial differential equation approach to smoothing. \emph{Journal 
+#' of Agricultural, Biological and Environmental Statistics}, 25(1), 1-16.
 #'
 #' Fischer, J.-O. (2026). Fast and scalable inference in hidden Markov models
 #' with Gaussian fields.

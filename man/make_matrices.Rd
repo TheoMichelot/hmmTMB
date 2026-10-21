@@ -33,7 +33,8 @@ A list of
   \item L Matrix with log(lambda) = L * theta, mapping the smoothing
   parameters of each smooth to the weights of its penalties (mgcv's
   convention). It is the identity unless a smooth combines several
-  penalties through fewer parameters.
+  penalties through fewer parameters. See \code{?mgcv::smooth.construct} 
+  for details.
   \item gmrf For each penalty, 1 if its log-determinant depends on the
   parameters and so has to be computed inside the likelihood, and 0 if the
   penalty is a fixed matrix scaled by exp(theta)
