@@ -10,7 +10,7 @@ the observation model from a hidden Markov model.
 \examples{
 
 ## ------------------------------------------------
-## Method `Observation$new`
+## Method `Observation$new()`
 ## ------------------------------------------------
 
 # Load data set from MSwM package
@@ -37,7 +37,7 @@ obs <- Observation$new(data = energy,
                        formula = f)
 
 ## ------------------------------------------------
-## Method `Observation$par`
+## Method `Observation$par()`
 ## ------------------------------------------------
 
 # Load data set from MSwM package
@@ -61,7 +61,7 @@ obs$update_coeff_fe(coeff_fe = c(3, 2, 6, -2, log(2), log(2)))
 obs$par(t = c(1, 10, 20))
 
 ## ------------------------------------------------
-## Method `Observation$suggest_initial`
+## Method `Observation$suggest_initial()`
 ## ------------------------------------------------
 
 # Load data set from MSwM package
@@ -89,56 +89,57 @@ obs$par()
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-Observation-new}{\code{Observation$new()}}
-\item \href{#method-Observation-data}{\code{Observation$data()}}
-\item \href{#method-Observation-dists}{\code{Observation$dists()}}
-\item \href{#method-Observation-nstates}{\code{Observation$nstates()}}
-\item \href{#method-Observation-par}{\code{Observation$par()}}
-\item \href{#method-Observation-par_alt}{\code{Observation$par_alt()}}
-\item \href{#method-Observation-inipar}{\code{Observation$inipar()}}
-\item \href{#method-Observation-coeff_fe}{\code{Observation$coeff_fe()}}
-\item \href{#method-Observation-coeff_re}{\code{Observation$coeff_re()}}
-\item \href{#method-Observation-X_fe}{\code{Observation$X_fe()}}
-\item \href{#method-Observation-X_re}{\code{Observation$X_re()}}
-\item \href{#method-Observation-lambda}{\code{Observation$lambda()}}
-\item \href{#method-Observation-sd_re}{\code{Observation$sd_re()}}
-\item \href{#method-Observation-formulas}{\code{Observation$formulas()}}
-\item \href{#method-Observation-terms}{\code{Observation$terms()}}
-\item \href{#method-Observation-obs_var}{\code{Observation$obs_var()}}
-\item \href{#method-Observation-known_states}{\code{Observation$known_states()}}
-\item \href{#method-Observation-fixpar}{\code{Observation$fixpar()}}
-\item \href{#method-Observation-empty}{\code{Observation$empty()}}
-\item \href{#method-Observation-gam_args}{\code{Observation$gam_args()}}
-\item \href{#method-Observation-update_par}{\code{Observation$update_par()}}
-\item \href{#method-Observation-update_coeff_fe}{\code{Observation$update_coeff_fe()}}
-\item \href{#method-Observation-update_coeff_re}{\code{Observation$update_coeff_re()}}
-\item \href{#method-Observation-update_X_fe}{\code{Observation$update_X_fe()}}
-\item \href{#method-Observation-update_X_re}{\code{Observation$update_X_re()}}
-\item \href{#method-Observation-update_lambda}{\code{Observation$update_lambda()}}
-\item \href{#method-Observation-update_data}{\code{Observation$update_data()}}
-\item \href{#method-Observation-update_fixpar}{\code{Observation$update_fixpar()}}
-\item \href{#method-Observation-make_mat}{\code{Observation$make_mat()}}
-\item \href{#method-Observation-make_newdata_grid}{\code{Observation$make_newdata_grid()}}
-\item \href{#method-Observation-n2w}{\code{Observation$n2w()}}
-\item \href{#method-Observation-w2n}{\code{Observation$w2n()}}
-\item \href{#method-Observation-linpred}{\code{Observation$linpred()}}
-\item \href{#method-Observation-obs_probs}{\code{Observation$obs_probs()}}
-\item \href{#method-Observation-cdf}{\code{Observation$cdf()}}
-\item \href{#method-Observation-suggest_initial}{\code{Observation$suggest_initial()}}
-\item \href{#method-Observation-plot_dist}{\code{Observation$plot_dist()}}
-\item \href{#method-Observation-formulation}{\code{Observation$formulation()}}
-\item \href{#method-Observation-print}{\code{Observation$print()}}
-\item \href{#method-Observation-clone}{\code{Observation$clone()}}
-}
+  \itemize{
+    \item \href{#method-Observation-initialize}{\code{Observation$new()}}
+    \item \href{#method-Observation-data}{\code{Observation$data()}}
+    \item \href{#method-Observation-dists}{\code{Observation$dists()}}
+    \item \href{#method-Observation-nstates}{\code{Observation$nstates()}}
+    \item \href{#method-Observation-par}{\code{Observation$par()}}
+    \item \href{#method-Observation-par_alt}{\code{Observation$par_alt()}}
+    \item \href{#method-Observation-inipar}{\code{Observation$inipar()}}
+    \item \href{#method-Observation-coeff_fe}{\code{Observation$coeff_fe()}}
+    \item \href{#method-Observation-coeff_re}{\code{Observation$coeff_re()}}
+    \item \href{#method-Observation-X_fe}{\code{Observation$X_fe()}}
+    \item \href{#method-Observation-X_re}{\code{Observation$X_re()}}
+    \item \href{#method-Observation-lambda}{\code{Observation$lambda()}}
+    \item \href{#method-Observation-sd_re}{\code{Observation$sd_re()}}
+    \item \href{#method-Observation-formulas}{\code{Observation$formulas()}}
+    \item \href{#method-Observation-terms}{\code{Observation$terms()}}
+    \item \href{#method-Observation-obs_var}{\code{Observation$obs_var()}}
+    \item \href{#method-Observation-known_states}{\code{Observation$known_states()}}
+    \item \href{#method-Observation-fixpar}{\code{Observation$fixpar()}}
+    \item \href{#method-Observation-empty}{\code{Observation$empty()}}
+    \item \href{#method-Observation-gam_args}{\code{Observation$gam_args()}}
+    \item \href{#method-Observation-update_par}{\code{Observation$update_par()}}
+    \item \href{#method-Observation-update_coeff_fe}{\code{Observation$update_coeff_fe()}}
+    \item \href{#method-Observation-update_coeff_re}{\code{Observation$update_coeff_re()}}
+    \item \href{#method-Observation-update_X_fe}{\code{Observation$update_X_fe()}}
+    \item \href{#method-Observation-update_X_re}{\code{Observation$update_X_re()}}
+    \item \href{#method-Observation-update_lambda}{\code{Observation$update_lambda()}}
+    \item \href{#method-Observation-update_data}{\code{Observation$update_data()}}
+    \item \href{#method-Observation-update_fixpar}{\code{Observation$update_fixpar()}}
+    \item \href{#method-Observation-make_mat}{\code{Observation$make_mat()}}
+    \item \href{#method-Observation-make_newdata_grid}{\code{Observation$make_newdata_grid()}}
+    \item \href{#method-Observation-n2w}{\code{Observation$n2w()}}
+    \item \href{#method-Observation-w2n}{\code{Observation$w2n()}}
+    \item \href{#method-Observation-linpred}{\code{Observation$linpred()}}
+    \item \href{#method-Observation-obs_probs}{\code{Observation$obs_probs()}}
+    \item \href{#method-Observation-cdf}{\code{Observation$cdf()}}
+    \item \href{#method-Observation-suggest_initial}{\code{Observation$suggest_initial()}}
+    \item \href{#method-Observation-plot_dist}{\code{Observation$plot_dist()}}
+    \item \href{#method-Observation-formulation}{\code{Observation$formulation()}}
+    \item \href{#method-Observation-print}{\code{Observation$print()}}
+    \item \href{#method-Observation-clone}{\code{Observation$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Observation-new"></a>}}
-\if{latex}{\out{\hypertarget{method-Observation-new}{}}}
-\subsection{Method \code{new()}}{
-Create new Observation object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$new(
+\if{html}{\out{<a id="method-Observation-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-Observation-initialize}{}}}
+\subsection{\code{Observation$new()}}{
+  Create new Observation object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$new(
   data = NULL,
   dists,
   formulas = NULL,
@@ -146,58 +147,52 @@ Create new Observation object
   par,
   fixpar = NULL,
   gam_args = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{Data frame containing response variables (named in dists
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{data}}{Data frame containing response variables (named in dists
 and par) and covariates (named in formulas). Note that "state" is a
 reserved column name, used to pass known states to the model (semi-
 supervised learning).}
-
-\item{\code{dists}}{Named list of distribution names for each data stream,
+      \item{\code{dists}}{Named list of distribution names for each data stream,
 with the following options: beta, binom, cat, dir, exp, foldednorm, 
 gamma, gamma2, lnorm, mvnorm, nbinom, norm, pois, t, truncnorm, tweedie, 
 vm, weibull, wrpcauchy, zibinom, zigamma, zigamma2, zinbinom, zipois, 
 zoibeta, ztnbinom, ztpois. See vignette about list of distributions for 
 more details, e.g., list of parameters for each distribution.}
-
-\item{\code{formulas}}{List of formulas for observation parameters. This should
+      \item{\code{formulas}}{List of formulas for observation parameters. This should
 be a nested list, where the outer list has one element for each
 observed variable, and the inner lists have one element for each
 parameter. Any parameter that is not included is assumed to have the
 formula ~1. By default, all parameters have the formula ~1 (i.e., no
 covariate effects).}
-
-\item{\code{n_states}}{Number of states (optional). If not provided, the number
+      \item{\code{n_states}}{Number of states (optional). If not provided, the number
 of states is derived from the length of entries of \code{par}.}
-
-\item{\code{par}}{List of initial observation parameters. This should
+      \item{\code{par}}{List of initial observation parameters. This should
 be a nested list, where the outer list has one element for each
 observed variable, and the inner lists have one element for each
 parameter. The choice of good initial values can be important, especially
 for complex models; the package vignettes discuss approaches to selecting
 them (e.g., see \code{Observation$suggest_initial()}).}
-
-\item{\code{fixpar}}{List with optional elements "obs" (fixed coefficients for
+      \item{\code{fixpar}}{List with optional elements "obs" (fixed coefficients for
 observation parameters), and "lambda_obs" (fixed smoothness parameters),
 Each element is a named vector of coefficients that should either be 
 fixed (if the corresponding element is set to NA) or estimated to a 
 common value (using integers or factor levels).}
-
-\item{\code{gam_args}}{Named list of arguments passed to \code{mgcv::gam()} in
+      \item{\code{gam_args}}{Named list of arguments passed to \code{mgcv::gam()} in
 \code{Observation$make_mat()}, e.g., "knots". Use at your own risk.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new Observation object
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{# Load data set from MSwM package
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new Observation object
+  }
+  \subsection{Examples}{
+    \if{html}{\out{<div class="r example copy">}}
+    \preformatted{# Load data set from MSwM package
 data(energy, package = "MSwM")
 
 # Initial observation parameters
@@ -220,79 +215,82 @@ obs <- Observation$new(data = energy,
                        par = par0, 
                        formula = f)
 }
-\if{html}{\out{</div>}}
-
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-data"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-data}{}}}
-\subsection{Method \code{data()}}{
-Data frame
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$data()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$data()}}{
+  Data frame
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$data()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-dists"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-dists}{}}}
-\subsection{Method \code{dists()}}{
-List of distributions
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$dists()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$dists()}}{
+  List of distributions
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$dists()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-nstates"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-nstates}{}}}
-\subsection{Method \code{nstates()}}{
-Number of states
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$nstates()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$nstates()}}{
+  Number of states
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$nstates()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-par"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-par}{}}}
-\subsection{Method \code{par()}}{
-Parameters on natural scale
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$par(t = 1, full_names = TRUE, linpred = NULL, as_list = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{t}}{Time index or vector of time indices; default t = 1. If 
+\subsection{\code{Observation$par()}}{
+  Parameters on natural scale
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$par(t = 1, full_names = TRUE, linpred = NULL, as_list = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{t}}{Time index or vector of time indices; default t = 1. If 
 t = "all", then return observation parameters for all time points.}
-
-\item{\code{full_names}}{Logical. If TRUE, the rows of the output
+      \item{\code{full_names}}{Logical. If TRUE, the rows of the output
 are named in the format "variable.parameter" (default). If
 FALSE, the rows are names in the format "parameter". The
 latter is used in various internal functions, when the parameters
 need to be passed on to an R function.}
-
-\item{\code{linpred}}{Optional custom linear predictor.}
-
-\item{\code{as_list}}{Logical. If TRUE, the output is a nested list with three levels:
+      \item{\code{linpred}}{Optional custom linear predictor.}
+      \item{\code{as_list}}{Logical. If TRUE, the output is a nested list with three levels:
 (1) time step, (2) observed variable, (3) observation parameter. If FALSE (default),
 the output is an array with one row for each observation parameter, one column for
 each state, and one slice for each time step.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Array of parameters with one row for each observation parameter, 
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Array of parameters with one row for each observation parameter, 
 one column for each state, and one slice for each time step. (See as_list
 argument for alternative output format.)
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{# Load data set from MSwM package
+  }
+  \subsection{Examples}{
+    \if{html}{\out{<div class="r example copy">}}
+    \preformatted{# Load data set from MSwM package
 data(energy, package = "MSwM")
 
 # Initial observation parameters
@@ -312,104 +310,116 @@ obs$update_coeff_fe(coeff_fe = c(3, 2, 6, -2, log(2), log(2)))
 # Observation parameter values for given data rows
 obs$par(t = c(1, 10, 20))
 }
-\if{html}{\out{</div>}}
-
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-par_alt"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-par_alt}{}}}
-\subsection{Method \code{par_alt()}}{
-Alternative parameter output
+\subsection{\code{Observation$par_alt()}}{
+  Alternative parameter output
 
 This function is only useful for the categorical and multivariate
 normal distributions, and it formats the parameters in a slightly nicer
 way.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$par_alt(var = NULL, t = 1)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of observation variable for which parameters are 
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$par_alt(var = NULL, t = 1)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{var}}{Name of observation variable for which parameters are 
 required. By default, the first variable in 'dists' is used.}
-
-\item{\code{t}}{Time index for covariate values. Only one value should be
+      \item{\code{t}}{Time index for covariate values. Only one value should be
 provided.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    List of distribution parameters, with one element for each state
+  }
 }
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-List of distribution parameters, with one element for each state
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-inipar"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-inipar}{}}}
-\subsection{Method \code{inipar()}}{
-Return initial parameter values supplied
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$inipar()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$inipar()}}{
+  Return initial parameter values supplied
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$inipar()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-coeff_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-coeff_fe}{}}}
-\subsection{Method \code{coeff_fe()}}{
-Fixed effect parameters on working scale
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$coeff_fe()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$coeff_fe()}}{
+  Fixed effect parameters on working scale
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$coeff_fe()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-coeff_re"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-coeff_re}{}}}
-\subsection{Method \code{coeff_re()}}{
-Random effect parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$coeff_re()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$coeff_re()}}{
+  Random effect parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$coeff_re()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-X_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-X_fe}{}}}
-\subsection{Method \code{X_fe()}}{
-Fixed effect design matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$X_fe()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$X_fe()}}{
+  Fixed effect design matrix
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$X_fe()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-X_re"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-X_re}{}}}
-\subsection{Method \code{X_re()}}{
-Random effect design matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$X_re()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$X_re()}}{
+  Random effect design matrix
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$X_re()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-lambda"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-lambda}{}}}
-\subsection{Method \code{lambda()}}{
-Smoothness parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$lambda()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$lambda()}}{
+  Smoothness parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$lambda()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-sd_re"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-sd_re}{}}}
-\subsection{Method \code{sd_re()}}{
-Standard deviation of smooth terms
+\subsection{\code{Observation$sd_re()}}{
+  Standard deviation of smooth terms
 
 This function transforms the smoothness parameter of
 each smooth term into a standard deviation, given by 
@@ -419,279 +429,312 @@ A smooth with its own parameterisation rather than a single smoothness
 parameter -- a Gaussian field, whose parameters are already a marginal
 standard deviation and a range -- has no such transformation and
 returns NA; read those off \code{lambda()} directly.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$sd_re()}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$sd_re()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-formulas"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-formulas}{}}}
-\subsection{Method \code{formulas()}}{
-List of model formulas for observation model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$formulas(raw = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$formulas()}}{
+  List of model formulas for observation model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$formulas(raw = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{raw}}{Logical. If FALSE, returns the nested list created by
+make_formulas (default). If TRUE, returns formulas passed as input.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{raw}}{Logical. If FALSE, returns the nested list created by
-make_formulas (default). If TRUE, returns formulas passed as input.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-terms"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-terms}{}}}
-\subsection{Method \code{terms()}}{
-Terms of model formulas
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$terms()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$terms()}}{
+  Terms of model formulas
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$terms()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-obs_var"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-obs_var}{}}}
-\subsection{Method \code{obs_var()}}{
-Data frame of response variables
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$obs_var(expand = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$obs_var()}}{
+  Data frame of response variables
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$obs_var(expand = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{expand}}{If TRUE, then multivariate variables in observations are 
+expanded to be univariate, creating extra columns.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Data frame of observation variables
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{expand}}{If TRUE, then multivariate variables in observations are 
-expanded to be univariate, creating extra columns.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Data frame of observation variables
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-known_states"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-known_states}{}}}
-\subsection{Method \code{known_states()}}{
-Vector of known states
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$known_states(mat = TRUE)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$known_states()}}{
+  Vector of known states
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$known_states(mat = TRUE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{mat}}{Logical.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{mat}}{Logical.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-fixpar"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-fixpar}{}}}
-\subsection{Method \code{fixpar()}}{
-Fixed parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$fixpar(all = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{all}}{Logical. If FALSE, only user-specified fixed
+\subsection{\code{Observation$fixpar()}}{
+  Fixed parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$fixpar(all = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{all}}{Logical. If FALSE, only user-specified fixed
 parameters are returned, but not parameters that are fixed
 for some other reason (e.g., size of binomial distribution)}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-empty"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-empty}{}}}
-\subsection{Method \code{empty()}}{
-Empty model? (for simulation only)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$empty()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$empty()}}{
+  Empty model? (for simulation only)
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$empty()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-gam_args"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-gam_args}{}}}
-\subsection{Method \code{gam_args()}}{
-Extra arguments for mgcv::gam (passed to make_matrices)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$gam_args()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$gam_args()}}{
+  Extra arguments for mgcv::gam (passed to make_matrices)
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$gam_args()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_par"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-update_par}{}}}
-\subsection{Method \code{update_par()}}{
-Update parameters
+\subsection{\code{Observation$update_par()}}{
+  Update parameters
 
 Updates the 'par' attribute to the list passed as input,
 and updates the intercept elements of 'coeff_fe' using
 the list passed as input
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_par(par)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$update_par(par)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{par}}{New list of parameters}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{par}}{New list of parameters}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_coeff_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-update_coeff_fe}{}}}
-\subsection{Method \code{update_coeff_fe()}}{
-Update coefficients for fixed effect parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_coeff_fe(coeff_fe)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$update_coeff_fe()}}{
+  Update coefficients for fixed effect parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$update_coeff_fe(coeff_fe)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{coeff_fe}}{New vector of coefficients for fixed effect 
+parameters}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{coeff_fe}}{New vector of coefficients for fixed effect 
-parameters}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_coeff_re"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-update_coeff_re}{}}}
-\subsection{Method \code{update_coeff_re()}}{
-Update random effect parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_coeff_re(coeff_re)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$update_coeff_re()}}{
+  Update random effect parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$update_coeff_re(coeff_re)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{coeff_re}}{New vector of coefficients for random effect 
+parameters}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{coeff_re}}{New vector of coefficients for random effect 
-parameters}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_X_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-update_X_fe}{}}}
-\subsection{Method \code{update_X_fe()}}{
-Update fixed effect design matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_X_fe(X_fe)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$update_X_fe()}}{
+  Update fixed effect design matrix
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$update_X_fe(X_fe)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{X_fe}}{New fixed effect design matrix}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{X_fe}}{New fixed effect design matrix}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_X_re"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-update_X_re}{}}}
-\subsection{Method \code{update_X_re()}}{
-Update random effect design matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_X_re(X_re)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$update_X_re()}}{
+  Update random effect design matrix
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$update_X_re(X_re)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{X_re}}{New random effect design matrix}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{X_re}}{New random effect design matrix}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_lambda"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-update_lambda}{}}}
-\subsection{Method \code{update_lambda()}}{
-Update smoothness parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_lambda(lambda)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$update_lambda()}}{
+  Update smoothness parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$update_lambda(lambda)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{lambda}}{New smoothness parameter vector}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{lambda}}{New smoothness parameter vector}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_data"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-update_data}{}}}
-\subsection{Method \code{update_data()}}{
-Update data
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_data(data)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$update_data()}}{
+  Update data
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$update_data(data)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{data}}{New data frame}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{New data frame}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-update_fixpar"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-update_fixpar}{}}}
-\subsection{Method \code{update_fixpar()}}{
-Update information about fixed parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$update_fixpar(fixpar)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$update_fixpar()}}{
+  Update information about fixed parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$update_fixpar(fixpar)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{fixpar}}{New list of fixed parameters, in the same format
+expected by Observation$new()}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{fixpar}}{New list of fixed parameters, in the same format
-expected by Observation$new()}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-make_mat"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-make_mat}{}}}
-\subsection{Method \code{make_mat()}}{
-Make model matrices
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$make_mat(new_data = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{new_data}}{Optional new data set, including covariates for which
+\subsection{\code{Observation$make_mat()}}{
+  Make model matrices
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$make_mat(new_data = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{new_data}}{Optional new data set, including covariates for which
 the design matrices should be created. If this argument is not specified,
 the design matrices are based on the original data frame.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A list with elements:
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A list with elements:
 \describe{
   \item{X_fe}{Design matrix for fixed effects}
   \item{X_re}{Design matrix for random effects}
@@ -699,150 +742,162 @@ A list with elements:
   \item{ncol_fe}{Number of columns of X_fe for each parameter}
   \item{ncol_re}{Number of columns of X_re and S for each random effect}
 }
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-make_newdata_grid"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-make_newdata_grid}{}}}
-\subsection{Method \code{make_newdata_grid()}}{
-Design matrices for grid of covariates
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$make_newdata_grid(var, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of variable}
-
-\item{\code{covs}}{Optional named list for values of covariates (other than 'var') 
+\subsection{\code{Observation$make_newdata_grid()}}{
+  Design matrices for grid of covariates
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$make_newdata_grid(var, covs = NULL, n_grid = 1000)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{var}}{Name of variable}
+      \item{\code{covs}}{Optional named list for values of covariates (other than 'var') 
 that should be used in the plot (or dataframe with single row). If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
-
-\item{\code{n_grid}}{Grid size (number of points). Default: 1000.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A list with the same elements as the output of make_mat, 
+      \item{\code{n_grid}}{Grid size (number of points). Default: 1000.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A list with the same elements as the output of make_mat, 
 plus a data frame of covariates values.
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-n2w"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-n2w}{}}}
-\subsection{Method \code{n2w()}}{
-Natural to working parameter transformation
+\subsection{\code{Observation$n2w()}}{
+  Natural to working parameter transformation
 
 This function applies the link functions of the distribution
 parameters, to transform parameters from their natural scale
 to the working scale (i.e., linear predictor scale)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$n2w(par)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$n2w(par)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{par}}{List of parameters on natural scale}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Vector of parameters on working scale
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{par}}{List of parameters on natural scale}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Vector of parameters on working scale
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-w2n"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-w2n}{}}}
-\subsection{Method \code{w2n()}}{
-Working to natural parameter transformation
+\subsection{\code{Observation$w2n()}}{
+  Working to natural parameter transformation
 
 This function applies the inverse link functions of the
 distribution parameters, to transform parameters from the working
 scale (i.e., linear predictor scale) to their natural scale.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$w2n(wpar)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$w2n(wpar)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{wpar}}{Vector of parameters on working scale}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    List of parameters on natural scale
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{wpar}}{Vector of parameters on working scale}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-List of parameters on natural scale
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-linpred"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-linpred}{}}}
-\subsection{Method \code{linpred()}}{
-Compute linear predictor
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$linpred()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$linpred()}}{
+  Compute linear predictor
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$linpred()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-obs_probs"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-obs_probs}{}}}
-\subsection{Method \code{obs_probs()}}{
-Observation likelihoods
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$obs_probs(data = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$obs_probs()}}{
+  Observation likelihoods
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$obs_probs(data = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{data}}{Optional dataframe to include in form of obs_var() output}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Matrix of likelihoods of observations, with one row for each 
+time step, and one column for each state.
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{Optional dataframe to include in form of obs_var() output}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Matrix of likelihoods of observations, with one row for each 
-time step, and one column for each state.
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-cdf"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-cdf}{}}}
-\subsection{Method \code{cdf()}}{
-Cumulative probabilities of observations
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$cdf()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-List of cumulative probabilities, with one element for each
+\subsection{\code{Observation$cdf()}}{
+  Cumulative probabilities of observations
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$cdf()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    List of cumulative probabilities, with one element for each
 observed variable. Matrix rows correspond to time steps, and columns
 correspond to states.
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-suggest_initial"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-suggest_initial}{}}}
-\subsection{Method \code{suggest_initial()}}{
-Suggest initial observation parameters
+\subsection{\code{Observation$suggest_initial()}}{
+  Suggest initial observation parameters
 
 The K-means algorithm is used to define clusters of observations
 (supposed to approximate the HMM states). Then, for each cluster,
 the \code{parapprox} function of the relevant \code{Dist} object
 is used to obtain parameter values.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$suggest_initial()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-List of initial parameters for each observation variable
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{# Load data set from MSwM package
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$suggest_initial()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    List of initial parameters for each observation variable
+  }
+  \subsection{Examples}{
+    \if{html}{\out{<div class="r example copy">}}
+    \preformatted{# Load data set from MSwM package
 data(energy, package = "MSwM")
 
 # Initial observation parameters
@@ -865,79 +920,84 @@ par0_new
 obs$update_par(par = par0_new)
 obs$par()
 }
-\if{html}{\out{</div>}}
-
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-plot_dist"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-plot_dist}{}}}
-\subsection{Method \code{plot_dist()}}{
-Plot histogram of data and pdfs
+\subsection{\code{Observation$plot_dist()}}{
+  Plot histogram of data and pdfs
 
 Plot histogram of observations for the variable specified by the argument name, 
 overlaid with the pdf of the specified distribution for that data stream. 
 Helpful to select initial parameter values for model fitting, or to visualise 
 fitted state-dependent distributions.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$plot_dist(var = NULL, weights = NULL, t = 1)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of response variable for which the histogram
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$plot_dist(var = NULL, weights = NULL, t = 1)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{var}}{Name of response variable for which the histogram
 and pdfs should be plotted.}
-
-\item{\code{weights}}{Optional vector of length the number of pdfs that are
+      \item{\code{weights}}{Optional vector of length the number of pdfs that are
 plotted. Useful to visualise a mixture of distributions weighted by the
 proportion of time spent in the different states.}
+      \item{\code{t}}{Index of time step to use for covariates (default: 1).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A ggplot object
+  }
+}
 
-\item{\code{t}}{Index of time step to use for covariates (default: 1).}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A ggplot object
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-formulation"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-formulation}{}}}
-\subsection{Method \code{formulation()}}{
-Print model formulation
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$formulation()}\if{html}{\out{</div>}}
+\subsection{\code{Observation$formulation()}}{
+  Print model formulation
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$formulation()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-print"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-print}{}}}
-\subsection{Method \code{print()}}{
-Print Observation object
+\subsection{\code{Observation$print()}}{
+  Print Observation object
 Check constructor arguments
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$print()}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$print()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Observation-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-Observation-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Observation$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{Observation$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Observation$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

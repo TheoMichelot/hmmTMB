@@ -9,38 +9,39 @@ functions for a probability distribution.
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-Dist-new}{\code{Dist$new()}}
-\item \href{#method-Dist-name}{\code{Dist$name()}}
-\item \href{#method-Dist-pdf}{\code{Dist$pdf()}}
-\item \href{#method-Dist-cdf}{\code{Dist$cdf()}}
-\item \href{#method-Dist-rng}{\code{Dist$rng()}}
-\item \href{#method-Dist-link}{\code{Dist$link()}}
-\item \href{#method-Dist-invlink}{\code{Dist$invlink()}}
-\item \href{#method-Dist-npar}{\code{Dist$npar()}}
-\item \href{#method-Dist-parnames}{\code{Dist$parnames()}}
-\item \href{#method-Dist-parapprox}{\code{Dist$parapprox()}}
-\item \href{#method-Dist-fixed}{\code{Dist$fixed()}}
-\item \href{#method-Dist-code}{\code{Dist$code()}}
-\item \href{#method-Dist-name_long}{\code{Dist$name_long()}}
-\item \href{#method-Dist-set_npar}{\code{Dist$set_npar()}}
-\item \href{#method-Dist-set_parnames}{\code{Dist$set_parnames()}}
-\item \href{#method-Dist-set_code}{\code{Dist$set_code()}}
-\item \href{#method-Dist-pdf_apply}{\code{Dist$pdf_apply()}}
-\item \href{#method-Dist-rng_apply}{\code{Dist$rng_apply()}}
-\item \href{#method-Dist-par_alt}{\code{Dist$par_alt()}}
-\item \href{#method-Dist-n2w}{\code{Dist$n2w()}}
-\item \href{#method-Dist-w2n}{\code{Dist$w2n()}}
-\item \href{#method-Dist-clone}{\code{Dist$clone()}}
-}
+  \itemize{
+    \item \href{#method-Dist-initialize}{\code{Dist$new()}}
+    \item \href{#method-Dist-name}{\code{Dist$name()}}
+    \item \href{#method-Dist-pdf}{\code{Dist$pdf()}}
+    \item \href{#method-Dist-cdf}{\code{Dist$cdf()}}
+    \item \href{#method-Dist-rng}{\code{Dist$rng()}}
+    \item \href{#method-Dist-link}{\code{Dist$link()}}
+    \item \href{#method-Dist-invlink}{\code{Dist$invlink()}}
+    \item \href{#method-Dist-npar}{\code{Dist$npar()}}
+    \item \href{#method-Dist-parnames}{\code{Dist$parnames()}}
+    \item \href{#method-Dist-parapprox}{\code{Dist$parapprox()}}
+    \item \href{#method-Dist-fixed}{\code{Dist$fixed()}}
+    \item \href{#method-Dist-code}{\code{Dist$code()}}
+    \item \href{#method-Dist-name_long}{\code{Dist$name_long()}}
+    \item \href{#method-Dist-set_npar}{\code{Dist$set_npar()}}
+    \item \href{#method-Dist-set_parnames}{\code{Dist$set_parnames()}}
+    \item \href{#method-Dist-set_code}{\code{Dist$set_code()}}
+    \item \href{#method-Dist-pdf_apply}{\code{Dist$pdf_apply()}}
+    \item \href{#method-Dist-rng_apply}{\code{Dist$rng_apply()}}
+    \item \href{#method-Dist-par_alt}{\code{Dist$par_alt()}}
+    \item \href{#method-Dist-n2w}{\code{Dist$n2w()}}
+    \item \href{#method-Dist-w2n}{\code{Dist$w2n()}}
+    \item \href{#method-Dist-clone}{\code{Dist$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Dist-new"></a>}}
-\if{latex}{\out{\hypertarget{method-Dist-new}{}}}
-\subsection{Method \code{new()}}{
-Create a Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$new(
+\if{html}{\out{<a id="method-Dist-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-Dist-initialize}{}}}
+\subsection{\code{Dist$new()}}{
+  Create a Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$new(
   name,
   pdf,
   rng,
@@ -53,371 +54,399 @@ Create a Dist object
   fixed = NULL,
   name_long = name,
   par_alt = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{name}}{Name of distribution}
-
-\item{\code{pdf}}{Probability density/mass function of the distribution
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{name}}{Name of distribution}
+      \item{\code{pdf}}{Probability density/mass function of the distribution
 (e.g. \code{dnorm} for normal distribution).}
-
-\item{\code{rng}}{Random generator function of the distribution (e.g.
+      \item{\code{rng}}{Random generator function of the distribution (e.g.
 \code{rnorm} for normal distribution).}
-
-\item{\code{cdf}}{Cumulative distribution function of the distribution
+      \item{\code{cdf}}{Cumulative distribution function of the distribution
 (e.g., \code{pnorm} for normal distribution). This is used to compute
 pseudo-residuals.}
-
-\item{\code{link}}{Named list of link functions for distribution parameters}
-
-\item{\code{invlink}}{Named list of inverse link functions for distribution
+      \item{\code{link}}{Named list of link functions for distribution parameters}
+      \item{\code{invlink}}{Named list of inverse link functions for distribution
 parameters}
-
-\item{\code{npar}}{Number of parameters of the distribution}
-
-\item{\code{parnames}}{Character vector with name of each parameter}
-
-\item{\code{parapprox}}{Function that takes a sample and produces approximate 
+      \item{\code{npar}}{Number of parameters of the distribution}
+      \item{\code{parnames}}{Character vector with name of each parameter}
+      \item{\code{parapprox}}{Function that takes a sample and produces approximate 
 values for the unknown parameters}
-
-\item{\code{fixed}}{Vector with element for each parameter which is TRUE if 
+      \item{\code{fixed}}{Vector with element for each parameter which is TRUE if 
 parameter is fixed}
-
-\item{\code{name_long}}{Long version of the name of the distribution, possibly 
+      \item{\code{name_long}}{Long version of the name of the distribution, possibly 
 more user-readable than name.}
-
-\item{\code{par_alt}}{Function that takes a vector of the distribution
+      \item{\code{par_alt}}{Function that takes a vector of the distribution
 parameters as input and returns them in a different format. Only
 relevant for some distributions (e.g., MVN, where the SDs and
 correlations can be reformatted into a covariance matrix)}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new Dist object
+  }
 }
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new Dist object
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-name"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-name}{}}}
-\subsection{Method \code{name()}}{
-Return name of Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$name()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$name()}}{
+  Return name of Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$name()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-pdf"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-pdf}{}}}
-\subsection{Method \code{pdf()}}{
-Return pdf of Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$pdf()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$pdf()}}{
+  Return pdf of Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$pdf()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-cdf"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-cdf}{}}}
-\subsection{Method \code{cdf()}}{
-Return cdf of Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$cdf()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$cdf()}}{
+  Return cdf of Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$cdf()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-rng"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-rng}{}}}
-\subsection{Method \code{rng()}}{
-Return random generator function of Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$rng()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$rng()}}{
+  Return random generator function of Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$rng()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-link"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-link}{}}}
-\subsection{Method \code{link()}}{
-Return link function of Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$link()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$link()}}{
+  Return link function of Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$link()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-invlink"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-invlink}{}}}
-\subsection{Method \code{invlink()}}{
-Return inverse link function of Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$invlink()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$invlink()}}{
+  Return inverse link function of Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$invlink()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-npar"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-npar}{}}}
-\subsection{Method \code{npar()}}{
-Return number of parameters of Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$npar()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$npar()}}{
+  Return number of parameters of Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$npar()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-parnames"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-parnames}{}}}
-\subsection{Method \code{parnames()}}{
-Return names of parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$parnames()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$parnames()}}{
+  Return names of parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$parnames()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-parapprox"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-parapprox}{}}}
-\subsection{Method \code{parapprox()}}{
-Return function that approximates parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$parapprox()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$parapprox()}}{
+  Return function that approximates parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$parapprox()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-fixed"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-fixed}{}}}
-\subsection{Method \code{fixed()}}{
-Return which parameters are fixed
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$fixed()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$fixed()}}{
+  Return which parameters are fixed
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$fixed()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-code"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-code}{}}}
-\subsection{Method \code{code()}}{
-Return code of Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$code()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$code()}}{
+  Return code of Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$code()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-name_long"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-name_long}{}}}
-\subsection{Method \code{name_long()}}{
-Human-readable name of Dist object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$name_long()}\if{html}{\out{</div>}}
+\subsection{\code{Dist$name_long()}}{
+  Human-readable name of Dist object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$name_long()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-set_npar"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-set_npar}{}}}
-\subsection{Method \code{set_npar()}}{
-Set number of parameters this distribution has
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$set_npar(new_npar)}\if{html}{\out{</div>}}
+\subsection{\code{Dist$set_npar()}}{
+  Set number of parameters this distribution has
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$set_npar(new_npar)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{new_npar}}{Number of parameters}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{new_npar}}{Number of parameters}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-set_parnames"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-set_parnames}{}}}
-\subsection{Method \code{set_parnames()}}{
-Set parameter names
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$set_parnames(new_parnames)}\if{html}{\out{</div>}}
+\subsection{\code{Dist$set_parnames()}}{
+  Set parameter names
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$set_parnames(new_parnames)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{new_parnames}}{Parameter names}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{new_parnames}}{Parameter names}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-set_code"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-set_code}{}}}
-\subsection{Method \code{set_code()}}{
-Set distribution code
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$set_code(new_code)}\if{html}{\out{</div>}}
+\subsection{\code{Dist$set_code()}}{
+  Set distribution code
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$set_code(new_code)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{new_code}}{Distribution code}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{new_code}}{Distribution code}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-pdf_apply"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-pdf_apply}{}}}
-\subsection{Method \code{pdf_apply()}}{
-Evaluate probability density/mass function
+\subsection{\code{Dist$pdf_apply()}}{
+  Evaluate probability density/mass function
 
 This method is used in the Dist$obs_probs() method. It is a wrapper 
 around Dist$pdf(), which prepares the parameters and passes them to the 
 function.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$pdf_apply(x, par, log = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{Value at which the function should be evaluated}
-
-\item{\code{par}}{Vector of parameters. The entries should be named if
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$pdf_apply(x, par, log = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{x}}{Value at which the function should be evaluated}
+      \item{\code{par}}{Vector of parameters. The entries should be named if
 they are not in the same order as expected by the R function. (E.g.
 shape/scale rather than shape/rate for gamma distribution.)}
-
-\item{\code{log}}{Logical. If TRUE, the log-density is returned. 
+      \item{\code{log}}{Logical. If TRUE, the log-density is returned. 
 Default: FALSE.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Probability density/mass function evaluated at x for
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Probability density/mass function evaluated at x for
 parameters par
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-rng_apply"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-rng_apply}{}}}
-\subsection{Method \code{rng_apply()}}{
-Random number generator
+\subsection{\code{Dist$rng_apply()}}{
+  Random number generator
 
 This method is a wrapper around Dist$rng(), which prepares the parameters 
 and passes them to the function.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$rng_apply(n, par)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{n}}{Number of realisations to generate}
-
-\item{\code{par}}{Vector of parameters. The entries should be named if
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$rng_apply(n, par)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{n}}{Number of realisations to generate}
+      \item{\code{par}}{Vector of parameters. The entries should be named if
 they are not in the same order as expected by the R function. (E.g.
 shape/scale rather than shape/rate for gamma distribution.)}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Vector of \code{n} realisations of this distribution
+  }
 }
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Vector of \code{n} realisations of this distribution
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-par_alt"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-par_alt}{}}}
-\subsection{Method \code{par_alt()}}{
-Alternative parameter formatting
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$par_alt(par)}\if{html}{\out{</div>}}
+\subsection{\code{Dist$par_alt()}}{
+  Alternative parameter formatting
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$par_alt(par)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{par}}{Vector of distribution parameters}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Formatted parameters
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{par}}{Vector of distribution parameters}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Formatted parameters
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-n2w"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-n2w}{}}}
-\subsection{Method \code{n2w()}}{
-Natural to working parameter transformation
+\subsection{\code{Dist$n2w()}}{
+  Natural to working parameter transformation
 
 This method transforms parameters from the natural scale (i.e., their domain
 of definition) to the "working" or "linear predictor" scale (i.e., the real
 line). It is a wrapper for Dist$link().
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$n2w(par)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$n2w(par)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{par}}{List of parameters}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Vector of parameters on the working scale
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{par}}{List of parameters}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Vector of parameters on the working scale
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-w2n"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-w2n}{}}}
-\subsection{Method \code{w2n()}}{
-Working to natural parameter transformation
+\subsection{\code{Dist$w2n()}}{
+  Working to natural parameter transformation
 
 This method transforms parameters from the "working" or "linear predictor" 
 scale (i.e., the real line) to the natural scale (i.e., their domain
 of definition). It is a wrapper for Dist$invlink().
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$w2n(wpar, as_matrix = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{wpar}}{Vector of working parameters}
-
-\item{\code{as_matrix}}{Logical. If TRUE, the natural parameters are
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$w2n(wpar, as_matrix = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{wpar}}{Vector of working parameters}
+      \item{\code{as_matrix}}{Logical. If TRUE, the natural parameters are
 returned as a matrix with one row for each state and one column
 for each parameter. If FALSE, the natural parameters are returned
 as a list (default).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    List or matrix of parameters on natural scale
+  }
 }
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-List or matrix of parameters on natural scale
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dist-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-Dist-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Dist$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{Dist$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Dist$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

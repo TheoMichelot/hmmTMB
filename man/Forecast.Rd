@@ -9,7 +9,7 @@ Creates a forecast object from a fitted HMM model, projecting future state proba
 \examples{
 
 ## ------------------------------------------------
-## Method `Forecast$new`
+## Method `Forecast$new()`
 ## ------------------------------------------------
 
 \donttest{
@@ -73,65 +73,62 @@ hidden state and observation components it is built from.
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-Forecast-new}{\code{Forecast$new()}}
-\item \href{#method-Forecast-obs_par_forecast}{\code{Forecast$obs_par_forecast()}}
-\item \href{#method-Forecast-tpm_forecast}{\code{Forecast$tpm_forecast()}}
-\item \href{#method-Forecast-eval_range}{\code{Forecast$eval_range()}}
-\item \href{#method-Forecast-forecast_data}{\code{Forecast$forecast_data()}}
-\item \href{#method-Forecast-update_eval_range}{\code{Forecast$update_eval_range()}}
-\item \href{#method-Forecast-hidden_state_forecast}{\code{Forecast$hidden_state_forecast()}}
-\item \href{#method-Forecast-forecast_dists}{\code{Forecast$forecast_dists()}}
-\item \href{#method-Forecast-quantile}{\code{Forecast$quantile()}}
-\item \href{#method-Forecast-mean}{\code{Forecast$mean()}}
-\item \href{#method-Forecast-plot}{\code{Forecast$plot()}}
-\item \href{#method-Forecast-clone}{\code{Forecast$clone()}}
-}
+  \itemize{
+    \item \href{#method-Forecast-initialize}{\code{Forecast$new()}}
+    \item \href{#method-Forecast-obs_par_forecast}{\code{Forecast$obs_par_forecast()}}
+    \item \href{#method-Forecast-tpm_forecast}{\code{Forecast$tpm_forecast()}}
+    \item \href{#method-Forecast-eval_range}{\code{Forecast$eval_range()}}
+    \item \href{#method-Forecast-forecast_data}{\code{Forecast$forecast_data()}}
+    \item \href{#method-Forecast-update_eval_range}{\code{Forecast$update_eval_range()}}
+    \item \href{#method-Forecast-hidden_state_forecast}{\code{Forecast$hidden_state_forecast()}}
+    \item \href{#method-Forecast-forecast_dists}{\code{Forecast$forecast_dists()}}
+    \item \href{#method-Forecast-quantile}{\code{Forecast$quantile()}}
+    \item \href{#method-Forecast-mean}{\code{Forecast$mean()}}
+    \item \href{#method-Forecast-plot}{\code{Forecast$plot()}}
+    \item \href{#method-Forecast-clone}{\code{Forecast$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Forecast-new"></a>}}
-\if{latex}{\out{\hypertarget{method-Forecast-new}{}}}
-\subsection{Method \code{new()}}{
-Construct a forecast object.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$new(
+\if{html}{\out{<a id="method-Forecast-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-Forecast-initialize}{}}}
+\subsection{\code{Forecast$new()}}{
+  Construct a forecast object.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$new(
   hmm = NULL,
   n = NULL,
   forecast_data = NULL,
   preset_eval_range = NULL,
   starting_state_distribution = "last"
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{hmm}}{A fitted HMM object.}
-
-\item{\code{n}}{Forecast horizon: a whole number greater than zero. Ignored if
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{hmm}}{A fitted HMM object.}
+      \item{\code{n}}{Forecast horizon: a whole number greater than zero. Ignored if
 forecast_data is provided.}
-
-\item{\code{forecast_data}}{data.frame of future covariates / IDs.
+      \item{\code{forecast_data}}{data.frame of future covariates / IDs.
 Must include all covariates in fitted hmm.}
-
-\item{\code{preset_eval_range}}{Named list: elements are numeric vectors (univariate) or matrices
+      \item{\code{preset_eval_range}}{Named list: elements are numeric vectors (univariate) or matrices
 (multivariate, rows as dimension ex. mu1, mu2, columns as points).
 For any observation variable without an entry, a default grid of 100
 equally spaced points is used, spanning the range of the training data
 for that variable with each endpoint expanded outward by 10\% of its
 magnitude. A warning is issued whenever this default is applied, as
 the resulting grid may not suit the distribution's support.}
-
-\item{\code{starting_state_distribution}}{Distribution over states at the first
+      \item{\code{starting_state_distribution}}{Distribution over states at the first
 forecast step. Either a numeric vector of length nstates() that is
 non-negative and sums to 1, or one of "last" (state probabilities at
 the final training row, propagated one step) or "stationary" (the
 model's stationary distribution).}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-Algorithm overview
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    Algorithm overview
 \enumerate{
   \item Validate the arguments.
   \item Build or accept the future design matrix (\code{forecast_data}).
@@ -142,10 +139,9 @@ Algorithm overview
   \item Marginalise over states to obtain unconditional pdfs on the
         evaluation grid (\code{forecast_dists}).
 }
-}
-
-\subsection{Returns}{
-A \code{Forecast} object. Results are read back with the accessor
+  }
+  \subsection{Returns}{
+    A \code{Forecast} object. Results are read back with the accessor
 methods below, each invoked with \code{()}:
 \describe{
   \item{hidden_state_forecast}{Matrix of nstates rows by n forecast steps.}
@@ -157,11 +153,10 @@ methods below, each invoked with \code{()}:
 }
 The evaluation grid can be changed after construction with
 \code{update_eval_range()}, which recomputes \code{forecast_dists}.
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{\donttest{
-data(faithful)
+  }
+  \subsection{Examples}{
+    \if{html}{\out{<div class="r example copy">}}
+    \preformatted{data(faithful)
 
 # Create training and forecast data frames
 training_fraction <- 0.8
@@ -213,182 +208,199 @@ forecast <- Forecast$new(
 # Unconditional predictive densities: grid points x forecast steps
 dim(forecast$forecast_dists()$eruptions)
 }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
 
-}
-
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-obs_par_forecast"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-obs_par_forecast}{}}}
-\subsection{Method \code{obs_par_forecast()}}{
-Get predicted observation parameters.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$obs_par_forecast()}\if{html}{\out{</div>}}
+\subsection{\code{Forecast$obs_par_forecast()}}{
+  Get predicted observation parameters.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$obs_par_forecast()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-tpm_forecast"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-tpm_forecast}{}}}
-\subsection{Method \code{tpm_forecast()}}{
-Get predicted transition matrices.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$tpm_forecast()}\if{html}{\out{</div>}}
+\subsection{\code{Forecast$tpm_forecast()}}{
+  Get predicted transition matrices.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$tpm_forecast()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-eval_range"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-eval_range}{}}}
-\subsection{Method \code{eval_range()}}{
-Get the evaluation grid for each response variable.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$eval_range()}\if{html}{\out{</div>}}
+\subsection{\code{Forecast$eval_range()}}{
+  Get the evaluation grid for each response variable.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$eval_range()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-forecast_data"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-forecast_data}{}}}
-\subsection{Method \code{forecast_data()}}{
-Get the forecast data used for predictions.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$forecast_data()}\if{html}{\out{</div>}}
+\subsection{\code{Forecast$forecast_data()}}{
+  Get the forecast data used for predictions.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$forecast_data()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-update_eval_range"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-update_eval_range}{}}}
-\subsection{Method \code{update_eval_range()}}{
-Update the evaluation grid for forecast pdfs.
+\subsection{\code{Forecast$update_eval_range()}}{
+  Update the evaluation grid for forecast pdfs.
 This method reconfigures the evaluation range used to compute unconditional predictive pdfs.
 It validates the new eval_range, updates internal state, reinitializes forecast densities,
 and returns the object invisibly for chaining.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$update_eval_range(eval_range)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$update_eval_range(eval_range)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{eval_range}}{A named list specifying the new evaluation grid for each observation variable.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The Forecast object (invisibly), allowing method chaining.
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{eval_range}}{A named list specifying the new evaluation grid for each observation variable.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-The Forecast object (invisibly), allowing method chaining.
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-hidden_state_forecast"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-hidden_state_forecast}{}}}
-\subsection{Method \code{hidden_state_forecast()}}{
-Get the forward state probabilities.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$hidden_state_forecast()}\if{html}{\out{</div>}}
+\subsection{\code{Forecast$hidden_state_forecast()}}{
+  Get the forward state probabilities.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$hidden_state_forecast()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-forecast_dists"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-forecast_dists}{}}}
-\subsection{Method \code{forecast_dists()}}{
-Get the unconditional predictive pdfs.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$forecast_dists()}\if{html}{\out{</div>}}
+\subsection{\code{Forecast$forecast_dists()}}{
+  Get the unconditional predictive pdfs.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$forecast_dists()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-quantile"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-quantile}{}}}
-\subsection{Method \code{quantile()}}{
-Quantiles of forecast distribution
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$quantile(var, probs)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of observation variable, as character string}
-
-\item{\code{probs}}{Numeric vector of probabilities}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Data frame with one column for each quantile probability and
+\subsection{\code{Forecast$quantile()}}{
+  Quantiles of forecast distribution
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$quantile(var, probs)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{var}}{Name of observation variable, as character string}
+      \item{\code{probs}}{Numeric vector of probabilities}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Data frame with one column for each quantile probability and
 one row for each time step in the forecast
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-mean"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-mean}{}}}
-\subsection{Method \code{mean()}}{
-Mean of forecast distribution
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$mean(var)}\if{html}{\out{</div>}}
+\subsection{\code{Forecast$mean()}}{
+  Mean of forecast distribution
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$mean(var)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{var}}{Name of observation variable, as character string}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Numeric vector of means, with one element for each time
+step in the forecast
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of observation variable, as character string}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Numeric vector of means, with one element for each time
-step in the forecast
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-plot"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-plot}{}}}
-\subsection{Method \code{plot()}}{
-Plot forecast
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$plot(var, show_data = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of observation variable, as character string}
-
-\item{\code{show_data}}{Logical: should data be included in the plot?}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-The plot shows the mean of the forecast distribution over time
+\subsection{\code{Forecast$plot()}}{
+  Plot forecast
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$plot(var, show_data = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{var}}{Name of observation variable, as character string}
+      \item{\code{show_data}}{Logical: should data be included in the plot?}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    The plot shows the mean of the forecast distribution over time
 (red line), as well as bands of decreasing opacity for the 50%, 80%, and
 90% quantile intervals of the forecast distribution.
+  }
+  \subsection{Returns}{
+    A ggplot object
+  }
 }
 
-\subsection{Returns}{
-A ggplot object
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Forecast-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-Forecast-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Forecast$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{Forecast$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Forecast$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

@@ -23,50 +23,60 @@ export(strip_comments)
 importFrom(MASS,ginv)
 importFrom(Matrix,bdiag)
 importFrom(R6,R6Class)
-importFrom(TMB,MakeADFun)
-importFrom(TMB,sdreport)
-importFrom(ggplot2,aes)
-importFrom(ggplot2,after_stat)
-importFrom(ggplot2,coord_cartesian)
-importFrom(ggplot2,element_blank)
-importFrom(ggplot2,element_text)
-importFrom(ggplot2,facet_wrap)
-importFrom(ggplot2,geom_contour)
-importFrom(ggplot2,geom_errorbar)
-importFrom(ggplot2,geom_histogram)
-importFrom(ggplot2,geom_line)
-importFrom(ggplot2,geom_point)
-importFrom(ggplot2,geom_raster)
-importFrom(ggplot2,geom_ribbon)
-importFrom(ggplot2,geom_vline)
-importFrom(ggplot2,ggplot)
-importFrom(ggplot2,ggtitle)
-importFrom(ggplot2,label_bquote)
-importFrom(ggplot2,scale_colour_manual)
-importFrom(ggplot2,scale_fill_viridis_c)
-importFrom(ggplot2,scale_size_manual)
-importFrom(ggplot2,theme)
-importFrom(ggplot2,theme_light)
-importFrom(ggplot2,xlab)
-importFrom(ggplot2,ylab)
+importFrom(TMB,
+  MakeADFun,
+  sdreport
+)
+importFrom(ggplot2,
+  aes,
+  after_stat,
+  coord_cartesian,
+  element_blank,
+  element_text,
+  facet_wrap,
+  geom_contour,
+  geom_errorbar,
+  geom_histogram,
+  geom_line,
+  geom_point,
+  geom_raster,
+  geom_ribbon,
+  geom_vline,
+  ggplot,
+  ggtitle,
+  label_bquote,
+  scale_colour_manual,
+  scale_fill_viridis_c,
+  scale_size_manual,
+  theme,
+  theme_light,
+  xlab,
+  ylab
+)
 importFrom(methods,as)
-importFrom(mgcv,dmvn)
-importFrom(mgcv,exclude.too.far)
-importFrom(mgcv,gam)
-importFrom(mgcv,ldTweedie)
-importFrom(mgcv,rTweedie)
-importFrom(mgcv,rmvn)
-importFrom(stats,as.formula)
-importFrom(stats,nlminb)
-importFrom(stats,plogis)
-importFrom(stats,predict)
-importFrom(stats,qlogis)
-importFrom(stats,rnorm)
-importFrom(stats,runif)
-importFrom(stats,terms)
-importFrom(stats,update)
-importFrom(stringr,str_split)
-importFrom(stringr,str_split_fixed)
-importFrom(stringr,str_trim)
+importFrom(mgcv,
+  dmvn,
+  exclude.too.far,
+  gam,
+  ldTweedie,
+  rTweedie,
+  rmvn
+)
+importFrom(stats,
+  as.formula,
+  nlminb,
+  plogis,
+  predict,
+  qlogis,
+  rnorm,
+  runif,
+  terms,
+  update
+)
+importFrom(stringr,
+  str_split,
+  str_split_fixed,
+  str_trim
+)
 importFrom(tmbstan,tmbstan)
 useDynLib(hmmTMB, .registration = TRUE)

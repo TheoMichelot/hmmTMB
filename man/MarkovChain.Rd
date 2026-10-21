@@ -9,7 +9,7 @@ Contains the parameters and model formulas for the hidden process model.
 \examples{
 
 ## ------------------------------------------------
-## Method `MarkovChain$new`
+## Method `MarkovChain$new()`
 ## ------------------------------------------------
 
 # Load data set from MSwM package
@@ -34,56 +34,57 @@ hid <- MarkovChain$new(data = energy, n_states = 2,
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-MarkovChain-new}{\code{MarkovChain$new()}}
-\item \href{#method-MarkovChain-formula}{\code{MarkovChain$formula()}}
-\item \href{#method-MarkovChain-formulas}{\code{MarkovChain$formulas()}}
-\item \href{#method-MarkovChain-tpm}{\code{MarkovChain$tpm()}}
-\item \href{#method-MarkovChain-ref}{\code{MarkovChain$ref()}}
-\item \href{#method-MarkovChain-ref_mat}{\code{MarkovChain$ref_mat()}}
-\item \href{#method-MarkovChain-ref_delta0}{\code{MarkovChain$ref_delta0()}}
-\item \href{#method-MarkovChain-coeff_fe}{\code{MarkovChain$coeff_fe()}}
-\item \href{#method-MarkovChain-delta}{\code{MarkovChain$delta()}}
-\item \href{#method-MarkovChain-delta0}{\code{MarkovChain$delta0()}}
-\item \href{#method-MarkovChain-stationary}{\code{MarkovChain$stationary()}}
-\item \href{#method-MarkovChain-fixpar}{\code{MarkovChain$fixpar()}}
-\item \href{#method-MarkovChain-coeff_re}{\code{MarkovChain$coeff_re()}}
-\item \href{#method-MarkovChain-X_fe}{\code{MarkovChain$X_fe()}}
-\item \href{#method-MarkovChain-X_re}{\code{MarkovChain$X_re()}}
-\item \href{#method-MarkovChain-lambda}{\code{MarkovChain$lambda()}}
-\item \href{#method-MarkovChain-sd_re}{\code{MarkovChain$sd_re()}}
-\item \href{#method-MarkovChain-nstates}{\code{MarkovChain$nstates()}}
-\item \href{#method-MarkovChain-terms}{\code{MarkovChain$terms()}}
-\item \href{#method-MarkovChain-unique_ID}{\code{MarkovChain$unique_ID()}}
-\item \href{#method-MarkovChain-initial_state}{\code{MarkovChain$initial_state()}}
-\item \href{#method-MarkovChain-empty}{\code{MarkovChain$empty()}}
-\item \href{#method-MarkovChain-gam_args}{\code{MarkovChain$gam_args()}}
-\item \href{#method-MarkovChain-update_tpm}{\code{MarkovChain$update_tpm()}}
-\item \href{#method-MarkovChain-update_coeff_fe}{\code{MarkovChain$update_coeff_fe()}}
-\item \href{#method-MarkovChain-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
-\item \href{#method-MarkovChain-update_X_fe}{\code{MarkovChain$update_X_fe()}}
-\item \href{#method-MarkovChain-update_X_re}{\code{MarkovChain$update_X_re()}}
-\item \href{#method-MarkovChain-update_delta0}{\code{MarkovChain$update_delta0()}}
-\item \href{#method-MarkovChain-update_lambda}{\code{MarkovChain$update_lambda()}}
-\item \href{#method-MarkovChain-update_fixpar}{\code{MarkovChain$update_fixpar()}}
-\item \href{#method-MarkovChain-make_mat}{\code{MarkovChain$make_mat()}}
-\item \href{#method-MarkovChain-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
-\item \href{#method-MarkovChain-tpm2par}{\code{MarkovChain$tpm2par()}}
-\item \href{#method-MarkovChain-par2tpm}{\code{MarkovChain$par2tpm()}}
-\item \href{#method-MarkovChain-linpred}{\code{MarkovChain$linpred()}}
-\item \href{#method-MarkovChain-simulate}{\code{MarkovChain$simulate()}}
-\item \href{#method-MarkovChain-formulation}{\code{MarkovChain$formulation()}}
-\item \href{#method-MarkovChain-print}{\code{MarkovChain$print()}}
-\item \href{#method-MarkovChain-clone}{\code{MarkovChain$clone()}}
-}
+  \itemize{
+    \item \href{#method-MarkovChain-initialize}{\code{MarkovChain$new()}}
+    \item \href{#method-MarkovChain-formula}{\code{MarkovChain$formula()}}
+    \item \href{#method-MarkovChain-formulas}{\code{MarkovChain$formulas()}}
+    \item \href{#method-MarkovChain-tpm}{\code{MarkovChain$tpm()}}
+    \item \href{#method-MarkovChain-ref}{\code{MarkovChain$ref()}}
+    \item \href{#method-MarkovChain-ref_mat}{\code{MarkovChain$ref_mat()}}
+    \item \href{#method-MarkovChain-ref_delta0}{\code{MarkovChain$ref_delta0()}}
+    \item \href{#method-MarkovChain-coeff_fe}{\code{MarkovChain$coeff_fe()}}
+    \item \href{#method-MarkovChain-delta}{\code{MarkovChain$delta()}}
+    \item \href{#method-MarkovChain-delta0}{\code{MarkovChain$delta0()}}
+    \item \href{#method-MarkovChain-stationary}{\code{MarkovChain$stationary()}}
+    \item \href{#method-MarkovChain-fixpar}{\code{MarkovChain$fixpar()}}
+    \item \href{#method-MarkovChain-coeff_re}{\code{MarkovChain$coeff_re()}}
+    \item \href{#method-MarkovChain-X_fe}{\code{MarkovChain$X_fe()}}
+    \item \href{#method-MarkovChain-X_re}{\code{MarkovChain$X_re()}}
+    \item \href{#method-MarkovChain-lambda}{\code{MarkovChain$lambda()}}
+    \item \href{#method-MarkovChain-sd_re}{\code{MarkovChain$sd_re()}}
+    \item \href{#method-MarkovChain-nstates}{\code{MarkovChain$nstates()}}
+    \item \href{#method-MarkovChain-terms}{\code{MarkovChain$terms()}}
+    \item \href{#method-MarkovChain-unique_ID}{\code{MarkovChain$unique_ID()}}
+    \item \href{#method-MarkovChain-initial_state}{\code{MarkovChain$initial_state()}}
+    \item \href{#method-MarkovChain-empty}{\code{MarkovChain$empty()}}
+    \item \href{#method-MarkovChain-gam_args}{\code{MarkovChain$gam_args()}}
+    \item \href{#method-MarkovChain-update_tpm}{\code{MarkovChain$update_tpm()}}
+    \item \href{#method-MarkovChain-update_coeff_fe}{\code{MarkovChain$update_coeff_fe()}}
+    \item \href{#method-MarkovChain-update_coeff_re}{\code{MarkovChain$update_coeff_re()}}
+    \item \href{#method-MarkovChain-update_X_fe}{\code{MarkovChain$update_X_fe()}}
+    \item \href{#method-MarkovChain-update_X_re}{\code{MarkovChain$update_X_re()}}
+    \item \href{#method-MarkovChain-update_delta0}{\code{MarkovChain$update_delta0()}}
+    \item \href{#method-MarkovChain-update_lambda}{\code{MarkovChain$update_lambda()}}
+    \item \href{#method-MarkovChain-update_fixpar}{\code{MarkovChain$update_fixpar()}}
+    \item \href{#method-MarkovChain-make_mat}{\code{MarkovChain$make_mat()}}
+    \item \href{#method-MarkovChain-make_mat_grid}{\code{MarkovChain$make_mat_grid()}}
+    \item \href{#method-MarkovChain-tpm2par}{\code{MarkovChain$tpm2par()}}
+    \item \href{#method-MarkovChain-par2tpm}{\code{MarkovChain$par2tpm()}}
+    \item \href{#method-MarkovChain-linpred}{\code{MarkovChain$linpred()}}
+    \item \href{#method-MarkovChain-simulate}{\code{MarkovChain$simulate()}}
+    \item \href{#method-MarkovChain-formulation}{\code{MarkovChain$formulation()}}
+    \item \href{#method-MarkovChain-print}{\code{MarkovChain$print()}}
+    \item \href{#method-MarkovChain-clone}{\code{MarkovChain$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-MarkovChain-new"></a>}}
-\if{latex}{\out{\hypertarget{method-MarkovChain-new}{}}}
-\subsection{Method \code{new()}}{
-Create new MarkovChain object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$new(
+\if{html}{\out{<a id="method-MarkovChain-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-MarkovChain-initialize}{}}}
+\subsection{\code{MarkovChain$new()}}{
+  Create new MarkovChain object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$new(
   data = NULL,
   formula = NULL,
   n_states,
@@ -92,28 +93,24 @@ Create new MarkovChain object
   fixpar = NULL,
   ref = 1:n_states,
   gam_args = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{Data frame, needed to create model matrices, and to identify the
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{data}}{Data frame, needed to create model matrices, and to identify the
 number of time series (which each have a separate initial distribution)}
-
-\item{\code{formula}}{Either (1) R formula, used for all transition probabilities, 
+      \item{\code{formula}}{Either (1) R formula, used for all transition probabilities, 
 or (2) matrix of character strings giving the formula for each transition
 probability, with "." along the diagonal (or for reference elements; see
 \code{ref} argument). (Default: no covariate dependence.)}
-
-\item{\code{n_states}}{Number of states. If not specified, then \code{formula} 
+      \item{\code{n_states}}{Number of states. If not specified, then \code{formula} 
 needs to be provided as a matrix, and n_states is deduced from its dimensions.}
-
-\item{\code{tpm}}{Optional transition probability matrix, to initialise the model
+      \item{\code{tpm}}{Optional transition probability matrix, to initialise the model
 parameters (intercepts in model with covariates). If not provided, the default 
 is a matrix with 0.9 on the diagonal.}
-
-\item{\code{initial_state}}{Specify model for initial state distribution. There
+      \item{\code{initial_state}}{Specify model for initial state distribution. There
 are five different options: 
 \itemize{
    \item "estimated": a separate initial distribution is estimated for 
@@ -128,33 +125,30 @@ are five different options:
    of IDs): each element is used as the known initial state for the 
    corresponding ID
 }}
-
-\item{\code{fixpar}}{List with optional elements "hid" (fixed parameters for
+      \item{\code{fixpar}}{List with optional elements "hid" (fixed parameters for
 transition probabilities), "lambda_hid" (fixed smoothness parameters), 
 and "delta0" (fixed parameters for initial distribution). Each element is 
 a named vector of coefficients that should either be fixed (if the 
 corresponding element is set to NA) or estimated to a common value (using 
 integers or factor levels).}
-
-\item{\code{ref}}{Vector of indices for reference transition probabilities, 
+      \item{\code{ref}}{Vector of indices for reference transition probabilities, 
 of length \code{n_states}. The i-th element is the index for the 
 reference in the i-th row of the transition probability matrix. For 
 example, ref = c(1, 1) means that the first element of the first row
 Pr(1>1) and the first element of the second row Pr(2>1) are used as 
 reference elements and are not estimated. If this is not provided,
 the diagonal transition probabilities are used as references.}
-
-\item{\code{gam_args}}{Named list of arguments passed to \code{mgcv::gam()} in
+      \item{\code{gam_args}}{Named list of arguments passed to \code{mgcv::gam()} in
 \code{MarkovChain$make_mat()}, e.g., "knots". Use at your own risk.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new MarkovChain object
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{# Load data set from MSwM package
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A new MarkovChain object
+  }
+  \subsection{Examples}{
+    \if{html}{\out{<div class="r example copy">}}
+    \preformatted{# Load data set from MSwM package
 data(energy, package = "MSwM")
 
 # Create 2-state covariate-free model and initialise transition 
@@ -174,224 +168,250 @@ structure <- matrix(c(".", "~poly(Oil, 2)",
 hid <- MarkovChain$new(data = energy, n_states = 2,
                        formula = structure)
 }
-\if{html}{\out{</div>}}
-
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-formula"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-formula}{}}}
-\subsection{Method \code{formula()}}{
-Formula of MarkovChain model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$formula()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$formula()}}{
+  Formula of MarkovChain model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$formula()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-formulas"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-formulas}{}}}
-\subsection{Method \code{formulas()}}{
-List of formulas for MarkovChain model
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$formulas()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$formulas()}}{
+  List of formulas for MarkovChain model
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$formulas()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-tpm"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-tpm}{}}}
-\subsection{Method \code{tpm()}}{
-Get transition probability matrices
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$tpm(t = 1, linpred = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{t}}{Time index or vector of time indices; default = 1. If t = "all" 
+\subsection{\code{MarkovChain$tpm()}}{
+  Get transition probability matrices
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$tpm(t = 1, linpred = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{t}}{Time index or vector of time indices; default = 1. If t = "all" 
 then all transition probability matrices are returned.}
+      \item{\code{linpred}}{Optional custom linear predictor}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Array with one slice for each transition probability matrix
+  }
+}
 
-\item{\code{linpred}}{Optional custom linear predictor}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Array with one slice for each transition probability matrix
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-ref"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-ref}{}}}
-\subsection{Method \code{ref()}}{
-Indices of reference elements in transition probability
+\subsection{\code{MarkovChain$ref()}}{
+  Indices of reference elements in transition probability
 matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$ref()}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$ref()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-ref_mat"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-ref_mat}{}}}
-\subsection{Method \code{ref_mat()}}{
-Matrix of reference elements in transition probability
+\subsection{\code{MarkovChain$ref_mat()}}{
+  Matrix of reference elements in transition probability
 matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$ref_mat()}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$ref_mat()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-ref_delta0"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-ref_delta0}{}}}
-\subsection{Method \code{ref_delta0()}}{
-Indices of reference elements in initial distribution
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$ref_delta0()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$ref_delta0()}}{
+  Indices of reference elements in initial distribution
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$ref_delta0()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-coeff_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-coeff_fe}{}}}
-\subsection{Method \code{coeff_fe()}}{
-Current parameter estimates (fixed effects)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$coeff_fe()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$coeff_fe()}}{
+  Current parameter estimates (fixed effects)
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$coeff_fe()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-delta"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-delta}{}}}
-\subsection{Method \code{delta()}}{
-Stationary distribution
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$delta(t = NULL, linpred = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{t}}{Time point(s) for which stationary distribution should be returned. 
+\subsection{\code{MarkovChain$delta()}}{
+  Stationary distribution
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$delta(t = NULL, linpred = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{t}}{Time point(s) for which stationary distribution should be returned. 
 If t = "all", all deltas are returned; else this should be a vector of
 time indices. If NULL (default), the stationary distribution for the first
 time step is returned.}
-
-\item{\code{linpred}}{Optional custom linear predictor}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Matrix of stationary distributions. Each row corresponds to
+      \item{\code{linpred}}{Optional custom linear predictor}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Matrix of stationary distributions. Each row corresponds to
 a row of the design matrices, and each column corresponds to a state.
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-delta0"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-delta0}{}}}
-\subsection{Method \code{delta0()}}{
-Initial distribution
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$delta0(log = FALSE, as_matrix = TRUE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{log}}{Logical indicating whether to return the log of the initial
+\subsection{\code{MarkovChain$delta0()}}{
+  Initial distribution
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$delta0(log = FALSE, as_matrix = TRUE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{log}}{Logical indicating whether to return the log of the initial
 probabilities (default: FALSE). If TRUE, then the last element is
 excluded, as it is not estimated.}
-
-\item{\code{as_matrix}}{Logical indicating whether the output should be
+      \item{\code{as_matrix}}{Logical indicating whether the output should be
 formatted as a matrix (default). If as_matrix is FALSE and log is
 TRUE, the result is formatted as a column vector.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Matrix with one row for each time series ID, and one column
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Matrix with one row for each time series ID, and one column
 for each state. For each ID, the i-th element of the corresponding 
 row is the probability Pr(S[1] = i)
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-stationary"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-stationary}{}}}
-\subsection{Method \code{stationary()}}{
-Use stationary distribution as initial distribution?
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$stationary()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$stationary()}}{
+  Use stationary distribution as initial distribution?
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$stationary()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-fixpar"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-fixpar}{}}}
-\subsection{Method \code{fixpar()}}{
-Fixed parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$fixpar(all = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{all}}{Logical. If FALSE, only user-specified fixed
+\subsection{\code{MarkovChain$fixpar()}}{
+  Fixed parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$fixpar(all = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{all}}{Logical. If FALSE, only user-specified fixed
 parameters are returned, but not parameters that are fixed
 for some other reason (e.g., from '.' in formula)}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-coeff_re"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-coeff_re}{}}}
-\subsection{Method \code{coeff_re()}}{
-Current parameter estimates (random effects)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$coeff_re()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$coeff_re()}}{
+  Current parameter estimates (random effects)
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$coeff_re()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-X_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-X_fe}{}}}
-\subsection{Method \code{X_fe()}}{
-Fixed effect design matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$X_fe()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$X_fe()}}{
+  Fixed effect design matrix
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$X_fe()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-X_re"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-X_re}{}}}
-\subsection{Method \code{X_re()}}{
-Random effect design matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$X_re()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$X_re()}}{
+  Random effect design matrix
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$X_re()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-lambda"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-lambda}{}}}
-\subsection{Method \code{lambda()}}{
-Smoothness parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$lambda()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$lambda()}}{
+  Smoothness parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$lambda()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-sd_re"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-sd_re}{}}}
-\subsection{Method \code{sd_re()}}{
-Standard deviation of smooth terms
+\subsection{\code{MarkovChain$sd_re()}}{
+  Standard deviation of smooth terms
 
 This function transforms the smoothness parameter of
 each smooth term into a standard deviation, given by 
@@ -401,235 +421,265 @@ A smooth with its own parameterisation rather than a single smoothness
 parameter -- a Gaussian field, whose parameters are already a marginal
 standard deviation and a range -- has no such transformation and
 returns NA; read those off \code{lambda()} directly.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$sd_re()}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$sd_re()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-nstates"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-nstates}{}}}
-\subsection{Method \code{nstates()}}{
-Number of states
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$nstates()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$nstates()}}{
+  Number of states
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$nstates()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-terms"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-terms}{}}}
-\subsection{Method \code{terms()}}{
-Terms of model formulas
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$terms()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$terms()}}{
+  Terms of model formulas
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$terms()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-unique_ID"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-unique_ID}{}}}
-\subsection{Method \code{unique_ID()}}{
-Number of time series
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$unique_ID()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$unique_ID()}}{
+  Number of time series
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$unique_ID()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-initial_state"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-initial_state}{}}}
-\subsection{Method \code{initial_state()}}{
-Initial state (see constructor argument)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$initial_state()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$initial_state()}}{
+  Initial state (see constructor argument)
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$initial_state()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-empty"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-empty}{}}}
-\subsection{Method \code{empty()}}{
-Empty model? (for simulation only)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$empty()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$empty()}}{
+  Empty model? (for simulation only)
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$empty()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-gam_args"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-gam_args}{}}}
-\subsection{Method \code{gam_args()}}{
-Extra arguments for mgcv::gam (passed to make_matrices)
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$gam_args()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$gam_args()}}{
+  Extra arguments for mgcv::gam (passed to make_matrices)
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$gam_args()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-update_tpm"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-update_tpm}{}}}
-\subsection{Method \code{update_tpm()}}{
-Update transition probability matrix
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_tpm(tpm)}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$update_tpm()}}{
+  Update transition probability matrix
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$update_tpm(tpm)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{tpm}}{New transition probability matrix}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{tpm}}{New transition probability matrix}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-update_coeff_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-update_coeff_fe}{}}}
-\subsection{Method \code{update_coeff_fe()}}{
-Update coefficients for fixed effect parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_coeff_fe(coeff_fe)}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$update_coeff_fe()}}{
+  Update coefficients for fixed effect parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$update_coeff_fe(coeff_fe)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{coeff_fe}}{Vector of coefficients for fixed effect parameters}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{coeff_fe}}{Vector of coefficients for fixed effect parameters}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-update_coeff_re"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-update_coeff_re}{}}}
-\subsection{Method \code{update_coeff_re()}}{
-Update coefficients for random effect parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_coeff_re(coeff_re)}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$update_coeff_re()}}{
+  Update coefficients for random effect parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$update_coeff_re(coeff_re)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{coeff_re}}{Vector of coefficients for random effect parameters}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{coeff_re}}{Vector of coefficients for random effect parameters}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-update_X_fe"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-update_X_fe}{}}}
-\subsection{Method \code{update_X_fe()}}{
-Update design matrix for fixed effects
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_X_fe(X_fe)}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$update_X_fe()}}{
+  Update design matrix for fixed effects
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$update_X_fe(X_fe)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{X_fe}}{new design matrix for fixed effects}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{X_fe}}{new design matrix for fixed effects}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-update_X_re"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-update_X_re}{}}}
-\subsection{Method \code{update_X_re()}}{
-Update design matrix for random effects
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_X_re(X_re)}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$update_X_re()}}{
+  Update design matrix for random effects
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$update_X_re(X_re)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{X_re}}{new design matrix for random effects}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{X_re}}{new design matrix for random effects}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-update_delta0"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-update_delta0}{}}}
-\subsection{Method \code{update_delta0()}}{
-Update initial distribution
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_delta0(delta0)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{delta0}}{Either a matrix where the i-th row is the initial
+\subsection{\code{MarkovChain$update_delta0()}}{
+  Update initial distribution
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$update_delta0(delta0)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{delta0}}{Either a matrix where the i-th row is the initial
 distribution for the i-th time series in the data, or a vector which is
 then used for all time series. Entries of each row of delta0 should sum
 to one.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-update_lambda"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-update_lambda}{}}}
-\subsection{Method \code{update_lambda()}}{
-Update smoothness parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_lambda(lambda)}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$update_lambda()}}{
+  Update smoothness parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$update_lambda(lambda)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{lambda}}{New smoothness parameter vector}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{lambda}}{New smoothness parameter vector}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-update_fixpar"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-update_fixpar}{}}}
-\subsection{Method \code{update_fixpar()}}{
-Update information about fixed parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$update_fixpar(fixpar)}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$update_fixpar()}}{
+  Update information about fixed parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$update_fixpar(fixpar)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{fixpar}}{New list of fixed parameters, in the same format
+expected by MarkovChain$new()}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{fixpar}}{New list of fixed parameters, in the same format
-expected by MarkovChain$new()}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-make_mat"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-make_mat}{}}}
-\subsection{Method \code{make_mat()}}{
-Make model matrices
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$make_mat(data, new_data = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{Data frame containing all needed covariates}
-
-\item{\code{new_data}}{Optional new data set, including covariates for which
+\subsection{\code{MarkovChain$make_mat()}}{
+  Make model matrices
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$make_mat(data, new_data = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{data}}{Data frame containing all needed covariates}
+      \item{\code{new_data}}{Optional new data set, including covariates for which
 the design matrices should be created. This needs to be passed in addition
 to the argument '\code{data}', for cases where smooth terms or factor
 covariates are included, and the original data set is needed to determine
 the full range of covariate values.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A list with elements:
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A list with elements:
 \describe{
   \item{X_fe}{Design matrix for fixed effects}
   \item{X_re}{Design matrix for random effects}
@@ -637,162 +687,173 @@ A list with elements:
   \item{ncol_fe}{Number of columns of X_fe for each parameter}
   \item{ncol_re}{Number of columns of X_re and S for each random effect}
 }
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-make_mat_grid"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-make_mat_grid}{}}}
-\subsection{Method \code{make_mat_grid()}}{
-Design matrices for grid of covariates
+\subsection{\code{MarkovChain$make_mat_grid()}}{
+  Design matrices for grid of covariates
 
 Used in plotting functions such as HMM$plot_tpm and HMM$plot_stat_dist
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$make_mat_grid(var, data, covs = NULL, n_grid = 1000)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{var}}{Name of variable}
-
-\item{\code{data}}{Data frame containing the covariates}
-
-\item{\code{covs}}{Optional named list for values of covariates (other than 'var') 
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$make_mat_grid(var, data, covs = NULL, n_grid = 1000)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{var}}{Name of variable}
+      \item{\code{data}}{Data frame containing the covariates}
+      \item{\code{covs}}{Optional named list for values of covariates (other than 'var') 
 that should be used in the plot (or dataframe with single row). If this is
 not specified, the mean value is used for numeric variables, and the
 first level for factor variables.}
-
-\item{\code{n_grid}}{Grid size (number of points). Default: 1000.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A list with the same elements as the output of make_mat, 
+      \item{\code{n_grid}}{Grid size (number of points). Default: 1000.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A list with the same elements as the output of make_mat, 
 plus a data frame of covariates values.
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-tpm2par"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-tpm2par}{}}}
-\subsection{Method \code{tpm2par()}}{
-Transform transition probabilities to working scale
+\subsection{\code{MarkovChain$tpm2par()}}{
+  Transform transition probabilities to working scale
 
 Apply the multinomial logit link function to get the corresponding 
 parameters on the working scale (i.e., linear predictor scale).
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$tpm2par(tpm)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$tpm2par(tpm)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{tpm}}{Transition probability matrix}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Vector of parameters on linear predictor scale
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{tpm}}{Transition probability matrix}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Vector of parameters on linear predictor scale
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-par2tpm"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-par2tpm}{}}}
-\subsection{Method \code{par2tpm()}}{
-Transform working parameters to transition probabilities
+\subsection{\code{MarkovChain$par2tpm()}}{
+  Transform working parameters to transition probabilities
 
 Apply the inverse multinomial logit link function to transform the 
 parameters on the working scale (i.e., linear predictor scale) into 
 the transition probabilities.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$par2tpm(par)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$par2tpm(par)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{par}}{Vector of parameters on working scale}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Transition probability matrix
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{par}}{Vector of parameters on working scale}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Transition probability matrix
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-linpred"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-linpred}{}}}
-\subsection{Method \code{linpred()}}{
-Linear predictor for transition probabilities
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$linpred()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$linpred()}}{
+  Linear predictor for transition probabilities
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$linpred()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-simulate"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-simulate}{}}}
-\subsection{Method \code{simulate()}}{
-Simulate from Markov chain
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$simulate(n, data = NULL, new_data = NULL, silent = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{n}}{Number of time steps to simulate}
-
-\item{\code{data}}{Optional data frame containing all needed covariates}
-
-\item{\code{new_data}}{Optional new data set, including covariates for which
+\subsection{\code{MarkovChain$simulate()}}{
+  Simulate from Markov chain
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$simulate(n, data = NULL, new_data = NULL, silent = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{n}}{Number of time steps to simulate}
+      \item{\code{data}}{Optional data frame containing all needed covariates}
+      \item{\code{new_data}}{Optional new data set, including covariates for which
 the design matrices should be created. This needs to be passed in addition
 to the argument '\code{data}', for cases where smooth terms or factor
 covariates are included, and the original data set is needed to determine
 the full range of covariate values.}
+      \item{\code{silent}}{if TRUE then no messages are printed}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    Sequence of states of simulated chain
+  }
+}
 
-\item{\code{silent}}{if TRUE then no messages are printed}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Sequence of states of simulated chain
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-formulation"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-formulation}{}}}
-\subsection{Method \code{formulation()}}{
-Print model formulation
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$formulation()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$formulation()}}{
+  Print model formulation
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$formulation()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-print"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-print}{}}}
-\subsection{Method \code{print()}}{
-Print MarkovChain object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$print()}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$print()}}{
+  Print MarkovChain object
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$print()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MarkovChain-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-MarkovChain-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{MarkovChain$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{MarkovChain$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{MarkovChain$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }
