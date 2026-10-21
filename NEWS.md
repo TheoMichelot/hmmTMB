@@ -1,6 +1,7 @@
 
-# hmmTMB 1.1.3
+# hmmTMB 2.0.0
 
+- Add scaled chi-squared distribution "schisq"
 - Add `HMM$plot_2d()`, for plotting a model component as a surface over two
   covariates. `HMM$plot()` varies one covariate and holds the rest fixed, which
   for a bivariate term such as `s(x, y)` shows a single slice; this varies both
