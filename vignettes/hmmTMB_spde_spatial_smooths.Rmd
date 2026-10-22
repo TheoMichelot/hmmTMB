@@ -1,0 +1,161 @@
+---
+title: "SPDE smooths in hmmTMB"
+author: "Théo Michelot"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    number_sections: true
+header-includes:
+  \renewcommand{\baselinestretch}{1.2}
+fontsize: 12pt
+bibliography: refs.bib
+vignette: >
+  %\VignetteIndexEntry{SPDE smooths in hmmTMB}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+  
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+message = FALSE, error = FALSE, warning = FALSE,
+comment = NA
+)
+```
+
+```{r simulate, include = FALSE}
+set.seed(346934)
+
+# Spatially-varying transition probabilities
+tpm <- function(x, y) {
+  p12 <- plogis(-1 + sin(2*pi*x/500) + cos(2*pi*y/500) + (x + y)/500)
+  p21 <- plogis(-1 - sin(2*pi*x/500) - cos(2*pi*y/500) - (x + y)/500)
+  matrix(c(1 - p12, p12,
+           p21, 1 - p21),
+         nrow = 2, byrow = TRUE)
+}
+
+# Movement parameters
+mean_step <- c(1, 30)
+sd_step <- c(1, 1)
+shape_step <- mean_step^2/sd_step^2
+rate_step <- mean_step/sd_step^2
+sd_angle <- c(3, 0.5)
+
+# Number of individuals and steps per individual
+n_id <- 30
+n_by_id <- 200
+data <- NULL
+for(i_id in 1:n_id) {
+  # Initialise variables for this individual
+  s <- rep(1, n_by_id)
+  x <- rep(NA, n_by_id)
+  y <- rep(NA, n_by_id)
+  x[1] <- rnorm(1, 0, 100)
+  y[1] <- rnorm(1, 0, 100)
+  step <- rep(NA, n_by_id)
+  heading <- 0
+  
+  # Loop over time
+  for(i in 2:n_by_id) {
+    # New state
+    s[i] <- sample(1:2, size = 1, prob = tpm(x[i-1], y[i-1])[s[i-1],])
+    
+    # New step length and heading
+    step[i] <- rgamma(1, shape = shape_step[s[i]], rate = rate_step[s[i]])
+    heading <- heading + rnorm(1, 0, sd_angle[s[i]])
+    
+    # New position
+    x[i] <- x[i-1] + step[i] * cos(heading)
+    y[i] <- y[i-1] + step[i] * sin(heading)
+  }
+  subdata <- data.frame(ID = i_id,
+                        step = step,
+                        x = x,
+                        y = y)
+  data <- rbind(data, subdata)
+}
+```
+
+This vignette illustrates the application of the `"spde"` smooths in hmmTMB to capture spatially-varying parameters. This extension was developed by Jan-Ole Fischer, and the theory and methods are described in @fischer2026. (Please include a reference to that article if you use these methods in hmmTMB.) @miller2020 explain how stochastic partial differential equations (SPDEs) can be represented as basis-penalty smoothers in mgcv, which makes the implementation in hmmTMB possible.
+
+We consider a simulated data set inspired by animal movement applications. The data frame has columns `ID` (individual identifier), `step` (step length), `x` (Easting), and `y` (Northing). We assume that the step length distribution depends on an unobserved behavioural state, and we decide to use a hidden Markov model to account for behaviour transitions. For additional details about the use of hidden Markov models for anima, movement, see for example @langrock2012, or the hmmTMB vignette "Flexible animal movement modelling using hmmTMB".
+
+```{r show-data}
+head(data)
+```
+
+We will demonstrate the use of `"spde"` smooths to estimate spatially-varying transition probabilities. That is, we assume that the probability that an animal changes behaviour is not constant over the whole the study region, and we wish to capture this with a flexible spatial model. 
+
+A key modelling choice is the spatial mesh, which is used to approximate the spatial model. A mesh can be created with the package fmesher (@lindgren2026), and the documentation for that package should be consulted for details. A finer mesh leads to a better approximation, but also to an increased computational cost. We use `fmesher::fm_mesh_2d()` to create a mesh over the study region. The domain of the mesh is chosen to extend beyond the observed locations using `fm_extensions()`, where the `convex` argument specifies the size of the padding for the inner and outer parts of the mesh. Then, `max.edge` is used to indicate that the mesh should be finer (i.e., composed of triangles with shorter edges) in the inner part of the mesh than in the outer part. Plotting the resulting mesh with the data locations is an important check.
+
+```{r define-mesh, fig.width = 6, fig.height = 6, out.width="60%", fig.align = "center"}
+library(fmesher)
+
+# Create a spatial mesh
+loc <- cbind(data$x, data$y)
+mesh <- fm_mesh_2d(
+  boundary = fm_extensions(loc, convex = c(300, 1000)), 
+  max.edge = c(100, 300)
+)
+plot(mesh)
+points(data$x, data$y, pch = 20, cex = 0.4)
+```
+
+The plot confirms that the animals' movement tends to be faster and more directed in some areas than others, which motivates the use of a spatial model for transition probabilities.
+
+We define a 2-state Markov chain object for the behaviour process. We use the argument `formula` of `MarkovChain$new()` to include covariate effects on the transition probabilities. Here, the covariates are the spatial positions, and we use the mgcv formula syntax to specify a two-dimensional smooth of `x` and `y`. The basis type is set to `"spde"`, and the mesh is passed through `xt`. Note that the package accesses the mesh directly from the environment (rather than storing a copy), so we need to make sure the `mesh` object is unchanged through the analysis. Here, we also assume that all individuals start in state 1 (specified through `initial_state`).
+
+```{r define-markov-chain}
+library(hmmTMB)
+
+f <- ~s(x, y, bs = "spde", xt = list(mesh = mesh))
+hid <- MarkovChain$new(data = data, 
+                       n_states = 2,
+                       formula = f, 
+                       initial_state = 1)
+```
+
+For the state-dependent observation process, we model step lengths with a gamma distribution. We specify initial parameter values based on the observed distribution of step lengths, with the expectation that state 1 will capture slower movement, and state 2 faster movement.
+
+```{r define-observation}
+dists <- list(step = "gamma2")
+par0 <- list(step = list(mean = c(2, 10), sd = c(2, 10)))
+obs <- Observation$new(data = data, dists = dists, par = par0)
+```
+
+We can now fit the model.
+
+```{r fit-model}
+hmm <- HMM$new(obs = obs, hid = hid)
+hmm$fit(silent = TRUE)
+```
+
+To visualise the spatial variations in transition probabilities, we use the `HMM$plot_2d()` function. This predicts the estimated parameter over a spatial grid, and displays the result as a heatmap. We use `n_grid = 100` to get a relatively fine-resolution map, and `padding = 300` to expand the range of the prediction beyond the range of the observed locations.
+
+```{r plot-tpm, fig.width = 5, fig.height = 5, out.width="80%", fig.align = "center"}
+hmm$plot_2d(what = "tpm", var = "x", var2 = "y", 
+            n_grid = 100, padding = 300) +
+  coord_equal()
+```
+
+The overall pattern suggests that animals are more likely to transition into state 1 (and remain in state 1) in the southwest corner of the map, and more likely to transition into state 2 (and remain in state 2) in the northeast corner of the map. There are also some smaller-scale variations.
+
+We can also visualise the uncertainty in the estimated transition probabilities, using `show = "ci"` ("confidence intervals") and `n_post = 200 ` (number of posterior samples used to approximate confidence bands). 
+
+```{r plot-tpm-ci, fig.width = 5, fig.height = 5, out.width="80%", fig.align = "center"}
+hmm$plot_2d(what = "tpm", var = "x", var2 = "y", 
+            n_grid = 100, padding = 300, 
+            n_post = 200, show = "ci") +
+  coord_equal()
+```
+
+Uncertainty is relatively high in the northeast for the probabilities out of state 1; this is expected because state 1 occurs more rarely in that area. Likewise, there is high uncertainty for the probabilities on the second row in the southwest corner 
+
+The model stored the estimated Matérn parameters, and these can be accessed through `HMM$lambda()`.
+
+```{r print-lambda}
+hmm$lambda()$hid
+```
+
+
+# References
